@@ -16,8 +16,8 @@
 
 
 class WaveformControl  : public Component,
-                           public ChangeListener,
-                           public FileDragAndDropTarget
+                         public ChangeListener,
+                         public FileDragAndDropTarget
 {
 public:
     WaveformControl(const Colour&);

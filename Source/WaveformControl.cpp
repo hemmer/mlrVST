@@ -9,10 +9,11 @@ Author:  Hemmer
 */
 
 #include "WaveformControl.h"
+#include "PluginEditor.h"
 
-WaveformControl::WaveformControl(const Colour &bg)
-    : thumbnailCache (5),
-        thumbnail (512, formatManager, thumbnailCache),
+WaveformControl::WaveformControl(const Colour &bg) :
+    	thumbnailCache(5),
+        thumbnail(512, formatManager, thumbnailCache),
 		backgroundColour(bg)
 {
     startTime = endTime = 0;
@@ -67,7 +68,7 @@ void WaveformControl::paint (Graphics& g)
     }
     else
     {
-        g.setFont (14.0f);
+        g.setFont (12.0f);
         g.drawFittedText ("(No audio file selected)", 0, 0, getWidth(), getHeight(),
                             Justification::centred, 2);
     }
@@ -86,9 +87,10 @@ bool WaveformControl::isInterestedInFileDrag (const StringArray& /*files*/)
 
 void WaveformControl::filesDropped (const StringArray& files, int /*x*/, int /*y*/)
 {
-    //AudioDemoPlaybackPage* demoPage = findParentComponentOfClass ((AudioDemoPlaybackPage*) 0);
+    mlrVSTAudioProcessorEditor* demoPage = findParentComponentOfClass ((mlrVSTAudioProcessorEditor*) 0);
 
     //if (demoPage != 0)
-        //  demoPage->showFile (File (files[0]));
+        //demoPage->helloLabel.setText("boom");
+//        showFile (File (files[0]));
 }
 
