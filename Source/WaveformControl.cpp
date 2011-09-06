@@ -11,14 +11,23 @@ Author:  Hemmer
 #include "WaveformControl.h"
 #include "PluginEditor.h"
 
-WaveformControl::WaveformControl(const Colour &bg) :
+WaveformControl::WaveformControl(const Colour &bg, const int &id) :
     	thumbnailCache(5),
         thumbnail(512, formatManager, thumbnailCache),
-		backgroundColour(bg)
+		backgroundColour(bg),
+        trackInfo(0),
+        waveformID(id)
+        //demoPage(0)
 {
     startTime = endTime = 0;
     formatManager.registerBasicFormats();
     thumbnail.addChangeListener (this);
+
+    addAndMakeVisible(trackInfo = new Label("trackinfo", "hai"));
+    trackInfo->setBounds(0, 0, 50, 20);
+    trackInfo->setColour(Label::backgroundColourId, Colours::cornflowerblue);
+
+   
 }
 
 WaveformControl::~WaveformControl()
@@ -55,7 +64,35 @@ void WaveformControl::mouseWheelMove (const MouseEvent&, float wheelIncrementX, 
     }
 }
 
-void WaveformControl::paint (Graphics& g)
+void WaveformControl::mouseDown(const MouseEvent &e){
+
+    if(e.mods == ModifierKeys::rightButtonModifier){
+
+        mlrVSTAudioProcessorEditor *demoPage = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
+        
+        if(demoPage != 0){
+            Array<File> loadedFiles = demoPage->getLoadedFiles();
+
+            PopupMenu p = PopupMenu();
+
+
+            for(int i = 0; i < loadedFiles.size(); ++i){
+                p.addItem(i, String(loadedFiles[i].getFileName()));
+            }
+            int fileChoice = p.show();
+            demoPage->recieveFileSelection(waveformID, fileChoice);
+        }
+
+        // DO WE STORE A FILE OBJECT IN THE WAVEFORMCONTROL?
+        // OR KEEP IT IN THE PARENT
+
+        //trackInfo->setText(labeltext, false);
+
+
+    }
+}
+
+void WaveformControl::paint(Graphics& g)
 {
 	g.fillAll (backgroundColour);
 
@@ -87,7 +124,7 @@ bool WaveformControl::isInterestedInFileDrag (const StringArray& /*files*/)
 
 void WaveformControl::filesDropped (const StringArray& files, int /*x*/, int /*y*/)
 {
-    mlrVSTAudioProcessorEditor* demoPage = findParentComponentOfClass ((mlrVSTAudioProcessorEditor*) 0);
+    //mlrVSTAudioProcessorEditor* demoPage = findParentComponentOfClass ((mlrVSTAudioProcessorEditor*) 0);
 
     //if (demoPage != 0)
         //demoPage->helloLabel.setText("boom");

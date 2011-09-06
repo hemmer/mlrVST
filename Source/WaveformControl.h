@@ -14,18 +14,18 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 
-
 class WaveformControl  : public Component,
                          public ChangeListener,
                          public FileDragAndDropTarget
 {
 public:
-    WaveformControl(const Colour&);
+    WaveformControl(const Colour&, const int&);
 	~WaveformControl();
 
     void setFile (const File& file);
 	void setZoomFactor (double amount);
 	void mouseWheelMove (const MouseEvent&, float wheelIncrementX, float wheelIncrementY);
+    void mouseDown(const MouseEvent&);
 
     void paint (Graphics& g);
     void changeListenerCallback (ChangeBroadcaster*);
@@ -40,6 +40,9 @@ public:
 
 private:
 	Colour backgroundColour;
+    Label *trackInfo;
+
+    int waveformID;
 };
 
 

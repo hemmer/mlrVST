@@ -69,12 +69,13 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     bgCols.add(Colour(33,61,75));
 	
 	for(int i = 0; i < numChannels; ++i){
-		waveformArray.add(new WaveformControl(bgCols[i]));
+		waveformArray.add(new WaveformControl(bgCols[i], i));
 		addAndMakeVisible ( waveformArray[i] );
 		waveformArray[i]->setBounds(30, 80 + i * 50, 300, 50);
 	}
 
-
+    OldSchoolLookAndFeel oldLookAndFeel;
+    LookAndFeel::setDefaultLookAndFeel(&oldLookAndFeel);
 	
     startTimer (50);
 }
@@ -89,6 +90,18 @@ mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
     deleteAndZero(loadButton);
         
 }
+
+// receieve communication from the WaveformControl component
+void mlrVSTAudioProcessorEditor::recieveFileSelection(const int &waveformID, const int &fileChoice){
+    helloLabel->setText(String(waveformID) + ", id: " + String(fileChoice), false);
+    waveformArray[waveformID]->setFile(loadedFiles[fileChoice]);
+}
+
+// return a copy of the current filelist array
+Array<File> mlrVSTAudioProcessorEditor::getLoadedFiles(){
+    return Array<File>(loadedFiles);
+}
+
 
 //==============================================================================
 void mlrVSTAudioProcessorEditor::paint (Graphics& g)
@@ -105,12 +118,12 @@ void mlrVSTAudioProcessorEditor::timerCallback()
 {
     mlrVSTAudioProcessor* ourProcessor = getProcessor();
 
-    AudioPlayHead::CurrentPositionInfo newPos (ourProcessor->lastPosInfo);
+    AudioPlayHead::CurrentPositionInfo newPos(ourProcessor->lastPosInfo);
 
     if (lastDisplayedPosition != newPos)
         displayPositionInfo (newPos);
 
-    delaySlider->setValue (ourProcessor->delay, false);
+    delaySlider->setValue(ourProcessor->delay, false);
 }
 
 // This is our Slider::Listener callback, when the user drags a slider.

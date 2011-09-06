@@ -36,6 +36,11 @@ public:
     void sliderValueChanged (Slider*);
 	void buttonClicked(Button*);
 
+    //void mouseDown(const MouseEvent&);
+    void recieveFileSelection(const int &waveformID, const int &fileID);
+
+    Array<File> getLoadedFiles();
+
 private:
     Label *infoLabel, *delayLabel, *helloLabel, *logoLabel;
     Slider *delaySlider;
