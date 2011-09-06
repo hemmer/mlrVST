@@ -14,21 +14,21 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "PluginProcessor.h"
-//#include "WaveformControl.h"
+#include "WaveformControl.h"
 
-class DemoThumbnailComp;
+class WaveformControl;
 
 //==============================================================================
 /** This is the editor component that our filter will display.
 */
-class JuceDemoPluginAudioProcessorEditor  : public AudioProcessorEditor,
+class mlrVSTAudioProcessorEditor  : public AudioProcessorEditor,
                                             public SliderListener,
 											public ButtonListener,
                                             public Timer
 {
 public:
-    JuceDemoPluginAudioProcessorEditor (JuceDemoPluginAudioProcessor* ownerFilter);
-    ~JuceDemoPluginAudioProcessorEditor();
+    mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter);
+    ~mlrVSTAudioProcessorEditor();
 
     //==============================================================================
     void timerCallback();
@@ -42,7 +42,7 @@ private:
     Slider delaySlider;
 	DrawableButton loadButton;
 
-	File testFile;
+	Array<File> loadedFiles;
 
 	AudioFormatManager formatManager;
     //AudioThumbnailCache thumbnailCache;
@@ -53,13 +53,14 @@ private:
 	AudioTransportSource transportSource;
     ScopedPointer<AudioFormatReaderSource> currentAudioFileSource;
 
-	DemoThumbnailComp* thumbnailTest;
+	Array<WaveformControl*> waveformArray;
+	const int numChannels;
 
     AudioPlayHead::CurrentPositionInfo lastDisplayedPosition;
 
-    JuceDemoPluginAudioProcessor* getProcessor() const
+    mlrVSTAudioProcessor* getProcessor() const
     {
-        return static_cast <JuceDemoPluginAudioProcessor*> (getAudioProcessor());
+        return static_cast <mlrVSTAudioProcessor*> (getAudioProcessor());
     }
 
     void displayPositionInfo (const AudioPlayHead::CurrentPositionInfo& pos);

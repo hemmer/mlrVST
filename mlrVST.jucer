@@ -17,12 +17,16 @@
             vstFolder="c:\SDKs\vstsdk2.4"/>
   </EXPORTFORMATS>
   <CONFIGURATIONS>
-    <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="JuceDemoPlugin"
-                   osxSDK="default" osxCompatibility="default"/>
-    <CONFIGURATION name="Release" isDebug="0" optimisation="2" targetName="JuceDemoPlugin"
-                   osxSDK="default" osxCompatibility="default"/>
+    <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="mlrVST"
+                   osxSDK="default" osxCompatibility="default" osxArchitecture="default"/>
+    <CONFIGURATION name="Release" isDebug="0" optimisation="2" targetName="mlrVST"
+                   osxSDK="default" osxCompatibility="default" osxArchitecture="default"/>
   </CONFIGURATIONS>
   <MAINGROUP id="dYAMo6Ykd" name="mlrVST">
+    <FILE id="V4lM8" name="WaveformControl.cpp" compile="1" resource="0"
+          file="Source/WaveformControl.cpp"/>
+    <FILE id="Vwhx63" name="WaveformControl.h" compile="0" resource="0"
+          file="Source/WaveformControl.h"/>
     <FILE id="gFFr0hbSp" name="PluginProcessor.cpp" compile="1" resource="0"
           file="Source/PluginProcessor.cpp"/>
     <FILE id="PkpMNdnIr" name="PluginProcessor.h" compile="0" resource="0"

@@ -132,7 +132,7 @@ private:
 
 
 //==============================================================================
-JuceDemoPluginAudioProcessor::JuceDemoPluginAudioProcessor()
+mlrVSTAudioProcessor::mlrVSTAudioProcessor()
     : delayBuffer (2, 12000)
 {
     // Set up some default values..
@@ -152,17 +152,17 @@ JuceDemoPluginAudioProcessor::JuceDemoPluginAudioProcessor()
     synth.addSound (new SineWaveSound());
 }
 
-JuceDemoPluginAudioProcessor::~JuceDemoPluginAudioProcessor()
+mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
 {
 }
 
 //==============================================================================
-int JuceDemoPluginAudioProcessor::getNumParameters()
+int mlrVSTAudioProcessor::getNumParameters()
 {
     return totalNumParams;
 }
 
-float JuceDemoPluginAudioProcessor::getParameter (int index)
+float mlrVSTAudioProcessor::getParameter (int index)
 {
     // This method will be called by the host, probably on the audio thread, so
     // it's absolutely time-critical. Don't use critical sections or anything
@@ -175,7 +175,7 @@ float JuceDemoPluginAudioProcessor::getParameter (int index)
     }
 }
 
-void JuceDemoPluginAudioProcessor::setParameter (int index, float newValue)
+void mlrVSTAudioProcessor::setParameter (int index, float newValue)
 {
     // This method will be called by the host, probably on the audio thread, so
     // it's absolutely time-critical. Don't use critical sections or anything
@@ -188,7 +188,7 @@ void JuceDemoPluginAudioProcessor::setParameter (int index, float newValue)
     }
 }
 
-const String JuceDemoPluginAudioProcessor::getParameterName (int index)
+const String mlrVSTAudioProcessor::getParameterName (int index)
 {
     switch (index)
     {
@@ -200,13 +200,13 @@ const String JuceDemoPluginAudioProcessor::getParameterName (int index)
     return String::empty;
 }
 
-const String JuceDemoPluginAudioProcessor::getParameterText (int index)
+const String mlrVSTAudioProcessor::getParameterText (int index)
 {
     return String (getParameter (index), 2);
 }
 
 //==============================================================================
-void JuceDemoPluginAudioProcessor::prepareToPlay (double sampleRate, int /*samplesPerBlock*/)
+void mlrVSTAudioProcessor::prepareToPlay (double sampleRate, int /*samplesPerBlock*/)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
@@ -215,21 +215,21 @@ void JuceDemoPluginAudioProcessor::prepareToPlay (double sampleRate, int /*sampl
     delayBuffer.clear();
 }
 
-void JuceDemoPluginAudioProcessor::releaseResources()
+void mlrVSTAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
     keyboardState.reset();
 }
 
-void JuceDemoPluginAudioProcessor::reset()
+void mlrVSTAudioProcessor::reset()
 {
     // Use this method as the place to clear any delay lines, buffers, etc, as it
     // means there's been a break in the audio's continuity.
     delayBuffer.clear();
 }
 
-void JuceDemoPluginAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
+void mlrVSTAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
 {
     const int numSamples = buffer.getNumSamples();
     int channel, dp = 0;
@@ -286,13 +286,13 @@ void JuceDemoPluginAudioProcessor::processBlock (AudioSampleBuffer& buffer, Midi
 }
 
 //==============================================================================
-AudioProcessorEditor* JuceDemoPluginAudioProcessor::createEditor()
+AudioProcessorEditor* mlrVSTAudioProcessor::createEditor()
 {
-    return new JuceDemoPluginAudioProcessorEditor (this);
+    return new mlrVSTAudioProcessorEditor (this);
 }
 
 //==============================================================================
-void JuceDemoPluginAudioProcessor::getStateInformation (MemoryBlock& destData)
+void mlrVSTAudioProcessor::getStateInformation (MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
     // Here's an example of how you can use XML to make it easy and more robust:
@@ -310,7 +310,7 @@ void JuceDemoPluginAudioProcessor::getStateInformation (MemoryBlock& destData)
     copyXmlToBinary (xml, destData);
 }
 
-void JuceDemoPluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void mlrVSTAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
@@ -333,27 +333,27 @@ void JuceDemoPluginAudioProcessor::setStateInformation (const void* data, int si
     }
 }
 
-const String JuceDemoPluginAudioProcessor::getInputChannelName (const int channelIndex) const
+const String mlrVSTAudioProcessor::getInputChannelName (const int channelIndex) const
 {
     return String (channelIndex + 1);
 }
 
-const String JuceDemoPluginAudioProcessor::getOutputChannelName (const int channelIndex) const
+const String mlrVSTAudioProcessor::getOutputChannelName (const int channelIndex) const
 {
     return String (channelIndex + 1);
 }
 
-bool JuceDemoPluginAudioProcessor::isInputChannelStereoPair (int /*index*/) const
+bool mlrVSTAudioProcessor::isInputChannelStereoPair (int /*index*/) const
 {
     return true;
 }
 
-bool JuceDemoPluginAudioProcessor::isOutputChannelStereoPair (int /*index*/) const
+bool mlrVSTAudioProcessor::isOutputChannelStereoPair (int /*index*/) const
 {
     return true;
 }
 
-bool JuceDemoPluginAudioProcessor::acceptsMidi() const
+bool mlrVSTAudioProcessor::acceptsMidi() const
 {
 #if JucePlugin_WantsMidiInput
     return true;
@@ -362,7 +362,7 @@ bool JuceDemoPluginAudioProcessor::acceptsMidi() const
 #endif
 }
 
-bool JuceDemoPluginAudioProcessor::producesMidi() const
+bool mlrVSTAudioProcessor::producesMidi() const
 {
 #if JucePlugin_ProducesMidiOutput
     return true;
@@ -375,5 +375,5 @@ bool JuceDemoPluginAudioProcessor::producesMidi() const
 // This creates new instances of the plugin..
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new JuceDemoPluginAudioProcessor();
+    return new mlrVSTAudioProcessor();
 }
