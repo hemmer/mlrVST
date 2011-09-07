@@ -5,6 +5,8 @@
     Created: 6 Sep 2011 12:38:13pm
     Author:  Hemmer
 
+    Custom component to display a waveform (corresponding to an mlr row)
+
   ==============================================================================
 */
 
@@ -33,16 +35,17 @@ public:
     bool isInterestedInFileDrag (const StringArray& /*files*/);
     void filesDropped (const StringArray& files, int /*x*/, int /*y*/);
 
-    AudioFormatManager formatManager;
-    AudioThumbnailCache thumbnailCache;
-    AudioThumbnail thumbnail;
-    double startTime, endTime;
 
 private:
 	Colour backgroundColour;
     Label *trackInfo;
 
     int waveformID;
+
+    AudioFormatManager formatManager;
+    AudioThumbnailCache thumbnailCache;
+    AudioThumbnail thumbnail;
+    double startTime, endTime;
 };
 
 

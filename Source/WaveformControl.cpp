@@ -5,6 +5,8 @@ WaveformControl.cpp
 Created: 6 Sep 2011 12:38:13pm
 Author:  Hemmer
 
+Custom component to display a waveform (corresponding to an mlr row)
+
 ==============================================================================
 */
 
@@ -17,7 +19,6 @@ WaveformControl::WaveformControl(const Colour &bg, const int &id) :
 		backgroundColour(bg),
         trackInfo(0),
         waveformID(id)
-        //demoPage(0)
 {
     startTime = endTime = 0;
     formatManager.registerBasicFormats();
@@ -27,7 +28,6 @@ WaveformControl::WaveformControl(const Colour &bg, const int &id) :
     trackInfo->setBounds(0, 0, 50, 20);
     trackInfo->setColour(Label::backgroundColourId, Colours::cornflowerblue);
 
-   
 }
 
 WaveformControl::~WaveformControl()
@@ -35,6 +35,7 @@ WaveformControl::~WaveformControl()
     thumbnail.removeChangeListener (this);
 }
 
+// update the thumbnail to reflect a new choice of file
 void WaveformControl::setFile (const File& file)
 {
     thumbnail.setSource (new FileInputSource (file));
@@ -75,8 +76,12 @@ void WaveformControl::mouseDown(const MouseEvent &e){
 
             PopupMenu p = PopupMenu();
 
+            // TODO: if no popup item selected, 0 is returned selecting
+            // the first file in the list
 
-            for(int i = 0; i < loadedFiles.size(); ++i){
+            // TODO: add option to select "none"
+            for(int i = 0; i < loadedFiles.size(); ++i)
+            {
                 p.addItem(i, String(loadedFiles[i].getFileName()));
             }
             int fileChoice = p.show();
@@ -100,8 +105,17 @@ void WaveformControl::paint(Graphics& g)
 
     if (thumbnail.getTotalLength() > 0)
     {
-        thumbnail.drawChannels (g, getLocalBounds().reduced (2, 2),
-                                startTime, endTime, 1.0f);
+        g.setColour (Colours::black);
+        thumbnail.drawChannel(g, getLocalBounds().reduced (2, 2),
+                              startTime, endTime, 0, 1.0f);
+
+        g.setColour (Colours::white);
+        
+        thumbnail.drawChannel(g, getLocalBounds().reduced (2, 2),
+                              startTime, endTime, 1, 1.0f);
+
+        //thumbnail.drawChannels (g, getLocalBounds().reduced (2, 2),
+        //                        startTime, endTime, 1.0f);
     }
     else
     {

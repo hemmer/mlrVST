@@ -136,8 +136,10 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged (Slider* slider)
     }
 }
 
+// Button handling
 void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 {
+    // Manually load a file
 	if(btn == loadButton){
 
 		FileChooser myChooser ("Please choose a file:", File::getSpecialLocation(File::userDesktopDirectory), "*.wav");
@@ -145,15 +147,15 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 		{	
 			File newFile = myChooser.getResult();
 			loadedFiles.addIfNotAlreadyThere(newFile);
-			//loadFileIntoTransport(testFile);
-			//testWaveform->setFile(testFile);
-			for(int i = 0; i < numChannels; ++i){
+
+            for(int i = 0; i < waveformArray.size(); ++i){
 				waveformArray[i]->setFile(newFile);
 			}
 
 			String str = T("Files Loaded:\n");
-			for(int i = 0; i < loadedFiles.size(); ++i){
-				str += String(loadedFiles[i].getFileNameWithoutExtension()) + "\n";
+			for(int i = 0; i < loadedFiles.size(); ++i)
+            {
+                str += String(loadedFiles[i].getFileNameWithoutExtension()) + "\n";
 			}
 			helloLabel->setText(str, false);
 		}
