@@ -31,7 +31,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
     // test label
 	addAndMakeVisible(logoLabel = new Label("", "mlrVST"));
-    logoLabel->setBounds(0, 0, getWidth(), 20);
+    logoLabel->setBounds(0, 0, getWidth(), 30);
 	logoLabel->setColour(Label::backgroundColourId, Colours::black);
     logoLabel->setColour(Label::textColourId, Colours::white);
     logoLabel->setJustificationType(Justification::bottomRight);
@@ -187,8 +187,9 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 			helloLabel->setText(str, false);
 		}
 	}
-    else if(btn = debugButton)
+    else if(btn == debugButton)
     {
+        // just a little test (REMEMBER TO REMOVE)
         channelsArray.clear();
         channelsArray.add(ChannelStrip(Colour(226,  70,  45), 0));
         channelsArray.add(ChannelStrip(Colour(106,  22,  37), 1));

@@ -18,6 +18,7 @@ WaveformControl::WaveformControl(const int &id, const Array<ChannelStrip> &chanA
         thumbnail(512, formatManager, thumbnailCache),
         backgroundColour(Colours::black),
         trackNumberLbl(0),
+        filenameLbl(0),
         waveformID(id),
         currentFile(),
         //numChannels(channelsArray.size()),
@@ -37,6 +38,11 @@ WaveformControl::WaveformControl(const int &id, const Array<ChannelStrip> &chanA
     trackNumberLbl->setColour(Label::textColourId, Colours::white);
     trackNumberLbl->setFont(10.0f);
 
+    addAndMakeVisible(filenameLbl = new Label("filename", "No File"));
+    filenameLbl->setColour(Label::backgroundColourId, Colours::white);
+    filenameLbl->setColour(Label::textColourId, Colours::black);
+    filenameLbl->setFont(10.0f);
+
     updateChannelList(chanArray);
 }
 
@@ -44,6 +50,7 @@ WaveformControl::~WaveformControl()
 {
     thumbnail.removeChangeListener (this);
     deleteAndZero(trackNumberLbl);
+    deleteAndZero(filenameLbl);
 
     for(int i = 0; i < channelButtonArray.size(); ++i)
     {
@@ -60,6 +67,7 @@ void WaveformControl::setFile (const File& file)
     endTime = thumbnail.getTotalLength();
 
     // update filename label
+    filenameLbl->setText(file.getFileName(), false);
     currentFile = File(file);
 }
 
@@ -79,6 +87,7 @@ void WaveformControl::buttonClicked(Button *btn){
 void WaveformControl::updateChannelList(const Array<ChannelStrip> &chanArray)
 {
     channelsArray = Array<ChannelStrip>(chanArray);
+    int i = 0;  // for interating over loops
 
     // sanity check: make sure we actually
     // have an array to work with
@@ -88,7 +97,7 @@ void WaveformControl::updateChannelList(const Array<ChannelStrip> &chanArray)
         // as total number of channels may have decreased
         if(channelButtonArray.size() != 0){
             // TODO: check is deleteAndZero really necessary?
-            for(int i = 0; i < channelButtonArray.size(); ++i)
+            for(i = 0; i < channelButtonArray.size(); ++i)
             {
                 DrawableButton *tempBtn = channelButtonArray[i];
                 deleteAndZero(tempBtn);
@@ -97,16 +106,18 @@ void WaveformControl::updateChannelList(const Array<ChannelStrip> &chanArray)
         }
 
         // (re)add the updated channel spec
-        for(int i = 0; i < channelsArray.size(); ++i)
+        for(i = 0; i < channelsArray.size(); ++i)
         {
             DrawableButton *tempBtn = new DrawableButton("button" + String(i), DrawableButton::ImageRaw);
             channelButtonArray.add(tempBtn);
             addAndMakeVisible(channelButtonArray[i]);
-            channelButtonArray[i]->setBounds(50 + i*15, 0, 15, 10);
+            channelButtonArray[i]->setBounds(15 + i*15, 0, 15, 15);
             channelButtonArray[i]->addListener(this);
             channelButtonArray[i]->setBackgroundColours(channelsArray[i].getColour(),
                                                         channelsArray[i].getColour());
         }
+
+        filenameLbl->setBounds((i+1)*15, 0, 500, 15);
 
         // reset channel to first channel just in case 
         // old channel setting no longer exists
@@ -193,11 +204,6 @@ void WaveformControl::paint(Graphics& g)
 
         //thumbnail.drawChannels (g, getLocalBounds().reduced (2, 2),
         //                        startTime, endTime, 1.0f);
-
-        g.setFont (16.0f);
-        g.setColour(Colours::black);
-        g.drawFittedText (String(currentFile.getFileName()), 0, 0, getWidth(), getHeight(),
-                            Justification::centred, 2);
     }
     else
     {

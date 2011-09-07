@@ -45,7 +45,7 @@ public:
 
 private:
 
-    Label *trackNumberLbl;
+    Label *trackNumberLbl, *filenameLbl;
     Array<DrawableButton*> channelButtonArray;
 
     // number of output channels available

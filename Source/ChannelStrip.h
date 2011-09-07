@@ -1,15 +1,15 @@
 /*
   ==============================================================================
 
-    ChannelStrip
-    Created: 7 Sep 2011 5:09:34pm
+    ChannelStrip.h
+    Created: 7 Sep 2011 9:35:22pm
     Author:  Hemmer
 
   ==============================================================================
 */
 
-#ifndef __CHANNELSTRIP_85BD3C77__
-#define __CHANNELSTRIP_85BD3C77__
+#ifndef __CHANNELSTRIP_H_B6000B1__
+#define __CHANNELSTRIP_H_B6000B1__
 
 
 class ChannelStrip {
@@ -26,10 +26,6 @@ public:
     {
     }
 
-    //ChannelStrip & operator=(const ChannelStrip &other){
-
-    //}
-
     Colour getColour() const { return channelColour; }
     int getChannelNum() const { return channelNumber; }
 
@@ -39,4 +35,5 @@ private:
 };
 
 
-#endif  // __CHANNELSTRIP_85BD3C77__
+
+#endif  // __CHANNELSTRIP_H_B6000B1__
