@@ -94,6 +94,9 @@ public:
 
 private:
     //==============================================================================
+
+    //void addNewSample();
+
     AudioSampleBuffer delayBuffer;
     int delayPosition;
 

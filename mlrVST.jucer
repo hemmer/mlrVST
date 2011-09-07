@@ -23,6 +23,7 @@
                    osxSDK="default" osxCompatibility="default" osxArchitecture="default"/>
   </CONFIGURATIONS>
   <MAINGROUP id="dYAMo6Ykd" name="mlrVST">
+    <FILE id="LYNZT" name="ChannelStrip" compile="0" resource="1" file="Source/ChannelStrip"/>
     <FILE id="V4lM8" name="WaveformControl.cpp" compile="1" resource="0"
           file="Source/WaveformControl.cpp"/>
     <FILE id="Vwhx63" name="WaveformControl.h" compile="0" resource="0"

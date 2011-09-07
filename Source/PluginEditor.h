@@ -39,10 +39,13 @@ public:
     //void mouseDown(const MouseEvent&);
     void recieveFileSelection(const int &waveformID, const int &fileID);
 
+    // just for debuggin
+    void debugMe(String str);
+
     Array<File> getLoadedFiles();
 
 private:
-    Label *infoLabel, *delayLabel, *helloLabel, *logoLabel;
+    Label *infoLabel, *delayLabel, *helloLabel, *logoLabel, *debugLabel;
     Slider *delaySlider;
 	DrawableButton *loadButton;
 
@@ -51,10 +54,19 @@ private:
 
 	AudioFormatManager formatManager;
 
-	Array<WaveformControl*> waveformArray;
+	// Store the waveform controls/strips in array. 
+    // For a standard monome64 this is 7
+    Array<WaveformControl*> waveformArray;
+    const int numStrips;
+
+    // this is the number of seperate channels
+    // i.e. the number of simultaneous samples
+    // that can be played at once
 	const int numChannels;
-    static const int GUI_HEIGHT = 400;
-    static const int GUI_WIDTH = 500;
+    Array<ChannelStrip> channelsArray;
+
+    static const int GUI_HEIGHT = 700;
+    static const int GUI_WIDTH = 600;
 
     AudioPlayHead::CurrentPositionInfo lastDisplayedPosition;
 

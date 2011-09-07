@@ -91,7 +91,7 @@ public:
             {
                 while (--numSamples >= 0)
                 {
-                    const float currentSample = (float) (sin (currentAngle) * level * tailOff);
+                    const float currentSample = (float) (sin(currentAngle) * level * tailOff);
 
                     for (int i = outputBuffer.getNumChannels(); --i >= 0;)
                         *outputBuffer.getSampleData (i, startSample) += currentSample;
@@ -130,6 +130,17 @@ private:
     double currentAngle, angleDelta, level, tailOff;
 };
 
+// SAMPLERZ
+//class MySampleSound : public SamplerSound
+//{
+//public:
+//    MySampleSound()
+//    {
+//
+//    }
+//
+//};
+
 
 //==============================================================================
 mlrVSTAudioProcessor::mlrVSTAudioProcessor()
@@ -146,11 +157,32 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor()
     delayPosition = 0;
 
     // Initialise the synth...
-    for (int i = 8; --i >= 0;)
+    for (int i = 4; --i >= 0;)
         synth.addVoice (new SineWaveVoice());   // These voices will play our custom sine-wave sounds..
 
     synth.addSound (new SineWaveSound());
 }
+
+//void mlrVSTAudioProcessor::addNewSample(){
+//
+//    WavAudioFormat wavFormat;
+//    ScopedPointer<AudioFormatReader> audioReader(wavFormat.createReaderFor(
+//                                                 new MemoryInputStream (BinaryData::cello_wav,
+//                                                                        BinaryData::cello_wavSize, false),
+//                                                                        true));
+//
+//   BigInteger allNotes;
+//   allNotes.setRange(0, 128, true);
+//
+//   synth.addSound(new SamplerSound("demo sound", *audioReader, allNotes,
+//                                   74,   // root midi note
+//                                   0.1,  // attack time
+//                                   0.1,  // release time
+//                                   10.0  // maximum sample length
+//                                   ));
+//
+//    
+//}
 
 mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
 {
@@ -238,9 +270,8 @@ void mlrVSTAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& 
     for (channel = 0; channel < getNumInputChannels(); ++channel)
         buffer.applyGain (channel, 0, buffer.getNumSamples(), gain);
 
-    // Now pass any incoming midi messages to our keyboard state object, and let it
-    // add messages to the buffer if the user is clicking on the on-screen keys
-    keyboardState.processNextMidiBuffer (midiMessages, 0, numSamples, true);
+    // NOT USING ONSCREEN KEYBOARD
+    // keyboardState.processNextMidiBuffer (midiMessages, 0, numSamples, true);
 
     // and now get the synth to process these midi events and generate its output.
     synth.renderNextBlock (buffer, midiMessages, 0, numSamples);

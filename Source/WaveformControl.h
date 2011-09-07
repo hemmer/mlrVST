@@ -15,13 +15,17 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
+#include "ChannelStrip.h"
+
+//class ChannelStrip;
 
 class WaveformControl  : public Component,
                          public ChangeListener,
+                         public ButtonListener,
                          public FileDragAndDropTarget
 {
 public:
-    WaveformControl(const Colour&, const int&);
+    WaveformControl(const int &id, const Array<ChannelStrip> &channelsArray);
 	~WaveformControl();
 
     void setFile (const File& file);
@@ -31,21 +35,36 @@ public:
 
     void paint (Graphics& g);
     void changeListenerCallback (ChangeBroadcaster*);
+    void buttonClicked(Button *btn);
 
     bool isInterestedInFileDrag (const StringArray& /*files*/);
     void filesDropped (const StringArray& files, int /*x*/, int /*y*/);
 
 
 private:
-	Colour backgroundColour;
-    Label *trackInfo;
 
+    Label *trackNumberLbl;
+    Array<DrawableButton*> channelButtonArray;
+
+    // number of output channels available
+    //const int numChannels;
+    // which channel audio is currently going to
+    int currentChannel;
+    // 
+    const Array<ChannelStrip> &channelsArray;
+
+    // which strip we are representing
     int waveformID;
 
+    // stuff for drawing waveforms
     AudioFormatManager formatManager;
     AudioThumbnailCache thumbnailCache;
     AudioThumbnail thumbnail;
     double startTime, endTime;
+    // main background colour
+    Colour backgroundColour;
+
+    File currentFile;
 };
 
 
