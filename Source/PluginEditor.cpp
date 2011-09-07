@@ -14,18 +14,15 @@
 //==============================================================================
 mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter)
     : AudioProcessorEditor (ownerFilter),
-      infoLabel(0),
-	  helloLabel(0),
-      logoLabel(0),
-      delayLabel(0),
-      delaySlider(0),
+      infoLabel(0), helloLabel(0), logoLabel(0), delayLabel(0),
+      delaySlider(0), gainSlider(0),
 	  loadButton(0),
 	  waveformArray(),
 	  numChannels(4),
       numStrips(7),
 	  loadedFiles(),
-      debugLabel(0), debugButton(0),
-      channelsArray()
+      debugLabel(0), debugButton(0),    // debugging stuff
+      channelsArray(), slidersArray()
 {
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
@@ -42,8 +39,16 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	helloLabel->setBounds(350, 150, 100, 100);
 	helloLabel->setColour(Label::backgroundColourId, Colours::bisque);
 
+    // add some sliders..
+    addAndMakeVisible(gainSlider = new Slider("gain"));
+    gainSlider->setSliderStyle(Slider::LinearVertical);
+    gainSlider->addListener(this);
+    gainSlider->setRange(0.0, 1.0, 0.01);
+    gainSlider->setBounds(350, 500, 30, 150);
+    gainSlider->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
+
     addAndMakeVisible(delaySlider = new Slider("delay"));
-	delaySlider->setSliderStyle(Slider::LinearHorizontal);
+	delaySlider->setSliderStyle(Slider::LinearVertical);
     delaySlider->addListener(this);
     delaySlider->setRange(0.0, 1.0, 0.01);
 	delaySlider->setValue(0.02);
@@ -84,12 +89,27 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     channelsArray.add(ChannelStrip(Colour( 33,  61,  75), 3));
     channelsArray.add(ChannelStrip(Colour(250, 241, 162), 4));
 
+    // add waveform strips
     for(int i = 0; i < numStrips; ++i){
         waveformArray.add(new WaveformControl(i, channelsArray));
         waveformArray[i]->setBounds(30, 80 + i * 80, 300, 75);
         addAndMakeVisible( waveformArray[i] );
 	}
 
+    // programmitcally add volume controls
+    for(int i = 0; i < channelsArray.size(); ++i)
+    {
+        Slider *tempSlider = new Slider("channel " + String(i) + " vol");
+        slidersArray.add(tempSlider);
+        addAndMakeVisible(slidersArray[i]);
+        slidersArray[i]->setSliderStyle(Slider::LinearVertical);
+        slidersArray[i]->addListener(this);
+        slidersArray[i]->setRange(0.0, 1.0, 0.01);
+        slidersArray[i]->setValue(0.8);
+        slidersArray[i]->setBounds(380 + i*30, 500, 30, 150);
+        slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
+        slidersArray[i]->setColour(Slider::backgroundColourId, channelsArray[i].getColour());
+    }
     
     OldSchoolLookAndFeel oldLookAndFeel;
     LookAndFeel::setDefaultLookAndFeel(&oldLookAndFeel);
@@ -106,10 +126,19 @@ mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
     deleteAndZero(helloLabel);
     deleteAndZero(logoLabel);
     deleteAndZero(debugLabel);
-    deleteAndZero(debugButton);
+    // sliders
     deleteAndZero(delaySlider);
+    deleteAndZero(gainSlider);
+    // programatically remove volume controls
+    for(int i = 0; i < slidersArray.size(); ++i)
+    {
+        Slider *tempSlider = slidersArray[i];
+        deleteAndZero(tempSlider);
+    }
+
+    // buttons
     deleteAndZero(loadButton);
-        
+    deleteAndZero(debugButton);        
 }
 
 void mlrVSTAudioProcessorEditor::debugMe(String str)
@@ -155,7 +184,15 @@ void mlrVSTAudioProcessorEditor::timerCallback()
 // This is our Slider::Listener callback, when the user drags a slider.
 void mlrVSTAudioProcessorEditor::sliderValueChanged (Slider* slider)
 {
-    if (slider == delaySlider)
+    if (slider == gainSlider)
+    {
+        // It's vital to use setParameterNotifyingHost to change any parameters that are automatable
+        // by the host, rather than just modifying them directly, otherwise the host won't know
+        // that they've changed.
+        getProcessor()->setParameterNotifyingHost (mlrVSTAudioProcessor::gainParam,
+                                                   (float) gainSlider->getValue());
+    }
+    else if (slider == delaySlider)
     {
         getProcessor()->setParameterNotifyingHost (mlrVSTAudioProcessor::delayParam,
                                                    (float) delaySlider->getValue());
