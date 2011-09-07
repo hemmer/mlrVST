@@ -40,6 +40,8 @@ public:
     bool isInterestedInFileDrag (const StringArray& /*files*/);
     void filesDropped (const StringArray& files, int /*x*/, int /*y*/);
 
+    // if the number of channels changes, we can update the strips
+    void updateChannelList(const Array<ChannelStrip> &channelsArray);
 
 private:
 
@@ -50,8 +52,8 @@ private:
     //const int numChannels;
     // which channel audio is currently going to
     int currentChannel;
-    // 
-    const Array<ChannelStrip> &channelsArray;
+    // store channels information
+    Array<ChannelStrip> channelsArray;
 
     // which strip we are representing
     int waveformID;

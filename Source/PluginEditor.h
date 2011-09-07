@@ -47,7 +47,7 @@ public:
 private:
     Label *infoLabel, *delayLabel, *helloLabel, *logoLabel, *debugLabel;
     Slider *delaySlider;
-	DrawableButton *loadButton;
+	DrawableButton *loadButton, *debugButton;
 
 	Array<File> loadedFiles;
 	ListBox fileList;

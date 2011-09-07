@@ -16,14 +16,14 @@ Custom component to display a waveform (corresponding to an mlr row)
 WaveformControl::WaveformControl(const int &id, const Array<ChannelStrip> &chanArray) :
     	thumbnailCache(5),
         thumbnail(512, formatManager, thumbnailCache),
-        backgroundColour(channelsArray[currentChannel].getColour()),
+        backgroundColour(Colours::black),
         trackNumberLbl(0),
         waveformID(id),
         currentFile(),
         //numChannels(channelsArray.size()),
         currentChannel(0),
         channelButtonArray(),
-        channelsArray(chanArray)
+        channelsArray()
 {
     Rectangle<int> waveformShape = getBoundsInParent();
 
@@ -37,24 +37,19 @@ WaveformControl::WaveformControl(const int &id, const Array<ChannelStrip> &chanA
     trackNumberLbl->setColour(Label::textColourId, Colours::white);
     trackNumberLbl->setFont(10.0f);
 
-    jassert(channelsArray.size() == 4)
-
-    for(int i = 0; i < channelsArray.size(); ++i)
-    {
-        DrawableButton *tempBtn = new DrawableButton("button" + String(i), DrawableButton::ImageRaw);
-        channelButtonArray.add(tempBtn);
-        addAndMakeVisible(channelButtonArray[i]);
-        channelButtonArray[i]->setBounds(50 + i*15, 0, 15, 10);
-        channelButtonArray[i]->addListener(this);
-        channelButtonArray[i]->setBackgroundColours(channelsArray[i].getColour(),
-                                                    channelsArray[i].getColour());
-    }
+    updateChannelList(chanArray);
 }
 
 WaveformControl::~WaveformControl()
 {
     thumbnail.removeChangeListener (this);
     deleteAndZero(trackNumberLbl);
+
+    for(int i = 0; i < channelButtonArray.size(); ++i)
+    {
+        DrawableButton *tempBtn = channelButtonArray[i];
+        deleteAndZero(tempBtn);
+    }
 }
 
 // update the thumbnail to reflect a new choice of file
@@ -77,6 +72,51 @@ void WaveformControl::buttonClicked(Button *btn){
         }
     }
 }
+
+
+// Used to (re)add Buttons to control the switching channels.
+// Useful if we want to change the total number of channels at runtime.
+void WaveformControl::updateChannelList(const Array<ChannelStrip> &chanArray)
+{
+    channelsArray = Array<ChannelStrip>(chanArray);
+
+    // sanity check: make sure we actually
+    // have an array to work with
+    if(channelsArray.size() != 0)
+    {
+        // if there are existing buttons, remove them first
+        // as total number of channels may have decreased
+        if(channelButtonArray.size() != 0){
+            // TODO: check is deleteAndZero really necessary?
+            for(int i = 0; i < channelButtonArray.size(); ++i)
+            {
+                DrawableButton *tempBtn = channelButtonArray[i];
+                deleteAndZero(tempBtn);
+            }
+            channelButtonArray.clear();
+        }
+
+        // (re)add the updated channel spec
+        for(int i = 0; i < channelsArray.size(); ++i)
+        {
+            DrawableButton *tempBtn = new DrawableButton("button" + String(i), DrawableButton::ImageRaw);
+            channelButtonArray.add(tempBtn);
+            addAndMakeVisible(channelButtonArray[i]);
+            channelButtonArray[i]->setBounds(50 + i*15, 0, 15, 10);
+            channelButtonArray[i]->addListener(this);
+            channelButtonArray[i]->setBackgroundColours(channelsArray[i].getColour(),
+                                                        channelsArray[i].getColour());
+        }
+
+        // reset channel to first channel just in case 
+        // old channel setting no longer exists
+        currentChannel = 0;
+        backgroundColour = channelsArray[currentChannel].getColour();
+        // let the UI know
+        repaint();
+    }
+}
+
 
 void WaveformControl::setZoomFactor (double amount)
 {
@@ -178,7 +218,7 @@ bool WaveformControl::isInterestedInFileDrag (const StringArray& /*files*/)
     return true;
 }
 
-void WaveformControl::filesDropped (const StringArray& files, int /*x*/, int /*y*/)
+void WaveformControl::filesDropped (const StringArray& /*files*/, int /*x*/, int /*y*/)
 {
     //mlrVSTAudioProcessorEditor* demoPage = findParentComponentOfClass ((mlrVSTAudioProcessorEditor*) 0);
 

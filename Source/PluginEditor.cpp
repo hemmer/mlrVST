@@ -24,6 +24,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	  numChannels(4),
       numStrips(7),
 	  loadedFiles(),
+      debugLabel(0), debugButton(0),
       channelsArray()
 {
     setSize(GUI_WIDTH, GUI_HEIGHT);
@@ -34,6 +35,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	logoLabel->setColour(Label::backgroundColourId, Colours::black);
     logoLabel->setColour(Label::textColourId, Colours::white);
     logoLabel->setJustificationType(Justification::bottomRight);
+    logoLabel->setFont(30.0f);
 	
 	// test label
 	addAndMakeVisible(helloLabel = new Label("", "Hello"));
@@ -65,16 +67,16 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     infoLabel->setColour (Label::textColourId, Colours::black);
 	infoLabel->setBounds (10, getHeight() - 25, 400, 25);
 
+    // useful UI debuggin components
     addAndMakeVisible(debugLabel = new Label());
     debugLabel->setColour(Label::textColourId, Colours::black);
 	debugLabel->setBounds(10, 80, 400, 25);
+    addAndMakeVisible(debugButton = new DrawableButton("loadfile", DrawableButton::ImageRaw));
+	debugButton->addListener(this);
+	debugButton->setBackgroundColours(Colours::blue, Colours::black);
+	debugButton->setBounds(400, 300, 50, 25);
 
-	Array<Colour> bgCols = Array<Colour>();
-	bgCols.add(Colour(226,70,45));
-    bgCols.add(Colour(106,22,37));
-    bgCols.add(Colour(73,108,104));
-    bgCols.add(Colour(33,61,75));
-	
+
     // manually add channels (TODO automate this)
     channelsArray.add(ChannelStrip(Colour(226,  70,  45), 0));
     channelsArray.add(ChannelStrip(Colour(106,  22,  37), 1));
@@ -104,6 +106,7 @@ mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
     deleteAndZero(helloLabel);
     deleteAndZero(logoLabel);
     deleteAndZero(debugLabel);
+    deleteAndZero(debugButton);
     deleteAndZero(delaySlider);
     deleteAndZero(loadButton);
         
@@ -163,7 +166,8 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged (Slider* slider)
 void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 {
     // Manually load a file
-	if(btn == loadButton){
+	if(btn == loadButton)
+    {
 
 		FileChooser myChooser ("Please choose a file:", File::getSpecialLocation(File::userDesktopDirectory), "*.wav");
 		if(myChooser.browseForFileToOpen())
@@ -183,6 +187,18 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 			helloLabel->setText(str, false);
 		}
 	}
+    else if(btn = debugButton)
+    {
+        channelsArray.clear();
+        channelsArray.add(ChannelStrip(Colour(226,  70,  45), 0));
+        channelsArray.add(ChannelStrip(Colour(106,  22,  37), 1));
+        channelsArray.add(ChannelStrip(Colour( 73, 108, 104), 2));
+
+        for(int i = 0; i < waveformArray.size(); ++i)
+        {
+            waveformArray[i]->updateChannelList(channelsArray);
+	    }
+    }
 }
 
 static const String timeToTimecodeString (const double seconds)

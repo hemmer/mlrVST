@@ -35,7 +35,7 @@ public:
 
 private:
     Colour channelColour;
-    const int channelNumber;
+    int channelNumber;
 };
 
 
