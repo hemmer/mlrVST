@@ -17,8 +17,9 @@
 //==============================================================================
 mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     delayBuffer (2, 12000),
-    myChannel(0),
-    samplePool()    // sample pool is initially empty
+    channelProcessorArray(),
+    samplePool(),    // sample pool is initially empty
+    numChannels(1)
 {
     // Set up some default values..
     gain = 1.0f;
@@ -42,21 +43,35 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     ScopedPointer<AudioFormatReader> audioReader(wavFormat.createReaderFor(
                                                  new FileInputStream(testFile), true));
 
-   BigInteger allNotes;
-   allNotes.setRange(0, 128, true);
+    BigInteger allNotes;
+    allNotes.setRange(0, 128, true);
 
-   synth.addSound(new ZamplerSound("demo sound", *audioReader, allNotes,
+    synth.addSound(new ZamplerSound("demo sound", *audioReader, allNotes,
                                    74,   // root midi note
                                    0.05,  // attack time
                                    0.1,  // release time
                                    10.0  // maximum sample length
                                    ));
 
-   //AudioSample testSample = AudioSample(testFile);
+    
+   // add basic sample to pool
    samplePool.addIfNotAlreadyThere(new AudioSample(testFile));
-   AudioSample* testSample = samplePool.getUnchecked(0);
-   myChannel.setCurrentSample(*testSample);
-   
+
+   buildChannelProcessorArray();
+
+}
+
+void mlrVSTAudioProcessor::buildChannelProcessorArray()
+{
+    AudioSample* testSample = samplePool.getUnchecked(0);
+
+    // add the list of channels 
+    for(int c = 0; c < numChannels; c++)
+    {
+        ChannelProcessor tempChannelProcessor(c);
+        tempChannelProcessor.setCurrentSample(*testSample);
+        channelProcessorArray.add(&tempChannelProcessor);
+    }
 }
 
 mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
@@ -145,16 +160,17 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
     //for (channel = 0; channel < getNumInputChannels(); ++channel)
     //    buffer.applyGain (channel, 0, buffer.getNumSamples(), gain);
 
-    // NOT USING ONSCREEN KEYBOARD
-    // keyboardState.processNextMidiBuffer (midiMessages, 0, numSamples, true);
-
+    // NOT USING
     // and now get the synth to process these midi events and generate its output.
     //synth.renderNextBlock (buffer, midiMessages, 0, numSamples);
 
     // for each channel, add its contributions
     // Remember to set the correct sample
-    myChannel.renderNextBlock(buffer, midiMessages, 0, numSamples);
-
+    for(int c = 0; c < numChannels; c++)
+    {
+        ChannelProcessor *temp = channelProcessorArray[c];
+        temp->renderNextBlock(buffer, midiMessages, 0, numSamples);
+    }
 
     // Apply our delay effect to the new output..
     for (channel = 0; channel < getNumInputChannels(); ++channel)

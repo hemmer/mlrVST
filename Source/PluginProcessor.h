@@ -110,7 +110,11 @@ private:
     Zynth synth;
 
     // eventually this will be an array for all the channels
-    ChannelProcessor myChannel; 
+    int numChannels;
+    // store pointers to ChannelProcessors
+    Array<ChannelProcessor*> channelProcessorArray; 
+
+    void buildChannelProcessorArray();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTAudioProcessor);
 };
