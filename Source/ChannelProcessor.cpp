@@ -16,7 +16,8 @@ ChannelProcessor::ChannelProcessor(const int &channelIDNo) :
     channelIDNumber(channelIDNo),
     currentSample(0),
     sampleStartPosition(0),
-    isPlaying(false)
+    isPlaying(false),
+    isSampleReversed(false)
 {
 
 }
@@ -47,7 +48,7 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
         if(noteNumber >= 60 && noteNumber <= 67)
         {
             noteNumber -= 60;
-            startSamplePlaying(noteNumber, 1500);
+            startSamplePlaying(noteNumber, 15000);
         }
     }
     else if (m.isNoteOff())

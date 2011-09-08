@@ -80,6 +80,14 @@ public:
     // The lets the ChannelProcessor know which sample to read
     void setCurrentSample(const AudioSample &currentSample);
 
+    //==========================================
+    /**  LOOP_FULL              - loop back to sample start once finished
+         LOOP_FULL_WHILE_HELD   - loop back to sample start once
+                                  finished though only if button still held
+         PLAY_TO_END            - play from current position to end of sample
+         LOOP_BLOCK             - loop the current block while held
+    */
+    enum PlayMode{ LOOP_FULL, LOOP_BLOCK, PLAY_TO_END };
 private:
 
     // each channel has an individual ID
@@ -96,7 +104,7 @@ private:
     int sampleCurrentPosition;
 
     // status of sample playback
-    bool isInAttack, isInRelease, isPlaying;
+    bool isInAttack, isInRelease, isPlaying, isSampleReversed;
 
     void handleMidiEvent(const MidiMessage& m);
 

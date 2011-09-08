@@ -52,10 +52,10 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
                                    10.0  // maximum sample length
                                    ));
 
-   const AudioSample testSample = AudioSample(testFile);
-   samplePool.addIfNotAlreadyThere(testSample);
-
-   myChannel.setCurrentSample(testSample);
+   //AudioSample testSample = AudioSample(testFile);
+   samplePool.addIfNotAlreadyThere(new AudioSample(testFile));
+   AudioSample* testSample = samplePool.getUnchecked(0);
+   myChannel.setCurrentSample(*testSample);
    
 }
 
@@ -149,10 +149,11 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
     // keyboardState.processNextMidiBuffer (midiMessages, 0, numSamples, true);
 
     // and now get the synth to process these midi events and generate its output.
-    synth.renderNextBlock (buffer, midiMessages, 0, numSamples);
+    //synth.renderNextBlock (buffer, midiMessages, 0, numSamples);
 
     // for each channel, add its contributions
-    // channel.renderNextBlock(buffer, midiMessages, 0, numSamples, samplePool);
+    // Remember to set the correct sample
+    myChannel.renderNextBlock(buffer, midiMessages, 0, numSamples);
 
 
     // Apply our delay effect to the new output..

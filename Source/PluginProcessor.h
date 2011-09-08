@@ -101,7 +101,7 @@ private:
     //==============================================================================
 
     // store array of samplePool objects
-    Array<AudioSample> samplePool;
+    Array<AudioSample*> samplePool;
 
     AudioSampleBuffer delayBuffer;
     int delayPosition;

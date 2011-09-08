@@ -97,7 +97,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     gainSlider->setSliderStyle(Slider::LinearVertical);
     gainSlider->addListener(this);
     gainSlider->setRange(0.0, 1.0, 0.01);
-    gainSlider->setValue(0.8);
+    gainSlider->setValue(0.05);
     gainSlider->setBounds(350, 500, 30, 150);
     gainSlider->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
 
