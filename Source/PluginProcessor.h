@@ -106,13 +106,11 @@ private:
     AudioSampleBuffer delayBuffer;
     int delayPosition;
 
-    // the synth!
-    Zynth synth;
-
     // eventually this will be an array for all the channels
     int numChannels;
     // store pointers to ChannelProcessors
     Array<ChannelProcessor*> channelProcessorArray; 
+    ChannelProcessor myChannel;
 
     void buildChannelProcessorArray();
 

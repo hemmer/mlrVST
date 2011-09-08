@@ -13,6 +13,6 @@ HIGH PRIORTIY
 - use static types for adding IDs
 - Allow MIDI clips too
 	- Have AudioSample subclass Sample to allow MIDISample
-
+- arpeggio mode, hold down button sequence to trigger blocks in that order
 
 LOW PRIORTIY

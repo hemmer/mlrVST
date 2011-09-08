@@ -19,7 +19,8 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     delayBuffer (2, 12000),
     channelProcessorArray(),
     samplePool(),    // sample pool is initially empty
-    numChannels(1)
+    numChannels(1),
+    myChannel(1)
 {
     // Set up some default values..
     gain = 1.0f;
@@ -31,34 +32,13 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     lastPosInfo.resetToDefault();
     delayPosition = 0;
 
+    // add basic sample to pool
+    File testFile = File("C:\\Users\\Hemmer\\Desktop\\funky.wav");    
+    samplePool.addIfNotAlreadyThere(new AudioSample(testFile));
 
-    // Initialise the synth...
-    //for (int i = 4; --i >= 0;)
-    //{
-    synth.addVoice(new ZamplerVoice());
-    //}
-
-    File testFile = File("C:\\Users\\Hemmer\\Desktop\\1 3-Audio.wav");
-    WavAudioFormat wavFormat;
-    ScopedPointer<AudioFormatReader> audioReader(wavFormat.createReaderFor(
-                                                 new FileInputStream(testFile), true));
-
-    BigInteger allNotes;
-    allNotes.setRange(0, 128, true);
-
-    synth.addSound(new ZamplerSound("demo sound", *audioReader, allNotes,
-                                   74,   // root midi note
-                                   0.05,  // attack time
-                                   0.1,  // release time
-                                   10.0  // maximum sample length
-                                   ));
-
-    
-   // add basic sample to pool
-   samplePool.addIfNotAlreadyThere(new AudioSample(testFile));
-
-   buildChannelProcessorArray();
-
+    buildChannelProcessorArray();
+    AudioSample* testSample = samplePool.getUnchecked(0);
+    myChannel.setCurrentSample(*testSample);
 }
 
 void mlrVSTAudioProcessor::buildChannelProcessorArray()
@@ -132,7 +112,8 @@ void mlrVSTAudioProcessor::prepareToPlay (double sampleRate, int /*samplesPerBlo
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    synth.setCurrentPlaybackSampleRate (sampleRate);
+    // TODO: does ChannelProcessor need this?
+    //synth.setCurrentPlaybackSampleRate (sampleRate);
     keyboardState.reset();
     delayBuffer.clear();
 }
@@ -166,11 +147,13 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
     // for each channel, add its contributions
     // Remember to set the correct sample
-    for(int c = 0; c < numChannels; c++)
-    {
-        ChannelProcessor *temp = channelProcessorArray[c];
-        temp->renderNextBlock(buffer, midiMessages, 0, numSamples);
-    }
+    myChannel.renderNextBlock(buffer, midiMessages, 0, numSamples);
+    //for(int c = 0; c < numChannels; c++)
+    //for(int c = 0; c < channelProcessorArray.size(); c++)
+    //{
+    //    ChannelProcessor *temp = channelProcessorArray[c];
+    //    temp->renderNextBlock(buffer, midiMessages, 0, numSamples);
+    //}
 
     // Apply our delay effect to the new output..
     for (channel = 0; channel < getNumInputChannels(); ++channel)
