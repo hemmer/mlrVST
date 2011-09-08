@@ -15,6 +15,7 @@ Ideas / Upcoming Features
 - ADSR envelopes for samples (maybe make advanced options).
 - configurable number of channels
 - loop current block only on hold down button
+- Load MIDI tracks into stips
 
 
 
