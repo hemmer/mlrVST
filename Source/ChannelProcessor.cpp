@@ -21,7 +21,7 @@ ChannelProcessor::ChannelProcessor(const int &channelIDNo) :
 
 }
 
-void ChannelProcessor::setCurrentSample(AudioSample &newSample)
+void ChannelProcessor::setCurrentSample(const AudioSample &newSample)
 {
     currentSample = &newSample;
 }
@@ -29,6 +29,7 @@ void ChannelProcessor::setCurrentSample(AudioSample &newSample)
 void ChannelProcessor::startSamplePlaying(const int &block, const int &blockSize)
 {
     sampleStartPosition = block * blockSize;
+    sampleCurrentPosition = sampleStartPosition;
     isPlaying = true;
 }
 
@@ -36,6 +37,25 @@ void ChannelProcessor::stopSamplePlaying()
 {
     isPlaying = false;
 }
+
+
+void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
+{
+    if (m.isNoteOn())
+    {
+        int noteNumber = m.getNoteNumber();
+        if(noteNumber >= 60 && noteNumber <= 67)
+        {
+            noteNumber -= 60;
+            startSamplePlaying(noteNumber, 1500);
+        }
+    }
+    else if (m.isNoteOff())
+    {
+        stopSamplePlaying();
+    }
+}
+
 
 // processes a block of samples [startSample, startSample + numSamples]
 // TODO: eventually replace MIDIBuffer with MonomeDataBuffer
@@ -46,8 +66,8 @@ void ChannelProcessor::renderNextBlock(AudioSampleBuffer& outputBuffer,
 {
    
     // must set the sample rate before using this!
-    jassert (sampleRate != 0);
-
+    //jassert (sampleRate != 0);
+    
     const ScopedLock sl (lock);
 
     MidiBuffer::Iterator midiIterator(midiData);
@@ -70,7 +90,7 @@ void ChannelProcessor::renderNextBlock(AudioSampleBuffer& outputBuffer,
         if (numThisTime > 0)
         {
             // render the current section
-            renderSection(outputBuffer, startSample, numThisTime);
+            renderNextSection(outputBuffer, startSample, numThisTime);
         }
 
         if (useEvent)
@@ -84,13 +104,13 @@ void ChannelProcessor::renderNextBlock(AudioSampleBuffer& outputBuffer,
 
 
 
-void renderSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
+void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
 {
         if (currentSample != nullptr && isPlaying)
     {
-        // TODO: can remove a level of abstraction from here
+        // TODO: can we remove a level of abstraction from here?
         const float* const inL = currentSample->getAudioData()->getSampleData(0, 0);
-        const float* const inR = currentSample->getAudioData()->getNumChannels() > 1
+        const float* const inR = currentSample->getNumChannels() > 1
                                ? currentSample->getAudioData()->getSampleData(1, 0) : nullptr;
 
         float* outL = outputBuffer.getSampleData(0, startSample);
@@ -98,14 +118,14 @@ void renderSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamp
 
         while (--numSamples >= 0)
         {
-            const int pos = (int) sourceSamplePosition;
-            const float alpha = (float) (sourceSamplePosition - pos);
-            const float invAlpha = 1.0f - alpha;
-
+            // NEXT: what is sourceSamplePosition??????????????????
+            //const int pos = (int) sourceSamplePosition;
+            //const float alpha = (float) (sourceSamplePosition - pos);
+            //const float invAlpha = 1.0f - alpha;
             // just using a very simple linear interpolation here..
-            float l = (inL [pos] * invAlpha + inL [pos + 1] * alpha);
-            float r = (inR != nullptr) ? (inR [pos] * invAlpha + inR [pos + 1] * alpha)
-                                       : l;
+            //float l = (inL [pos] * invAlpha + inL [pos + 1] * alpha);
+            //float r = (inR != nullptr) ? (inR [pos] * invAlpha + inR [pos + 1] * alpha)
+            //                           : l;
 
             // we only have one velocity
             //l *= lgain;
@@ -138,7 +158,12 @@ void renderSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamp
             //    }
             //}
 
-            // if we have stereo samples
+
+            float l = inL[sampleCurrentPosition];
+            // if no right channel, clone in the left channel
+            float r = (inR != nullptr) ? inR[sampleCurrentPosition] : l;
+
+            // if we have stereo output avaiable 
             if (outR != nullptr)
             {
                 *outL++ += l;
@@ -146,14 +171,15 @@ void renderSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamp
             }
             else
             {
+                // else average the two channels
                 *outL++ += (l + r) * 0.5f;
             }
 
-            sourceSamplePosition += pitchRatio;
+            sampleCurrentPosition += 1;
 
-            if (sourceSamplePosition > playingSound->length)
+            if (sampleCurrentPosition > currentSample->getSampleLength())
             {
-                stopNote (false);
+                stopSamplePlaying();
                 break;
             }
         }

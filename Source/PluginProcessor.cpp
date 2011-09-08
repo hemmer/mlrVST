@@ -52,8 +52,11 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
                                    10.0  // maximum sample length
                                    ));
 
-   AudioSample test = AudioSample(testFile);
-   samplePool.add(test);
+   const AudioSample testSample = AudioSample(testFile);
+   samplePool.addIfNotAlreadyThere(testSample);
+
+   myChannel.setCurrentSample(testSample);
+   
 }
 
 mlrVSTAudioProcessor::~mlrVSTAudioProcessor()

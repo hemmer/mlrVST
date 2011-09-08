@@ -16,7 +16,7 @@ Ideas / Upcoming Features
 - configurable number of channels
 - loop current block only on hold down button
 - Load MIDI tracks into stips
-
+- Speed independent pitch control of samples
 
 
 Links of Interest

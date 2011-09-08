@@ -78,21 +78,32 @@ public:
     void stopSamplePlaying();
 
     // The lets the ChannelProcessor know which sample to read
-    void setCurrentSample(AudioSample &currentSample);
+    void setCurrentSample(const AudioSample &currentSample);
 
 private:
 
-    // each channel has 
+    // each channel has an individual ID
     const int channelIDNumber;
 
     // pointer to the current sample in the sample pool
-    AudioSample *currentSample;
+    // NOTE: "const" qualifier means we can't change the
+    // sample which this pointer points at
+    const AudioSample *currentSample;
 
-    // which part of the sample to start playing from (in samples)
+    // which position in the sample to start playing from (measured in samples)
     int sampleStartPosition;
+    // where we are in the sample at the moment
+    int sampleCurrentPosition;
 
     // status of sample playback
     bool isInAttack, isInRelease, isPlaying;
+
+    void handleMidiEvent(const MidiMessage& m);
+
+
+    //==============================================================================
+    /** This is used to control access to the rendering callback and the note trigger methods. */
+    CriticalSection lock;
 };
 
 

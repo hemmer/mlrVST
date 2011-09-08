@@ -13,17 +13,20 @@
 AudioSample::AudioSample(const File &sampleSource) :
     sampleFile(sampleSource),
     data(0),
-    sampleSampleRate(0)
+    sampleSampleRate(0.0),
+    sampleLength(0),
+    numChannels(0)
 {
 
     WavAudioFormat wavFormat;
     ScopedPointer<AudioFormatReader> audioReader(wavFormat.createReaderFor(
                                                  new FileInputStream(sampleSource), true));
 
-    int length = (int) audioReader->lengthInSamples;
+    sampleLength = (int) audioReader->lengthInSamples;
+    numChannels = audioReader->numChannels;
 
-    data = new AudioSampleBuffer(jmin(2, (int) audioReader->numChannels), length);
+    data = new AudioSampleBuffer(jmin(2, (int) audioReader->numChannels), sampleLength);
     sampleSampleRate = audioReader->sampleRate;
-    data->readFromAudioReader(audioReader, 0, length + 4, 0, true, true);
+    data->readFromAudioReader(audioReader, 0, sampleLength, 0, true, true);
 }
 
