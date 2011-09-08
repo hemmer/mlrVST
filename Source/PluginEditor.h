@@ -40,7 +40,7 @@ public:
     void recieveFileSelection(const int &waveformID, const int &fileID);
 
     // just for debuggin
-    void debugMe(String str);
+    void debugMe(const String str);
 
     Array<File> getLoadedFiles();
 

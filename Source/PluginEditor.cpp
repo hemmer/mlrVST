@@ -150,7 +150,7 @@ mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
     deleteAndZero(debugButton);        
 }
 
-void mlrVSTAudioProcessorEditor::debugMe(String str)
+void mlrVSTAudioProcessorEditor::debugMe(const String str)
 {
     debugLabel->setText(str, false);
 }

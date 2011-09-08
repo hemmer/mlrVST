@@ -157,32 +157,31 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor()
     delayPosition = 0;
 
     // Initialise the synth...
-    for (int i = 4; --i >= 0;)
-        synth.addVoice (new SineWaveVoice());   // These voices will play our custom sine-wave sounds..
+    //for (int i = 4; --i >= 0;)
+    //{
+      //  synth.addVoice(new SineWaveVoice());   // These voices will play our custom sine-wave sounds..
+    synth.addVoice(new SamplerVoice());
+    //}
 
-    synth.addSound (new SineWaveSound());
+//    synth.addSound (new SineWaveSound());
+
+    File testFile = File("C:\\Users\\Hemmer\\Desktop\\1 3-Audio.wav");
+    WavAudioFormat wavFormat;
+    ScopedPointer<AudioFormatReader> audioReader(wavFormat.createReaderFor(
+                                                 new FileInputStream(testFile), true));
+
+   BigInteger allNotes;
+   allNotes.setRange(0, 128, true);
+
+   synth.addSound(new SamplerSound("demo sound", *audioReader, allNotes,
+                                   74,   // root midi note
+                                   0.1,  // attack time
+                                   0.1,  // release time
+                                   10.0  // maximum sample length
+                                   ));
+
+    
 }
-
-//void mlrVSTAudioProcessor::addNewSample(){
-//
-//    WavAudioFormat wavFormat;
-//    ScopedPointer<AudioFormatReader> audioReader(wavFormat.createReaderFor(
-//                                                 new MemoryInputStream (BinaryData::cello_wav,
-//                                                                        BinaryData::cello_wavSize, false),
-//                                                                        true));
-//
-//   BigInteger allNotes;
-//   allNotes.setRange(0, 128, true);
-//
-//   synth.addSound(new SamplerSound("demo sound", *audioReader, allNotes,
-//                                   74,   // root midi note
-//                                   0.1,  // attack time
-//                                   0.1,  // release time
-//                                   10.0  // maximum sample length
-//                                   ));
-//
-//    
-//}
 
 mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
 {
