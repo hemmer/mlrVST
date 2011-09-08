@@ -266,9 +266,9 @@ void mlrVSTAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& 
     const int numSamples = buffer.getNumSamples();
     int channel, dp = 0;
 
-    // Go through the incoming data, and apply our gain to it...
-    for (channel = 0; channel < getNumInputChannels(); ++channel)
-        buffer.applyGain (channel, 0, buffer.getNumSamples(), gain);
+    //// Go through the incoming data, and apply our gain to it...
+    //for (channel = 0; channel < getNumInputChannels(); ++channel)
+    //    buffer.applyGain (channel, 0, buffer.getNumSamples(), gain);
 
     // NOT USING ONSCREEN KEYBOARD
     // keyboardState.processNextMidiBuffer (midiMessages, 0, numSamples, true);
@@ -294,6 +294,11 @@ void mlrVSTAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& 
     }
 
     delayPosition = dp;
+
+    // Go through the outgoing data, and apply our master gain to it...
+    for (channel = 0; channel < getNumInputChannels(); ++channel)
+        buffer.applyGain(channel, 0, buffer.getNumSamples(), gain);
+
 
     // In case we have more outputs than inputs, we'll clear any output
     // channels that didn't contain input data, (because these aren't

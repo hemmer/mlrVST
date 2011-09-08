@@ -25,7 +25,7 @@ class WaveformControl  : public Component,
                          public FileDragAndDropTarget
 {
 public:
-    WaveformControl(const int &id, const Array<ChannelStrip> &channelsArray);
+    WaveformControl(const int &id, const Array<ChannelStrip> &channelArray);
 	~WaveformControl();
 
     void setFile (const File& file);
@@ -41,7 +41,7 @@ public:
     void filesDropped (const StringArray& files, int /*x*/, int /*y*/);
 
     // if the number of channels changes, we can update the strips
-    void updateChannelList(const Array<ChannelStrip> &channelsArray);
+    void updateChannelList(const Array<ChannelStrip> &channelArray);
 
 private:
 
@@ -53,7 +53,7 @@ private:
     // which channel audio is currently going to
     int currentChannel;
     // store channels information
-    Array<ChannelStrip> channelsArray;
+    Array<ChannelStrip> channelArray;
 
     // which strip we are representing
     int waveformID;

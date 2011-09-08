@@ -22,11 +22,11 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       numStrips(7),
 	  loadedFiles(),
       debugLabel(0), debugButton(0),    // debugging stuff
-      channelsArray(), slidersArray()
+      channelArray(), slidersArray()
 {
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
-    // test label
+    // add logo strip to top
 	addAndMakeVisible(logoLabel = new Label("", "mlrVST"));
     logoLabel->setBounds(0, 0, getWidth(), 30);
 	logoLabel->setColour(Label::backgroundColourId, Colours::black);
@@ -34,19 +34,9 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     logoLabel->setJustificationType(Justification::bottomRight);
     logoLabel->setFont(30.0f);
 	
-	// test label
-	addAndMakeVisible(helloLabel = new Label("", "Hello"));
-	helloLabel->setBounds(350, 150, 100, 100);
-	helloLabel->setColour(Label::backgroundColourId, Colours::bisque);
 
-    // add some sliders..
-    addAndMakeVisible(gainSlider = new Slider("gain"));
-    gainSlider->setSliderStyle(Slider::LinearVertical);
-    gainSlider->addListener(this);
-    gainSlider->setRange(0.0, 1.0, 0.01);
-    gainSlider->setBounds(350, 500, 30, 150);
-    gainSlider->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
 
+    // DELAY stuff (may eventually go)
     addAndMakeVisible(delaySlider = new Slider("delay"));
 	delaySlider->setSliderStyle(Slider::LinearVertical);
     delaySlider->addListener(this);
@@ -54,23 +44,22 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	delaySlider->setValue(0.02);
 	delaySlider->setBounds(350, 80, 150, 40);
 
-    addAndMakeVisible(loadButton = new DrawableButton("loadfile", DrawableButton::ImageRaw));
-	loadButton->setBounds(30, 50, 100, 30);
-	loadButton->addListener(this);
-	loadButton->setBackgroundColours(Colours::blue, Colours::black);
-
-	formatManager.registerBasicFormats();
-
-
     delayLabel = new Label("", "Delay:");
     delayLabel->attachToComponent(delaySlider, false);
     delayLabel->setFont (Font (11.0f));
 
 
+    // For manually loading files
+    addAndMakeVisible(loadButton = new DrawableButton("loadfile", DrawableButton::ImageRaw));
+	loadButton->setBounds(30, 50, 100, 30);
+	loadButton->addListener(this);
+	loadButton->setBackgroundColours(Colours::blue, Colours::black);
+
+
     // add a label that will display the current timecode and status..
     addAndMakeVisible(infoLabel = new Label());
-    infoLabel->setColour (Label::textColourId, Colours::black);
-	infoLabel->setBounds (10, getHeight() - 25, 400, 25);
+    infoLabel->setColour(Label::textColourId, Colours::black);
+	infoLabel->setBounds(10, getHeight() - 25, 400, 25);
 
     // useful UI debuggin components
     addAndMakeVisible(debugLabel = new Label());
@@ -80,24 +69,40 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	debugButton->addListener(this);
 	debugButton->setBackgroundColours(Colours::blue, Colours::black);
 	debugButton->setBounds(400, 300, 50, 25);
-
+    // another test label
+	addAndMakeVisible(helloLabel = new Label("", "Hello"));
+	helloLabel->setBounds(350, 150, 100, 100);
+	helloLabel->setColour(Label::backgroundColourId, Colours::bisque);
 
     // manually add channels (TODO automate this)
-    channelsArray.add(ChannelStrip(Colour(226,  70,  45), 0));
-    channelsArray.add(ChannelStrip(Colour(106,  22,  37), 1));
-    channelsArray.add(ChannelStrip(Colour( 73, 108, 104), 2));
-    channelsArray.add(ChannelStrip(Colour( 33,  61,  75), 3));
-    channelsArray.add(ChannelStrip(Colour(250, 241, 162), 4));
+    // possible adding ColourSets or similar
+    channelArray.add(ChannelStrip(Colour(226,  70,  45), 0));
+    channelArray.add(ChannelStrip(Colour(106,  22,  37), 1));
+    channelArray.add(ChannelStrip(Colour( 73, 108, 104), 2));
+    channelArray.add(ChannelStrip(Colour( 33,  61,  75), 3));
+    channelArray.add(ChannelStrip(Colour(250, 241, 162), 4));
 
     // add waveform strips
     for(int i = 0; i < numStrips; ++i){
-        waveformArray.add(new WaveformControl(i, channelsArray));
+        waveformArray.add(new WaveformControl(i, channelArray));
         waveformArray[i]->setBounds(30, 80 + i * 80, 300, 75);
         addAndMakeVisible( waveformArray[i] );
 	}
 
-    // programmitcally add volume controls
-    for(int i = 0; i < channelsArray.size(); ++i)
+    /////////////////////////////
+    // Add all volume controls //
+    /////////////////////////////
+    // Master volume
+    addAndMakeVisible(gainSlider = new Slider("gain"));
+    gainSlider->setSliderStyle(Slider::LinearVertical);
+    gainSlider->addListener(this);
+    gainSlider->setRange(0.0, 1.0, 0.01);
+    gainSlider->setValue(0.8);
+    gainSlider->setBounds(350, 500, 30, 150);
+    gainSlider->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
+
+    // Programmatically add group volume controls
+    for(int i = 0; i < channelArray.size(); ++i)
     {
         Slider *tempSlider = new Slider("channel " + String(i) + " vol");
         slidersArray.add(tempSlider);
@@ -108,11 +113,15 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
         slidersArray[i]->setValue(0.8);
         slidersArray[i]->setBounds(380 + i*30, 500, 30, 150);
         slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
-        slidersArray[i]->setColour(Slider::backgroundColourId, channelsArray[i].getColour());
+        slidersArray[i]->setColour(Slider::backgroundColourId, channelArray[i].getColour());
     }
+
+    formatManager.registerBasicFormats();
     
-    OldSchoolLookAndFeel oldLookAndFeel;
-    LookAndFeel::setDefaultLookAndFeel(&oldLookAndFeel);
+    // This doesn't seem to work
+    // TODO: Make custom look and feel
+    //OldSchoolLookAndFeel oldLookAndFeel;
+    //LookAndFeel::setDefaultLookAndFeel(&oldLookAndFeel);
 	
     startTimer (50);
 
@@ -227,14 +236,14 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
     else if(btn == debugButton)
     {
         // just a little test (REMEMBER TO REMOVE)
-        channelsArray.clear();
-        channelsArray.add(ChannelStrip(Colour(226,  70,  45), 0));
-        channelsArray.add(ChannelStrip(Colour(106,  22,  37), 1));
-        channelsArray.add(ChannelStrip(Colour( 73, 108, 104), 2));
+        channelArray.clear();
+        channelArray.add(ChannelStrip(Colour(226,  70,  45), 0));
+        channelArray.add(ChannelStrip(Colour(106,  22,  37), 1));
+        channelArray.add(ChannelStrip(Colour( 73, 108, 104), 2));
 
         for(int i = 0; i < waveformArray.size(); ++i)
         {
-            waveformArray[i]->updateChannelList(channelsArray);
+            waveformArray[i]->updateChannelList(channelArray);
 	    }
     }
 }

@@ -21,10 +21,10 @@ WaveformControl::WaveformControl(const int &id, const Array<ChannelStrip> &chanA
         filenameLbl(0),
         waveformID(id),
         currentFile(),
-        //numChannels(channelsArray.size()),
+        //numChannels(channelArray.size()),
         currentChannel(0),
         channelButtonArray(),
-        channelsArray()
+        channelArray()
 {
     Rectangle<int> waveformShape = getBoundsInParent();
 
@@ -74,7 +74,7 @@ void WaveformControl::setFile (const File& file)
 void WaveformControl::buttonClicked(Button *btn){
     for(int i = 0; i < channelButtonArray.size(); ++i){
         if(channelButtonArray[i] == btn){
-            backgroundColour = channelsArray[i].getColour();
+            backgroundColour = channelArray[i].getColour();
             currentChannel = i;
             repaint();
         }
@@ -86,12 +86,12 @@ void WaveformControl::buttonClicked(Button *btn){
 // Useful if we want to change the total number of channels at runtime.
 void WaveformControl::updateChannelList(const Array<ChannelStrip> &chanArray)
 {
-    channelsArray = Array<ChannelStrip>(chanArray);
+    channelArray = Array<ChannelStrip>(chanArray);
     int i = 0;  // for interating over loops
 
     // sanity check: make sure we actually
     // have an array to work with
-    if(channelsArray.size() != 0)
+    if(channelArray.size() != 0)
     {
         // if there are existing buttons, remove them first
         // as total number of channels may have decreased
@@ -106,15 +106,15 @@ void WaveformControl::updateChannelList(const Array<ChannelStrip> &chanArray)
         }
 
         // (re)add the updated channel spec
-        for(i = 0; i < channelsArray.size(); ++i)
+        for(i = 0; i < channelArray.size(); ++i)
         {
             DrawableButton *tempBtn = new DrawableButton("button" + String(i), DrawableButton::ImageRaw);
             channelButtonArray.add(tempBtn);
             addAndMakeVisible(channelButtonArray[i]);
             channelButtonArray[i]->setBounds(15 + i*15, 0, 15, 15);
             channelButtonArray[i]->addListener(this);
-            channelButtonArray[i]->setBackgroundColours(channelsArray[i].getColour(),
-                                                        channelsArray[i].getColour());
+            channelButtonArray[i]->setBackgroundColours(channelArray[i].getColour(),
+                                                        channelArray[i].getColour());
         }
 
         filenameLbl->setBounds((i+1)*15, 0, 500, 15);
@@ -122,7 +122,7 @@ void WaveformControl::updateChannelList(const Array<ChannelStrip> &chanArray)
         // reset channel to first channel just in case 
         // old channel setting no longer exists
         currentChannel = 0;
-        backgroundColour = channelsArray[currentChannel].getColour();
+        backgroundColour = channelArray[currentChannel].getColour();
         // let the UI know
         repaint();
     }
@@ -161,7 +161,7 @@ void WaveformControl::mouseDown(const MouseEvent &e){
             Array<File> loadedFiles = demoPage->getLoadedFiles();
 
             PopupMenu p = PopupMenu();
-
+            
             // TODO: if no popup item selected, 0 is returned selecting
             // the first file in the list
 
@@ -172,9 +172,9 @@ void WaveformControl::mouseDown(const MouseEvent &e){
             {
                 p.addItem(i, String(loadedFiles[i].getFileName()));
             }
-            int fileChoice = p.show();
+            int fileChoice = p.showMenu(PopupMenu::Options().withTargetComponent(filenameLbl));
             demoPage->recieveFileSelection(waveformID, fileChoice);
-            demoPage->debugMe(String(channelsArray[1].getChannelNum()));
+            demoPage->debugMe(String(channelArray[1].getChannelNum()));
         }
 
         // DO WE STORE A FILE OBJECT IN THE WAVEFORMCONTROL?

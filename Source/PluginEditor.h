@@ -63,7 +63,7 @@ private:
     // i.e. the number of simultaneous samples
     // that can be played at once
 	const int numChannels;
-    Array<ChannelStrip> channelsArray;
+    Array<ChannelStrip> channelArray;
     Array<Slider*> slidersArray;
     static const int GUI_HEIGHT = 700;
     static const int GUI_WIDTH = 600;
