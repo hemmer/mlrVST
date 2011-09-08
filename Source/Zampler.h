@@ -13,21 +13,21 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
-
+#include "Zynth.h"
 
 //==============================================================================
 /**
-    A subclass of SynthesiserSound that represents a sampled audio clip.
+    A subclass of ZynthSound that represents a sampled audio clip.
 
     This is based on the Sampler classes from the Juce Library but is renamed
     to the silly Zampler to avoid confusion!
 
-    To use it, create a Synthesiser, add some ZamplerVoice objects to it, then
+    To use it, create a Zynth, add some ZamplerVoice objects to it, then
     give it some ZamplerSound objects to play.
 
-    @see ZamplerVoice, Synthesiser, SynthesiserSound
+    @see ZamplerVoice, Zynth, ZynthSound
 */
-class JUCE_API  ZamplerSound    : public SynthesiserSound
+class JUCE_API  ZamplerSound    : public ZynthSound
 {
 public:
     //==============================================================================
@@ -40,7 +40,7 @@ public:
         @param source       the audio to load. This object can be safely deleted by the
                             caller after this constructor returns
         @param midiNotes    the set of midi keys that this sound should be played on. This
-                            is used by the SynthesiserSound::appliesToNote() method
+                            is used by the ZynthSound::appliesToNote() method
         @param midiNoteForNormalPitch   the midi note at which the sample should be played
                                         with its natural rate. All other notes will be pitched
                                         up or down relative to this one
@@ -92,14 +92,14 @@ private:
 
 //==============================================================================
 /**
-    A subclass of SynthesiserVoice that can play a ZamplerSound.
+    A subclass of ZynthVoice that can play a ZamplerSound.
 
-    To use it, create a Synthesiser, add some ZamplerVoice objects to it, then
+    To use it, create a Zynth, add some ZamplerVoice objects to it, then
     give it some SampledSound objects to play.
 
-    @see ZamplerSound, Synthesiser, SynthesiserVoice
+    @see ZamplerSound, Zynth, ZynthVoice
 */
-class JUCE_API  ZamplerVoice    : public SynthesiserVoice
+class JUCE_API  ZamplerVoice    : public ZynthVoice
 {
 public:
     //==============================================================================
@@ -112,11 +112,11 @@ public:
 
 
     //==============================================================================
-    bool canPlaySound (SynthesiserSound* sound);
+    bool canPlaySound (ZynthSound* sound);
 
     void startNote (const int midiNoteNumber,
                     const float velocity,
-                    SynthesiserSound* sound,
+                    ZynthSound* sound,
                     const int currentPitchWheelPosition);
 
     void stopNote (const bool allowTailOff);

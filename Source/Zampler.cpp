@@ -76,14 +76,14 @@ ZamplerVoice::~ZamplerVoice()
 {
 }
 
-bool ZamplerVoice::canPlaySound (SynthesiserSound* sound)
+bool ZamplerVoice::canPlaySound (ZynthSound* sound)
 {
     return dynamic_cast <const ZamplerSound*> (sound) != nullptr;
 }
 
 void ZamplerVoice::startNote (const int midiNoteNumber,
                               const float velocity,
-                              SynthesiserSound* s,
+                              ZynthSound* s,
                               const int /*currentPitchWheelPosition*/)
 {
     const ZamplerSound* const sound = dynamic_cast <const ZamplerSound*> (s);
@@ -154,13 +154,16 @@ void ZamplerVoice::renderNextBlock (AudioSampleBuffer& outputBuffer, int startSa
 
     if (playingSound != nullptr)
     {
+        // these are the sample input data
         const float* const inL = playingSound->data->getSampleData (0, 0);
         const float* const inR = playingSound->data->getNumChannels() > 1
                                     ? playingSound->data->getSampleData (1, 0) : nullptr;
 
+        // this is what we add the sample data to
         float* outL = outputBuffer.getSampleData (0, startSample);
         float* outR = outputBuffer.getNumChannels() > 1 ? outputBuffer.getSampleData (1, startSample) : nullptr;
 
+        // for all the samples we are required to cover
         while (--numSamples >= 0)
         {
             const int pos = (int) sourceSamplePosition;

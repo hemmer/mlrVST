@@ -13,9 +13,12 @@
 #include "Zampler.h"
 
 
+
 //==============================================================================
-mlrVSTAudioProcessor::mlrVSTAudioProcessor()
-    : delayBuffer (2, 12000)
+mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
+    delayBuffer (2, 12000),
+    myChannel(0),
+    samplePool()    // sample pool is initially empty
 {
     // Set up some default values..
     gain = 1.0f;
@@ -26,6 +29,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor()
 
     lastPosInfo.resetToDefault();
     delayPosition = 0;
+
 
     // Initialise the synth...
     //for (int i = 4; --i >= 0;)
@@ -48,7 +52,8 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor()
                                    10.0  // maximum sample length
                                    ));
 
-    
+   AudioSample test = AudioSample(testFile);
+   samplePool.add(test);
 }
 
 mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
@@ -128,7 +133,7 @@ void mlrVSTAudioProcessor::reset()
     delayBuffer.clear();
 }
 
-void mlrVSTAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
+void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
 {
     const int numSamples = buffer.getNumSamples();
     int channel, dp = 0;
@@ -142,6 +147,10 @@ void mlrVSTAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& 
 
     // and now get the synth to process these midi events and generate its output.
     synth.renderNextBlock (buffer, midiMessages, 0, numSamples);
+
+    // for each channel, add its contributions
+    // channel.renderNextBlock(buffer, midiMessages, 0, numSamples, samplePool);
+
 
     // Apply our delay effect to the new output..
     for (channel = 0; channel < getNumInputChannels(); ++channel)
@@ -172,6 +181,8 @@ void mlrVSTAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& 
     // guaranteed to be empty - they may contain garbage).
     for (int i = getNumInputChannels(); i < getNumOutputChannels(); ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
+
+
 
     // ask the host for the current time so we can display it...
     AudioPlayHead::CurrentPositionInfo newTime;

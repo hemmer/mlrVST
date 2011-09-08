@@ -13,7 +13,9 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
-
+#include "Zynth.h"
+#include "ChannelProcessor.h"
+#include "AudioSample.h"
 
 //==============================================================================
 /**
@@ -92,16 +94,23 @@ public:
 
     float gain, delay;
 
+    // add a sample to the sample pool
+    void addNewSample();
+
 private:
     //==============================================================================
 
-    //void addNewSample();
+    // store array of samplePool objects
+    Array<AudioSample> samplePool;
 
     AudioSampleBuffer delayBuffer;
     int delayPosition;
 
     // the synth!
-    Synthesiser synth;
+    Zynth synth;
+
+    // eventually this will be an array for all the channels
+    ChannelProcessor myChannel; 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTAudioProcessor);
 };
