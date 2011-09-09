@@ -160,21 +160,29 @@ void WaveformControl::mouseDown(const MouseEvent &e){
         if(demoPage != 0){
             Array<File> loadedFiles = demoPage->getLoadedFiles();
 
-            PopupMenu p = PopupMenu();
-            
-            // TODO: if no popup item selected, 0 is returned selecting
-            // the first file in the list
-
-            // TODO: add option to select "none"
-
-            // TODO: right click to delete sample under cursor
-            for(int i = 0; i < loadedFiles.size(); ++i)
+            // only show the menu if we have files to show
+            if(loadedFiles.size() != 0)
             {
-                p.addItem(i, String(loadedFiles[i].getFileName()));
+                PopupMenu p = PopupMenu();
+            
+                // TODO: add option to select "no file
+                // TODO: middle click to delete sample under cursor in menu?
+                for(int i = 0; i < loadedFiles.size(); ++i)
+                {
+                    // +1 is because 0 is result for no item clicked
+                    p.addItem(i+1, String(loadedFiles[i].getFileName()));
+                }
+
+                // show the menu and store choice 
+                int fileChoice = p.showMenu(PopupMenu::Options().withTargetComponent(filenameLbl));
+
+                if (fileChoice != 0)
+                {
+                    --fileChoice;       // -1 is to correct for +1 in for loop above
+                    demoPage->recieveFileSelection(waveformID, fileChoice);
+                    DBG("Waveform strip" + String(waveformID) + ": file selected " + loadedFiles[fileChoice].getFileName());
+                }
             }
-            int fileChoice = p.showMenu(PopupMenu::Options().withTargetComponent(filenameLbl));
-            demoPage->recieveFileSelection(waveformID, fileChoice);
-            demoPage->debugMe(String(channelArray[1].getChannelNum()));
         }
 
         // DO WE STORE A FILE OBJECT IN THE WAVEFORMCONTROL?

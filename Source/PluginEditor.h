@@ -39,13 +39,10 @@ public:
     //void mouseDown(const MouseEvent&);
     void recieveFileSelection(const int &waveformID, const int &fileID);
 
-    // just for debuggin
-    void debugMe(const String str);
-
     Array<File> getLoadedFiles();
 
 private:
-    Label infoLabel, delayLabel, helloLabel, logoLabel, debugLabel;
+    Label infoLabel, delayLabel, helloLabel, logoLabel;
     Slider delaySlider, gainSlider;
 	DrawableButton loadButton, debugButton;
 

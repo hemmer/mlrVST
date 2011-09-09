@@ -21,7 +21,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	  numChannels(4),
       numStrips(7),
 	  loadedFiles(),
-      debugLabel(), debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
+      debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
       channelArray(), slidersArray()
 {
     setSize(GUI_WIDTH, GUI_HEIGHT);
@@ -61,9 +61,6 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	infoLabel.setBounds(10, getHeight() - 25, 400, 25);
 
     // useful UI debugging components
-    addAndMakeVisible(&debugLabel);
-    debugLabel.setColour(Label::textColourId, Colours::black);
-	debugLabel.setBounds(10, 80, 400, 25);
     addAndMakeVisible(&debugButton);
 	debugButton.addListener(this);
 	debugButton.setBackgroundColours(Colours::blue, Colours::black);
@@ -134,11 +131,6 @@ mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
     //    deleteAndZero(tempSlider);
     //}
  
-}
-
-void mlrVSTAudioProcessorEditor::debugMe(const String str)
-{
-    debugLabel.setText(str, false);
 }
 
 // receieve communication from the WaveformControl component
@@ -219,9 +211,9 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 			helloLabel.setText(str, false);
 		}
 	}
+    // just a little test (REMEMBER TO REMOVE)
     else if(btn == &debugButton)
     {
-        // just a little test (REMEMBER TO REMOVE)
         channelArray.clear();
         channelArray.add(ChannelStrip(Colour(226,  70,  45), 0));
         channelArray.add(ChannelStrip(Colour(106,  22,  37), 1));
