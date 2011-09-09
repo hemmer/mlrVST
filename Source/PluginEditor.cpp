@@ -34,7 +34,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     logoLabel.setJustificationType(Justification::bottomRight);
     logoLabel.setFont(30.0f);
 	
-
+    DBG("editor loaded");
 
     // DELAY stuff (may eventually go)
     addAndMakeVisible(&delaySlider);
@@ -100,7 +100,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     gainSlider.setBounds(350, 500, 30, 150);
     gainSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
 
-    slidersArray.clear();
+    //slidersArray.clear();
     // Programmatically add group volume controls
     for(int i = 0; i < channelArray.size(); ++i)
     {
@@ -127,12 +127,12 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
 mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
 {
-    // programatically remove volume controls
-    for(int i = 0; i < slidersArray.size(); ++i)
-    {
-        Slider *tempSlider = slidersArray[i];
-        deleteAndZero(tempSlider);
-    }
+    //// programatically remove volume controls
+    //for(int i = 0; i < slidersArray.size(); ++i)
+    //{
+    //    Slider *tempSlider = slidersArray[i];
+    //    deleteAndZero(tempSlider);
+    //}
  
 }
 
