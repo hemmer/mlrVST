@@ -17,10 +17,9 @@
 //==============================================================================
 mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     delayBuffer (2, 12000),
-    channelProcessorArray(),
-    samplePool(),    // sample pool is initially empty
-    numChannels(1),
-    myChannel(1)
+    channelProcessorArray(),    // array of processor objects
+    samplePool(),               // sample pool is initially empty
+    numChannels(2)
 {
     // Set up some default values..
     gain = 1.0f;
@@ -33,13 +32,16 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     delayPosition = 0;
 
     // add basic sample to pool
-    File testFile = File("C:\\Users\\Hemmer\\Desktop\\funky.wav");    
-    samplePool.add(new AudioSample(testFile));
-    // and let the channel load it
-    myChannel.setCurrentSample(samplePool.getFirst());
+    File testFile1 = File("C:\\Users\\Hemmer\\Desktop\\funky.wav");    
+    File testFile2 = File("C:\\Users\\Hemmer\\Desktop\\3drums.wav");    
+    samplePool.add(new AudioSample(testFile1));
+    samplePool.add(new AudioSample(testFile2));
 
+    // add our channels
     buildChannelProcessorArray();
 
+    channelProcessorArray[0]->setCurrentSample(samplePool.getFirst());
+    channelProcessorArray[1]->setCurrentSample(samplePool.getLast());
 }
 
 void mlrVSTAudioProcessor::buildChannelProcessorArray()
@@ -146,13 +148,12 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
     // for each channel, add its contributions
     // Remember to set the correct sample
-    myChannel.renderNextBlock(buffer, midiMessages, 0, numSamples);
+    //myChannel.renderNextBlock(buffer, midiMessages, 0, numSamples);
     //for(int c = 0; c < numChannels; c++)
-    //for(int c = 0; c < channelProcessorArray.size(); c++)
-    //{
-    //    ChannelProcessor *temp = channelProcessorArray[c];
-    //    temp->renderNextBlock(buffer, midiMessages, 0, numSamples);
-    //}
+    for(int c = 0; c < channelProcessorArray.size(); c++)
+    {
+        channelProcessorArray[c]->renderNextBlock(buffer, midiMessages, 0, numSamples);
+    }
 
     // Apply our delay effect to the new output..
     for (channel = 0; channel < getNumInputChannels(); ++channel)

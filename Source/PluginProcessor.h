@@ -108,9 +108,8 @@ private:
 
     // eventually this will be an array for all the channels
     int numChannels;
-    // store pointers to ChannelProcessors
+    // These are the seperate audio channels
     OwnedArray<ChannelProcessor> channelProcessorArray; 
-    ChannelProcessor myChannel;
 
     void buildChannelProcessorArray();
 
