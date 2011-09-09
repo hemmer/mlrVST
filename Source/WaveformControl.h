@@ -45,19 +45,18 @@ public:
 
 private:
 
-    Label *trackNumberLbl, *filenameLbl;
-    Array<DrawableButton*> channelButtonArray;
-
-    // number of output channels available
-    //const int numChannels;
-    // which channel audio is currently going to
-    int currentChannel;
+    // which strip we are representing
+    int waveformID;
     // store channels information
     Array<ChannelStrip> channelArray;
 
-    // which strip we are representing
-    int waveformID;
+    // GUI components
+    Label trackNumberLbl, filenameLbl;
+    OwnedArray<DrawableButton> channelButtonArray;
 
+    // which channel audio is currently going to
+    int currentChannel;
+    
     // stuff for drawing waveforms
     AudioFormatManager formatManager;
     AudioThumbnailCache thumbnailCache;
