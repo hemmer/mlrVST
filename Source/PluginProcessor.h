@@ -101,7 +101,7 @@ private:
     //==============================================================================
 
     // store array of samplePool objects
-    Array<AudioSample*> samplePool;
+    OwnedArray<AudioSample> samplePool;
 
     AudioSampleBuffer delayBuffer;
     int delayPosition;
@@ -109,7 +109,7 @@ private:
     // eventually this will be an array for all the channels
     int numChannels;
     // store pointers to ChannelProcessors
-    Array<ChannelProcessor*> channelProcessorArray; 
+    OwnedArray<ChannelProcessor> channelProcessorArray; 
     ChannelProcessor myChannel;
 
     void buildChannelProcessorArray();

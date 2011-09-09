@@ -14,65 +14,64 @@
 //==============================================================================
 mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter)
     : AudioProcessorEditor (ownerFilter),
-      infoLabel(0), helloLabel(0), logoLabel(0), delayLabel(0),
-      delaySlider(0), gainSlider(0),
-	  loadButton(0),
+      infoLabel(), helloLabel("", "Hello"), logoLabel("", "mlrVST"), delayLabel("", "Delay:"),
+      delaySlider("delay"), gainSlider("gain"),
+	  loadButton("loadfile", DrawableButton::ImageRaw),
 	  waveformArray(),
 	  numChannels(4),
       numStrips(7),
 	  loadedFiles(),
-      debugLabel(0), debugButton(0),    // debugging stuff
+      debugLabel(), debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
       channelArray(), slidersArray()
 {
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
     // add logo strip to top
-	addAndMakeVisible(logoLabel = new Label("", "mlrVST"));
-    logoLabel->setBounds(0, 0, getWidth(), 30);
-	logoLabel->setColour(Label::backgroundColourId, Colours::black);
-    logoLabel->setColour(Label::textColourId, Colours::white);
-    logoLabel->setJustificationType(Justification::bottomRight);
-    logoLabel->setFont(30.0f);
+	addAndMakeVisible(&logoLabel);
+    logoLabel.setBounds(0, 0, getWidth(), 30);
+	logoLabel.setColour(Label::backgroundColourId, Colours::black);
+    logoLabel.setColour(Label::textColourId, Colours::white);
+    logoLabel.setJustificationType(Justification::bottomRight);
+    logoLabel.setFont(30.0f);
 	
 
 
     // DELAY stuff (may eventually go)
-    addAndMakeVisible(delaySlider = new Slider("delay"));
-	delaySlider->setSliderStyle(Slider::LinearVertical);
-    delaySlider->addListener(this);
-    delaySlider->setRange(0.0, 1.0, 0.01);
-	delaySlider->setValue(0.02);
-	delaySlider->setBounds(350, 80, 150, 40);
-
-    delayLabel = new Label("", "Delay:");
-    delayLabel->attachToComponent(delaySlider, false);
-    delayLabel->setFont (Font (11.0f));
+    addAndMakeVisible(&delaySlider);
+	delaySlider.setSliderStyle(Slider::LinearVertical);
+    delaySlider.addListener(this);
+    delaySlider.setRange(0.0, 1.0, 0.01);
+	delaySlider.setValue(0.02);
+	delaySlider.setBounds(350, 80, 150, 40);
+    // attach label
+    delayLabel.attachToComponent(&delaySlider, false);
+    delayLabel.setFont (Font (11.0f));
 
 
     // For manually loading files
-    addAndMakeVisible(loadButton = new DrawableButton("loadfile", DrawableButton::ImageRaw));
-	loadButton->setBounds(30, 50, 100, 30);
-	loadButton->addListener(this);
-	loadButton->setBackgroundColours(Colours::blue, Colours::black);
+    addAndMakeVisible(&loadButton);
+	loadButton.setBounds(30, 50, 100, 30);
+	loadButton.addListener(this);
+	loadButton.setBackgroundColours(Colours::blue, Colours::black);
 
 
     // add a label that will display the current timecode and status..
-    addAndMakeVisible(infoLabel = new Label());
-    infoLabel->setColour(Label::textColourId, Colours::black);
-	infoLabel->setBounds(10, getHeight() - 25, 400, 25);
+    addAndMakeVisible(&infoLabel);
+    infoLabel.setColour(Label::textColourId, Colours::black);
+	infoLabel.setBounds(10, getHeight() - 25, 400, 25);
 
-    // useful UI debuggin components
-    addAndMakeVisible(debugLabel = new Label());
-    debugLabel->setColour(Label::textColourId, Colours::black);
-	debugLabel->setBounds(10, 80, 400, 25);
-    addAndMakeVisible(debugButton = new DrawableButton("loadfile", DrawableButton::ImageRaw));
-	debugButton->addListener(this);
-	debugButton->setBackgroundColours(Colours::blue, Colours::black);
-	debugButton->setBounds(400, 300, 50, 25);
+    // useful UI debugging components
+    addAndMakeVisible(&debugLabel);
+    debugLabel.setColour(Label::textColourId, Colours::black);
+	debugLabel.setBounds(10, 80, 400, 25);
+    addAndMakeVisible(&debugButton);
+	debugButton.addListener(this);
+	debugButton.setBackgroundColours(Colours::blue, Colours::black);
+	debugButton.setBounds(400, 300, 50, 25);
     // another test label
-	addAndMakeVisible(helloLabel = new Label("", "Hello"));
-	helloLabel->setBounds(350, 150, 100, 100);
-	helloLabel->setColour(Label::backgroundColourId, Colours::bisque);
+	addAndMakeVisible(&helloLabel);
+	helloLabel.setBounds(350, 150, 100, 100);
+	helloLabel.setColour(Label::backgroundColourId, Colours::bisque);
 
     // manually add channels (TODO automate this)
     // possible adding ColourSets or similar
@@ -93,19 +92,19 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     // Add all volume controls //
     /////////////////////////////
     // Master volume
-    addAndMakeVisible(gainSlider = new Slider("gain"));
-    gainSlider->setSliderStyle(Slider::LinearVertical);
-    gainSlider->addListener(this);
-    gainSlider->setRange(0.0, 1.0, 0.01);
-    gainSlider->setValue(0.05);
-    gainSlider->setBounds(350, 500, 30, 150);
-    gainSlider->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
+    addAndMakeVisible(&gainSlider);
+    gainSlider.setSliderStyle(Slider::LinearVertical);
+    gainSlider.addListener(this);
+    gainSlider.setRange(0.0, 1.0, 0.01);
+    gainSlider.setValue(0.05);
+    gainSlider.setBounds(350, 500, 30, 150);
+    gainSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
 
+    slidersArray.clear();
     // Programmatically add group volume controls
     for(int i = 0; i < channelArray.size(); ++i)
     {
-        Slider *tempSlider = new Slider("channel " + String(i) + " vol");
-        slidersArray.add(tempSlider);
+        slidersArray.add(new Slider("channel " + String(i) + " vol"));
         addAndMakeVisible(slidersArray[i]);
         slidersArray[i]->setSliderStyle(Slider::LinearVertical);
         slidersArray[i]->addListener(this);
@@ -118,46 +117,33 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
     formatManager.registerBasicFormats();
     
-    // This doesn't seem to work
+    // This doesn't seem to work 
     // TODO: Make custom look and feel
-    //OldSchoolLookAndFeel oldLookAndFeel;
-    //LookAndFeel::setDefaultLookAndFeel(&oldLookAndFeel);
+    // OldSchoolLookAndFeel oldLookAndFeel;
+    // LookAndFeel::setDefaultLookAndFeel(&oldLookAndFeel);
 	
     startTimer (50);
-
-
 }
 
 mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
 {
-    deleteAndZero(infoLabel);
-    deleteAndZero(delayLabel);
-    deleteAndZero(helloLabel);
-    deleteAndZero(logoLabel);
-    deleteAndZero(debugLabel);
-    // sliders
-    deleteAndZero(delaySlider);
-    deleteAndZero(gainSlider);
     // programatically remove volume controls
     for(int i = 0; i < slidersArray.size(); ++i)
     {
         Slider *tempSlider = slidersArray[i];
         deleteAndZero(tempSlider);
     }
-
-    // buttons
-    deleteAndZero(loadButton);
-    deleteAndZero(debugButton);        
+ 
 }
 
 void mlrVSTAudioProcessorEditor::debugMe(const String str)
 {
-    debugLabel->setText(str, false);
+    debugLabel.setText(str, false);
 }
 
 // receieve communication from the WaveformControl component
 void mlrVSTAudioProcessorEditor::recieveFileSelection(const int &waveformID, const int &fileChoice){
-    helloLabel->setText(String(waveformID) + ", id: " + String(fileChoice), false);
+    helloLabel.setText(String(waveformID) + ", id: " + String(fileChoice), false);
     waveformArray[waveformID]->setFile(loadedFiles[fileChoice]);
 }
 
@@ -187,24 +173,24 @@ void mlrVSTAudioProcessorEditor::timerCallback()
     if (lastDisplayedPosition != newPos)
         displayPositionInfo (newPos);
 
-    delaySlider->setValue(ourProcessor->delay, false);
+    delaySlider.setValue(ourProcessor->delay, false);
 }
 
 // This is our Slider::Listener callback, when the user drags a slider.
 void mlrVSTAudioProcessorEditor::sliderValueChanged (Slider* slider)
 {
-    if (slider == gainSlider)
+    if (slider == &gainSlider)
     {
         // It's vital to use setParameterNotifyingHost to change any parameters that are automatable
         // by the host, rather than just modifying them directly, otherwise the host won't know
         // that they've changed.
         getProcessor()->setParameterNotifyingHost (mlrVSTAudioProcessor::gainParam,
-                                                   (float) gainSlider->getValue());
+                                                   (float) gainSlider.getValue());
     }
-    else if (slider == delaySlider)
+    else if (slider == &delaySlider)
     {
         getProcessor()->setParameterNotifyingHost (mlrVSTAudioProcessor::delayParam,
-                                                   (float) delaySlider->getValue());
+                                                   (float) delaySlider.getValue());
     }
 }
 
@@ -212,7 +198,7 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged (Slider* slider)
 void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 {
     // Manually load a file
-	if(btn == loadButton)
+	if(btn == &loadButton)
     {
 
 		FileChooser myChooser ("Please choose a file:", File::getSpecialLocation(File::userDesktopDirectory), "*.wav");
@@ -230,10 +216,10 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
             {
                 str += String(loadedFiles[i].getFileNameWithoutExtension()) + "\n";
 			}
-			helloLabel->setText(str, false);
+			helloLabel.setText(str, false);
 		}
 	}
-    else if(btn == debugButton)
+    else if(btn == &debugButton)
     {
         // just a little test (REMEMBER TO REMOVE)
         channelArray.clear();
@@ -304,5 +290,5 @@ void mlrVSTAudioProcessorEditor::displayPositionInfo (const AudioPlayHead::Curre
     else if (pos.isPlaying)
         displayText << "  (playing)";
 
-    infoLabel->setText (displayText, false);
+    infoLabel.setText(displayText, false);
 }

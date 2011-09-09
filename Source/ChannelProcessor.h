@@ -78,7 +78,7 @@ public:
     void stopSamplePlaying();
 
     // The lets the ChannelProcessor know which sample to read
-    void setCurrentSample(const AudioSample &currentSample);
+    void setCurrentSample(const AudioSample* currentSample);
 
     //==========================================
     /**  LOOP_FULL              - loop back to sample start once finished

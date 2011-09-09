@@ -34,23 +34,22 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
 
     // add basic sample to pool
     File testFile = File("C:\\Users\\Hemmer\\Desktop\\funky.wav");    
-    samplePool.addIfNotAlreadyThere(new AudioSample(testFile));
+    samplePool.add(new AudioSample(testFile));
+    // and let the channel load it
+    myChannel.setCurrentSample(samplePool.getFirst());
 
     buildChannelProcessorArray();
-    AudioSample* testSample = samplePool.getUnchecked(0);
-    myChannel.setCurrentSample(*testSample);
+
 }
 
 void mlrVSTAudioProcessor::buildChannelProcessorArray()
 {
-    AudioSample* testSample = samplePool.getUnchecked(0);
-
+    channelProcessorArray.clear();
     // add the list of channels 
     for(int c = 0; c < numChannels; c++)
     {
-        ChannelProcessor tempChannelProcessor(c);
-        tempChannelProcessor.setCurrentSample(*testSample);
-        channelProcessorArray.add(&tempChannelProcessor);
+        channelProcessorArray.add(new ChannelProcessor(c));
+        channelProcessorArray[c]->setCurrentSample(samplePool.getFirst());
     }
 }
 

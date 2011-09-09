@@ -22,9 +22,9 @@ ChannelProcessor::ChannelProcessor(const int &channelIDNo) :
 
 }
 
-void ChannelProcessor::setCurrentSample(const AudioSample &newSample)
+void ChannelProcessor::setCurrentSample(const AudioSample* newSample)
 {
-    currentSample = &newSample;
+    currentSample = newSample;
 }
 
 void ChannelProcessor::startSamplePlaying(const int &block, const int &blockSize)

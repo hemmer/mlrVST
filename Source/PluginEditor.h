@@ -45,9 +45,9 @@ public:
     Array<File> getLoadedFiles();
 
 private:
-    Label *infoLabel, *delayLabel, *helloLabel, *logoLabel, *debugLabel;
-    Slider *delaySlider, *gainSlider;
-	DrawableButton *loadButton, *debugButton;
+    Label infoLabel, delayLabel, helloLabel, logoLabel, debugLabel;
+    Slider delaySlider, gainSlider;
+	DrawableButton loadButton, debugButton;
 
 	Array<File> loadedFiles;
 	ListBox fileList;
@@ -56,15 +56,17 @@ private:
 
 	// Store the waveform controls/strips in array. 
     // For a standard monome64 this is 7
-    Array<WaveformControl*> waveformArray;
+    OwnedArray<WaveformControl> waveformArray;
     const int numStrips;
 
-    // this is the number of seperate channels
-    // i.e. the number of simultaneous samples
-    // that can be played at once
+    // This is the number of seperate channels. In 
+    // pratical terms, this is just the number of 
+    // samples that can be played at once.
 	const int numChannels;
     Array<ChannelStrip> channelArray;
-    Array<Slider*> slidersArray;
+    OwnedArray<Slider> slidersArray;
+
+    // For simplicity, let's stick to a fixed size GUI
     static const int GUI_HEIGHT = 700;
     static const int GUI_WIDTH = 600;
 
