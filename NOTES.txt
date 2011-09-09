@@ -1,1 +1,8 @@
 Plugin UI doesn't initialise (at least in the debugger) until you right click -> Show UI
+
+Design decision: have number of channels fixed at compile time, and have VSTs parameter for them (allows automation etc)
+				 OR have number of channels set at runtime.
+				 
+IDEAS
+
+- drop cue points?

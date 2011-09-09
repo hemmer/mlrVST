@@ -11,6 +11,9 @@
 #ifndef __PLUGINEDITOR_H_4ACCBAA__
 #define __PLUGINEDITOR_H_4ACCBAA__
 
+
+
+
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "PluginProcessor.h"
@@ -24,6 +27,7 @@ class WaveformControl;
 class mlrVSTAudioProcessorEditor  : public AudioProcessorEditor,
                                             public SliderListener,
 											public ButtonListener,
+                                            public ComboBoxListener,
                                             public Timer
 {
 public:
@@ -32,7 +36,10 @@ public:
 
     //==============================================================================
     void timerCallback();
-    void paint (Graphics& g);
+    void paint(Graphics& g);
+
+    // listeners
+    void comboBoxChanged (ComboBox* comboBoxThatHasChanged);
     void sliderValueChanged (Slider*);
 	void buttonClicked(Button*);
 
@@ -43,8 +50,10 @@ public:
 
 private:
     Label infoLabel, delayLabel, helloLabel, logoLabel;
-    Slider delaySlider, gainSlider;
+    Slider delaySlider, masterGainSlider;
 	DrawableButton loadButton, debugButton;
+
+    ComboBox selNumChannels;
 
 	Array<File> loadedFiles;
 	ListBox fileList;
@@ -59,8 +68,8 @@ private:
     // This is the number of seperate channels. In 
     // pratical terms, this is just the number of 
     // samples that can be played at once.
-	const int numChannels;
-    Array<ChannelStrip> channelArray;
+	int numChannels;
+
     OwnedArray<Slider> slidersArray;
 
     // For simplicity, let's stick to a fixed size GUI

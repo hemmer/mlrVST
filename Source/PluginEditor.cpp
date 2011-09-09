@@ -8,21 +8,20 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "ChannelStrip.h"
-
 
 //==============================================================================
 mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter)
     : AudioProcessorEditor (ownerFilter),
       infoLabel(), helloLabel("", "Hello"), logoLabel("", "mlrVST"), delayLabel("", "Delay:"),
-      delaySlider("delay"), gainSlider("gain"),
+      delaySlider("delay"), masterGainSlider("master gain"),
 	  loadButton("loadfile", DrawableButton::ImageRaw),
+      selNumChannels("select number of channels"),
 	  waveformArray(),
 	  numChannels(4),
       numStrips(7),
 	  loadedFiles(),
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
-      channelArray(), slidersArray()
+      slidersArray()
 {
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
@@ -34,7 +33,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     logoLabel.setJustificationType(Justification::bottomRight);
     logoLabel.setFont(30.0f);
 	
-    DBG("editor loaded");
+
 
     // DELAY stuff (may eventually go)
     addAndMakeVisible(&delaySlider);
@@ -46,6 +45,9 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     // attach label
     delayLabel.attachToComponent(&delaySlider, false);
     delayLabel.setFont (Font (11.0f));
+
+        DBG("editor loaded");
+
 
 
     // For manually loading files
@@ -70,17 +72,9 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	helloLabel.setBounds(350, 150, 100, 100);
 	helloLabel.setColour(Label::backgroundColourId, Colours::bisque);
 
-    // manually add channels (TODO automate this)
-    // possible adding ColourSets or similar
-    channelArray.add(ChannelStrip(Colour(226,  70,  45), 0));
-    channelArray.add(ChannelStrip(Colour(106,  22,  37), 1));
-    channelArray.add(ChannelStrip(Colour( 73, 108, 104), 2));
-    channelArray.add(ChannelStrip(Colour( 33,  61,  75), 3));
-    channelArray.add(ChannelStrip(Colour(250, 241, 162), 4));
-
     // add waveform strips
     for(int i = 0; i < numStrips; ++i){
-        waveformArray.add(new WaveformControl(i, channelArray));
+        waveformArray.add(new WaveformControl(i));
         waveformArray[i]->setBounds(30, 80 + i * 80, 300, 75);
         addAndMakeVisible( waveformArray[i] );
 	}
@@ -89,28 +83,37 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     // Add all volume controls //
     /////////////////////////////
     // Master volume
-    addAndMakeVisible(&gainSlider);
-    gainSlider.setSliderStyle(Slider::LinearVertical);
-    gainSlider.addListener(this);
-    gainSlider.setRange(0.0, 1.0, 0.01);
-    gainSlider.setValue(0.05);
-    gainSlider.setBounds(350, 500, 30, 150);
-    gainSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
+    addAndMakeVisible(&masterGainSlider);
+    masterGainSlider.setSliderStyle(Slider::LinearVertical);
+    masterGainSlider.addListener(this);
+    masterGainSlider.setRange(0.0, 1.0, 0.01);
+    masterGainSlider.setValue(0.05);
+    masterGainSlider.setBounds(330, 500, 30, 150);
+    masterGainSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
 
     //slidersArray.clear();
     // Programmatically add group volume controls
-    for(int i = 0; i < channelArray.size(); ++i)
-    {
-        slidersArray.add(new Slider("channel " + String(i) + " vol"));
-        addAndMakeVisible(slidersArray[i]);
-        slidersArray[i]->setSliderStyle(Slider::LinearVertical);
-        slidersArray[i]->addListener(this);
-        slidersArray[i]->setRange(0.0, 1.0, 0.01);
-        slidersArray[i]->setValue(0.8);
-        slidersArray[i]->setBounds(380 + i*30, 500, 30, 150);
-        slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
-        slidersArray[i]->setColour(Slider::backgroundColourId, channelArray[i].getColour());
-    }
+    //for(int i = 0; i < channelArray.size(); ++i)
+    //{
+    //    slidersArray.add(new Slider("channel " + String(i) + " vol"));
+    //    addAndMakeVisible(slidersArray[i]);
+    //    slidersArray[i]->setSliderStyle(Slider::LinearVertical);
+    //    slidersArray[i]->addListener(this);
+    //    slidersArray[i]->setRange(0.0, 1.0, 0.01);
+    //    slidersArray[i]->setValue(0.8);
+    //    slidersArray[i]->setBounds(380 + i*30, 500, 30, 150);
+    //    slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
+    //    slidersArray[i]->setColour(Slider::backgroundColourId, channelArray[i].getColour());
+    //}
+
+    // combobox to select the number of channels
+    addAndMakeVisible(&selNumChannels);
+    for(int i = 1; i <= 8; ++i) selNumChannels.addItem(String(i), i);
+    selNumChannels.addListener(this);
+    selNumChannels.setBounds(400, 400, 100, 30);
+    // flag forces the number of channels to (re)built
+    selNumChannels.setSelectedId(4, false);
+
 
     formatManager.registerBasicFormats();
     
@@ -119,18 +122,12 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     // OldSchoolLookAndFeel oldLookAndFeel;
     // LookAndFeel::setDefaultLookAndFeel(&oldLookAndFeel);
 	
-    startTimer (50);
+    startTimer(50);
 }
 
 mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
 {
-    //// programatically remove volume controls
-    //for(int i = 0; i < slidersArray.size(); ++i)
-    //{
-    //    Slider *tempSlider = slidersArray[i];
-    //    deleteAndZero(tempSlider);
-    //}
- 
+
 }
 
 // receieve communication from the WaveformControl component
@@ -171,19 +168,38 @@ void mlrVSTAudioProcessorEditor::timerCallback()
 // This is our Slider::Listener callback, when the user drags a slider.
 void mlrVSTAudioProcessorEditor::sliderValueChanged (Slider* slider)
 {
-    if (slider == &gainSlider)
+    if (slider == &masterGainSlider)
     {
         // It's vital to use setParameterNotifyingHost to change any parameters that are automatable
         // by the host, rather than just modifying them directly, otherwise the host won't know
         // that they've changed.
-        getProcessor()->setParameterNotifyingHost (mlrVSTAudioProcessor::gainParam,
-                                                   (float) gainSlider.getValue());
+        getProcessor()->setParameterNotifyingHost(mlrVSTAudioProcessor::masterGainParam,
+                                                   (float) masterGainSlider.getValue());
     }
     else if (slider == &delaySlider)
     {
-        getProcessor()->setParameterNotifyingHost (mlrVSTAudioProcessor::delayParam,
+        getProcessor()->setParameterNotifyingHost(mlrVSTAudioProcessor::delayParam,
                                                    (float) delaySlider.getValue());
     }
+
+    // check the channel volume notifications
+    for(int i = 0; i < slidersArray.size(); ++i)
+    {
+        if (slider == slidersArray[i])
+        {
+            jassert(i < 8);     // we should not have more than 8 channels
+            float newChannelGainValue = (float) slidersArray[i]->getValue();
+
+            // let host know about the new value
+            // channel0GainParam is the first channel id, so +i to access the rest
+            getProcessor()->setParameterNotifyingHost(mlrVSTAudioProcessor::channel0GainParam + i,
+                                                      newChannelGainValue);
+            // and update the appropriate channel
+            getProcessor()->getChannelProcessor(i)->setChannelGain(newChannelGainValue);
+            // NEEEEED to update channel processor HERE
+        }
+    }
+   
 }
 
 // Button handling
@@ -211,18 +227,45 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 			helloLabel.setText(str, false);
 		}
 	}
-    // just a little test (REMEMBER TO REMOVE)
-    else if(btn == &debugButton)
+}
+
+// Combo box handling
+void mlrVSTAudioProcessorEditor::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
+{
+    if (comboBoxThatHasChanged == &selNumChannels)
     {
-        channelArray.clear();
-        channelArray.add(ChannelStrip(Colour(226,  70,  45), 0));
-        channelArray.add(ChannelStrip(Colour(106,  22,  37), 1));
-        channelArray.add(ChannelStrip(Colour( 73, 108, 104), 2));
+        numChannels = comboBoxThatHasChanged->getSelectedId();
+        DBG(numChannels);
+        getProcessor()->buildChannelProcessorArray(numChannels);
+        slidersArray.clear();
+
+        for(int i = 0; i < numChannels; ++i)
+        {
+            slidersArray.add(new Slider("channel " + String(i) + " vol"));
+            addAndMakeVisible(slidersArray[i]);
+            slidersArray[i]->setSliderStyle(Slider::LinearVertical);
+            slidersArray[i]->addListener(this);
+            slidersArray[i]->setRange(0.0, 1.0, 0.01);
+            slidersArray[i]->setValue(0.8);
+            slidersArray[i]->setBounds(360 + i*30, 500, 30, 150);
+            Colour sliderColour = getProcessor()->getChannelProcessor(i)->getChannelColour();
+            slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
+            slidersArray[i]->setColour(Slider::backgroundColourId, sliderColour);
+
+
+        }
 
         for(int i = 0; i < waveformArray.size(); ++i)
         {
-            waveformArray[i]->updateChannelList(channelArray);
+            waveformArray[i]->clearChannelList();
+            for(int chan = 0; chan < numChannels; ++chan)
+            {
+                Colour sliderColour = getProcessor()->getChannelProcessor(chan)->getChannelColour();
+                waveformArray[i]->addChannel(chan, sliderColour);
+            }
 	    }
+
+
     }
 }
 

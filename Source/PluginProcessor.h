@@ -11,6 +11,7 @@
 #ifndef __PLUGINPROCESSOR_H_526ED7A9__
 #define __PLUGINPROCESSOR_H_526ED7A9__
 
+
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "Zynth.h"
@@ -60,6 +61,7 @@ public:
     void setCurrentProgram (int /*index*/)                              { }
     const String getProgramName (int /*index*/)                         { return String::empty; }
     void changeProgramName (int /*index*/, const String& /*newName*/)   { }
+    ChannelProcessor* getChannelProcessor(const int &index) { return channelProcessorArray[index]; }
 
     //==============================================================================
     void getStateInformation (MemoryBlock& destData);
@@ -78,24 +80,35 @@ public:
     // callback - the UI component will read this and display it.
     AudioPlayHead::CurrentPositionInfo lastPosInfo;
 
-    // these are used to persist the UI's size - the values are stored along with the
-    // filter's other parameters, and the UI component will update them when it gets
-    // resized.
-    int lastUIWidth, lastUIHeight;
-
     //==============================================================================
+    // Note we may not need all these parameters, but if the host is to allow them,
+    // to be automatable, we need to allow for the possibility.
     enum Parameters
     {
-        gainParam = 0,
+        masterGainParam = 0,
         delayParam,
-
+        channel0GainParam,
+        channel1GainParam,
+        channel2GainParam,
+        channel3GainParam,
+        channel4GainParam,
+        channel5GainParam,
+        channel6GainParam,
+        channel7GainParam,
         totalNumParams
     };
 
-    float gain, delay;
+    float masterGain, delay;
+    // individual channel volumes
+    float channel0Gain, channel1Gain, channel2Gain, channel3Gain;
+    float channel4Gain, channel5Gain, channel6Gain, channel7Gain;
 
     // add a sample to the sample pool
     void addNewSample();
+
+
+    // set up the channels (can be used to change number of channels
+    void buildChannelProcessorArray(const int &newNumChannels);
 
 private:
     //==============================================================================
@@ -111,7 +124,7 @@ private:
     // These are the seperate audio channels
     OwnedArray<ChannelProcessor> channelProcessorArray; 
 
-    void buildChannelProcessorArray();
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTAudioProcessor);
 };

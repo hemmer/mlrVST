@@ -12,12 +12,14 @@
 
 
 // main constructor
-ChannelProcessor::ChannelProcessor(const int &channelIDNo) :
+ChannelProcessor::ChannelProcessor(const int &channelIDNo, const Colour &col) :
     channelIDNumber(channelIDNo),
+    channelGain(0.8),
     currentSample(0),
     sampleStartPosition(0),
     isPlaying(false),
-    isSampleReversed(false)
+    isSampleReversed(false),
+    channelColour(col)
 {
 
 }
@@ -163,6 +165,9 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
             float l = inL[sampleCurrentPosition];
             // if no right channel, clone in the left channel
             float r = (inR != nullptr) ? inR[sampleCurrentPosition] : l;
+
+            l *=  channelGain;
+            r *=  channelGain;
 
             // if we have stereo output avaiable 
             if (outR != nullptr)

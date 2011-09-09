@@ -24,7 +24,7 @@ public:
     ChannelProcessor();
 
     // Normal constructor
-    ChannelProcessor(const int &channelIDNo);
+    ChannelProcessor(const int &channelIDNo, const Colour &col);
                      
     //==============================================================================
     /** Renders the next section of data for this voice.
@@ -79,6 +79,12 @@ public:
 
     // The lets the ChannelProcessor know which sample to read
     void setCurrentSample(const AudioSample* currentSample);
+    void setChannelGain(const float &vol)
+    { channelGain = vol;
+    DBG("channel " + String(channelIDNumber) + " " + String(vol)); }
+
+    // TODO: eventually this could be channel colourscheme
+    Colour getChannelColour() const { return channelColour; }
 
     //==========================================
     /**  LOOP_FULL              - loop back to sample start once finished
@@ -92,6 +98,8 @@ private:
 
     // each channel has an individual ID
     const int channelIDNumber;
+    // and a gain level
+    float channelGain;
 
     // pointer to the current sample in the sample pool
     // NOTE: "const" qualifier means we can't change the
@@ -107,6 +115,8 @@ private:
     bool isInAttack, isInRelease, isPlaying, isSampleReversed;
 
     void handleMidiEvent(const MidiMessage& m);
+
+    Colour channelColour;
 
 
     //==============================================================================

@@ -13,7 +13,7 @@ Custom component to display a waveform (corresponding to an mlr row)
 #include "WaveformControl.h"
 #include "PluginEditor.h"
 
-WaveformControl::WaveformControl(const int &id, const Array<ChannelStrip> &chanArray) :
+WaveformControl::WaveformControl(const int &id) :
     	thumbnailCache(5),
         thumbnail(512, formatManager, thumbnailCache),
         backgroundColour(Colours::black),
@@ -21,9 +21,9 @@ WaveformControl::WaveformControl(const int &id, const Array<ChannelStrip> &chanA
         filenameLbl("filename", "No File"),
         waveformID(id),
         currentFile(),
-        currentChannel(0),
-        channelButtonArray(),
-        channelArray()
+        currentChannel(0), numChannels(0),
+        channelButtonArray()
+        //channelArray()
 {
     Rectangle<int> waveformShape = getBoundsInParent();
 
@@ -42,13 +42,16 @@ WaveformControl::WaveformControl(const int &id, const Array<ChannelStrip> &chanA
     filenameLbl.setColour(Label::textColourId, Colours::black);
     filenameLbl.setFont(10.0f);
 
-    updateChannelList(chanArray);
 }
 
 WaveformControl::~WaveformControl()
 {
     thumbnail.removeChangeListener (this);
 }
+
+//void WaveformControl::updateChannelColour(const Colour &col){
+//    backgroundColour = col;
+//}
 
 // update the thumbnail to reflect a new choice of file
 void WaveformControl::setFile (const File& file)
@@ -67,50 +70,45 @@ void WaveformControl::buttonClicked(Button *btn){
     // see if any of the channel selection buttons were chosen
     for(int i = 0; i < channelButtonArray.size(); ++i){
         if(channelButtonArray[i] == btn){
-            backgroundColour = channelArray[i].getColour();
+            backgroundColour = channelButtonArray[i]->getBackgroundColour();
             currentChannel = i;
             repaint();
         }
     }
 }
 
+void WaveformControl::clearChannelList()
+{
+    // if there are existing buttons, remove them
+    if(channelButtonArray.size() != 0) channelButtonArray.clear();
+    numChannels = 0;
+}
+
 
 // Used to (re)add Buttons to control the switching channels.
 // Useful if we want to change the total number of channels at runtime.
-void WaveformControl::updateChannelList(const Array<ChannelStrip> &chanArray)
+void WaveformControl::addChannel(const int &id, const Colour &col)
 {
-    channelArray = Array<ChannelStrip>(chanArray);
-    int i = 0;  // for interating over loops
 
-    // sanity check: make sure we actually
-    // have an channel data to work with
-    if(channelArray.size() != 0)
-    {
-        // if there are existing buttons, remove them first
-        // as total number of channels may have decreased
-        if(channelButtonArray.size() != 0) channelButtonArray.clear();
-        
-        // (re)add the updated channel spec
-        for(i = 0; i < channelArray.size(); ++i)
-        {
-            channelButtonArray.add(new DrawableButton("button" + String(i), DrawableButton::ImageRaw));
-            addAndMakeVisible(channelButtonArray.getLast());
-            channelButtonArray[i]->setBounds(15 + i*15, 0, 15, 15);
-            channelButtonArray[i]->addListener(this);
-            channelButtonArray[i]->setBackgroundColours(channelArray[i].getColour(),
-                                                        channelArray[i].getColour());
-        }
+    channelButtonArray.add(new DrawableButton("button" + String(numChannels), DrawableButton::ImageRaw));
+    addAndMakeVisible(channelButtonArray.getLast());
+    channelButtonArray.getLast()->setBounds(15 + numChannels*15, 0, 15, 15);
+    channelButtonArray.getLast()->addListener(this);
+    channelButtonArray.getLast()->setBackgroundColours(col, col);
 
-        // once we've added all the buttons, add the filename
-        filenameLbl.setBounds((i+1)*15, 0, 500, 15);
 
-        // reset channel to first channel just in case 
-        // old channel setting no longer exists
-        currentChannel = 0;
-        backgroundColour = channelArray[currentChannel].getColour();
-        // let the UI know
-        repaint();
-    }
+    // once we've added all the buttons, add the filename
+    // TODO NOW: filenameLbl.setBounds((i+1)*15, 0, 500, 15);
+
+    // reset channel to first channel just in case 
+    // old channel setting no longer exists
+    currentChannel = 0;
+    //backgroundColour = channelArray[currentChannel].getColour();
+    // let the UI know
+    repaint();
+
+    ++numChannels;
+
 }
 
 

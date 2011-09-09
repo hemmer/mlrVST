@@ -8,10 +8,12 @@
   ==============================================================================
 */
 
+// use this to help track down memory leaks (SLOW)
+// #include <vld.h>
+
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "Zampler.h"
-
 
 
 //==============================================================================
@@ -19,14 +21,14 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     delayBuffer (2, 12000),
     channelProcessorArray(),    // array of processor objects
     samplePool(),               // sample pool is initially empty
-    numChannels(2)
+    numChannels(4)
 {
     // Set up some default values..
-    gain = 1.0f;
+    masterGain = 1.0f;
     delay = 0.5f;
-
-    lastUIWidth = 400;
-    lastUIHeight = 200;
+    // for individual channels
+    channel0Gain = channel1Gain = channel2Gain = channel3Gain = 0.5;
+    channel4Gain = channel5Gain = channel6Gain = channel7Gain = 0.5;
 
     lastPosInfo.resetToDefault();
     delayPosition = 0;
@@ -38,21 +40,32 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     samplePool.add(new AudioSample(testFile2));
 
     // add our channels
-    buildChannelProcessorArray();
+    buildChannelProcessorArray(numChannels);
 
     channelProcessorArray[0]->setCurrentSample(samplePool.getFirst());
     channelProcessorArray[1]->setCurrentSample(samplePool.getLast());
 }
 
-void mlrVSTAudioProcessor::buildChannelProcessorArray()
+void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
 {
+    // update the number of channels
+    numChannels = newNumChannels;
+
+
+    // make sure we're not using the channelProcessorArray
+    // while (re)building it
+    suspendProcessing(true);
+
     channelProcessorArray.clear();
     // add the list of channels 
     for(int c = 0; c < numChannels; c++)
     {
-        channelProcessorArray.add(new ChannelProcessor(c));
+        channelProcessorArray.add(new ChannelProcessor(c, Colour((float) (0.1f * c), 0.5f, 0.5f, 1.0f)));
         channelProcessorArray[c]->setCurrentSample(samplePool.getFirst());
     }
+
+    // resume processing
+    suspendProcessing(false);
 }
 
 mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
@@ -72,8 +85,16 @@ float mlrVSTAudioProcessor::getParameter (int index)
     // UI-related, or anything at all that may block in any way!
     switch (index)
     {
-        case gainParam:     return gain;
-        case delayParam:    return delay;
+        case masterGainParam:       return masterGain;
+        case delayParam:            return delay;
+        case channel0GainParam:     return channel0Gain;
+        case channel1GainParam:     return channel1Gain;
+        case channel2GainParam:     return channel2Gain;
+        case channel3GainParam:     return channel3Gain;
+        case channel4GainParam:     return channel4Gain;
+        case channel5GainParam:     return channel5Gain;
+        case channel6GainParam:     return channel6Gain;
+        case channel7GainParam:     return channel7Gain;
         default:            return 0.0f;
     }
 }
@@ -85,9 +106,26 @@ void mlrVSTAudioProcessor::setParameter (int index, float newValue)
     // UI-related, or anything at all that may block in any way!
     switch (index)
     {
-        case gainParam:     gain = newValue;  break;
-        case delayParam:    delay = newValue;  break;
-        default:            break;
+        case masterGainParam:       masterGain = newValue;  break;
+        case delayParam:            delay = newValue;  break;
+        // TODO: there might be a neater way to do this!
+        case channel0GainParam:
+            channel0Gain = newValue;    break;
+        case channel1GainParam:
+            channel1Gain = newValue;    break;
+        case channel2GainParam:     
+            channel2Gain = newValue;    break;
+        case channel3GainParam:     
+            channel3Gain = newValue;    break;
+        case channel4GainParam:     
+            channel4Gain = newValue;    break;
+        case channel5GainParam:
+            channel5Gain = newValue;    break;
+        case channel6GainParam:     
+            channel6Gain = newValue;    break;
+        case channel7GainParam:     
+            channel7Gain = newValue;    break;
+        default:                    break;
     }
 }
 
@@ -95,9 +133,17 @@ const String mlrVSTAudioProcessor::getParameterName (int index)
 {
     switch (index)
     {
-        case gainParam:     return "gain";
-        case delayParam:    return "delay";
-        default:            break;
+    case masterGainParam:       return "master gain";
+    case delayParam:            return "delay";
+    case channel0GainParam:     return "channel 0 gain";
+    case channel1GainParam:     return "channel 1 gain";
+    case channel2GainParam:     return "channel 2 gain";
+    case channel3GainParam:     return "channel 3 gain";
+    case channel4GainParam:     return "channel 4 gain";
+    case channel5GainParam:     return "channel 5 gain";
+    case channel6GainParam:     return "channel 6 gain";
+    case channel7GainParam:     return "channel 7 gain";
+    default:            break;
     }
 
     return String::empty;
@@ -176,7 +222,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
     // Go through the outgoing data, and apply our master gain to it...
     for (channel = 0; channel < getNumInputChannels(); ++channel)
-        buffer.applyGain(channel, 0, buffer.getNumSamples(), gain);
+        buffer.applyGain(channel, 0, buffer.getNumSamples(), masterGain);
 
 
     // In case we have more outputs than inputs, we'll clear any output
@@ -218,9 +264,7 @@ void mlrVSTAudioProcessor::getStateInformation (MemoryBlock& destData)
     XmlElement xml ("MYPLUGINSETTINGS");
 
     // add some attributes to it..
-    xml.setAttribute ("uiWidth", lastUIWidth);
-    xml.setAttribute ("uiHeight", lastUIHeight);
-    xml.setAttribute ("gain", gain);
+    xml.setAttribute ("master gain", masterGain);
     xml.setAttribute ("delay", delay);
 
     // then use this helper function to stuff it into the binary blob and return it..
@@ -240,11 +284,8 @@ void mlrVSTAudioProcessor::setStateInformation (const void* data, int sizeInByte
         // make sure that it's actually our type of XML object..
         if (xmlState->hasTagName ("MYPLUGINSETTINGS"))
         {
-            // ok, now pull out our parameters..
-            lastUIWidth  = xmlState->getIntAttribute ("uiWidth", lastUIWidth);
-            lastUIHeight = xmlState->getIntAttribute ("uiHeight", lastUIHeight);
-
-            gain  = (float) xmlState->getDoubleAttribute ("gain", gain);
+            // ok, now pull out our parameters...
+            masterGain  = (float) xmlState->getDoubleAttribute ("master gain", masterGain);
             delay = (float) xmlState->getDoubleAttribute ("delay", delay);
         }
     }
