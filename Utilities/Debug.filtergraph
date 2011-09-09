@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<FILTERGRAPH>
+  <FILTER uid="1" x="0.167929293" y="0.180497925" uiLastX="0" uiLastY="0">
+    <PLUGIN name="Audio Input" descriptiveName="" format="Internal" category="I/O devices"
+            manufacturer="Raw Material Software" version="1.0" file="" uid="246006c0"
+            isInstrument="0" fileTime="0" numInputs="0" numOutputs="2"/>
+    <STATE>0.</STATE>
+  </FILTER>
+  <FILTER uid="2" x="0.457070707" y="0.244813278" uiLastX="0" uiLastY="0">
+    <PLUGIN name="Midi Input" descriptiveName="" format="Internal" category="I/O devices"
+            manufacturer="Raw Material Software" version="1.0" file="" uid="cb5fde0b"
+            isInstrument="0" fileTime="0" numInputs="0" numOutputs="0"/>
+    <STATE>0.</STATE>
+  </FILTER>
+  <FILTER uid="3" x="0.463383838" y="0.873443983" uiLastX="0" uiLastY="0">
+    <PLUGIN name="Audio Output" descriptiveName="" format="Internal" category="I/O devices"
+            manufacturer="Raw Material Software" version="1.0" file="" uid="724248cb"
+            isInstrument="0" fileTime="0" numInputs="2" numOutputs="0"/>
+    <STATE>0.</STATE>
+  </FILTER>
+  <FILTER uid="4" x="0.340909091" y="0.470954357" uiLastX="67" uiLastY="31">
+    <PLUGIN name="mlrVST" format="VST" category="Effect" manufacturer="Raw Material Software"
+            version="V1.0.0" file="C:\Users\Hemmer\Documents\C++\JUCE\mlrVST\Builds\VisualStudio2010\Debug\mlrVST.dll"
+            uid="76737458" isInstrument="0" fileTime="1324ddcfc4a" numInputs="2"
+            numOutputs="2"/>
+    <STATE>258.CMlaKA....fQBMDZ....AX2bzgE.A.......................................................................................................................................................................................hY0PxDBV....7zTVPwTUGkjSSUDUTkjSGMEH0k1UoQFcn0iHz.CLh.RcogTYocFZz0iHx.CLh.xYgkla8HBLtPiM4jSN4jSN4HBHjUFagkWOh.iKvDSN4jSN4jSN1HxK9.Py</STATE>
+  </FILTER>
+  <CONNECTION srcFilter="2" srcChannel="4096" dstFilter="4" dstChannel="4096"/>
+  <CONNECTION srcFilter="4" srcChannel="0" dstFilter="3" dstChannel="0"/>
+  <CONNECTION srcFilter="4" srcChannel="1" dstFilter="3" dstChannel="1"/>
+</FILTERGRAPH>

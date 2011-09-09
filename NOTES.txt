@@ -1,0 +1,1 @@
+Plugin UI doesn't initialise (at least in the debugger) until you right click -> Show UI

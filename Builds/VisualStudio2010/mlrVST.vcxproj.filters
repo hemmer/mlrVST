@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="mlrVST">
+      <UniqueIdentifier>{6155B00E-5CD3-D100-3C52-4A58C1AE9E57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Juce VST Wrapper">
+      <UniqueIdentifier>{E7C93B65-34E0-8EC9-DCEB-74C257AD64C4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Juce Library Code">
+      <UniqueIdentifier>{F7048EA6-F4B2-F31B-E402-E05D678A1111}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Source\AudioSample.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ChannelProcessor.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Zynth.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Zampler.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\WaveformControl.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\PluginProcessor.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\PluginEditor.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\..\..\SDKs\juce\src\audio\plugin_client\VST\juce_VST_Wrapper.cpp">
+      <Filter>Juce VST Wrapper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode1.cpp">
+      <Filter>Juce Library Code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode2.cpp">
+      <Filter>Juce Library Code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode3.cpp">
+      <Filter>Juce Library Code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode4.cpp">
+      <Filter>Juce Library Code</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Source\AudioSample.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\ChannelProcessor.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Zynth.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Zampler.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\ChannelStrip.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\WaveformControl.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\PluginProcessor.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\PluginEditor.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JuceLibraryCode\AppConfig.h">
+      <Filter>Juce Library Code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JuceLibraryCode\JuceHeader.h">
+      <Filter>Juce Library Code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JuceLibraryCode\JucePluginCharacteristics.h">
+      <Filter>Juce Library Code</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
