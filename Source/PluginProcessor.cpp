@@ -32,12 +32,6 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
 
     lastPosInfo.resetToDefault();
     delayPosition = 0;
-
-
-
-    // TEST: set a few different samples
-    //channelProcessorArray[0]->setCurrentSample(samplePool.getFirst());
-    //channelProcessorArray[1]->setCurrentSample(samplePool.getLast());
 }
 
 void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
