@@ -15,8 +15,11 @@ AudioSample::AudioSample(const File &sampleSource) :
     data(0),
     sampleSampleRate(0.0),
     sampleLength(0),
-    numChannels(0)
+    numChannels(0),
+    sampleName(String::empty)
 {
+
+    sampleName = sampleSource.getFileName();
 
     WavAudioFormat wavFormat;
     ScopedPointer<AudioFormatReader> audioReader(wavFormat.createReaderFor(

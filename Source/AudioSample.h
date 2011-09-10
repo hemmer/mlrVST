@@ -23,13 +23,18 @@ public:
 
     int getSampleLength() const { return sampleLength; }
     int getNumChannels() const { return numChannels; }
-
+    String getSampleName() const { return sampleName; }
+    File getSampleFile() const { return sampleFile; }
     // TODO: isEquals / override comparison operator == 
     //friend bool operator== (AudioSample &s1, AudioSample &s2);
 private:
+    
+    // this stores the File object so
+    // we can retrieve metadata (path,
+    // comments etc)
+    File sampleFile;        // TODO: should this be const?
 
-    // TODO: should this be const?
-    File sampleFile;
+    String sampleName;
     
     // information about the current sample
     int sampleLength, numChannels;
