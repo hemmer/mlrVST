@@ -20,7 +20,7 @@ WaveformControl::WaveformControl(const int &id) :
         trackNumberLbl("track number", String(waveformID)),
         filenameLbl("filename", "No File"),
         waveformID(id),
-        currentFile(),
+        currentSample(),
         currentChannel(0), numChannels(0),
         channelButtonArray()
         //channelArray()
@@ -45,7 +45,6 @@ WaveformControl::WaveformControl(const int &id) :
     trackNumberLbl.setColour(Label::backgroundColourId, Colours::black);
     trackNumberLbl.setColour(Label::textColourId, Colours::white);
     trackNumberLbl.setFont(10.0f);
-
 
 
 }
@@ -147,19 +146,22 @@ void WaveformControl::mouseDown(const MouseEvent &e){
         mlrVSTAudioProcessorEditor *demoPage = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
         
         if(demoPage != 0){
-            Array<File> loadedFiles = demoPage->getLoadedFiles();
+            int currentSamplePoolSize = demoPage->getSamplePoolSize();
 
-            // only show the menu if we have files to show
-            if(loadedFiles.size() != 0)
+            // only show the menu if we have samples in the pool
+            if(currentSamplePoolSize != 0)
             {
                 PopupMenu p = PopupMenu();
                 
-                // TODO: add option to select "no file
+                // TODO: add option to select "no file?
                 // TODO: middle click to delete sample under cursor in menu?
-                for(int i = 0; i < loadedFiles.size(); ++i)
+
+                // for each sample, add it to the list
+                for(int i = 0; i < currentSamplePoolSize; ++i)
                 {
                     // +1 is because 0 is result for no item clicked
-                    p.addItem(i+1, String(loadedFiles[i].getFileName()));
+                    String iFileName = demoPage->getSampleName(i);
+                    p.addItem(i+1, iFileName);
                 }
 
                 // show the menu and store choice 
@@ -168,17 +170,12 @@ void WaveformControl::mouseDown(const MouseEvent &e){
                 if (fileChoice != 0)
                 {
                     --fileChoice;       // -1 is to correct for +1 in for loop above
-                    demoPage->recieveFileSelection(waveformID, fileChoice);
-                    DBG("Waveform strip" + String(waveformID) + ": file selected " + loadedFiles[fileChoice].getFileName());
+                    currentSample = demoPage->getSample(fileChoice);
+                    setFile(currentSample->getSampleFile());
+                    DBG("Waveform strip" + String(waveformID) + ": file selected " + currentSample->getSampleFile().getFileName());
                 }
             }
         }
-
-        // DO WE STORE A FILE OBJECT IN THE WAVEFORMCONTROL?
-        // OR KEEP IT IN THE PARENT
-
-        //trackInfo->setText(labeltext, false);
-
 
     }
 }

@@ -111,8 +111,7 @@ public:
 private:
     //==============================================================================
 
-    // store array of samplePool objects
-    OwnedArray<AudioSample> samplePool;
+
 
     AudioSampleBuffer delayBuffer;
     int delayPosition;

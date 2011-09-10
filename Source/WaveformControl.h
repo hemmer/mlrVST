@@ -15,7 +15,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
-
+#include "AudioSample.h"
 
 class WaveformControl  : public Component,
                          public ChangeListener,
@@ -43,6 +43,8 @@ public:
     void clearChannelList();
     //void updateChannelColour(const Colour &col);
 
+    AudioSample* getCurrentSample() const { return currentSample; }
+    //void setCurrentSample(AudioSample &newSample) { currentSample = &newSample; }
 private:
 
     // which strip we are representing
@@ -65,6 +67,7 @@ private:
     Colour backgroundColour;
 
     File currentFile;
+    AudioSample* currentSample;
 };
 
 

@@ -16,6 +16,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       delaySlider("delay"), masterGainSlider("master gain"),
 	  loadButton("loadfile", DrawableButton::ImageRaw),
       selNumChannels("select number of channels"),
+      samplePool(),               // sample pool is initially empty
 	  waveformArray(),
 	  numChannels(4),
       numStrips(7),
@@ -111,8 +112,15 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     for(int i = 1; i <= 8; ++i) selNumChannels.addItem(String(i), i);
     selNumChannels.addListener(this);
     selNumChannels.setBounds(400, 400, 100, 30);
-    // flag forces the number of channels to (re)built
+    // flag forces the number of channels to be (re)built
     selNumChannels.setSelectedId(4, false);
+
+
+    // add basic sample to pool
+    File testFile1 = File("C:\\Users\\Hemmer\\Desktop\\funky.wav");    
+    File testFile2 = File("C:\\Users\\Hemmer\\Desktop\\3drums.wav");    
+    //samplePool.add(new AudioSample(testFile1));
+    //samplePool.add(new AudioSample(testFile2));
 
 
     formatManager.registerBasicFormats();
@@ -128,12 +136,6 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
 {
 
-}
-
-// receieve communication from the WaveformControl component
-void mlrVSTAudioProcessorEditor::recieveFileSelection(const int &waveformID, const int &fileChoice){
-    helloLabel.setText(String(waveformID) + ", id: " + String(fileChoice), false);
-    waveformArray[waveformID]->setFile(loadedFiles[fileChoice]);
 }
 
 // return a copy of the current filelist array
@@ -223,18 +225,11 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 		if(myChooser.browseForFileToOpen())
 		{	
 			File newFile = myChooser.getResult();
-			loadedFiles.addIfNotAlreadyThere(newFile);
+			// TODO: handle duplicates
+            // add the new sample to the pool
+            samplePool.add(new AudioSample(newFile));
 
-            for(int i = 0; i < waveformArray.size(); ++i){
-				waveformArray[i]->setFile(newFile);
-			}
-
-			String str = T("Files Loaded:\n");
-			for(int i = 0; i < loadedFiles.size(); ++i)
-            {
-                str += String(loadedFiles[i].getFileNameWithoutExtension()) + "\n";
-			}
-			helloLabel.setText(str, false);
+			DBG("File Loaded: " + samplePool.getLast()->getSampleName());
 		}
 	}
 }

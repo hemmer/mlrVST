@@ -44,7 +44,21 @@ public:
 	void buttonClicked(Button*);
 
     //void mouseDown(const MouseEvent&);
-    void recieveFileSelection(const int &waveformID, const int &fileID);
+
+    int getSamplePoolSize() { return samplePool.size(); }
+    // TODO: bounds checking?
+    String getSampleName(const int &index)
+    {
+        jassert(index < samplePool.size());
+        return samplePool[index]->getSampleName();
+    }
+
+    AudioSample* getSample(const int &index)
+    {
+        jassert(index < samplePool.size());
+        return samplePool[index];
+    }
+
 
     Array<File> getLoadedFiles();
 
@@ -79,6 +93,10 @@ private:
     AudioPlayHead::CurrentPositionInfo lastDisplayedPosition;
 
     mlrVSTAudioProcessor* getProcessor() const { return static_cast <mlrVSTAudioProcessor*> (getAudioProcessor()); }
+
+    // store array of samplePool objects
+    OwnedArray<AudioSample> samplePool;
+
 
     void displayPositionInfo (const AudioPlayHead::CurrentPositionInfo& pos);
 };

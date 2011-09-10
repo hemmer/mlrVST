@@ -20,7 +20,6 @@
 mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     delayBuffer (2, 12000),
     channelProcessorArray(),    // array of processor objects
-    samplePool(),               // sample pool is initially empty
     numChannels(4),
     channelGains()
 {
@@ -34,15 +33,11 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     lastPosInfo.resetToDefault();
     delayPosition = 0;
 
-    // add basic sample to pool
-    File testFile1 = File("C:\\Users\\Hemmer\\Desktop\\funky.wav");    
-    File testFile2 = File("C:\\Users\\Hemmer\\Desktop\\3drums.wav");    
-    samplePool.add(new AudioSample(testFile1));
-    samplePool.add(new AudioSample(testFile2));
+
 
     // TEST: set a few different samples
-    channelProcessorArray[0]->setCurrentSample(samplePool.getFirst());
-    channelProcessorArray[1]->setCurrentSample(samplePool.getLast());
+    //channelProcessorArray[0]->setCurrentSample(samplePool.getFirst());
+    //channelProcessorArray[1]->setCurrentSample(samplePool.getLast());
 }
 
 void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
@@ -63,7 +58,6 @@ void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
     for(int c = 0; c < numChannels; c++)
     {
         channelProcessorArray.add(new ChannelProcessor(c, Colour((float) (0.1f * c), 0.5f, 0.5f, 1.0f)));
-        channelProcessorArray[c]->setCurrentSample(samplePool.getFirst());
     }
 
     // resume processing
@@ -186,18 +180,16 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
     const int numSamples = buffer.getNumSamples();
     int channel, dp = 0;
 
-    //// Go through the incoming data, and apply our gain to it...
-    //for (channel = 0; channel < getNumInputChannels(); ++channel)
-    //    buffer.applyGain (channel, 0, buffer.getNumSamples(), gain);
+    /*  Eventually should have something like
 
-    // NOT USING
-    // and now get the synth to process these midi events and generate its output.
-    //synth.renderNextBlock (buffer, midiMessages, 0, numSamples);
+    MonomeBuffer &monomeMessages - format (monomeRow, monomeCol, status)
+
+    maybe strip channel 0 messages (for control options)
+
+    */
 
     // for each channel, add its contributions
     // Remember to set the correct sample
-    //myChannel.renderNextBlock(buffer, midiMessages, 0, numSamples);
-    //for(int c = 0; c < numChannels; c++)
     for(int c = 0; c < channelProcessorArray.size(); c++)
     {
         channelProcessorArray[c]->renderNextBlock(buffer, midiMessages, 0, numSamples);

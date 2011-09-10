@@ -44,6 +44,22 @@ void ChannelProcessor::stopSamplePlaying()
 
 void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
 {
+    /* PSUEDO CODE TO HELP DESIGN ONCE MONOME messages are interpreted
+
+    // INCOMING PARAMS:
+
+    use monomeRow to ignore messages coming for other channels:
+
+    IF waveFormArray[monomeRow].getChannel != this.channelNumber
+    THEN ignore msg
+    ELSE setCurrentSample( waveFormArray[monomeRow].currentSample )
+
+    then just monomeCol to choose sample start position based on PLAYBACk_MODE
+
+    */
+
+
+
     if (m.isNoteOn())
     {
         int noteNumber = m.getNoteNumber();
