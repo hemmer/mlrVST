@@ -25,7 +25,16 @@ WaveformControl::WaveformControl(const int &id) :
         channelButtonArray()
         //channelArray()
 {
+    // TODO: doesn't get bounds until initialised
     Rectangle<int> waveformShape = getBoundsInParent();
+
+    addAndMakeVisible(&filenameLbl);
+    filenameLbl.setColour(Label::backgroundColourId, Colours::white);
+    filenameLbl.setColour(Label::textColourId, Colours::black);
+    filenameLbl.setJustificationType(Justification::right);
+    // TODO: make sure this is same as parent
+    filenameLbl.setBounds(0, 0, 300, 15);
+    filenameLbl.setFont(10.0f);
 
     startTime = endTime = 0;
     formatManager.registerBasicFormats();
@@ -37,10 +46,7 @@ WaveformControl::WaveformControl(const int &id) :
     trackNumberLbl.setColour(Label::textColourId, Colours::white);
     trackNumberLbl.setFont(10.0f);
 
-    addAndMakeVisible(&filenameLbl);
-    filenameLbl.setColour(Label::backgroundColourId, Colours::white);
-    filenameLbl.setColour(Label::textColourId, Colours::black);
-    filenameLbl.setFont(10.0f);
+
 
 }
 
@@ -147,7 +153,7 @@ void WaveformControl::mouseDown(const MouseEvent &e){
             if(loadedFiles.size() != 0)
             {
                 PopupMenu p = PopupMenu();
-            
+                
                 // TODO: add option to select "no file
                 // TODO: middle click to delete sample under cursor in menu?
                 for(int i = 0; i < loadedFiles.size(); ++i)

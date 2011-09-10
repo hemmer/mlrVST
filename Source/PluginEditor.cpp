@@ -152,7 +152,9 @@ void mlrVSTAudioProcessorEditor::paint (Graphics& g)
 
 
 //==============================================================================
-// This timer periodically checks whether any of the filter's parameters have changed...
+// This timer periodically checks whether any of the filter's
+// parameters have changed. In pratical terms, this is usually 
+// to see if the host has modified the parameters. 
 void mlrVSTAudioProcessorEditor::timerCallback()
 {
     mlrVSTAudioProcessor* ourProcessor = getProcessor();
@@ -162,11 +164,19 @@ void mlrVSTAudioProcessorEditor::timerCallback()
     if (lastDisplayedPosition != newPos)
         displayPositionInfo (newPos);
 
+    // TODO: use mlrVSTAudioProcessor::getParameter
+    // instead of accessing member variables directly?
     delaySlider.setValue(ourProcessor->delay, false);
+    masterGainSlider.setValue(ourProcessor->masterGain, false);
+
+    // check the if the channel volumes have changed
+    for(int i = 0; i < slidersArray.size(); ++i)
+        slidersArray[i]->setValue( ourProcessor->channelGains[i] );
+    
 }
 
 // This is our Slider::Listener callback, when the user drags a slider.
-void mlrVSTAudioProcessorEditor::sliderValueChanged (Slider* slider)
+void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
 {
     if (slider == &masterGainSlider)
     {

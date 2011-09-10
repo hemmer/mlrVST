@@ -100,10 +100,8 @@ public:
 
     float masterGain, delay;
     // individual channel volumes
-    float channel0Gain, channel1Gain, channel2Gain, channel3Gain;
-    float channel4Gain, channel5Gain, channel6Gain, channel7Gain;
-
-    // add a sample to the sample pool
+    Array<float> channelGains;
+    // adds a sample to the sample pool
     void addNewSample();
 
 
@@ -121,6 +119,8 @@ private:
 
     // eventually this will be an array for all the channels
     int numChannels;
+    // the maximum number of allowed channels
+    static const int maxChannels = 8;
     // These are the seperate audio channels
     OwnedArray<ChannelProcessor> channelProcessorArray; 
 

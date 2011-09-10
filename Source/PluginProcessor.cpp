@@ -21,14 +21,15 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     delayBuffer (2, 12000),
     channelProcessorArray(),    // array of processor objects
     samplePool(),               // sample pool is initially empty
-    numChannels(4)
+    numChannels(4),
+    channelGains()
 {
     // Set up some default values..
     masterGain = 1.0f;
     delay = 0.5f;
-    // for individual channels
-    channel0Gain = channel1Gain = channel2Gain = channel3Gain = 0.5;
-    channel4Gain = channel5Gain = channel6Gain = channel7Gain = 0.5;
+    // add our channel processors
+    buildChannelProcessorArray(numChannels);
+    
 
     lastPosInfo.resetToDefault();
     delayPosition = 0;
@@ -39,9 +40,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     samplePool.add(new AudioSample(testFile1));
     samplePool.add(new AudioSample(testFile2));
 
-    // add our channels
-    buildChannelProcessorArray(numChannels);
-
+    // TEST: set a few different samples
     channelProcessorArray[0]->setCurrentSample(samplePool.getFirst());
     channelProcessorArray[1]->setCurrentSample(samplePool.getLast());
 }
@@ -51,10 +50,13 @@ void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
     // update the number of channels
     numChannels = newNumChannels;
 
-
     // make sure we're not using the channelProcessorArray
     // while (re)building it
     suspendProcessing(true);
+
+    // reset the gains
+    channelGains.clear();
+    for(int c = 0; c < maxChannels; c++) channelGains.add(0.8f);
 
     channelProcessorArray.clear();
     // add the list of channels 
@@ -87,14 +89,14 @@ float mlrVSTAudioProcessor::getParameter (int index)
     {
         case masterGainParam:       return masterGain;
         case delayParam:            return delay;
-        case channel0GainParam:     return channel0Gain;
-        case channel1GainParam:     return channel1Gain;
-        case channel2GainParam:     return channel2Gain;
-        case channel3GainParam:     return channel3Gain;
-        case channel4GainParam:     return channel4Gain;
-        case channel5GainParam:     return channel5Gain;
-        case channel6GainParam:     return channel6Gain;
-        case channel7GainParam:     return channel7Gain;
+        case channel0GainParam:     return channelGains[0];
+        case channel1GainParam:     return channelGains[1];
+        case channel2GainParam:     return channelGains[2];
+        case channel3GainParam:     return channelGains[3];
+        case channel4GainParam:     return channelGains[4];
+        case channel5GainParam:     return channelGains[5];
+        case channel6GainParam:     return channelGains[6];
+        case channel7GainParam:     return channelGains[7];
         default:            return 0.0f;
     }
 }
@@ -110,21 +112,21 @@ void mlrVSTAudioProcessor::setParameter (int index, float newValue)
         case delayParam:            delay = newValue;  break;
         // TODO: there might be a neater way to do this!
         case channel0GainParam:
-            channel0Gain = newValue;    break;
+            channelGains.set(0, newValue);    break;
         case channel1GainParam:
-            channel1Gain = newValue;    break;
+            channelGains.set(1, newValue);    break;
         case channel2GainParam:     
-            channel2Gain = newValue;    break;
+            channelGains.set(2, newValue);    break;
         case channel3GainParam:     
-            channel3Gain = newValue;    break;
+            channelGains.set(3, newValue);    break;
         case channel4GainParam:     
-            channel4Gain = newValue;    break;
+            channelGains.set(4, newValue);    break;
         case channel5GainParam:
-            channel5Gain = newValue;    break;
+            channelGains.set(5, newValue);    break;
         case channel6GainParam:     
-            channel6Gain = newValue;    break;
+            channelGains.set(6, newValue);    break;
         case channel7GainParam:     
-            channel7Gain = newValue;    break;
+            channelGains.set(7, newValue);    break;
         default:                    break;
     }
 }
