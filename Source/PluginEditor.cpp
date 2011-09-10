@@ -24,6 +24,25 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
       slidersArray()
 {
+
+    // TEST:
+    //osc stuff
+    char buffer[1536];
+    osc::OutboundPacketStream p( buffer, 1536 );
+    UdpTransmitSocket socket( IpEndpointName("localhost", 8001) );
+
+    p.Clear();
+    p << osc::BeginMessage( "/test1" )
+            << true << 23 << (float)3.1415 << "hello" << osc::EndMessage;
+    socket.Send( p.Data(), p.Size() );
+
+    // test1 message with too few arguments
+    p.Clear();
+    p << osc::BeginMessage( "/test1" )
+            << true << osc::EndMessage;
+    socket.Send( p.Data(), p.Size() );
+    // END TEST
+
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
     // add logo strip to top
@@ -47,9 +66,8 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     delayLabel.attachToComponent(&delaySlider, false);
     delayLabel.setFont (Font (11.0f));
 
-        DBG("editor loaded");
-
-
+    DBG("editor loaded");
+    
 
     // For manually loading files
     addAndMakeVisible(&loadButton);

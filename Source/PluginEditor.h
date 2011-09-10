@@ -11,8 +11,9 @@
 #ifndef __PLUGINEDITOR_H_4ACCBAA__
 #define __PLUGINEDITOR_H_4ACCBAA__
 
-
-
+#include "osc/OscOutboundPacketStream.h"
+#include "ip/UdpSocket.h"
+#include "ip/IpEndpointName.h"
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
@@ -99,6 +100,9 @@ private:
 
 
     void displayPositionInfo (const AudioPlayHead::CurrentPositionInfo& pos);
+
+
+
 };
 
 

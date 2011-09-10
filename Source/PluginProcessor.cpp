@@ -13,7 +13,6 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "Zampler.h"
 
 
 //==============================================================================

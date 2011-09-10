@@ -64,7 +64,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>c:\SDKs\vstsdk2.4;..\..\JuceLibraryCode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\oscpack;c:\SDKs\vstsdk2.4;..\..\JuceLibraryCode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;DEBUG;_DEBUG;JUCER_VS2010_78A501D=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -105,7 +105,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>c:\SDKs\vstsdk2.4;..\..\JuceLibraryCode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\oscpack;c:\SDKs\vstsdk2.4;..\..\JuceLibraryCode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;DEBUG;_DEBUG;JUCER_VS2010_78A501D=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -144,7 +144,7 @@
     </Midl>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>c:\SDKs\vstsdk2.4;..\..\JuceLibraryCode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\oscpack;c:\SDKs\vstsdk2.4;..\..\JuceLibraryCode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;JUCER_VS2010_78A501D=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -175,10 +175,15 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp" />
+    <ClCompile Include="..\..\oscpack\ip\win32\NetworkingUtils.cpp" />
+    <ClCompile Include="..\..\oscpack\ip\win32\UdpSocket.cpp" />
+    <ClCompile Include="..\..\oscpack\osc\OscOutboundPacketStream.cpp" />
+    <ClCompile Include="..\..\oscpack\osc\OscPrintReceivedElements.cpp" />
+    <ClCompile Include="..\..\oscpack\osc\OscReceivedElements.cpp" />
+    <ClCompile Include="..\..\oscpack\osc\OscTypes.cpp" />
     <ClCompile Include="..\..\Source\AudioSample.cpp" />
     <ClCompile Include="..\..\Source\ChannelProcessor.cpp" />
-    <ClCompile Include="..\..\Source\Zynth.cpp" />
-    <ClCompile Include="..\..\Source\Zampler.cpp" />
     <ClCompile Include="..\..\Source\WaveformControl.cpp" />
     <ClCompile Include="..\..\Source\PluginProcessor.cpp" />
     <ClCompile Include="..\..\Source\PluginEditor.cpp" />
@@ -189,10 +194,21 @@
     <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode4.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\oscpack\ip\IpEndpointName.h" />
+    <ClInclude Include="..\..\oscpack\ip\NetworkingUtils.h" />
+    <ClInclude Include="..\..\oscpack\ip\PacketListener.h" />
+    <ClInclude Include="..\..\oscpack\ip\TimerListener.h" />
+    <ClInclude Include="..\..\oscpack\ip\UdpSocket.h" />
+    <ClInclude Include="..\..\oscpack\osc\MessageMappingOscPacketListener.h" />
+    <ClInclude Include="..\..\oscpack\osc\OscException.h" />
+    <ClInclude Include="..\..\oscpack\osc\OscHostEndianness.h" />
+    <ClInclude Include="..\..\oscpack\osc\OscOutboundPacketStream.h" />
+    <ClInclude Include="..\..\oscpack\osc\OscPacketListener.h" />
+    <ClInclude Include="..\..\oscpack\osc\OscPrintReceivedElements.h" />
+    <ClInclude Include="..\..\oscpack\osc\OscReceivedElements.h" />
+    <ClInclude Include="..\..\oscpack\osc\OscTypes.h" />
     <ClInclude Include="..\..\Source\AudioSample.h" />
     <ClInclude Include="..\..\Source\ChannelProcessor.h" />
-    <ClInclude Include="..\..\Source\Zynth.h" />
-    <ClInclude Include="..\..\Source\Zampler.h" />
     <ClInclude Include="..\..\Source\WaveformControl.h" />
     <ClInclude Include="..\..\Source\PluginProcessor.h" />
     <ClInclude Include="..\..\Source\PluginEditor.h" />

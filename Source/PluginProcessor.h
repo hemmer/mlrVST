@@ -14,7 +14,6 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
-#include "Zynth.h"
 #include "ChannelProcessor.h"
 #include "AudioSample.h"
 

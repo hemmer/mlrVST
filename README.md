@@ -7,7 +7,7 @@ Current Status
 --------------
 
 UI is starting to take shape (at least in terms of functionality). Variable number of channels can be set at runtime.
-Very basic audio processing can be done.
+Very basic audio processing can be done. Initial OSC tests are sucessful.
 
 
 Possible Upcoming Features
