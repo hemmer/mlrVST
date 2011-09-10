@@ -103,7 +103,7 @@ void WaveformControl::addChannel(const int &id, const Colour &col)
     // reset channel to first channel just in case 
     // old channel setting no longer exists
     currentChannel = 0;
-    //backgroundColour = channelArray[currentChannel].getColour();
+    backgroundColour = channelButtonArray.getFirst()->getBackgroundColour();
     // let the UI know
     repaint();
 

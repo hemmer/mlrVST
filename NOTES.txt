@@ -5,4 +5,4 @@ Design decision: have number of channels fixed at compile time, and have VSTs pa
 				 
 IDEAS
 
-- drop cue points?
+- play mode where you can drop cue points?

@@ -6,8 +6,8 @@ VST port of the popular monome app using JUCE. At this stage, the app is very mu
 Current Status
 --------------
 
-UI is starting to take shape (at least in terms of functionality).
-No audio at all.
+UI is starting to take shape (at least in terms of functionality). Variable number of channels can be set at runtime.
+Very basic audio processing can be done.
 
 
 Ideas / Upcoming Features
@@ -17,7 +17,7 @@ Ideas / Upcoming Features
 - loop current block only on hold down button
 - Load MIDI tracks into stips
 - Speed independent pitch control of samples
-
+- 64 bit version?
 
 Links of Interest
 -----------------

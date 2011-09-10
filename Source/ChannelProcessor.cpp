@@ -14,7 +14,7 @@
 // main constructor
 ChannelProcessor::ChannelProcessor(const int &channelIDNo, const Colour &col) :
     channelIDNumber(channelIDNo),
-    channelGain(0.8),
+    channelGain(0.8f),
     currentSample(0),
     sampleStartPosition(0),
     isPlaying(false),
