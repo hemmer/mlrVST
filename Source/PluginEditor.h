@@ -100,8 +100,8 @@ private:
 
     // For simplicity, let's stick to a fixed size GUI
     static const int GUI_HEIGHT = 750;
-    static const int GUI_WIDTH = 600;
-
+    static const int GUI_WIDTH = 1024;
+    static const int PAD_AMOUNT = 10;
     AudioPlayHead::CurrentPositionInfo lastDisplayedPosition;
 
     mlrVSTAudioProcessor* getProcessor() const { return static_cast <mlrVSTAudioProcessor*> (getAudioProcessor()); }

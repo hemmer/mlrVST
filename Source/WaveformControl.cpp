@@ -175,15 +175,6 @@ void WaveformControl::paint(Graphics& g)
 
     if (thumbnail.getTotalLength() > 0)
     {
-        //g.setColour (Colours::black);
-        //thumbnail.drawChannel(g, getLocalBounds().reduced(2, 2),
-        //                      0, thumbnailLength, 0, 1.0f);
-
-        //g.setColour (Colours::white);
-        //
-        //thumbnail.drawChannel(g, getLocalBounds().reduced(2, 2),
-        //                      0, thumbnailLength, 1, 1.0f);
-
         thumbnail.drawChannels (g, waveformPaintBounds, 0, thumbnailLength, 1.0f);
     }
     else

@@ -19,8 +19,8 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       selNumChannels("select number of channels"),
       samplePool(),               // sample pool is initially empty
 	  waveformArray(),
-      waveformControlHeight(90), waveformControlWidth(300),
-	  numChannels(4),
+      waveformControlHeight(90), waveformControlWidth(700),
+	  numChannels(8),
       numStrips(7),
 	  loadedFiles(),
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
@@ -46,7 +46,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     delaySlider.addListener(this);
     delaySlider.setRange(0.0, 1.0, 0.01);
 	delaySlider.setValue(0.02);
-	delaySlider.setBounds(350, 80, 150, 40);
+	delaySlider.setBounds(50, 80, 150, 40);
     // attach label
     delayLabel.attachToComponent(&delaySlider, false);
     delayLabel.setFont (Font (11.0f));
@@ -56,7 +56,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
     // For manually loading files
     addAndMakeVisible(&loadButton);
-	loadButton.setBounds(350, 350, 100, 30);
+	loadButton.setBounds(50, 350, 100, 30);
 	loadButton.addListener(this);
 	loadButton.setBackgroundColours(Colours::yellow, Colours::black);
 
@@ -70,16 +70,20 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     addAndMakeVisible(&debugButton);
 	debugButton.addListener(this);
 	debugButton.setBackgroundColours(Colours::blue, Colours::black);
-	debugButton.setBounds(400, 300, 50, 25);
+	debugButton.setBounds(50, 300, 50, 25);
     // another test label
 	addAndMakeVisible(&helloLabel);
-	helloLabel.setBounds(350, 150, 100, 100);
+	helloLabel.setBounds(50, 150, 100, 100);
 	helloLabel.setColour(Label::backgroundColourId, Colours::bisque);
 
     // add waveform strips
+    
     for(int i = 0; i < numStrips; ++i){
+
+        int waveX = getWidth() - waveformControlWidth - PAD_AMOUNT;
+        int waveY = 40 + i * (waveformControlHeight + PAD_AMOUNT);
         waveformArray.add(new WaveformControl(i, waveformControlWidth, waveformControlHeight));
-        waveformArray[i]->setBounds(10, 40 + i * (waveformControlHeight + 5), waveformControlWidth, waveformControlHeight);
+        waveformArray[i]->setBounds(waveX, waveY, waveformControlWidth, waveformControlHeight);
         addAndMakeVisible( waveformArray[i] );
 	}
 
@@ -92,7 +96,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     masterGainSlider.addListener(this);
     masterGainSlider.setRange(0.0, 1.0, 0.01);
     masterGainSlider.setValue(0.05);
-    masterGainSlider.setBounds(330, 500, 30, 150);
+    masterGainSlider.setBounds(PAD_AMOUNT, 540, 30, 190);
     masterGainSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
 
 
@@ -100,10 +104,10 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     addAndMakeVisible(&selNumChannels);
     for(int i = 1; i <= 8; ++i) selNumChannels.addItem(String(i), i);
     selNumChannels.addListener(this);
-    selNumChannels.setBounds(400, 400, 100, 30);
+    selNumChannels.setBounds(50, 400, 100, 30);
     // NOTE: false flag forces the number of channels to be (re)built,
     // this is where the individual channel volume controls get added
-    selNumChannels.setSelectedId(4, false);
+    selNumChannels.setSelectedId(numChannels, false);
 
 
     // test adding basic samples to pool
@@ -138,7 +142,7 @@ Array<File> mlrVSTAudioProcessorEditor::getLoadedFiles(){
 //==============================================================================
 void mlrVSTAudioProcessorEditor::paint (Graphics& g)
 {
-	g.fillAll(Colours::white);      // fill with background colour 
+    g.fillAll(Colours::grey);      // fill with background colour 
 }
 
 
@@ -265,7 +269,7 @@ void mlrVSTAudioProcessorEditor::comboBoxChanged (ComboBox* comboBoxThatHasChang
             slidersArray[i]->addListener(this);
             slidersArray[i]->setRange(0.0, 1.0, 0.01);
             slidersArray[i]->setValue(0.8);
-            slidersArray[i]->setBounds(360 + i*30, 500, 30, 150);
+            slidersArray[i]->setBounds(40 + i*33, 540, 33, 190);
             Colour sliderColour = getProcessor()->getChannelProcessor(i)->getChannelColour();
             slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
             slidersArray[i]->setColour(Slider::backgroundColourId, sliderColour);
