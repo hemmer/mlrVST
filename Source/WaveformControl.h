@@ -30,6 +30,8 @@ public:
 	void setZoomFactor (double amount);
 	void mouseWheelMove (const MouseEvent&, float wheelIncrementX, float wheelIncrementY);
     void mouseDown(const MouseEvent&);
+    void mouseDrag(const MouseEvent&);
+    void mouseUp(const MouseEvent&);
 
     void paint (Graphics& g);
     void changeListenerCallback (ChangeBroadcaster*);
@@ -76,7 +78,10 @@ private:
     bool isReversed;
     // these allow a subsection of the sample to be selected
     // NOTE: by default the whole sample is selected
-    int selectionStart, selectionEnd; 
+    int selectionStart, selectionEnd;
+    // these are the same, except refering to the component 
+    // rather than the sample
+    int selectionStartVisual, selectionEndVisual; 
     // how many chunks to break the sample into (default 8 for 
     // standard monome) and what size (in samples) they are
     int numChunks, chunkSize;
@@ -90,7 +95,7 @@ private:
     double thumbnailLength;
 
     // main strip background colour
-    Colour backgroundColour;
+    Colour backgroundColour, backgroundColourDark;
 
     // Pointer to the sample object
     AudioSample* currentSample;

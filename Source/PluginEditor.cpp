@@ -15,7 +15,6 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     : AudioProcessorEditor (ownerFilter),
       infoLabel(), helloLabel("", "Hello"), logoLabel("", "mlrVST"), delayLabel("", "Delay:"),
       delaySlider("delay"), masterGainSlider("master gain"),
-	  loadButton("loadfile", DrawableButton::ImageRaw),
       selNumChannels("select number of channels"),
       samplePool(),               // sample pool is initially empty
 	  waveformArray(),
@@ -27,7 +26,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       slidersArray()
 {
     
-
+    DBG("GUI loaded");
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
     // add logo strip to top
@@ -37,7 +36,6 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     logoLabel.setColour(Label::textColourId, Colours::white);
     logoLabel.setJustificationType(Justification::bottomRight);
     logoLabel.setFont(30.0f);
-	
 
 
     // DELAY stuff (may eventually go)
@@ -50,15 +48,6 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     // attach label
     delayLabel.attachToComponent(&delaySlider, false);
     delayLabel.setFont (Font (11.0f));
-
-    DBG("editor loaded");
-    
-
-    // For manually loading files
-    addAndMakeVisible(&loadButton);
-	loadButton.setBounds(50, 350, 100, 30);
-	loadButton.addListener(this);
-	loadButton.setBackgroundColours(Colours::yellow, Colours::black);
 
 
     // add a label that will display the current timecode and status..
@@ -130,7 +119,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
 mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
 {
-
+    DBG("GUI unloaded");
 }
 
 // return a copy of the current filelist array
@@ -234,21 +223,11 @@ void mlrVSTAudioProcessorEditor::loadSampleFromFile(File &sampleFile)
 
 void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 {
-    // Manually load a file
-	if(btn == &loadButton)
-    {
+ //   // Manually load a file
+	//if(btn == &button)
+ //   {
 
-		FileChooser myChooser ("Please choose a file:", File::getSpecialLocation(File::userDesktopDirectory), "*.wav");
-        // TODO: add directories support
-        if(myChooser.browseForMultipleFilesToOpen())
-		{
-            Array<File> fileSelections = myChooser.getResults();
-            for(File* i = fileSelections.begin(); i < fileSelections.end(); ++i)
-            {
-                loadSampleFromFile(*i);
-            }
-		}
-	}
+	//}
 }
 
 // Combo box handling
@@ -286,8 +265,6 @@ void mlrVSTAudioProcessorEditor::comboBoxChanged (ComboBox* comboBoxThatHasChang
                 waveformArray[i]->addChannel(chan, sliderColour);
             }
 	    }
-
-
     }
 }
 

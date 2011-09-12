@@ -28,7 +28,8 @@ WaveformControl::WaveformControl(const int &id, const int &width, const int &hei
         selectionStart(0), selectionEnd(0),
         isReversed(false),
         numChunks(8), chunkSize(0),
-        thumbnailLength(0.0)
+        thumbnailLength(0.0),
+        selectionStartVisual(0), selectionEndVisual(0)
 {
 
     addAndMakeVisible(&filenameLbl);
@@ -63,6 +64,7 @@ void WaveformControl::buttonClicked(Button *btn){
     for(int i = 0; i < channelButtonArray.size(); ++i){
         if(channelButtonArray[i] == btn){
             backgroundColour = channelButtonArray[i]->getBackgroundColour();
+            backgroundColourDark = backgroundColour.darker().darker();
             currentChannel = i;
             repaint();
         }
@@ -96,6 +98,7 @@ void WaveformControl::addChannel(const int &id, const Colour &col)
     // old channel setting no longer exists
     currentChannel = 0;
     backgroundColour = channelButtonArray.getFirst()->getBackgroundColour();
+    backgroundColourDark = backgroundColour.darker().darker();
     // let the UI know
     repaint();
 
@@ -166,12 +169,53 @@ void WaveformControl::mouseDown(const MouseEvent &e){
             }
         }
     }
+    else
+    {
+        selectionStartVisual = e.getMouseDownX();
+        selectionEndVisual = selectionStartVisual;
+    }
 }
+
+void WaveformControl::mouseUp(const MouseEvent &e)
+{
+    if (e.mods == ModifierKeys::leftButtonModifier && currentSample != 0)
+    {
+        // we might have selected backwards
+        if (e.x > selectionStartVisual) selectionEndVisual = e.x;
+        else
+        {
+            selectionEndVisual = selectionStartVisual;
+            selectionStartVisual = e.x;
+        }
+
+        int sampleLength = currentSample->getSampleLength();
+
+        selectionStart = (int) ((selectionStartVisual / (double) componentWidth) * sampleLength);
+        selectionEnd = (int) ((selectionEndVisual / (double) componentWidth) * sampleLength);
+        repaint();
+        DBG("selection start " + String(selectionStart) + " ");
+    }
+}
+
+void WaveformControl::mouseDrag(const MouseEvent &e)
+{
+    selectionEndVisual = e.x;
+    repaint();
+    //DBG(e.g
+}
+
 
 void WaveformControl::paint(Graphics& g)
 {
-	g.fillAll (backgroundColour);
-    g.setColour (Colours::white);
+	g.fillAll(backgroundColourDark);
+    g.setColour(backgroundColour);
+
+    // this is because we can drag backwards!
+    if (selectionEndVisual > selectionStartVisual)
+        g.fillRect(selectionStartVisual, 15, (selectionEndVisual - selectionStartVisual), componentHeight - 15);
+    else g.fillRect(selectionEndVisual, 15, (selectionStartVisual - selectionEndVisual), componentHeight - 15);
+
+    g.setColour(Colours::white);
 
     if (thumbnail.getTotalLength() > 0)
     {
@@ -222,6 +266,8 @@ void WaveformControl::setAudioSample(AudioSample* sample)
     // TODO: check math of rounding here
     selectionStart = 0;
     selectionEnd = currentSample->getSampleLength();
+    selectionStartVisual = 0;
+    selectionEndVisual = componentWidth;
     chunkSize = (int) ((selectionEnd - selectionStart) / numChunks);
 
     // get temporary reference to the File object of the
@@ -231,7 +277,7 @@ void WaveformControl::setAudioSample(AudioSample* sample)
     thumbnailLength = thumbnail.getTotalLength();
 
     // update filename label
-    filenameLbl.setText(sampleFile.getFileName(), false);
+    filenameLbl.setText(sampleFile.getFullPathName(), false);
 
     DBG("Waveform strip " + String(waveformID) + ": file \"" + sampleFile.getFileName() + "\" selected.");
 }

@@ -76,7 +76,7 @@ public:
 private:
     Label infoLabel, delayLabel, helloLabel, logoLabel;
     Slider delaySlider, masterGainSlider;
-	DrawableButton loadButton, debugButton;
+	DrawableButton debugButton;
 
     ComboBox selNumChannels;
 
