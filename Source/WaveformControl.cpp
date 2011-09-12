@@ -151,6 +151,7 @@ void WaveformControl::mouseDown(const MouseEvent &e){
             // only show the menu if we have samples in the pool
             if(currentSamplePoolSize != 0)
             {
+                // TODO: can this be cached and only repopulated when the sample pool changes?
                 PopupMenu p = PopupMenu();
                 
                 // TODO: add option to select "no file?

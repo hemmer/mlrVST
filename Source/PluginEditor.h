@@ -11,14 +11,13 @@
 #ifndef __PLUGINEDITOR_H_4ACCBAA__
 #define __PLUGINEDITOR_H_4ACCBAA__
 
-#include "osc/OscOutboundPacketStream.h"
-#include "ip/UdpSocket.h"
-#include "ip/IpEndpointName.h"
+
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "PluginProcessor.h"
 #include "WaveformControl.h"
+
 
 class WaveformControl;
 
@@ -26,10 +25,10 @@ class WaveformControl;
 /** This is the editor component that our filter will display.
 */
 class mlrVSTAudioProcessorEditor  : public AudioProcessorEditor,
-                                            public SliderListener,
-											public ButtonListener,
-                                            public ComboBoxListener,
-                                            public Timer
+                                    public SliderListener,
+									public ButtonListener,
+                                    public ComboBoxListener,
+                                    public Timer
 {
 public:
     mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter);
@@ -54,6 +53,7 @@ public:
         return samplePool[index]->getSampleName();
     }
 
+    // Returns a pointer to the sample in the sample pool at the specified index
     AudioSample* getSample(const int &index)
     {
         jassert(index < samplePool.size());
@@ -100,8 +100,6 @@ private:
 
 
     void displayPositionInfo (const AudioPlayHead::CurrentPositionInfo& pos);
-
-
 
 };
 

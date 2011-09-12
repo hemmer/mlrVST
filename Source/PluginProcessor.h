@@ -16,6 +16,7 @@
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "ChannelProcessor.h"
 #include "AudioSample.h"
+#include "OSCListener.h"
 
 //==============================================================================
 /**
@@ -122,7 +123,8 @@ private:
     // These are the seperate audio channels
     OwnedArray<ChannelProcessor> channelProcessorArray; 
 
-
+    //OSCListener testOSCHandler;
+    OscListener oscMsgListener;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTAudioProcessor);
 };

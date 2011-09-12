@@ -9,6 +9,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+
 //==============================================================================
 mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter)
     : AudioProcessorEditor (ownerFilter),
@@ -24,24 +25,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
       slidersArray()
 {
-
-    // TEST:
-    //osc stuff
-    char buffer[1536];
-    osc::OutboundPacketStream p( buffer, 1536 );
-    UdpTransmitSocket socket( IpEndpointName("localhost", 8001) );
-
-    p.Clear();
-    p << osc::BeginMessage( "/test1" )
-            << true << 23 << (float)3.1415 << "hello" << osc::EndMessage;
-    socket.Send( p.Data(), p.Size() );
-
-    // test1 message with too few arguments
-    p.Clear();
-    p << osc::BeginMessage( "/test1" )
-            << true << osc::EndMessage;
-    socket.Send( p.Data(), p.Size() );
-    // END TEST
+    
 
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
@@ -110,27 +94,14 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     masterGainSlider.setBounds(330, 500, 30, 150);
     masterGainSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
 
-    //slidersArray.clear();
-    // Programmatically add group volume controls
-    //for(int i = 0; i < channelArray.size(); ++i)
-    //{
-    //    slidersArray.add(new Slider("channel " + String(i) + " vol"));
-    //    addAndMakeVisible(slidersArray[i]);
-    //    slidersArray[i]->setSliderStyle(Slider::LinearVertical);
-    //    slidersArray[i]->addListener(this);
-    //    slidersArray[i]->setRange(0.0, 1.0, 0.01);
-    //    slidersArray[i]->setValue(0.8);
-    //    slidersArray[i]->setBounds(380 + i*30, 500, 30, 150);
-    //    slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
-    //    slidersArray[i]->setColour(Slider::backgroundColourId, channelArray[i].getColour());
-    //}
 
     // combobox to select the number of channels
     addAndMakeVisible(&selNumChannels);
     for(int i = 1; i <= 8; ++i) selNumChannels.addItem(String(i), i);
     selNumChannels.addListener(this);
     selNumChannels.setBounds(400, 400, 100, 30);
-    // flag forces the number of channels to be (re)built
+    // NOTE: false flag forces the number of channels to be (re)built,
+    // this is where the individual channel volume controls get added
     selNumChannels.setSelectedId(4, false);
 
 
@@ -165,9 +136,7 @@ Array<File> mlrVSTAudioProcessorEditor::getLoadedFiles(){
 //==============================================================================
 void mlrVSTAudioProcessorEditor::paint (Graphics& g)
 {
-    //g.setGradientFill (ColourGradient (Colours::white, 0, 0, Colours::red, 0, (float) getHeight(), false));
-	g.fillAll(Colours::white);
-
+	g.fillAll(Colours::white);      // fill with background colour 
 }
 
 
@@ -232,7 +201,7 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
    
 }
 
-// Button handling
+
 void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 {
     // Manually load a file

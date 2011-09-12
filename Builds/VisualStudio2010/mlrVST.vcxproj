@@ -209,6 +209,7 @@
     <ClInclude Include="..\..\oscpack\osc\OscTypes.h" />
     <ClInclude Include="..\..\Source\AudioSample.h" />
     <ClInclude Include="..\..\Source\ChannelProcessor.h" />
+    <ClInclude Include="..\..\Source\OSCListener.h" />
     <ClInclude Include="..\..\Source\WaveformControl.h" />
     <ClInclude Include="..\..\Source\PluginProcessor.h" />
     <ClInclude Include="..\..\Source\PluginEditor.h" />
