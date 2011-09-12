@@ -1,16 +1,12 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mlrVST", "mlrVST.vcxproj", "{BC07A08E-8205-B220-39D4-B2685FFC59CA}"
+Project("{FC74DF80-5B42-961E-C29F-46CEDD130DFB}") = "mlrVST", "mlrVST.vcxproj", "{BC07A08E-8205-B220-39D4-B2685FFC59CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug (MiniHost)|Win32 = Debug (MiniHost)|Win32
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{BC07A08E-8205-B220-39D4-B2685FFC59CA}.Debug (MiniHost)|Win32.ActiveCfg = Debug|Win32
-		{BC07A08E-8205-B220-39D4-B2685FFC59CA}.Debug (MiniHost)|Win32.Build.0 = Debug|Win32
 		{BC07A08E-8205-B220-39D4-B2685FFC59CA}.Debug|Win32.ActiveCfg = Debug|Win32
 		{BC07A08E-8205-B220-39D4-B2685FFC59CA}.Debug|Win32.Build.0 = Debug|Win32
 		{BC07A08E-8205-B220-39D4-B2685FFC59CA}.Release|Win32.ActiveCfg = Release|Win32

@@ -17,8 +17,8 @@
 
 #define JucePlugin_Name                 "mlrVST"
 #define JucePlugin_Desc                 "VST port of monome app mlr"
-#define JucePlugin_Manufacturer         "Raw Material Software"
-#define JucePlugin_ManufacturerCode     'RawM'
+#define JucePlugin_Manufacturer         "Ewan Hemingway"
+#define JucePlugin_ManufacturerCode     'HemR'
 #define JucePlugin_PluginCode           'vstX'
 #define JucePlugin_MaxNumInputChannels  2
 #define JucePlugin_MaxNumOutputChannels 2

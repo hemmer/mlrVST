@@ -17,12 +17,12 @@ ifeq ($(CONFIG),Debug)
   LIBDIR := build
   OBJDIR := build/intermediate/Debug
   OUTDIR := build
-  CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I "~/SDKs/vstsdk2.4" -I "/usr/include" -I "/usr/include/freetype2" -I "../../JuceLibraryCode"
+  CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I "~/SDKs/vstsdk2.4" -I "/usr/include" -I "/usr/include/freetype2" -I "../../oscpack" -I "../../JuceLibraryCode"
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -g -ggdb -fPIC -O0
   CXXFLAGS += $(CFLAGS) 
   LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -L"/usr/X11R6/lib/" -L"../../../../../../Documents/bin" -lfreetype -lpthread -lrt -lX11 -lGL -lGLU -lXinerama -lasound 
   LDDEPS :=
-  RESFLAGS :=  -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I "~/SDKs/vstsdk2.4" -I "/usr/include" -I "/usr/include/freetype2" -I "../../JuceLibraryCode"
+  RESFLAGS :=  -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I "~/SDKs/vstsdk2.4" -I "/usr/include" -I "/usr/include/freetype2" -I "../../oscpack" -I "../../JuceLibraryCode"
   TARGET := mlrVST.so
   BLDCMD = $(CXX) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS) $(RESOURCES) $(TARGET_ARCH)
 endif
@@ -32,21 +32,26 @@ ifeq ($(CONFIG),Release)
   LIBDIR := build
   OBJDIR := build/intermediate/Release
   OUTDIR := build
-  CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I "~/SDKs/vstsdk2.4" -I "/usr/include" -I "/usr/include/freetype2" -I "../../JuceLibraryCode"
+  CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I "~/SDKs/vstsdk2.4" -I "/usr/include" -I "/usr/include/freetype2" -I "../../oscpack" -I "../../JuceLibraryCode"
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -fPIC -Os
   CXXFLAGS += $(CFLAGS) 
   LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -L"/usr/X11R6/lib/" -L"../../../../../../Documents/bin" -lfreetype -lpthread -lrt -lX11 -lGL -lGLU -lXinerama -lasound 
   LDDEPS :=
-  RESFLAGS :=  -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I "~/SDKs/vstsdk2.4" -I "/usr/include" -I "/usr/include/freetype2" -I "../../JuceLibraryCode"
+  RESFLAGS :=  -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I "~/SDKs/vstsdk2.4" -I "/usr/include" -I "/usr/include/freetype2" -I "../../oscpack" -I "../../JuceLibraryCode"
   TARGET := mlrVST.so
   BLDCMD = $(CXX) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS) $(RESOURCES) $(TARGET_ARCH)
 endif
 
 OBJECTS := \
+  $(OBJDIR)/IpEndpointName_d4cc3aed.o \
+  $(OBJDIR)/NetworkingUtils_571a8d2d.o \
+  $(OBJDIR)/UdpSocket_34dc4264.o \
+  $(OBJDIR)/OscOutboundPacketStream_595b04c5.o \
+  $(OBJDIR)/OscPrintReceivedElements_db1e1922.o \
+  $(OBJDIR)/OscReceivedElements_b8801585.o \
+  $(OBJDIR)/OscTypes_b02e2cd6.o \
   $(OBJDIR)/AudioSample_c5634f81.o \
   $(OBJDIR)/ChannelProcessor_6fdb09d8.o \
-  $(OBJDIR)/Zynth_e6f811a4.o \
-  $(OBJDIR)/Zampler_20b72fb0.o \
   $(OBJDIR)/WaveformControl_fbaf07c1.o \
   $(OBJDIR)/PluginProcessor_a059e380.o \
   $(OBJDIR)/PluginEditor_94d4fb09.o \
@@ -71,6 +76,41 @@ clean:
 	-@rm -rf $(OBJDIR)/*
 	-@rm -rf $(OBJDIR)
 
+$(OBJDIR)/IpEndpointName_d4cc3aed.o: ../../oscpack/ip/IpEndpointName.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling IpEndpointName.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/NetworkingUtils_571a8d2d.o: ../../oscpack/ip/win32/NetworkingUtils.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling NetworkingUtils.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/UdpSocket_34dc4264.o: ../../oscpack/ip/win32/UdpSocket.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling UdpSocket.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/OscOutboundPacketStream_595b04c5.o: ../../oscpack/osc/OscOutboundPacketStream.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling OscOutboundPacketStream.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/OscPrintReceivedElements_db1e1922.o: ../../oscpack/osc/OscPrintReceivedElements.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling OscPrintReceivedElements.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/OscReceivedElements_b8801585.o: ../../oscpack/osc/OscReceivedElements.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling OscReceivedElements.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/OscTypes_b02e2cd6.o: ../../oscpack/osc/OscTypes.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling OscTypes.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
 $(OBJDIR)/AudioSample_c5634f81.o: ../../Source/AudioSample.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling AudioSample.cpp"
@@ -79,16 +119,6 @@ $(OBJDIR)/AudioSample_c5634f81.o: ../../Source/AudioSample.cpp
 $(OBJDIR)/ChannelProcessor_6fdb09d8.o: ../../Source/ChannelProcessor.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling ChannelProcessor.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/Zynth_e6f811a4.o: ../../Source/Zynth.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling Zynth.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/Zampler_20b72fb0.o: ../../Source/Zampler.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling Zampler.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/WaveformControl_fbaf07c1.o: ../../Source/WaveformControl.cpp

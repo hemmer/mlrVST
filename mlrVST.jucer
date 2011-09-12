@@ -2,8 +2,8 @@
 
 <JUCERPROJECT id="0nRd9LLGO" name="mlrVST" projectType="audioplug" version="1.0.0"
               juceLinkage="amalg_multi" buildVST="1" buildRTAS="0" buildAU="1"
-              pluginName="mlrVST" pluginDesc="VST port of monome app mlr" pluginManufacturer="Raw Material Software"
-              pluginManufacturerCode="RawM" pluginCode="vstX" pluginChannelConfigs="{1, 1}, {2, 2}"
+              pluginName="mlrVST" pluginDesc="VST port of monome app mlr" pluginManufacturer="Ewan Hemingway"
+              pluginManufacturerCode="HemR" pluginCode="vstX" pluginChannelConfigs="{1, 1}, {2, 2}"
               pluginIsSynth="0" pluginWantsMidiIn="1" pluginProducesMidiOut="1"
               pluginSilenceInIsSilenceOut="0" pluginTailLength="0" pluginEditorRequiresKeys="1"
               pluginAUExportPrefix="JuceDemoProjectAU" pluginAUViewClass="JuceDemoProjectAU_V1"
@@ -18,22 +18,66 @@
   </EXPORTFORMATS>
   <CONFIGURATIONS>
     <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="mlrVST"
-                   osxSDK="default" osxCompatibility="default" osxArchitecture="default"/>
+                   osxSDK="default" osxCompatibility="default" osxArchitecture="default"
+                   headerPath="..\..\oscpack"/>
     <CONFIGURATION name="Release" isDebug="0" optimisation="2" targetName="mlrVST"
-                   osxSDK="default" osxCompatibility="default" osxArchitecture="default"/>
+                   osxSDK="default" osxCompatibility="default" osxArchitecture="default"
+                   headerPath="..\..\oscpack"/>
   </CONFIGURATIONS>
   <MAINGROUP id="dYAMo6Ykd" name="mlrVST">
+    <GROUP id="mkBFQj" name="oscpack">
+      <FILE id="nDRTg8" name="CHANGES" compile="0" resource="0" file="oscpack/CHANGES"/>
+      <GROUP id="IZH4cp" name="ip">
+        <FILE id="RVCEed" name="IpEndpointName.cpp" compile="1" resource="0"
+              file="oscpack/ip/IpEndpointName.cpp"/>
+        <FILE id="XU3bjD" name="IpEndpointName.h" compile="0" resource="0"
+              file="oscpack/ip/IpEndpointName.h"/>
+        <FILE id="xlXbBG" name="NetworkingUtils.h" compile="0" resource="0"
+              file="oscpack/ip/NetworkingUtils.h"/>
+        <FILE id="AYvUpu" name="PacketListener.h" compile="0" resource="0"
+              file="oscpack/ip/PacketListener.h"/>
+        <FILE id="ADkGNS" name="TimerListener.h" compile="0" resource="0" file="oscpack/ip/TimerListener.h"/>
+        <FILE id="DzxP24" name="UdpSocket.h" compile="0" resource="0" file="oscpack/ip/UdpSocket.h"/>
+        <GROUP id="arv1VW" name="win32">
+          <FILE id="aAehsf" name="NetworkingUtils.cpp" compile="1" resource="0"
+                file="oscpack/ip/win32/NetworkingUtils.cpp"/>
+          <FILE id="WijCnK" name="UdpSocket.cpp" compile="1" resource="0" file="oscpack/ip/win32/UdpSocket.cpp"/>
+        </GROUP>
+      </GROUP>
+      <FILE id="KLn1T" name="LICENSE" compile="0" resource="0" file="oscpack/LICENSE"/>
+      <GROUP id="FWJulM" name="osc">
+        <FILE id="MiVLlf" name="MessageMappingOscPacketListener.h" compile="0"
+              resource="0" file="oscpack/osc/MessageMappingOscPacketListener.h"/>
+        <FILE id="Fdobx6" name="OscException.h" compile="0" resource="0" file="oscpack/osc/OscException.h"/>
+        <FILE id="xUTZmF" name="OscHostEndianness.h" compile="0" resource="0"
+              file="oscpack/osc/OscHostEndianness.h"/>
+        <FILE id="p9m1Jz" name="OscOutboundPacketStream.cpp" compile="1" resource="0"
+              file="oscpack/osc/OscOutboundPacketStream.cpp"/>
+        <FILE id="cnItvL" name="OscOutboundPacketStream.h" compile="0" resource="0"
+              file="oscpack/osc/OscOutboundPacketStream.h"/>
+        <FILE id="OL7F6q" name="OscPacketListener.h" compile="0" resource="0"
+              file="oscpack/osc/OscPacketListener.h"/>
+        <FILE id="hRPrIE" name="OscPrintReceivedElements.cpp" compile="1" resource="0"
+              file="oscpack/osc/OscPrintReceivedElements.cpp"/>
+        <FILE id="DWVwwF" name="OscPrintReceivedElements.h" compile="0" resource="0"
+              file="oscpack/osc/OscPrintReceivedElements.h"/>
+        <FILE id="bSSDe4" name="OscReceivedElements.cpp" compile="1" resource="0"
+              file="oscpack/osc/OscReceivedElements.cpp"/>
+        <FILE id="aEVrEX" name="OscReceivedElements.h" compile="0" resource="0"
+              file="oscpack/osc/OscReceivedElements.h"/>
+        <FILE id="d1CX" name="OscTypes.cpp" compile="1" resource="0" file="oscpack/osc/OscTypes.cpp"/>
+        <FILE id="YRKc7B" name="OscTypes.h" compile="0" resource="0" file="oscpack/osc/OscTypes.h"/>
+      </GROUP>
+      <FILE id="iZ0Vgx" name="README" compile="0" resource="0" file="oscpack/README"/>
+      <FILE id="iLCvid" name="TODO" compile="0" resource="0" file="oscpack/TODO"/>
+    </GROUP>
     <FILE id="xH6roY" name="AudioSample.cpp" compile="1" resource="0" file="Source/AudioSample.cpp"/>
     <FILE id="UI00zN" name="AudioSample.h" compile="0" resource="0" file="Source/AudioSample.h"/>
     <FILE id="AAsGim" name="ChannelProcessor.cpp" compile="1" resource="0"
           file="Source/ChannelProcessor.cpp"/>
     <FILE id="KbP8N0" name="ChannelProcessor.h" compile="0" resource="0"
           file="Source/ChannelProcessor.h"/>
-    <FILE id="vFvlJX" name="Zynth.cpp" compile="1" resource="0" file="Source/Zynth.cpp"/>
-    <FILE id="griRE0" name="Zynth.h" compile="0" resource="0" file="Source/Zynth.h"/>
-    <FILE id="DOHMfJ" name="Zampler.cpp" compile="1" resource="0" file="Source/Zampler.cpp"/>
-    <FILE id="G5hblC" name="Zampler.h" compile="0" resource="0" file="Source/Zampler.h"/>
-    <FILE id="SbqwTL" name="ChannelStrip.h" compile="0" resource="0" file="Source/ChannelStrip.h"/>
+    <FILE id="cz1fGg" name="OSCListener.h" compile="0" resource="0" file="Source/OSCListener.h"/>
     <FILE id="V4lM8" name="WaveformControl.cpp" compile="1" resource="0"
           file="Source/WaveformControl.cpp"/>
     <FILE id="Vwhx63" name="WaveformControl.h" compile="0" resource="0"

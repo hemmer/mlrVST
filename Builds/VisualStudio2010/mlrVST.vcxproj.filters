@@ -1,8 +1,21 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
+
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="mlrVST">
       <UniqueIdentifier>{6155B00E-5CD3-D100-3C52-4A58C1AE9E57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mlrVST\oscpack">
+      <UniqueIdentifier>{BD7D9051-B731-76F5-BF06-8B29D11880A8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mlrVST\oscpack\ip">
+      <UniqueIdentifier>{20D6815C-6568-9F59-9FF8-EA9A5A754925}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mlrVST\oscpack\ip\win32">
+      <UniqueIdentifier>{6A5CC0F6-6C92-8940-E5B9-11B6C522E65D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mlrVST\oscpack\osc">
+      <UniqueIdentifier>{03CC40EF-CDFC-73B8-994C-25ADB29C222E}</UniqueIdentifier>
     </Filter>
     <Filter Include="Juce VST Wrapper">
       <UniqueIdentifier>{E7C93B65-34E0-8EC9-DCEB-74C257AD64C4}</UniqueIdentifier>
@@ -10,11 +23,56 @@
     <Filter Include="Juce Library Code">
       <UniqueIdentifier>{F7048EA6-F4B2-F31B-E402-E05D678A1111}</UniqueIdentifier>
     </Filter>
-    <Filter Include="oscpack">
-      <UniqueIdentifier>{a43387a7-edeb-4465-845a-22c0e4889953}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\oscpack\CHANGES">
+      <Filter>mlrVST\oscpack</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp">
+      <Filter>mlrVST\oscpack\ip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\ip\win32\NetworkingUtils.cpp">
+      <Filter>mlrVST\oscpack\ip\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\ip\win32\UdpSocket.cpp">
+      <Filter>mlrVST\oscpack\ip\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\LICENSE">
+      <Filter>mlrVST\oscpack</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\osc\OscOutboundPacketStream.cpp">
+      <Filter>mlrVST\oscpack\osc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\osc\OscPrintReceivedElements.cpp">
+      <Filter>mlrVST\oscpack\osc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\osc\OscReceivedElements.cpp">
+      <Filter>mlrVST\oscpack\osc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\osc\OscTypes.cpp">
+      <Filter>mlrVST\oscpack\osc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\README">
+      <Filter>mlrVST\oscpack</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\TODO">
+      <Filter>mlrVST\oscpack</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\AudioSample.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ChannelProcessor.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\WaveformControl.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\PluginProcessor.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\PluginEditor.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\..\..\SDKs\juce\src\audio\plugin_client\VST\juce_VST_Wrapper.cpp">
       <Filter>Juce VST Wrapper</Filter>
     </ClCompile>
@@ -30,44 +88,65 @@
     <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode4.cpp">
       <Filter>Juce Library Code</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp">
-      <Filter>oscpack</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\oscpack\ip\win32\NetworkingUtils.cpp">
-      <Filter>oscpack</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\oscpack\osc\OscOutboundPacketStream.cpp">
-      <Filter>oscpack</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\oscpack\osc\OscPrintReceivedElements.cpp">
-      <Filter>oscpack</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\oscpack\osc\OscReceivedElements.cpp">
-      <Filter>oscpack</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\oscpack\osc\OscTypes.cpp">
-      <Filter>oscpack</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\oscpack\ip\win32\UdpSocket.cpp">
-      <Filter>oscpack</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\AudioSample.cpp">
-      <Filter>mlrVST</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\ChannelProcessor.cpp">
-      <Filter>mlrVST</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\PluginEditor.cpp">
-      <Filter>mlrVST</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\PluginProcessor.cpp">
-      <Filter>mlrVST</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\WaveformControl.cpp">
-      <Filter>mlrVST</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\oscpack\ip\IpEndpointName.h">
+      <Filter>mlrVST\oscpack\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oscpack\ip\NetworkingUtils.h">
+      <Filter>mlrVST\oscpack\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oscpack\ip\PacketListener.h">
+      <Filter>mlrVST\oscpack\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oscpack\ip\TimerListener.h">
+      <Filter>mlrVST\oscpack\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oscpack\ip\UdpSocket.h">
+      <Filter>mlrVST\oscpack\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oscpack\osc\MessageMappingOscPacketListener.h">
+      <Filter>mlrVST\oscpack\osc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oscpack\osc\OscException.h">
+      <Filter>mlrVST\oscpack\osc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oscpack\osc\OscHostEndianness.h">
+      <Filter>mlrVST\oscpack\osc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oscpack\osc\OscOutboundPacketStream.h">
+      <Filter>mlrVST\oscpack\osc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oscpack\osc\OscPacketListener.h">
+      <Filter>mlrVST\oscpack\osc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oscpack\osc\OscPrintReceivedElements.h">
+      <Filter>mlrVST\oscpack\osc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oscpack\osc\OscReceivedElements.h">
+      <Filter>mlrVST\oscpack\osc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oscpack\osc\OscTypes.h">
+      <Filter>mlrVST\oscpack\osc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\AudioSample.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\ChannelProcessor.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\OSCListener.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\WaveformControl.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\PluginProcessor.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\PluginEditor.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\JuceLibraryCode\AppConfig.h">
       <Filter>Juce Library Code</Filter>
     </ClInclude>
@@ -76,63 +155,6 @@
     </ClInclude>
     <ClInclude Include="..\..\JuceLibraryCode\JucePluginCharacteristics.h">
       <Filter>Juce Library Code</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\oscpack\osc\OscOutboundPacketStream.h">
-      <Filter>oscpack</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\oscpack\ip\IpEndpointName.h">
-      <Filter>oscpack</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\oscpack\osc\MessageMappingOscPacketListener.h">
-      <Filter>oscpack</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\oscpack\ip\NetworkingUtils.h">
-      <Filter>oscpack</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\oscpack\osc\OscException.h">
-      <Filter>oscpack</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\oscpack\osc\OscHostEndianness.h">
-      <Filter>oscpack</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\oscpack\osc\OscPacketListener.h">
-      <Filter>oscpack</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\oscpack\ip\PacketListener.h">
-      <Filter>oscpack</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\oscpack\osc\OscPrintReceivedElements.h">
-      <Filter>oscpack</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\oscpack\osc\OscReceivedElements.h">
-      <Filter>oscpack</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\oscpack\osc\OscTypes.h">
-      <Filter>oscpack</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\oscpack\ip\TimerListener.h">
-      <Filter>oscpack</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\oscpack\ip\UdpSocket.h">
-      <Filter>oscpack</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\WaveformControl.h">
-      <Filter>mlrVST</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\AudioSample.h">
-      <Filter>mlrVST</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\ChannelProcessor.h">
-      <Filter>mlrVST</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\PluginEditor.h">
-      <Filter>mlrVST</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\PluginProcessor.h">
-      <Filter>mlrVST</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\OSCListener.h">
-      <Filter>mlrVST</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

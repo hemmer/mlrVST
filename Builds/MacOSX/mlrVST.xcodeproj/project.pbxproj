@@ -20,10 +20,15 @@
 		68746D242F6A6102FDD5D03D = { isa = PBXBuildFile; fileRef = B050085463EEB5F8367314CB; };
 		CBE9E6042991B0677E3136D2 = { isa = PBXBuildFile; fileRef = 678CC9E413A7CF979964CEF7; };
 		73B8F48633153DA5A10873E8 = { isa = PBXBuildFile; fileRef = 01A30B0A0B9B5064D9B75474; };
+		31FD9D2EC6D46B84967F0D35 = { isa = PBXBuildFile; fileRef = 100F8B40B69A9A1E784DCD02; };
+		9D879FBEBEB5094ADF4DE490 = { isa = PBXBuildFile; fileRef = 8E429F6F47FC51BB19636553; };
+		E860CC045C21B1D7974B511B = { isa = PBXBuildFile; fileRef = FF416AF914700894F05E475F; };
+		9CC8E0CA3EF9A6A071F6FAB3 = { isa = PBXBuildFile; fileRef = 3C52885E8AE69B042CD50D28; };
+		A7452B58497403DFA028A368 = { isa = PBXBuildFile; fileRef = B564DB07AEF07EA43418BB94; };
+		5FDB051DD5B7AEC62DD36D89 = { isa = PBXBuildFile; fileRef = 3756318EB00CFF5F9768CDF5; };
+		521F3A813342566F8F7B5747 = { isa = PBXBuildFile; fileRef = 2B1CE71C546B107666DC73CE; };
 		50BB992879D853F89A96A73B = { isa = PBXBuildFile; fileRef = 6D1E208BAB0190FAA087E890; };
 		23F9964E34ECB873EAACA45E = { isa = PBXBuildFile; fileRef = 91DFAB0065F69DB6213594AF; };
-		8F7D9A699FCD903698EB6D8E = { isa = PBXBuildFile; fileRef = 6C31BC757015200B6D5A82E3; };
-		FEEEC01EFEF83F685758CDBA = { isa = PBXBuildFile; fileRef = E61241A901D32F9DA89BF38C; };
 		B81BBC57FB7EFE859187DA48 = { isa = PBXBuildFile; fileRef = 176366C8174E4CC9F1BC955A; };
 		5AF66C048A4815F5A8ECDDCD = { isa = PBXBuildFile; fileRef = B50846B34831C2C28007BE7D; };
 		209FB8C7F7BE85A70E5D98D7 = { isa = PBXBuildFile; fileRef = 2C001306D198F8B21ABA7375; };
@@ -73,15 +78,35 @@
 		01A30B0A0B9B5064D9B75474 = { isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		AF721FB8136D2CAA9404AD8D = { isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mlrVST.component; sourceTree = "BUILT_PRODUCTS_DIR"; };
 		81567EBA449466A95492511B = { isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Info.plist; sourceTree = "SOURCE_ROOT"; };
+		A4B19EBBB18BBA80B5570F42 = { isa = PBXFileReference; lastKnownFileType = file; name = CHANGES; path = ../../oscpack/CHANGES; sourceTree = "SOURCE_ROOT"; };
+		100F8B40B69A9A1E784DCD02 = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = IpEndpointName.cpp; path = ../../oscpack/ip/IpEndpointName.cpp; sourceTree = "SOURCE_ROOT"; };
+		EAE9249A13F64389F0E25731 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IpEndpointName.h; path = ../../oscpack/ip/IpEndpointName.h; sourceTree = "SOURCE_ROOT"; };
+		7773D96196A335D8ABFFED99 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetworkingUtils.h; path = ../../oscpack/ip/NetworkingUtils.h; sourceTree = "SOURCE_ROOT"; };
+		FA0A1C8CC14E1B7E67CB09BA = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PacketListener.h; path = ../../oscpack/ip/PacketListener.h; sourceTree = "SOURCE_ROOT"; };
+		081AB423E54DC6F688023AC4 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TimerListener.h; path = ../../oscpack/ip/TimerListener.h; sourceTree = "SOURCE_ROOT"; };
+		A780E8A8BB90D8F9C4E66E43 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UdpSocket.h; path = ../../oscpack/ip/UdpSocket.h; sourceTree = "SOURCE_ROOT"; };
+		8E429F6F47FC51BB19636553 = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = NetworkingUtils.cpp; path = ../../oscpack/ip/win32/NetworkingUtils.cpp; sourceTree = "SOURCE_ROOT"; };
+		FF416AF914700894F05E475F = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = UdpSocket.cpp; path = ../../oscpack/ip/win32/UdpSocket.cpp; sourceTree = "SOURCE_ROOT"; };
+		6A257C0E891C9E46718E676A = { isa = PBXFileReference; lastKnownFileType = file; name = LICENSE; path = ../../oscpack/LICENSE; sourceTree = "SOURCE_ROOT"; };
+		B3AC6640725AE90F6A6C8E76 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MessageMappingOscPacketListener.h; path = ../../oscpack/osc/MessageMappingOscPacketListener.h; sourceTree = "SOURCE_ROOT"; };
+		5D7BFEAE07F53C5384F1BC6E = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OscException.h; path = ../../oscpack/osc/OscException.h; sourceTree = "SOURCE_ROOT"; };
+		71192341C1D86AD73EF8728F = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OscHostEndianness.h; path = ../../oscpack/osc/OscHostEndianness.h; sourceTree = "SOURCE_ROOT"; };
+		3C52885E8AE69B042CD50D28 = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = OscOutboundPacketStream.cpp; path = ../../oscpack/osc/OscOutboundPacketStream.cpp; sourceTree = "SOURCE_ROOT"; };
+		F12B0CBAA27137063810DB4C = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OscOutboundPacketStream.h; path = ../../oscpack/osc/OscOutboundPacketStream.h; sourceTree = "SOURCE_ROOT"; };
+		EB6B6342C109D13FB5505D17 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OscPacketListener.h; path = ../../oscpack/osc/OscPacketListener.h; sourceTree = "SOURCE_ROOT"; };
+		B564DB07AEF07EA43418BB94 = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = OscPrintReceivedElements.cpp; path = ../../oscpack/osc/OscPrintReceivedElements.cpp; sourceTree = "SOURCE_ROOT"; };
+		7D605CF990CB04AD95FAF174 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OscPrintReceivedElements.h; path = ../../oscpack/osc/OscPrintReceivedElements.h; sourceTree = "SOURCE_ROOT"; };
+		3756318EB00CFF5F9768CDF5 = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = OscReceivedElements.cpp; path = ../../oscpack/osc/OscReceivedElements.cpp; sourceTree = "SOURCE_ROOT"; };
+		58BD5B97EDD234FAC87D81FE = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OscReceivedElements.h; path = ../../oscpack/osc/OscReceivedElements.h; sourceTree = "SOURCE_ROOT"; };
+		2B1CE71C546B107666DC73CE = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = OscTypes.cpp; path = ../../oscpack/osc/OscTypes.cpp; sourceTree = "SOURCE_ROOT"; };
+		77F857CFB314E3E80593452F = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OscTypes.h; path = ../../oscpack/osc/OscTypes.h; sourceTree = "SOURCE_ROOT"; };
+		1B1FE8A33C30E3FAE29760D9 = { isa = PBXFileReference; lastKnownFileType = file; name = README; path = ../../oscpack/README; sourceTree = "SOURCE_ROOT"; };
+		5D8977B7609129372BC34EBD = { isa = PBXFileReference; lastKnownFileType = file; name = TODO; path = ../../oscpack/TODO; sourceTree = "SOURCE_ROOT"; };
 		6D1E208BAB0190FAA087E890 = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AudioSample.cpp; path = ../../Source/AudioSample.cpp; sourceTree = "SOURCE_ROOT"; };
 		05D517073C584412ECA97019 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AudioSample.h; path = ../../Source/AudioSample.h; sourceTree = "SOURCE_ROOT"; };
 		91DFAB0065F69DB6213594AF = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ChannelProcessor.cpp; path = ../../Source/ChannelProcessor.cpp; sourceTree = "SOURCE_ROOT"; };
 		1DD2A24C3455898B94B61794 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChannelProcessor.h; path = ../../Source/ChannelProcessor.h; sourceTree = "SOURCE_ROOT"; };
-		6C31BC757015200B6D5A82E3 = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Zynth.cpp; path = ../../Source/Zynth.cpp; sourceTree = "SOURCE_ROOT"; };
-		FB4BF778147AC6A82E734002 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Zynth.h; path = ../../Source/Zynth.h; sourceTree = "SOURCE_ROOT"; };
-		E61241A901D32F9DA89BF38C = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Zampler.cpp; path = ../../Source/Zampler.cpp; sourceTree = "SOURCE_ROOT"; };
-		D510A3EBD3C77A3068D16DF6 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Zampler.h; path = ../../Source/Zampler.h; sourceTree = "SOURCE_ROOT"; };
-		1DBCECCE3D32D556BCA43F37 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChannelStrip.h; path = ../../Source/ChannelStrip.h; sourceTree = "SOURCE_ROOT"; };
+		44E67CFE458501E763FF3AE9 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OSCListener.h; path = ../../Source/OSCListener.h; sourceTree = "SOURCE_ROOT"; };
 		176366C8174E4CC9F1BC955A = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = WaveformControl.cpp; path = ../../Source/WaveformControl.cpp; sourceTree = "SOURCE_ROOT"; };
 		59DFF736CF5242B0B41EAE25 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = WaveformControl.h; path = ../../Source/WaveformControl.h; sourceTree = "SOURCE_ROOT"; };
 		B50846B34831C2C28007BE7D = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = PluginProcessor.cpp; path = ../../Source/PluginProcessor.cpp; sourceTree = "SOURCE_ROOT"; };
@@ -149,16 +174,44 @@
 		B31CFE8BBA103078E19D1B97 = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = JuceLibraryCode3.mm; path = ../../JuceLibraryCode/JuceLibraryCode3.mm; sourceTree = "SOURCE_ROOT"; };
 		FD33B687C6FBA3ABC581AFD7 = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = JuceLibraryCode4.mm; path = ../../JuceLibraryCode/JuceLibraryCode4.mm; sourceTree = "SOURCE_ROOT"; };
 		DF8AD10F6B21858C3378B63F = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = JucePluginCharacteristics.h; path = ../../JuceLibraryCode/JucePluginCharacteristics.h; sourceTree = "SOURCE_ROOT"; };
+		C1D6642A841F82D53B9C5E36 = { isa = PBXGroup; children = (
+				8E429F6F47FC51BB19636553,
+				FF416AF914700894F05E475F ); name = win32; sourceTree = "<group>"; };
+		8F576857FFEFC43A02AC0D77 = { isa = PBXGroup; children = (
+				100F8B40B69A9A1E784DCD02,
+				EAE9249A13F64389F0E25731,
+				7773D96196A335D8ABFFED99,
+				FA0A1C8CC14E1B7E67CB09BA,
+				081AB423E54DC6F688023AC4,
+				A780E8A8BB90D8F9C4E66E43,
+				C1D6642A841F82D53B9C5E36 ); name = ip; sourceTree = "<group>"; };
+		9B121A9AF1F8B808EEEC0F84 = { isa = PBXGroup; children = (
+				B3AC6640725AE90F6A6C8E76,
+				5D7BFEAE07F53C5384F1BC6E,
+				71192341C1D86AD73EF8728F,
+				3C52885E8AE69B042CD50D28,
+				F12B0CBAA27137063810DB4C,
+				EB6B6342C109D13FB5505D17,
+				B564DB07AEF07EA43418BB94,
+				7D605CF990CB04AD95FAF174,
+				3756318EB00CFF5F9768CDF5,
+				58BD5B97EDD234FAC87D81FE,
+				2B1CE71C546B107666DC73CE,
+				77F857CFB314E3E80593452F ); name = osc; sourceTree = "<group>"; };
+		A35F68819EC55402CD88DA24 = { isa = PBXGroup; children = (
+				A4B19EBBB18BBA80B5570F42,
+				8F576857FFEFC43A02AC0D77,
+				6A257C0E891C9E46718E676A,
+				9B121A9AF1F8B808EEEC0F84,
+				1B1FE8A33C30E3FAE29760D9,
+				5D8977B7609129372BC34EBD ); name = oscpack; sourceTree = "<group>"; };
 		E1C5E3C67B4A2621AD2D3E05 = { isa = PBXGroup; children = (
+				A35F68819EC55402CD88DA24,
 				6D1E208BAB0190FAA087E890,
 				05D517073C584412ECA97019,
 				91DFAB0065F69DB6213594AF,
 				1DD2A24C3455898B94B61794,
-				6C31BC757015200B6D5A82E3,
-				FB4BF778147AC6A82E734002,
-				E61241A901D32F9DA89BF38C,
-				D510A3EBD3C77A3068D16DF6,
-				1DBCECCE3D32D556BCA43F37,
+				44E67CFE458501E763FF3AE9,
 				176366C8174E4CC9F1BC955A,
 				59DFF736CF5242B0B41EAE25,
 				B50846B34831C2C28007BE7D,
@@ -260,7 +313,7 @@
 				A60AEBCC9579AD6BA9D5CA4B ); name = Source; sourceTree = "<group>"; };
 		6B24C2D519EB1D09B3C748EC = { isa = XCBuildConfiguration; buildSettings = {
 				PREBINDING = NO;
-				HEADER_SEARCH_PATHS = "~/SDKs/vstsdk2.4 $(DEVELOPER_DIR)/Extras/CoreAudio/PublicUtility $(DEVELOPER_DIR)/Extras/CoreAudio/AudioUnits/AUPublic/Utility $(inherited)";
+				HEADER_SEARCH_PATHS = "~/SDKs/vstsdk2.4 ..\..\oscpack $(DEVELOPER_DIR)/Extras/CoreAudio/PublicUtility $(DEVELOPER_DIR)/Extras/CoreAudio/AudioUnits/AUPublic/Utility $(inherited)";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Audio/Plug-Ins/Components/";
@@ -281,7 +334,7 @@
 				"JUCER_XCODE_MAC_F6D2F4CF=1"); }; name = Debug; };
 		F4B05B483343A2F3C923C6B4 = { isa = XCBuildConfiguration; buildSettings = {
 				PREBINDING = NO;
-				HEADER_SEARCH_PATHS = "~/SDKs/vstsdk2.4 $(DEVELOPER_DIR)/Extras/CoreAudio/PublicUtility $(DEVELOPER_DIR)/Extras/CoreAudio/AudioUnits/AUPublic/Utility $(inherited)";
+				HEADER_SEARCH_PATHS = "~/SDKs/vstsdk2.4 ..\..\oscpack $(DEVELOPER_DIR)/Extras/CoreAudio/PublicUtility $(DEVELOPER_DIR)/Extras/CoreAudio/AudioUnits/AUPublic/Utility $(inherited)";
 				GCC_OPTIMIZATION_LEVEL = s;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Audio/Plug-Ins/Components/";
@@ -338,10 +391,15 @@
 		A79C4026C596A99BB0ADC224 = { isa = PBXRezBuildPhase; buildActionMask = 2147483647; files = (
 				6FC7ABF9C15FE51D4073E3D2 ); runOnlyForDeploymentPostprocessing = 0; };
 		F0F39FCA8C402F34BB74F6B3 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (
+				31FD9D2EC6D46B84967F0D35,
+				9D879FBEBEB5094ADF4DE490,
+				E860CC045C21B1D7974B511B,
+				9CC8E0CA3EF9A6A071F6FAB3,
+				A7452B58497403DFA028A368,
+				5FDB051DD5B7AEC62DD36D89,
+				521F3A813342566F8F7B5747,
 				50BB992879D853F89A96A73B,
 				23F9964E34ECB873EAACA45E,
-				8F7D9A699FCD903698EB6D8E,
-				FEEEC01EFEF83F685758CDBA,
 				B81BBC57FB7EFE859187DA48,
 				5AF66C048A4815F5A8ECDDCD,
 				209FB8C7F7BE85A70E5D98D7,
