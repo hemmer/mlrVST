@@ -23,7 +23,7 @@ class WaveformControl  : public Component,
                          public FileDragAndDropTarget
 {
 public:
-    WaveformControl(const int &id);
+    WaveformControl(const int &id, const int &height, const int &width);
 	~WaveformControl();
 
     //void setFile (const File& file);
@@ -36,8 +36,8 @@ public:
     void buttonClicked(Button *btn);
 
     // This allows us to load samples by Drag n' Drop
-    bool isInterestedInFileDrag (const StringArray& /*files*/);
-    void filesDropped (const StringArray& files, int /*x*/, int /*y*/);
+    bool isInterestedInFileDrag (const StringArray& files);
+    void filesDropped (const StringArray& files, int x, int y);
 
     // if the number of channels changes, we can update the strips
     void addChannel(const int &id, const Colour &col);
@@ -51,6 +51,9 @@ public:
     int getChunkSize() const { return chunkSize; }
 
 private:
+
+    const int componentHeight, componentWidth;
+    Rectangle<int> waveformPaintBounds;
 
     void setAudioSample(AudioSample* sample);
 

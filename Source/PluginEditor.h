@@ -89,6 +89,7 @@ private:
     // For a standard monome64 this is 7
     OwnedArray<WaveformControl> waveformArray;
     const int numStrips;
+    const int waveformControlHeight, waveformControlWidth;
 
     // This is the number of seperate channels. In 
     // pratical terms, this is just the number of 
@@ -98,7 +99,7 @@ private:
     OwnedArray<Slider> slidersArray;
 
     // For simplicity, let's stick to a fixed size GUI
-    static const int GUI_HEIGHT = 700;
+    static const int GUI_HEIGHT = 750;
     static const int GUI_WIDTH = 600;
 
     AudioPlayHead::CurrentPositionInfo lastDisplayedPosition;

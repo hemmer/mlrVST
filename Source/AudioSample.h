@@ -14,6 +14,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 
+
 class AudioSample 
 {
 public:
@@ -35,14 +36,16 @@ private:
     // comments etc)
     File sampleFile;        // TODO: should this be const?
 
-    String sampleName;
+    String sampleName, fileType;
     
     // information about the current sample
     int sampleLength, numChannels;
     double sampleSampleRate;
     ScopedPointer <AudioSampleBuffer> data;
-};
 
+    // DEBUG:
+    JUCE_LEAK_DETECTOR(AudioSample);
+};
 
 
 #endif  // __AUDIOSAMPLE_H_DED61AB8__

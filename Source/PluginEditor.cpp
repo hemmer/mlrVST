@@ -19,6 +19,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       selNumChannels("select number of channels"),
       samplePool(),               // sample pool is initially empty
 	  waveformArray(),
+      waveformControlHeight(90), waveformControlWidth(300),
 	  numChannels(4),
       numStrips(7),
 	  loadedFiles(),
@@ -55,9 +56,9 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
     // For manually loading files
     addAndMakeVisible(&loadButton);
-	loadButton.setBounds(30, 50, 100, 30);
+	loadButton.setBounds(350, 350, 100, 30);
 	loadButton.addListener(this);
-	loadButton.setBackgroundColours(Colours::blue, Colours::black);
+	loadButton.setBackgroundColours(Colours::yellow, Colours::black);
 
 
     // add a label that will display the current timecode and status..
@@ -77,8 +78,8 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
     // add waveform strips
     for(int i = 0; i < numStrips; ++i){
-        waveformArray.add(new WaveformControl(i));
-        waveformArray[i]->setBounds(30, 80 + i * 80, 300, 75);
+        waveformArray.add(new WaveformControl(i, waveformControlWidth, waveformControlHeight));
+        waveformArray[i]->setBounds(10, 40 + i * (waveformControlHeight + 5), waveformControlWidth, waveformControlHeight);
         addAndMakeVisible( waveformArray[i] );
 	}
 
@@ -105,14 +106,13 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     selNumChannels.setSelectedId(4, false);
 
 
-    // add basic sample to pool
+    // test adding basic samples to pool
     //File testFile1 = File("C:\\Users\\Hemmer\\Desktop\\funky.wav");
-    //File testFile1 = File("C:\\Users\\Hemmer\\Desktop\\sillyset.wav");
-    //AudioSample testSample (testFile1);
-    //File testFile2 = File("C:\\Users\\Hemmer\\Desktop\\3drums.wav");    
+    //File testFile2 = File("C:\\Users\\Hemmer\\Desktop\\sillyset.wav");
     //samplePool.add(new AudioSample(testFile1));
     //samplePool.add(new AudioSample(testFile2));
     
+
 
     formatManager.registerBasicFormats();
     
@@ -215,8 +215,15 @@ void mlrVSTAudioProcessorEditor::loadSampleFromFile(File &sampleFile)
 
     if (!duplicateFound)
     {
-        samplePool.add(new AudioSample(sampleFile));
-        DBG("Sample Loaded: " + samplePool.getLast()->getSampleName());
+        try{
+            samplePool.add(new AudioSample(sampleFile));
+            DBG("Sample Loaded: " + samplePool.getLast()->getSampleName());
+        }
+        catch(String errString)
+        {
+            DBG(errString);
+        }
+
     }
     else DBG("Sample already loaded!");
 }

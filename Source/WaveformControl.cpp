@@ -13,7 +13,9 @@ Custom component to display a waveform (corresponding to an mlr row)
 #include "WaveformControl.h"
 #include "PluginEditor.h"
 
-WaveformControl::WaveformControl(const int &id) :
+WaveformControl::WaveformControl(const int &id, const int &width, const int &height) :
+        componentHeight(height), componentWidth(width),
+        waveformPaintBounds(0, 15, componentWidth, componentHeight - 15),
     	thumbnailCache(5),
         thumbnail(512, formatManager, thumbnailCache),
         backgroundColour(Colours::black),
@@ -28,15 +30,13 @@ WaveformControl::WaveformControl(const int &id) :
         numChunks(8), chunkSize(0),
         thumbnailLength(0.0)
 {
-    // TODO: doesn't get bounds until initialised
-    Rectangle<int> waveformShape = getBoundsInParent();
 
     addAndMakeVisible(&filenameLbl);
     filenameLbl.setColour(Label::backgroundColourId, Colours::white);
     filenameLbl.setColour(Label::textColourId, Colours::black);
     filenameLbl.setJustificationType(Justification::right);
-    // TODO: make sure this is same as parent
-    filenameLbl.setBounds(0, 0, 300, 15);
+
+    filenameLbl.setBounds(0, 0, componentWidth, 15);
     filenameLbl.setFont(10.0f);
 
     formatManager.registerBasicFormats();
@@ -184,14 +184,12 @@ void WaveformControl::paint(Graphics& g)
         //thumbnail.drawChannel(g, getLocalBounds().reduced(2, 2),
         //                      0, thumbnailLength, 1, 1.0f);
 
-        thumbnail.drawChannels (g, getLocalBounds().reduced (2, 2),
-                                0, thumbnailLength, 1.0f);
+        thumbnail.drawChannels (g, waveformPaintBounds, 0, thumbnailLength, 1.0f);
     }
     else
     {
         g.setFont (12.0f);
-        g.drawFittedText ("(No audio file selected)", 0, 0, getWidth(), getHeight(),
-                            Justification::centred, 2);
+        g.drawFittedText("(No audio file selected)", 0, 15, componentWidth, componentHeight - 15, Justification::centred, 2);
     }
 }
 
@@ -221,7 +219,7 @@ void WaveformControl::filesDropped (const StringArray& files, int /*x*/, int /*y
 
     // set latest sample in the pool as the current sample
     // DESIGN: is this correct behaviour?
-    setAudioSample(pluginUI->getLatestSample());
+    if(pluginUI->getLatestSample() != 0) setAudioSample(pluginUI->getLatestSample());
 }
 
 void WaveformControl::setAudioSample(AudioSample* sample)
@@ -244,6 +242,5 @@ void WaveformControl::setAudioSample(AudioSample* sample)
     // update filename label
     filenameLbl.setText(sampleFile.getFileName(), false);
 
-    DBG("Waveform strip " + String(waveformID) + ": file selected " + sampleFile.getFileName());
-
+    DBG("Waveform strip " + String(waveformID) + ": file \"" + sampleFile.getFileName() + "\" selected.");
 }
