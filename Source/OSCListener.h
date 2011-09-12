@@ -50,7 +50,7 @@ class OscListener :
 
     protected:
 
-        void ProcessMessage(const osc::ReceivedMessage& m, const IpEndpointName& remoteEndpoint)
+        void ProcessMessage(const osc::ReceivedMessage& m, const IpEndpointName& /*remoteEndpoint*/)
         {
             // a more complex scheme involving std::map or some other method of
             // processing address patterns could be used here

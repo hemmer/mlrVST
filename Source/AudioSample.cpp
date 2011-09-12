@@ -33,3 +33,9 @@ AudioSample::AudioSample(const File &sampleSource) :
     data->readFromAudioReader(audioReader, 0, sampleLength, 0, true, true);
 }
 
+bool AudioSample::operator== (const AudioSample &s1) const
+{
+    // if each AudioSample points to the same file,
+    // consider them identical
+    return (getSampleFile() == s1.getSampleFile());
+}

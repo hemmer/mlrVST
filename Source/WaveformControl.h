@@ -26,7 +26,7 @@ public:
     WaveformControl(const int &id);
 	~WaveformControl();
 
-    void setFile (const File& file);
+    //void setFile (const File& file);
 	void setZoomFactor (double amount);
 	void mouseWheelMove (const MouseEvent&, float wheelIncrementX, float wheelIncrementY);
     void mouseDown(const MouseEvent&);
@@ -35,17 +35,24 @@ public:
     void changeListenerCallback (ChangeBroadcaster*);
     void buttonClicked(Button *btn);
 
+    // This allows us to load samples by Drag n' Drop
     bool isInterestedInFileDrag (const StringArray& /*files*/);
     void filesDropped (const StringArray& files, int /*x*/, int /*y*/);
 
     // if the number of channels changes, we can update the strips
     void addChannel(const int &id, const Colour &col);
     void clearChannelList();
-    //void updateChannelColour(const Colour &col);
 
     AudioSample* getCurrentSample() const { return currentSample; }
-    //void setCurrentSample(AudioSample &newSample) { currentSample = &newSample; }
+        
+    // how many chunks to break the sample into (default 8 for standard monome).
+    int getNumChunks() const { return numChunks; }
+    int getSelectionStart() const { return selectionStart; }
+    int getChunkSize() const { return chunkSize; }
+
 private:
+
+    void setAudioSample(AudioSample* sample);
 
     // which strip we are representing
     int waveformID;
@@ -53,20 +60,36 @@ private:
     // GUI components
     Label trackNumberLbl, filenameLbl;
     OwnedArray<DrawableButton> channelButtonArray;
-
-    // which channel audio is currently going to
-    int currentChannel, numChannels;
+        
+    int currentChannel;     // which channel audio is currently going to
+    int numChannels;        // total number of channels available
     
+    /* ============================================================
+       properties about the waveformcontrols handling of the sample
+       note these are waveform strip independent, i.e. they are not
+       properties of the AudioSample. This means we can have
+       different start points on different rows for the same sample
+       ============================================================*/
+    bool isReversed;
+    // these allow a subsection of the sample to be selected
+    // NOTE: by default the whole sample is selected
+    int selectionStart, selectionEnd; 
+    // how many chunks to break the sample into (default 8 for 
+    // standard monome) and what size (in samples) they are
+    int numChunks, chunkSize;
+
+
     // stuff for drawing waveforms
+    // TODO: should this be associated with the AudioSample?
     AudioFormatManager formatManager;
     AudioThumbnailCache thumbnailCache;
     AudioThumbnail thumbnail;
-    double startTime, endTime;
+    double thumbnailLength;
 
     // main strip background colour
     Colour backgroundColour;
 
-    File currentFile;
+    // Pointer to the sample object
     AudioSample* currentSample;
 };
 

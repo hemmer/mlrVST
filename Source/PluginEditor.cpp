@@ -106,11 +106,13 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
 
     // add basic sample to pool
-    File testFile1 = File("C:\\Users\\Hemmer\\Desktop\\funky.wav");    
-    File testFile2 = File("C:\\Users\\Hemmer\\Desktop\\3drums.wav");    
+    //File testFile1 = File("C:\\Users\\Hemmer\\Desktop\\funky.wav");
+    //File testFile1 = File("C:\\Users\\Hemmer\\Desktop\\sillyset.wav");
+    //AudioSample testSample (testFile1);
+    //File testFile2 = File("C:\\Users\\Hemmer\\Desktop\\3drums.wav");    
     //samplePool.add(new AudioSample(testFile1));
     //samplePool.add(new AudioSample(testFile2));
-
+    
 
     formatManager.registerBasicFormats();
     
@@ -202,6 +204,23 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
 }
 
 
+void mlrVSTAudioProcessorEditor::loadSampleFromFile(File &sampleFile)
+{
+    // avoid duplicates
+    bool duplicateFound = false;
+    for(int i = 0; i < samplePool.size(); ++i)
+    {
+        if (samplePool[i]->getSampleFile() == sampleFile) duplicateFound = true;
+    }
+
+    if (!duplicateFound)
+    {
+        samplePool.add(new AudioSample(sampleFile));
+        DBG("Sample Loaded: " + samplePool.getLast()->getSampleName());
+    }
+    else DBG("Sample already loaded!");
+}
+
 void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 {
     // Manually load a file
@@ -209,14 +228,14 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
     {
 
 		FileChooser myChooser ("Please choose a file:", File::getSpecialLocation(File::userDesktopDirectory), "*.wav");
-		if(myChooser.browseForFileToOpen())
-		{	
-			File newFile = myChooser.getResult();
-			// TODO: handle duplicates
-            // add the new sample to the pool
-            samplePool.add(new AudioSample(newFile));
-
-			DBG("File Loaded: " + samplePool.getLast()->getSampleName());
+        // TODO: add directories support
+        if(myChooser.browseForMultipleFilesToOpen())
+		{
+            Array<File> fileSelections = myChooser.getResults();
+            for(File* i = fileSelections.begin(); i < fileSelections.end(); ++i)
+            {
+                loadSampleFromFile(*i);
+            }
 		}
 	}
 }

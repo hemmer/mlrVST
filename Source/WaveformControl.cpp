@@ -22,8 +22,11 @@ WaveformControl::WaveformControl(const int &id) :
         waveformID(id),
         currentSample(),
         currentChannel(0), numChannels(0),
-        channelButtonArray()
-        //channelArray()
+        channelButtonArray(),
+        selectionStart(0), selectionEnd(0),
+        isReversed(false),
+        numChunks(8), chunkSize(0),
+        thumbnailLength(0.0)
 {
     // TODO: doesn't get bounds until initialised
     Rectangle<int> waveformShape = getBoundsInParent();
@@ -36,7 +39,6 @@ WaveformControl::WaveformControl(const int &id) :
     filenameLbl.setBounds(0, 0, 300, 15);
     filenameLbl.setFont(10.0f);
 
-    startTime = endTime = 0;
     formatManager.registerBasicFormats();
     thumbnail.addChangeListener (this);
 
@@ -54,21 +56,6 @@ WaveformControl::~WaveformControl()
     thumbnail.removeChangeListener (this);
 }
 
-//void WaveformControl::updateChannelColour(const Colour &col){
-//    backgroundColour = col;
-//}
-
-// update the thumbnail to reflect a new choice of file
-void WaveformControl::setFile (const File& file)
-{
-    thumbnail.setSource(new FileInputSource (file));
-    startTime = 0;
-    endTime = thumbnail.getTotalLength();
-
-    // update filename label
-    filenameLbl.setText(file.getFileName(), false);
-    currentFile = File(file);
-}
 
 void WaveformControl::buttonClicked(Button *btn){
 
@@ -90,8 +77,8 @@ void WaveformControl::clearChannelList()
 }
 
 
-// Used to (re)add Buttons to control the switching channels.
-// Useful if we want to change the total number of channels at runtime.
+/* Used to (re)add Buttons to control the switching channels.
+   Useful if we want to change the total number of channels at runtime. */
 void WaveformControl::addChannel(const int &id, const Colour &col)
 {
 
@@ -119,24 +106,24 @@ void WaveformControl::addChannel(const int &id, const Colour &col)
 
 void WaveformControl::setZoomFactor (double amount)
 {
-    if (thumbnail.getTotalLength() > 0)
-    {
-        double timeDisplayed = jmax (0.001, (thumbnail.getTotalLength() - startTime) * (1.0 - jlimit (0.0, 1.0, amount)));
-        endTime = startTime + timeDisplayed;
-        repaint();
-    }
+    //if (thumbnail.getTotalLength() > 0)
+    //{
+    //    double timeDisplayed = jmax (0.001, (thumbnail.getTotalLength() - startTime) * (1.0 - jlimit (0.0, 1.0, amount)));
+    //    endTime = startTime + timeDisplayed;
+    //    repaint();
+    //}
 }
 
 void WaveformControl::mouseWheelMove (const MouseEvent&, float wheelIncrementX, float wheelIncrementY)
 {
-    if (thumbnail.getTotalLength() > 0)
-    {
-        double newStart = startTime + (wheelIncrementX + wheelIncrementY) * (endTime - startTime) / 10.0;
-        newStart = jlimit (0.0, thumbnail.getTotalLength() - (endTime - startTime), newStart);
-        endTime = newStart + (endTime - startTime);
-        startTime = newStart;
-        repaint();
-    }
+    //if (thumbnail.getTotalLength() > 0)
+    //{
+    //    double newStart = startTime + (wheelIncrementX + wheelIncrementY) * (endTime - startTime) / 10.0;
+    //    newStart = jlimit (0.0, thumbnail.getTotalLength() - (endTime - startTime), newStart);
+    //    endTime = newStart + (endTime - startTime);
+    //    startTime = newStart;
+    //    repaint();
+    //}
 }
 
 void WaveformControl::mouseDown(const MouseEvent &e){
@@ -168,16 +155,16 @@ void WaveformControl::mouseDown(const MouseEvent &e){
                 // show the menu and store choice 
                 int fileChoice = p.showMenu(PopupMenu::Options().withTargetComponent(&filenameLbl));
 
+                // if a menu option has been chosen
                 if (fileChoice != 0)
                 {
-                    --fileChoice;       // -1 is to correct for +1 in for loop above
-                    currentSample = demoPage->getSample(fileChoice);
-                    setFile(currentSample->getSampleFile());
-                    DBG("Waveform strip" + String(waveformID) + ": file selected " + currentSample->getSampleFile().getFileName());
+                    // -1 is to correct for +1 in for loop above
+                    --fileChoice;       
+                    // update choice of sample
+                    setAudioSample(demoPage->getSample(fileChoice));
                 }
             }
         }
-
     }
 }
 
@@ -188,17 +175,17 @@ void WaveformControl::paint(Graphics& g)
 
     if (thumbnail.getTotalLength() > 0)
     {
-        g.setColour (Colours::black);
-        thumbnail.drawChannel(g, getLocalBounds().reduced(2, 2),
-                              startTime, endTime, 0, 1.0f);
+        //g.setColour (Colours::black);
+        //thumbnail.drawChannel(g, getLocalBounds().reduced(2, 2),
+        //                      0, thumbnailLength, 0, 1.0f);
 
-        g.setColour (Colours::white);
-        
-        thumbnail.drawChannel(g, getLocalBounds().reduced(2, 2),
-                              startTime, endTime, 1, 1.0f);
+        //g.setColour (Colours::white);
+        //
+        //thumbnail.drawChannel(g, getLocalBounds().reduced(2, 2),
+        //                      0, thumbnailLength, 1, 1.0f);
 
-        //thumbnail.drawChannels (g, getLocalBounds().reduced (2, 2),
-        //                        startTime, endTime, 1.0f);
+        thumbnail.drawChannels (g, getLocalBounds().reduced (2, 2),
+                                0, thumbnailLength, 1.0f);
     }
     else
     {
@@ -219,12 +206,44 @@ bool WaveformControl::isInterestedInFileDrag (const StringArray& /*files*/)
     return true;
 }
 
-void WaveformControl::filesDropped (const StringArray& /*files*/, int /*x*/, int /*y*/)
+void WaveformControl::filesDropped (const StringArray& files, int /*x*/, int /*y*/)
 {
-    //mlrVSTAudioProcessorEditor* demoPage = findParentComponentOfClass ((mlrVSTAudioProcessorEditor*) 0);
+    // get pointer to parent class
+    mlrVSTAudioProcessorEditor* pluginUI = findParentComponentOfClass ((mlrVSTAudioProcessorEditor*) 0);
 
-    //if (demoPage != 0)
-        //demoPage->helloLabel.setText("boom");
-//        showFile (File (files[0]));
+    // try to add each of the loaded files to the sample pool
+    for(int i = 0; i < files.size(); ++i)
+    {
+        File currentSample(files[i]);
+        DBG("Dragged file: " << files[i]);
+        pluginUI->loadSampleFromFile(currentSample);
+    }
+
+    // set latest sample in the pool as the current sample
+    // DESIGN: is this correct behaviour?
+    setAudioSample(pluginUI->getLatestSample());
 }
 
+void WaveformControl::setAudioSample(AudioSample* sample)
+{
+    // this is now the new audio sample
+    currentSample = sample;
+
+    // by default, the whole sample is selected
+    // TODO: check math of rounding here
+    selectionStart = 0;
+    selectionEnd = currentSample->getSampleLength();
+    chunkSize = (int) ((selectionEnd - selectionStart) / numChunks);
+
+    // get temporary reference to the File object of the
+    // sample to update labels / thumbnails
+    File sampleFile = currentSample->getSampleFile();
+    thumbnail.setSource(new FileInputSource (sampleFile));
+    thumbnailLength = thumbnail.getTotalLength();
+
+    // update filename label
+    filenameLbl.setText(sampleFile.getFileName(), false);
+
+    DBG("Waveform strip " + String(waveformID) + ": file selected " + sampleFile.getFileName());
+
+}

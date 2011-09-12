@@ -25,8 +25,9 @@ public:
     int getNumChannels() const { return numChannels; }
     String getSampleName() const { return sampleName; }
     File getSampleFile() const { return sampleFile; }
-    // TODO: isEquals / override comparison operator == 
-    //friend bool operator== (AudioSample &s1, AudioSample &s2);
+
+    // override comparison operator == 
+    bool operator== (const AudioSample &s1) const;
 private:
     
     // this stores the File object so
@@ -42,9 +43,8 @@ private:
     ScopedPointer <AudioSampleBuffer> data;
 };
 
-//bool operator== (AudioSample &s1, AudioSample &s2)
-//{
-//    return (s1.sampleFile == s2.sampleFile);
-//}
+
 
 #endif  // __AUDIOSAMPLE_H_DED61AB8__
+
+

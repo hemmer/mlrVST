@@ -28,7 +28,8 @@ class mlrVSTAudioProcessorEditor  : public AudioProcessorEditor,
                                     public SliderListener,
 									public ButtonListener,
                                     public ComboBoxListener,
-                                    public Timer
+                                    public Timer, 
+                                    public FileDragAndDropTarget
 {
 public:
     mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter);
@@ -37,6 +38,12 @@ public:
     //==============================================================================
     void timerCallback();
     void paint(Graphics& g);
+
+    // These are required so that the WaveformControls
+    // can handle sample loading by Drag n' Drop 
+    bool isInterestedInFileDrag(const StringArray&) { return true; }
+    void filesDropped(const StringArray&, int, int) { }
+
 
     // listeners
     void comboBoxChanged (ComboBox* comboBoxThatHasChanged);
@@ -59,7 +66,10 @@ public:
         jassert(index < samplePool.size());
         return samplePool[index];
     }
+    
+    AudioSample* getLatestSample() { return samplePool.getLast(); }
 
+    void loadSampleFromFile(File &sampleFile);
 
     Array<File> getLoadedFiles();
 
