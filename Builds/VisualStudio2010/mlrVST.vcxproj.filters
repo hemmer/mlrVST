@@ -135,7 +135,7 @@
     <ClInclude Include="..\..\Source\ChannelProcessor.h">
       <Filter>mlrVST</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\OSCListener.h">
+    <ClInclude Include="..\..\Source\OSCHandler.h">
       <Filter>mlrVST</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\WaveformControl.h">

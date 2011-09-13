@@ -16,12 +16,12 @@
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "ChannelProcessor.h"
 #include "AudioSample.h"
-#include "OSCListener.h"
+#include "OSCHandler.h"
 
 //==============================================================================
 /**
 */
-class mlrVSTAudioProcessor  : public AudioProcessor
+class mlrVSTAudioProcessor : public AudioProcessor
 {
 public:
     //==============================================================================
@@ -101,9 +101,30 @@ public:
     float masterGain, delay;
     // individual channel volumes
     Array<float> channelGains;
-    // adds a sample to the sample pool
-    void addNewSample();
 
+    // adds a sample to the sample pool
+    void addNewSample(File &sampleFile);
+
+    int getSamplePoolSize() { return samplePool.size(); }
+    // TODO: bounds checking?
+    String getSampleName(const int &index)
+    {
+        jassert(index < samplePool.size());
+        return samplePool[index]->getSampleName();
+    }
+
+    // Returns a pointer to the sample in the sample pool at the specified index
+    AudioSample* getSample(const int &index)
+    {
+        jassert(index < samplePool.size());
+        return samplePool[index];
+    }
+    
+    AudioSample* getLatestSample() { return samplePool.getLast(); }
+
+
+
+    void processOSCMessage();
 
     // set up the channels (can be used to change number of channels
     void buildChannelProcessorArray(const int &newNumChannels);
@@ -111,6 +132,8 @@ public:
 private:
     //==============================================================================
 
+    // store array of samplePool objects
+    OwnedArray<AudioSample> samplePool;
 
 
     AudioSampleBuffer delayBuffer;
@@ -124,7 +147,7 @@ private:
     OwnedArray<ChannelProcessor> channelProcessorArray; 
 
     //OSCListener testOSCHandler;
-    OscListener oscMsgListener;
+    OSCHandler oscMsgListener;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTAudioProcessor);
 };

@@ -23,7 +23,8 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     channelProcessorArray(),    // array of processor objects
     numChannels(4),
     channelGains(),
-    oscMsgListener()
+    oscMsgListener(),
+    samplePool()               // sample pool is initially empty
 {
 
     DBG("starting OSC thread");
@@ -53,6 +54,31 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     lastPosInfo.resetToDefault();
     delayPosition = 0;
 }
+
+void mlrVSTAudioProcessor::addNewSample(File &sampleFile)
+{
+    // avoid duplicates
+    bool duplicateFound = false;
+    for(int i = 0; i < samplePool.size(); ++i)
+    {
+        if (samplePool[i]->getSampleFile() == sampleFile) duplicateFound = true;
+    }
+
+    if (!duplicateFound)
+    {
+        try{
+            samplePool.add(new AudioSample(sampleFile));
+            DBG("Sample Loaded: " + samplePool.getLast()->getSampleName());
+        }
+        catch(String errString)
+        {
+            DBG(errString);
+        }
+
+    }
+    else DBG("Sample already loaded!");
+}
+
 
 void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
 {
@@ -230,7 +256,6 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
     /*  Eventually should have something like
 
     MonomeBuffer &monomeMessages - format (monomeRow, monomeCol, status)
-
     maybe strip channel 0 messages (for control options)
 
     */

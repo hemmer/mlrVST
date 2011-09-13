@@ -16,12 +16,10 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       infoLabel(), helloLabel("", "Hello"), logoLabel("", "mlrVST"), delayLabel("", "Delay:"),
       delaySlider("delay"), masterGainSlider("master gain"),
       selNumChannels("select number of channels"),
-      samplePool(),               // sample pool is initially empty
 	  waveformArray(),
       waveformControlHeight(90), waveformControlWidth(700),
 	  numChannels(8),
       numStrips(7),
-	  loadedFiles(),
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
       slidersArray()
 {
@@ -122,11 +120,6 @@ mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
     DBG("GUI unloaded");
 }
 
-// return a copy of the current filelist array
-Array<File> mlrVSTAudioProcessorEditor::getLoadedFiles(){
-    return Array<File>(loadedFiles);
-}
-
 
 //==============================================================================
 void mlrVSTAudioProcessorEditor::paint (Graphics& g)
@@ -197,29 +190,7 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
 }
 
 
-void mlrVSTAudioProcessorEditor::loadSampleFromFile(File &sampleFile)
-{
-    // avoid duplicates
-    bool duplicateFound = false;
-    for(int i = 0; i < samplePool.size(); ++i)
-    {
-        if (samplePool[i]->getSampleFile() == sampleFile) duplicateFound = true;
-    }
 
-    if (!duplicateFound)
-    {
-        try{
-            samplePool.add(new AudioSample(sampleFile));
-            DBG("Sample Loaded: " + samplePool.getLast()->getSampleName());
-        }
-        catch(String errString)
-        {
-            DBG(errString);
-        }
-
-    }
-    else DBG("Sample already loaded!");
-}
 
 void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 {

@@ -77,7 +77,7 @@
           file="Source/ChannelProcessor.cpp"/>
     <FILE id="KbP8N0" name="ChannelProcessor.h" compile="0" resource="0"
           file="Source/ChannelProcessor.h"/>
-    <FILE id="cz1fGg" name="OSCListener.h" compile="0" resource="0" file="Source/OSCListener.h"/>
+    <FILE id="cz1fGg" name="OSCHandler.h" compile="0" resource="0" file="Source/OSCHandler.h"/>
     <FILE id="V4lM8" name="WaveformControl.cpp" compile="1" resource="0"
           file="Source/WaveformControl.cpp"/>
     <FILE id="Vwhx63" name="WaveformControl.h" compile="0" resource="0"

@@ -57,15 +57,28 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
     then just monomeCol to choose sample start position based on PLAYBACk_MODE
 
     */
-
-
+    int monomeRow = -1;
+    int monomeCol = -1;
 
     if (m.isNoteOn())
     {
         int noteNumber = m.getNoteNumber();
-        if(noteNumber >= 60 && noteNumber <= 67)
+        if(noteNumber >= 48 && noteNumber <= 55)
         {
-            noteNumber -= 60;
+            monomeRow = 0;
+            monomeCol = noteNumber - 48;
+            DBG("row " + String(monomeRow));
+            DBG("col " + String(monomeCol));
+
+            startSamplePlaying(noteNumber, 15000);
+        }
+        else if(noteNumber >= 60 && noteNumber <= 67)
+        {
+            monomeRow = 1;
+            monomeCol = noteNumber - 60;
+            DBG("row " + String(monomeRow));
+            DBG("col " + String(monomeCol));
+
             startSamplePlaying(noteNumber, 15000);
         }
     }
@@ -125,8 +138,10 @@ void ChannelProcessor::renderNextBlock(AudioSampleBuffer& outputBuffer,
 
 void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
 {
-        if (currentSample != nullptr && isPlaying)
+    if (currentSample != nullptr && isPlaying)
     {
+        DBG("hIHOIDHAS");
+
         // TODO: can we remove a level of abstraction from here?
         const float* const inL = currentSample->getAudioData()->getSampleData(0, 0);
         const float* const inR = currentSample->getNumChannels() > 1

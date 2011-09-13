@@ -106,7 +106,7 @@
 		05D517073C584412ECA97019 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AudioSample.h; path = ../../Source/AudioSample.h; sourceTree = "SOURCE_ROOT"; };
 		91DFAB0065F69DB6213594AF = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ChannelProcessor.cpp; path = ../../Source/ChannelProcessor.cpp; sourceTree = "SOURCE_ROOT"; };
 		1DD2A24C3455898B94B61794 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChannelProcessor.h; path = ../../Source/ChannelProcessor.h; sourceTree = "SOURCE_ROOT"; };
-		44E67CFE458501E763FF3AE9 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OSCListener.h; path = ../../Source/OSCListener.h; sourceTree = "SOURCE_ROOT"; };
+		E42B6A8CA5383E482B0EF184 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OSCHandler.h; path = ../../Source/OSCHandler.h; sourceTree = "SOURCE_ROOT"; };
 		176366C8174E4CC9F1BC955A = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = WaveformControl.cpp; path = ../../Source/WaveformControl.cpp; sourceTree = "SOURCE_ROOT"; };
 		59DFF736CF5242B0B41EAE25 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = WaveformControl.h; path = ../../Source/WaveformControl.h; sourceTree = "SOURCE_ROOT"; };
 		B50846B34831C2C28007BE7D = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = PluginProcessor.cpp; path = ../../Source/PluginProcessor.cpp; sourceTree = "SOURCE_ROOT"; };
@@ -211,7 +211,7 @@
 				05D517073C584412ECA97019,
 				91DFAB0065F69DB6213594AF,
 				1DD2A24C3455898B94B61794,
-				44E67CFE458501E763FF3AE9,
+				E42B6A8CA5383E482B0EF184,
 				176366C8174E4CC9F1BC955A,
 				59DFF736CF5242B0B41EAE25,
 				B50846B34831C2C28007BE7D,

@@ -50,28 +50,14 @@ public:
     void sliderValueChanged (Slider*);
 	void buttonClicked(Button*);
 
-    //void mouseDown(const MouseEvent&);
+    // these just forward the various requests for sample information
+    // to the AudioProcessor (which holds the sample pool).
+    int getSamplePoolSize() { return getProcessor()->getSamplePoolSize(); }
+    String getSampleName(const int &index) { return getProcessor()->getSampleName(index); }
+    AudioSample* getSample(const int &index) { return getProcessor()->getSample(index); }
+    AudioSample* getLatestSample() { return getProcessor()->getLatestSample(); }
+    void loadSampleFromFile(File &sampleFile) { getProcessor()->addNewSample(sampleFile); }
 
-    int getSamplePoolSize() { return samplePool.size(); }
-    // TODO: bounds checking?
-    String getSampleName(const int &index)
-    {
-        jassert(index < samplePool.size());
-        return samplePool[index]->getSampleName();
-    }
-
-    // Returns a pointer to the sample in the sample pool at the specified index
-    AudioSample* getSample(const int &index)
-    {
-        jassert(index < samplePool.size());
-        return samplePool[index];
-    }
-    
-    AudioSample* getLatestSample() { return samplePool.getLast(); }
-
-    void loadSampleFromFile(File &sampleFile);
-
-    Array<File> getLoadedFiles();
 
 private:
     Label infoLabel, delayLabel, helloLabel, logoLabel;
@@ -80,7 +66,6 @@ private:
 
     ComboBox selNumChannels;
 
-	Array<File> loadedFiles;
 	ListBox fileList;
 
 	AudioFormatManager formatManager;
@@ -105,10 +90,6 @@ private:
     AudioPlayHead::CurrentPositionInfo lastDisplayedPosition;
 
     mlrVSTAudioProcessor* getProcessor() const { return static_cast <mlrVSTAudioProcessor*> (getAudioProcessor()); }
-
-    // store array of samplePool objects
-    OwnedArray<AudioSample> samplePool;
-
 
     void displayPositionInfo (const AudioPlayHead::CurrentPositionInfo& pos);
 
