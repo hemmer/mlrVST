@@ -16,7 +16,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "PluginProcessor.h"
-#include "WaveformControl.h"
+#include "SampleStripControl.h"
 
 
 class WaveformControl;
@@ -50,14 +50,28 @@ public:
     void sliderValueChanged (Slider*);
 	void buttonClicked(Button*);
 
-    // these just forward the various requests for sample information
-    // to the AudioProcessor (which holds the sample pool).
+    /* These just forward the various requests for sample information
+       to the AudioProcessor (which holds the sample pool). */
     int getSamplePoolSize() { return getProcessor()->getSamplePoolSize(); }
     String getSampleName(const int &index) { return getProcessor()->getSampleName(index); }
-    AudioSample* getSample(const int &index) { return getProcessor()->getSample(index); }
+    // AudioSample* getSample(const int &index) { return getProcessor()->getSample(index); }
     AudioSample* getLatestSample() { return getProcessor()->getLatestSample(); }
-    void loadSampleFromFile(File &sampleFile) { getProcessor()->addNewSample(sampleFile); }
+    // this returns false if the file failed to load, true otherwise
+    bool loadSampleFromFile(File &sampleFile) { return getProcessor()->addNewSample(sampleFile); }
+    
 
+    // Pass SampleStripControl messages back to the plugin processor
+    File getSampleSourceFile(const int &index) { return getProcessor()->getSample(index)->getSampleFile(); }
+
+    void updateSampleStripSample(const int &samplePoolIndex, const int &stripID)
+    {
+        getProcessor()->setSampleStripSample(samplePoolIndex, stripID);
+    }
+
+    void updateSampleStripSelection(const float &start, const float &end, const int &stripID)
+    {
+        getProcessor()->setSampleStripSelection(start, end, stripID);
+    }
 
 private:
     Label infoLabel, delayLabel, helloLabel, logoLabel;
@@ -72,7 +86,7 @@ private:
 
 	// Store the waveform controls/strips in array. 
     // For a standard monome64 this is 7
-    OwnedArray<WaveformControl> waveformArray;
+    OwnedArray<SampleStripControl> sampleStripControlArray;
     const int numStrips;
     const int waveformControlHeight, waveformControlWidth;
 

@@ -16,7 +16,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       infoLabel(), helloLabel("", "Hello"), logoLabel("", "mlrVST"), delayLabel("", "Delay:"),
       delaySlider("delay"), masterGainSlider("master gain"),
       selNumChannels("select number of channels"),
-	  waveformArray(),
+	  sampleStripControlArray(),
       waveformControlHeight(90), waveformControlWidth(700),
 	  numChannels(8),
       numStrips(7),
@@ -69,9 +69,9 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
         int waveX = getWidth() - waveformControlWidth - PAD_AMOUNT;
         int waveY = 40 + i * (waveformControlHeight + PAD_AMOUNT);
-        waveformArray.add(new WaveformControl(i, waveformControlWidth, waveformControlHeight));
-        waveformArray[i]->setBounds(waveX, waveY, waveformControlWidth, waveformControlHeight);
-        addAndMakeVisible( waveformArray[i] );
+        sampleStripControlArray.add(new SampleStripControl(i, waveformControlWidth, waveformControlHeight));
+        sampleStripControlArray[i]->setBounds(waveX, waveY, waveformControlWidth, waveformControlHeight);
+        addAndMakeVisible( sampleStripControlArray[i] );
 	}
 
     /////////////////////////////
@@ -227,13 +227,13 @@ void mlrVSTAudioProcessorEditor::comboBoxChanged (ComboBox* comboBoxThatHasChang
 
         }
 
-        for(int i = 0; i < waveformArray.size(); ++i)
+        for(int i = 0; i < sampleStripControlArray.size(); ++i)
         {
-            waveformArray[i]->clearChannelList();
+            sampleStripControlArray[i]->clearChannelList();
             for(int chan = 0; chan < numChannels; ++chan)
             {
                 Colour sliderColour = getProcessor()->getChannelProcessor(chan)->getChannelColour();
-                waveformArray[i]->addChannel(chan, sliderColour);
+                sampleStripControlArray[i]->addChannel(chan, sliderColour);
             }
 	    }
     }

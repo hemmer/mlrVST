@@ -71,17 +71,20 @@
       <FILE id="iZ0Vgx" name="README" compile="0" resource="0" file="oscpack/README"/>
       <FILE id="iLCvid" name="TODO" compile="0" resource="0" file="oscpack/TODO"/>
     </GROUP>
+    <FILE id="zjegya" name="SampleStrip.cpp" compile="1" resource="0" file="Source/SampleStrip.cpp"/>
+    <FILE id="Ps8rCl" name="SampleStrip.h" compile="0" resource="0" file="Source/SampleStrip.h"/>
     <FILE id="xH6roY" name="AudioSample.cpp" compile="1" resource="0" file="Source/AudioSample.cpp"/>
     <FILE id="UI00zN" name="AudioSample.h" compile="0" resource="0" file="Source/AudioSample.h"/>
     <FILE id="AAsGim" name="ChannelProcessor.cpp" compile="1" resource="0"
           file="Source/ChannelProcessor.cpp"/>
     <FILE id="KbP8N0" name="ChannelProcessor.h" compile="0" resource="0"
           file="Source/ChannelProcessor.h"/>
+    <FILE id="XwCRk4" name="OSCHandler.cpp" compile="1" resource="0" file="Source/OSCHandler.cpp"/>
     <FILE id="cz1fGg" name="OSCHandler.h" compile="0" resource="0" file="Source/OSCHandler.h"/>
-    <FILE id="V4lM8" name="WaveformControl.cpp" compile="1" resource="0"
-          file="Source/WaveformControl.cpp"/>
-    <FILE id="Vwhx63" name="WaveformControl.h" compile="0" resource="0"
-          file="Source/WaveformControl.h"/>
+    <FILE id="V4lM8" name="SampleStripControl.cpp" compile="1" resource="0"
+          file="Source/SampleStripControl.cpp"/>
+    <FILE id="Vwhx63" name="SampleStripControl.h" compile="0" resource="0"
+          file="Source/SampleStripControl.h"/>
     <FILE id="gFFr0hbSp" name="PluginProcessor.cpp" compile="1" resource="0"
           file="Source/PluginProcessor.cpp"/>
     <FILE id="PkpMNdnIr" name="PluginProcessor.h" compile="0" resource="0"

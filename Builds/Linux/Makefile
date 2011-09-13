@@ -50,9 +50,11 @@ OBJECTS := \
   $(OBJDIR)/OscPrintReceivedElements_db1e1922.o \
   $(OBJDIR)/OscReceivedElements_b8801585.o \
   $(OBJDIR)/OscTypes_b02e2cd6.o \
+  $(OBJDIR)/SampleStrip_9922baef.o \
   $(OBJDIR)/AudioSample_c5634f81.o \
   $(OBJDIR)/ChannelProcessor_6fdb09d8.o \
-  $(OBJDIR)/WaveformControl_fbaf07c1.o \
+  $(OBJDIR)/OSCHandler_bb1eaf54.o \
+  $(OBJDIR)/SampleStripControl_45995bf8.o \
   $(OBJDIR)/PluginProcessor_a059e380.o \
   $(OBJDIR)/PluginEditor_94d4fb09.o \
   $(OBJDIR)/juce_VST_Wrapper_812bffb1.o \
@@ -111,6 +113,11 @@ $(OBJDIR)/OscTypes_b02e2cd6.o: ../../oscpack/osc/OscTypes.cpp
 	@echo "Compiling OscTypes.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
+$(OBJDIR)/SampleStrip_9922baef.o: ../../Source/SampleStrip.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling SampleStrip.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
 $(OBJDIR)/AudioSample_c5634f81.o: ../../Source/AudioSample.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling AudioSample.cpp"
@@ -121,9 +128,14 @@ $(OBJDIR)/ChannelProcessor_6fdb09d8.o: ../../Source/ChannelProcessor.cpp
 	@echo "Compiling ChannelProcessor.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/WaveformControl_fbaf07c1.o: ../../Source/WaveformControl.cpp
+$(OBJDIR)/OSCHandler_bb1eaf54.o: ../../Source/OSCHandler.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling WaveformControl.cpp"
+	@echo "Compiling OSCHandler.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/SampleStripControl_45995bf8.o: ../../Source/SampleStripControl.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling SampleStripControl.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/PluginProcessor_a059e380.o: ../../Source/PluginProcessor.cpp

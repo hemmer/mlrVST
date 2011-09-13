@@ -129,9 +129,11 @@
     <ClCompile Include="..\..\oscpack\osc\OscPrintReceivedElements.cpp"/>
     <ClCompile Include="..\..\oscpack\osc\OscReceivedElements.cpp"/>
     <ClCompile Include="..\..\oscpack\osc\OscTypes.cpp"/>
+    <ClCompile Include="..\..\Source\SampleStrip.cpp"/>
     <ClCompile Include="..\..\Source\AudioSample.cpp"/>
     <ClCompile Include="..\..\Source\ChannelProcessor.cpp"/>
-    <ClCompile Include="..\..\Source\WaveformControl.cpp"/>
+    <ClCompile Include="..\..\Source\OSCHandler.cpp"/>
+    <ClCompile Include="..\..\Source\SampleStripControl.cpp"/>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
     <ClCompile Include="..\..\Source\PluginEditor.cpp"/>
     <ClCompile Include="..\..\..\..\..\..\..\..\SDKs\juce\src\audio\plugin_client\VST\juce_VST_Wrapper.cpp"/>
@@ -154,10 +156,11 @@
     <ClInclude Include="..\..\oscpack\osc\OscPrintReceivedElements.h"/>
     <ClInclude Include="..\..\oscpack\osc\OscReceivedElements.h"/>
     <ClInclude Include="..\..\oscpack\osc\OscTypes.h"/>
+    <ClInclude Include="..\..\Source\SampleStrip.h"/>
     <ClInclude Include="..\..\Source\AudioSample.h"/>
     <ClInclude Include="..\..\Source\ChannelProcessor.h"/>
     <ClInclude Include="..\..\Source\OSCHandler.h"/>
-    <ClInclude Include="..\..\Source\WaveformControl.h"/>
+    <ClInclude Include="..\..\Source\SampleStripControl.h"/>
     <ClInclude Include="..\..\Source\PluginProcessor.h"/>
     <ClInclude Include="..\..\Source\PluginEditor.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\AppConfig.h"/>

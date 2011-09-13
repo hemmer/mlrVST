@@ -13,7 +13,11 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
+
 #include "AudioSample.h"
+
+// forward declaration
+class mlrVSTAudioProcessor;
 
 class ChannelProcessor
 
@@ -24,7 +28,10 @@ public:
     ChannelProcessor();
 
     // Normal constructor
-    ChannelProcessor(const int &channelIDNo, const Colour &col);
+    ChannelProcessor(const int &channelIDNo, const Colour &col, mlrVSTAudioProcessor *owner);
+
+    // Deconstructor
+    ~ChannelProcessor();
                      
     //==============================================================================
     /** Renders the next section of data for this voice.
@@ -80,8 +87,10 @@ public:
     // The lets the ChannelProcessor know which sample to read
     void setCurrentSample(const AudioSample* currentSample);
     void setChannelGain(const float &vol)
-    { channelGain = vol;
-    DBG("channel " + String(channelIDNumber) + " " + String(vol)); }
+    { 
+        channelGain = vol;
+        DBG("channel " + String(channelIDNumber) + " " + String(vol));
+    }
 
     // TODO: eventually this could be channel colourscheme
     Colour getChannelColour() const { return channelColour; }
@@ -95,6 +104,8 @@ public:
     */
     enum PlayMode{ LOOP_FULL, LOOP_BLOCK, PLAY_TO_END };
 private:
+
+    ScopedPointer<mlrVSTAudioProcessor> parent;
 
     // each channel has an individual ID
     const int channelIDNumber;

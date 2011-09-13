@@ -12,21 +12,41 @@
 // OSC shared includes
 #include "ip/UdpSocket.h"
 
-#include "PluginProcessor.h"
 #include "AudioSample.h"
+
+// forward declaration
+class mlrVSTAudioProcessor;
 
 class OSCHandler :  public osc::OscPacketListener,
                     public Thread
 {
+
+private:
+    int port;
+    UdpListeningReceiveSocket s;
+    mlrVSTAudioProcessor *parent;
+
 public:
 
     // Constructor
-    OSCHandler() :
+    OSCHandler(mlrVSTAudioProcessor *owner) :
         Thread("OscListener Thread"),
         port(8000),
-        s(IpEndpointName("localhost", port), this)
+        s(IpEndpointName("localhost", port), this),
+        parent(owner)
     {
+        
     }
+
+    //// Constructor
+    //OSCHandler() :
+    //    Thread("OscListener Thread"),
+    //    port(8000),
+    //    s(IpEndpointName("localhost", port), this)
+    //{
+
+    //}
+
 
     ~OSCHandler()
     {
@@ -45,11 +65,7 @@ public:
         s.Run();
     }
 
-    void sendChangeMessage(int i);
-
-private:
-    int port;
-    UdpListeningReceiveSocket s;
+    void sendMessage(const int &a1, const int &a2, const int &a3);
 
 
 protected:
@@ -75,6 +91,7 @@ protected:
                 // example #1:
                 osc::int32 a1, a2, a3;
                 args >> a1 >> a2 >> a3 >> osc::EndMessage;
+                sendMessage(a1, a2, a3);
 
                 DBG("received '/mlrvst' message with arguments: " << a1 << " " << a2 << " " << a3 << "\n");
             }

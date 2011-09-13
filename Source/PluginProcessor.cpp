@@ -17,17 +17,20 @@ It contains the basic startup code for a Juce application.
 #include "osc/OscOutboundPacketStream.h"
 #include "ip/IpEndpointName.h"
 
+#include "OSCHandler.h"
+
 //==============================================================================
 mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     delayBuffer(2, 12000),
-    channelProcessorArray(),    // array of processor objects
-    numChannels(4),
-    channelGains(),
-    oscMsgListener(),
-    samplePool()               // sample pool is initially empty
+    channelProcessorArray(), numChannels(4),
+    sampleStripArray(), numSampleStrips(7),
+    channelGains(), defaultChannelGain(0.8),
+    samplePool(),               // sample pool is initially empty
+    oscMsgListener(this)
 {
-
+    
     DBG("starting OSC thread");
+    
     oscMsgListener.startThread();
 
     // TEST: oscpack sending data
@@ -43,10 +46,12 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
 
 
 
-
     // Set up some default values..
     masterGain = 1.0f;
     delay = 0.5f;
+
+    // create our SampleStrip objects 
+    buildSampleStripArray(numSampleStrips);
     // add our channel processors
     buildChannelProcessorArray(numChannels);
 
@@ -55,7 +60,13 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     delayPosition = 0;
 }
 
-void mlrVSTAudioProcessor::addNewSample(File &sampleFile)
+mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
+{
+    samplePool.clear();
+}
+
+// returns true if the sample was sucessfully loaded (or pre-existing)
+bool mlrVSTAudioProcessor::addNewSample(File &sampleFile)
 {
     // avoid duplicates
     bool duplicateFound = false;
@@ -69,14 +80,20 @@ void mlrVSTAudioProcessor::addNewSample(File &sampleFile)
         try{
             samplePool.add(new AudioSample(sampleFile));
             DBG("Sample Loaded: " + samplePool.getLast()->getSampleName());
+            return true;
         }
         catch(String errString)
         {
             DBG(errString);
+            return false;
         }
 
     }
-    else DBG("Sample already loaded!");
+    else
+    {
+        DBG("Sample already loaded!");
+        return true;
+    }
 }
 
 
@@ -85,31 +102,27 @@ void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
     // update the number of channels
     numChannels = newNumChannels;
 
-    // make sure we're not using the channelProcessorArray
-    // while (re)building it
+    // make sure we're not using the channelProcessorArray while (re)building it
     suspendProcessing(true);
 
-    // reset the gains
+    // reset the gains to the default
     channelGains.clear();
+    for (int c = 0; c < maxChannels; c++)
+        channelGains.add(defaultChannelGain);
 
-    for (int c = 0; c < maxChannels; c++) channelGains.add(0.8f);
-
+    // reset the list of channels
     channelProcessorArray.clear();
-
-    // add the list of channels
     for (int c = 0; c < numChannels; c++)
-    {
-        channelProcessorArray.add(new ChannelProcessor(c, Colour((float)(0.1f * c), 0.5f, 0.5f, 1.0f)));
+    {   
+        Colour channelColour((float) (0.1f * c), 0.5f, 0.5f, 1.0f);
+        channelProcessorArray.add(new ChannelProcessor(c, channelColour, this));
     }
 
     // resume processing
     suspendProcessing(false);
 }
 
-mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
-{
 
-}
 
 //==============================================================================
 int mlrVSTAudioProcessor::getNumParameters()
@@ -401,4 +414,54 @@ bool mlrVSTAudioProcessor::producesMidi() const
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new mlrVSTAudioProcessor();
+}
+
+
+
+// SampleStrip stuff
+
+// This is called from the GUI to update the range of the sample being played
+void mlrVSTAudioProcessor::setSampleStripSelection(const float &start, const float &end, const int &stripID)
+{
+    sampleStripArray[stripID]->setSampleSelection(start, end);
+}
+
+
+
+void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
+{
+    // make sure we're not using the sampleStripArray while (re)building it
+    suspendProcessing(true);
+
+
+    sampleStripArray.clear();
+    numSampleStrips = newNumSampleStrips;
+    
+    for (int i = 0; i < numSampleStrips; ++i)
+    {
+        sampleStripArray.add(new SampleStrip());    
+    }
+
+
+    // resume processing
+    suspendProcessing(false);
+}
+
+void mlrVSTAudioProcessor::setSampleStripSample(const int &samplePoolIndex, const int &stripID)
+{
+    AudioSample *tempSample = samplePool[samplePoolIndex];
+    sampleStripArray[stripID]->setCurrentSample(tempSample);
+    DBG("hiahoi!" + sampleStripArray[stripID]->getCurrentSample()->getSampleFile().getFullPathName());
+}
+
+SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index) 
+{
+    jassert( index < sampleStripArray.size() );
+    SampleStrip *tempStrip = sampleStripArray[index];
+    return tempStrip;
+}
+
+void mlrVSTAudioProcessor::processOSCMessage(const int &a1, const int &a2, const int &a3)
+{
+    DBG("HOIASDOIH" + String(a1) + String(a2) + String(a3));
 }

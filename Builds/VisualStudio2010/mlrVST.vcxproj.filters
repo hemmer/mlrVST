@@ -58,13 +58,19 @@
     <ClCompile Include="..\..\oscpack\TODO">
       <Filter>mlrVST\oscpack</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\SampleStrip.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\AudioSample.cpp">
       <Filter>mlrVST</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\ChannelProcessor.cpp">
       <Filter>mlrVST</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\WaveformControl.cpp">
+    <ClCompile Include="..\..\Source\OSCHandler.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\SampleStripControl.cpp">
       <Filter>mlrVST</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp">
@@ -129,6 +135,9 @@
     <ClInclude Include="..\..\oscpack\osc\OscTypes.h">
       <Filter>mlrVST\oscpack\osc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\SampleStrip.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\AudioSample.h">
       <Filter>mlrVST</Filter>
     </ClInclude>
@@ -138,7 +147,7 @@
     <ClInclude Include="..\..\Source\OSCHandler.h">
       <Filter>mlrVST</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\WaveformControl.h">
+    <ClInclude Include="..\..\Source\SampleStripControl.h">
       <Filter>mlrVST</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PluginProcessor.h">

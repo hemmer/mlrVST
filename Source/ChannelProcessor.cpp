@@ -9,10 +9,11 @@
 */
 
 #include "ChannelProcessor.h"
-
+#include "PluginProcessor.h"
 
 // main constructor
-ChannelProcessor::ChannelProcessor(const int &channelIDNo, const Colour &col) :
+ChannelProcessor::ChannelProcessor(const int &channelIDNo, const Colour &col, mlrVSTAudioProcessor *owner) :
+    parent(owner),
     channelIDNumber(channelIDNo),
     channelGain(0.8f),
     currentSample(0),
@@ -24,14 +25,19 @@ ChannelProcessor::ChannelProcessor(const int &channelIDNo, const Colour &col) :
 
 }
 
+ChannelProcessor::~ChannelProcessor()
+{
+    parent.release();
+}
+
 void ChannelProcessor::setCurrentSample(const AudioSample* newSample)
 {
     currentSample = newSample;
 }
 
-void ChannelProcessor::startSamplePlaying(const int &block, const int &blockSize)
+void ChannelProcessor::startSamplePlaying(const int &startBlock, const int &blockSize)
 {
-    sampleStartPosition = block * blockSize;
+    sampleStartPosition = startBlock * blockSize;
     sampleCurrentPosition = sampleStartPosition;
     isPlaying = true;
 }
@@ -67,20 +73,29 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
         {
             monomeRow = 0;
             monomeCol = noteNumber - 48;
-            DBG("row " + String(monomeRow));
-            DBG("col " + String(monomeCol));
+            DBG("press on: " + String(monomeCol) + " " + String(monomeRow));
 
-            startSamplePlaying(noteNumber, 15000);
+
         }
         else if(noteNumber >= 60 && noteNumber <= 67)
         {
             monomeRow = 1;
             monomeCol = noteNumber - 60;
-            DBG("row " + String(monomeRow));
-            DBG("col " + String(monomeCol));
+            DBG("press on: " + String(monomeCol) + " " + String(monomeRow));
 
             startSamplePlaying(noteNumber, 15000);
         }
+
+        SampleStrip *tempStrip = parent->getSampleStrip(monomeRow);
+        jassert( tempStrip->getCurrentSample() != 0);
+        setCurrentSample(tempStrip->getCurrentSample());
+        int blockSize = tempStrip->getBlockSize();
+        sampleStartPosition = tempStrip->getSampleStart() + monomeCol * blockSize;
+        //sampleEndPosition = tempStrip->getSampleEnd();
+        //startSamplePlaying(monomeCol, tempStrip->getBlockSize());
+
+        sampleCurrentPosition = sampleStartPosition;
+        isPlaying = true;
     }
     else if (m.isNoteOff())
     {
@@ -138,7 +153,15 @@ void ChannelProcessor::renderNextBlock(AudioSampleBuffer& outputBuffer,
 
 void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
 {
-    if (currentSample != nullptr && isPlaying)
+    if (currentSample == 0)
+    {
+        //DBG("null: " + String(channelIDNumber) + " " + String(isPlaying));
+    } else
+    {
+        // DBG("good: " + String(channelIDNumber));
+    }
+
+    if (currentSample != 0 && isPlaying)
     {
         DBG("hIHOIDHAS");
 

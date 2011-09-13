@@ -16,6 +16,8 @@
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "ChannelProcessor.h"
 #include "AudioSample.h"
+#include "SampleStrip.h"
+
 #include "OSCHandler.h"
 
 //==============================================================================
@@ -61,7 +63,11 @@ public:
     void setCurrentProgram (int /*index*/)                              { }
     const String getProgramName (int /*index*/)                         { return String::empty; }
     void changeProgramName (int /*index*/, const String& /*newName*/)   { }
-    ChannelProcessor* getChannelProcessor(const int &index) { return channelProcessorArray[index]; }
+
+    ChannelProcessor* getChannelProcessor(const int &index)
+    {
+        return channelProcessorArray[index];
+    }
 
     //==============================================================================
     void getStateInformation (MemoryBlock& destData);
@@ -103,7 +109,9 @@ public:
     Array<float> channelGains;
 
     // adds a sample to the sample pool
-    void addNewSample(File &sampleFile);
+    bool addNewSample(File &sampleFile);
+    void setSampleStripSample(const int &samplePoolIndex, const int &stripID);
+    void setSampleStripSelection(const float &start, const float &end, const int &stripID);
 
     int getSamplePoolSize() { return samplePool.size(); }
     // TODO: bounds checking?
@@ -124,16 +132,20 @@ public:
 
 
 
-    void processOSCMessage();
+    void processOSCMessage(const int &a1, const int &a2, const int &a3);
 
     // set up the channels (can be used to change number of channels
     void buildChannelProcessorArray(const int &newNumChannels);
+    void buildSampleStripArray(const int &numSampleStrips);
+
+    SampleStrip* getSampleStrip(const int &index);
 
 private:
     //==============================================================================
 
     // store array of samplePool objects
     OwnedArray<AudioSample> samplePool;
+
 
 
     AudioSampleBuffer delayBuffer;
@@ -145,8 +157,13 @@ private:
     static const int maxChannels = 8;
     // These are the seperate audio channels
     OwnedArray<ChannelProcessor> channelProcessorArray; 
+    const float defaultChannelGain;
+        
+    /* These track the seperate SampleStrips (related
+       to the GUI component SampleStripControl). */
+    OwnedArray<SampleStrip> sampleStripArray;
+    int numSampleStrips;
 
-    //OSCListener testOSCHandler;
     OSCHandler oscMsgListener;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTAudioProcessor);
