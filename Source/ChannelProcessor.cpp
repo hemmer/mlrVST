@@ -11,16 +11,21 @@
 #include "ChannelProcessor.h"
 #include "PluginProcessor.h"
 
+
 // main constructor
-ChannelProcessor::ChannelProcessor(const int &channelIDNo, const Colour &col, mlrVSTAudioProcessor *owner) :
+ChannelProcessor::ChannelProcessor(const int &channelIDNo,
+                                   const Colour &col,
+                                   mlrVSTAudioProcessor *owner,
+                                   SampleStrip *initialSampleStrip) :
     parent(owner),
     channelIDNumber(channelIDNo),
     channelGain(0.8f),
     currentSample(0),
-    sampleStartPosition(0),
+    sampleStartPosition(0), sampleEndPosition(0), selectionLength(0),
     isPlaying(false),
     isSampleReversed(false),
-    channelColour(col)
+    channelColour(col),
+    currentSampleStrip(initialSampleStrip)
 {
 
 }
@@ -30,9 +35,10 @@ ChannelProcessor::~ChannelProcessor()
     parent.release();
 }
 
-void ChannelProcessor::setCurrentSample(const AudioSample* newSample)
+void ChannelProcessor::setCurrentSampleStrip(const SampleStrip* newSampleStrip)
 {
-    currentSample = newSample;
+    currentSampleStrip = newSampleStrip;
+    currentSample = currentSampleStrip->getCurrentSample();
 }
 
 void ChannelProcessor::startSamplePlaying(const int &startBlock, const int &blockSize)
@@ -50,56 +56,54 @@ void ChannelProcessor::stopSamplePlaying()
 
 void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
 {
-    /* PSUEDO CODE TO HELP DESIGN ONCE MONOME messages are interpreted
+    /* Due to the design of JUCE, for now OSC messages are 
+       handled as MIDI messages. The monome row message has
+       already been used to load the all the sample strip
+       information we need at this point so we only need 
+       the monome column.
 
-    // INCOMING PARAMS:
+       The spec for those interested is:
 
-    use monomeRow to ignore messages coming for other channels:
-
-    IF waveFormArray[monomeRow].getChannel != this.channelNumber
-    THEN ignore msg
-    ELSE setCurrentSample( waveFormArray[monomeRow].currentSample )
-
-    then just monomeCol to choose sample start position based on PLAYBACk_MODE
-
+       monomeRow - MIDI message channel
+       monomeCol - MIDI message note (0-15)
     */
-    int monomeRow = -1;
-    int monomeCol = -1;
 
-    if (m.isNoteOn())
+    int monomeCol = m.getNoteNumber();
+
+    // We are only interested in columns that are
+    // within the allowed number of chunks.
+    if (monomeCol < currentSampleStrip->getNumChunks())
     {
-        int noteNumber = m.getNoteNumber();
-        if(noteNumber >= 48 && noteNumber <= 55)
-        {
-            monomeRow = 0;
-            monomeCol = noteNumber - 48;
-            DBG("press on: " + String(monomeCol) + " " + String(monomeRow));
 
+        DBG("message received. note " + String(m.getNoteNumber()) + ", channel " + String(m.getChannel()));
+
+        if (m.isNoteOn())
+        {
+
+            //jassert( tempStrip->getCurrentSample() == 0);
+            int blockSize = currentSampleStrip->getBlockSize();
+            sampleStartPosition = currentSampleStrip->getSampleStart();
+            sampleEndPosition = currentSampleStrip->getSampleEnd();
+            //selectionLength = (sampleEndPosition - sampleStartPosition);
+
+            //jassert( sampleEndPosition <= sampleLength);
+            //startSamplePlaying(monomeCol, tempStrip->getBlockSize());
+
+            if (currentSampleStrip->getCurrentSample() != 0)
+            {
+                sampleCurrentPosition = sampleStartPosition + monomeCol * blockSize;
+                DBG("blocksize" + String(blockSize) + " monomecol " + String(monomeCol));
+                int tempSampleLength = currentSampleStrip->getCurrentSample()->getSampleLength();
+                DBG("start sample " + String(sampleStartPosition) + ", end sample " + String(sampleEndPosition) + ", starting pos " + String(sampleCurrentPosition) + " sample length " + String(tempSampleLength) );
+                isPlaying = true;
+            }
 
         }
-        else if(noteNumber >= 60 && noteNumber <= 67)
+        else if (m.isNoteOff())
         {
-            monomeRow = 1;
-            monomeCol = noteNumber - 60;
-            DBG("press on: " + String(monomeCol) + " " + String(monomeRow));
-
-            startSamplePlaying(noteNumber, 15000);
+            stopSamplePlaying();
         }
 
-        SampleStrip *tempStrip = parent->getSampleStrip(monomeRow);
-        jassert( tempStrip->getCurrentSample() != 0);
-        setCurrentSample(tempStrip->getCurrentSample());
-        int blockSize = tempStrip->getBlockSize();
-        sampleStartPosition = tempStrip->getSampleStart() + monomeCol * blockSize;
-        //sampleEndPosition = tempStrip->getSampleEnd();
-        //startSamplePlaying(monomeCol, tempStrip->getBlockSize());
-
-        sampleCurrentPosition = sampleStartPosition;
-        isPlaying = true;
-    }
-    else if (m.isNoteOff())
-    {
-        stopSamplePlaying();
     }
 }
 
@@ -126,8 +130,10 @@ void ChannelProcessor::renderNextBlock(AudioSampleBuffer& outputBuffer,
     {
         int midiEventPos;
         // try to find a corresponding MIDI event and see if it's within range
+        // and is the correct channel
         const bool useEvent = midiIterator.getNextEvent(m, midiEventPos)
-                                && (midiEventPos < startSample + numSamples);
+                              && (midiEventPos < startSample + numSamples)
+                              && ((m.getChannel() - 1) == channelIDNumber);
 
         // if there was an event, process up until that position
         // otherwise process until the end
@@ -163,12 +169,11 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
 
     if (currentSample != 0 && isPlaying)
     {
-        DBG("hIHOIDHAS");
-
+        
         // TODO: can we remove a level of abstraction from here?
-        const float* const inL = currentSample->getAudioData()->getSampleData(0, 0);
-        const float* const inR = currentSample->getNumChannels() > 1
-                               ? currentSample->getAudioData()->getSampleData(1, 0) : nullptr;
+        const float* const inL = currentSampleStrip->getCurrentSample()->getAudioData()->getSampleData(0, 0);
+        const float* const inR = currentSampleStrip->getCurrentSample()->getNumChannels() > 1
+                               ? currentSampleStrip->getCurrentSample()->getAudioData()->getSampleData(1, 0) : nullptr;
 
         float* outL = outputBuffer.getSampleData(0, startSample);
         float* outR = outputBuffer.getNumChannels() > 1 ? outputBuffer.getSampleData (1, startSample) : nullptr;
@@ -237,7 +242,7 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
 
             sampleCurrentPosition += 1;
 
-            if (sampleCurrentPosition > currentSample->getSampleLength())
+            if (sampleCurrentPosition > sampleEndPosition)
             {
                 stopSamplePlaying();
                 break;

@@ -20,6 +20,7 @@
 class SampleStripControl :  public Component,
     public ChangeListener,
     public ButtonListener,
+    public ComboBoxListener,
     public FileDragAndDropTarget
 {
 public:
@@ -36,6 +37,7 @@ public:
     void paint(Graphics& g);
     void changeListenerCallback(ChangeBroadcaster*);
     void buttonClicked(Button *btn);
+    void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
 
     // This allows us to load samples by Drag n' Drop
     bool isInterestedInFileDrag(const StringArray& files);
@@ -46,17 +48,14 @@ public:
     void clearChannelList();
 
 
-    // how many chunks to break the sample into (default 8 for standard monome).
-    int getNumChunks() const
-    {
-        return numChunks;
-    }
-    //int getVisualSelectionStart() const { return visualSelectionStart; }
-    //int getVisualSelectionEnd() const { return visualSelectionEnd; }
 
-    void updateThumbnail(File &newFile);
+    void updateThumbnail(const File &newFile);
+
+    void buildNumBlocksList(const int &newMaxNumBlocks);
 
 private:
+
+    ComboBox selNumChunks;
 
     const int componentHeight, componentWidth;
     Rectangle<int> waveformPaintBounds;
@@ -81,9 +80,13 @@ private:
     // these are the same, except refering to the component
     // rather than the sample
     int visualSelectionStart, visualSelectionEnd;
+    int visualSelectionLength;
+    // this need to be a float as chunkSize might need anti aliasing.
+    float visualChunkSize;
     // how many chunks to break the sample into (default 8 for
     // standard monome) and what size (in samples) they are
     int numChunks;
+
 
 
     // stuff for drawing waveforms

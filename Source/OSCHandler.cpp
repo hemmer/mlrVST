@@ -11,8 +11,8 @@
 #include "PluginProcessor.h"
 #include "OSCHandler.h"
 
-void OSCHandler::sendMessage(const int &a1, const int &a2, const int &a3)
+void OSCHandler::sendMessage(const int &monomeCol, const int &monomeRow, const int &state)
 {
-    parent->processOSCMessage(a1, a2, a3);
+    parent->processOSCKeyPress(monomeCol, monomeRow, state);
 }
 

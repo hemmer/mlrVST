@@ -27,7 +27,8 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     isReversed(false),
     numChunks(8),
     thumbnailLength(0.0),
-    visualSelectionStart(0), visualSelectionEnd(0)
+    visualSelectionStart(0), visualSelectionEnd(0), visualChunkSize(0.0), visualSelectionLength(0),
+    selNumChunks()
 {
 
     addAndMakeVisible(&filenameLbl);
@@ -47,7 +48,39 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     trackNumberLbl.setColour(Label::textColourId, Colours::white);
     trackNumberLbl.setFont(10.0f);
 
+    // this will eventually be loaded from a setting
+    buildNumBlocksList(8);
+    addAndMakeVisible(&selNumChunks);
+    selNumChunks.addListener(this);
+    selNumChunks.setBounds(200, 0, 30, 15);
+}
 
+void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
+{
+    selNumChunks.clear();
+    for (int i = 1; i <= newMaxNumBlocks; ++i)
+        selNumChunks.addItem(String(i), i);
+
+    // select the max number of blocks (comboBoxChanged will 
+    // be informed).
+    selNumChunks.setSelectedId(newMaxNumBlocks);
+}
+
+void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
+{
+    // get pointer to parent class
+    mlrVSTAudioProcessorEditor* pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
+
+
+    if (comboBoxThatHasChanged == &selNumChunks)
+    {
+        numChunks = selNumChunks.getSelectedId();
+        visualChunkSize = (visualSelectionLength / (float) numChunks);
+        pluginUI->updateSampleStripParameter(SampleStrip::ParamNumChunks,
+                                             numChunks,
+                                             sampleStripID);
+        repaint();
+    }
 }
 
 SampleStripControl::~SampleStripControl()
@@ -58,6 +91,8 @@ SampleStripControl::~SampleStripControl()
 
 void SampleStripControl::buttonClicked(Button *btn)
 {
+    // get pointer to parent class
+    mlrVSTAudioProcessorEditor* pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
 
     // see if any of the channel selection buttons were chosen
     for (int i = 0; i < channelButtonArray.size(); ++i)
@@ -67,6 +102,7 @@ void SampleStripControl::buttonClicked(Button *btn)
             backgroundColour = channelButtonArray[i]->getBackgroundColour();
             backgroundColourDark = backgroundColour.darker().darker();
             currentChannel = i;
+            pluginUI->updateSampleStripParameter(SampleStrip::ParamCurrentChannel, currentChannel, sampleStripID);
             repaint();
         }
     }
@@ -76,7 +112,6 @@ void SampleStripControl::clearChannelList()
 {
     // if there are existing buttons, remove them
     if (channelButtonArray.size() != 0) channelButtonArray.clear();
-
     numChannels = 0;
 }
 
@@ -136,7 +171,6 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
 
     if (e.mods == ModifierKeys::rightButtonModifier)
     {
-
         mlrVSTAudioProcessorEditor *demoPage = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
 
         if (demoPage != 0)
@@ -148,7 +182,6 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
             {
                 // TODO: can this be cached and only repopulated when the sample pool changes?
                 PopupMenu p = PopupMenu();
-
                 // TODO: add option to select "no file?
                 // TODO: middle click to delete sample under cursor in menu?
 
@@ -172,8 +205,15 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
                     updateThumbnail(demoPage->getSampleSourceFile(fileChoice));
                     // and let the audio processor update the sample strip
                     demoPage->updateSampleStripSample(fileChoice, sampleStripID);
+
                     // select whole sample by default
+                    visualSelectionStart = 0;
+                    visualSelectionEnd = componentWidth;
+                    visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
+                    visualChunkSize = (visualSelectionLength / (float) numChunks);
+                    
                     demoPage->updateSampleStripSelection(0.0, 1.0, sampleStripID);
+                    repaint();
                 }
             }
         }
@@ -197,15 +237,17 @@ void SampleStripControl::mouseUp(const MouseEvent &e)
             visualSelectionEnd = visualSelectionStart;
             visualSelectionStart = e.x;
         }
-
         // Make sure we don't select outside the waveform
         if (visualSelectionEnd > componentWidth) visualSelectionEnd = componentWidth;
-
         if (visualSelectionStart < 0) visualSelectionStart = 0;
+
+        visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
+        visualChunkSize = (visualSelectionLength / (float) numChunks);
 
         // try to send the new selection to the SampleStrips
         mlrVSTAudioProcessorEditor *demoPage = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
 
+        // let the sample strip know about the change
         if (demoPage != 0)
         {
             demoPage->updateSampleStripSelection(visualSelectionStart / (float) componentWidth,
@@ -213,6 +255,7 @@ void SampleStripControl::mouseUp(const MouseEvent &e)
                                                  sampleStripID);
         }
 
+        // redraw to reflect new selection
         repaint();
     }
 }
@@ -220,8 +263,18 @@ void SampleStripControl::mouseUp(const MouseEvent &e)
 void SampleStripControl::mouseDrag(const MouseEvent &e)
 {
     visualSelectionEnd = e.x;
+
+    // Make sure we don't select outside the waveform
+    if (visualSelectionEnd > componentWidth) visualSelectionEnd = componentWidth;
+    if (visualSelectionEnd < 0) visualSelectionEnd = 0;
+
+    if (visualSelectionEnd > visualSelectionStart)
+        visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
+    else
+        visualSelectionLength = (visualSelectionStart - visualSelectionEnd);
+
+    visualChunkSize = (visualSelectionLength / (float) numChunks);
     repaint();
-    //DBG(e.g
 }
 
 
@@ -230,11 +283,28 @@ void SampleStripControl::paint(Graphics& g)
     g.fillAll(backgroundColourDark);
     g.setColour(backgroundColour);
 
-    // this is because we can drag backwards!
+    // this may seem complicated but we need to be able to
+    // paint the strip even if the selection is made backwards!
     if (visualSelectionEnd > visualSelectionStart)
-        g.fillRect(visualSelectionStart, 15, (visualSelectionEnd - visualSelectionStart), componentHeight - 15);
-    else g.fillRect(visualSelectionEnd, 15, (visualSelectionStart - visualSelectionEnd), componentHeight - 15);
-
+    {
+        for(int c = 0; c < numChunks; ++c)
+        {
+            Rectangle<float> chunkC((float) (visualSelectionStart + c * visualChunkSize),
+                                    15.0f, visualChunkSize, (float) (componentHeight - 15.0f));
+            g.fillRoundedRectangle(chunkC, 8.0f);
+        }
+    }
+    else
+    {
+        for(int c = 0; c < numChunks; ++c)
+        {
+            Rectangle<float> chunkC((float) (visualSelectionEnd + c * (visualChunkSize)),
+                                    15.0f, visualChunkSize, (float) (componentHeight - 15.0f));
+            g.fillRoundedRectangle(chunkC, 8.0f);
+        }
+    }
+        
+    // TODO: grey out waveform outside selection
     g.setColour(Colours::white);
 
     if (thumbnail.getTotalLength() > 0)
@@ -287,7 +357,7 @@ void SampleStripControl::filesDropped(const StringArray& files, int /*x*/, int /
     //if(pluginUI->getLatestSample() != 0) setAudioSample(pluginUI->getLatestSample());
 }
 
-void SampleStripControl::updateThumbnail(File &newFile)
+void SampleStripControl::updateThumbnail(const File &newFile)
 {
     thumbnail.setSource(new FileInputSource(newFile));
     thumbnailLength = thumbnail.getTotalLength();
@@ -297,28 +367,3 @@ void SampleStripControl::updateThumbnail(File &newFile)
 
     DBG("Waveform strip " + String(sampleStripID) + ": file \"" + newFile.getFileName() + "\" selected.");
 }
-
-//void SampleStripControl::setAudioSample(AudioSample* sample)
-//{
-//    // this is now the new audio sample
-//    currentSample = sample;
-//
-//    // by default, the whole sample is selected
-//    // TODO: check math of rounding here
-//    selectionStart = 0;
-//    selectionEnd = currentSample->getSampleLength();
-//    selectionStartVisual = 0;
-//    selectionEndVisual = componentWidth;
-//    chunkSize = (int) ((selectionEnd - selectionStart) / numChunks);
-//
-//    // get temporary reference to the File object of the
-//    // sample to update labels / thumbnails
-//    File sampleFile = currentSample->getSampleFile();
-//    thumbnail.setSource(new FileInputSource (sampleFile));
-//    thumbnailLength = thumbnail.getTotalLength();
-//
-//    // update filename label
-//    filenameLbl.setText(sampleFile.getFullPathName(), false);
-//
-//    DBG("Waveform strip " + String(waveformID) + ": file \"" + sampleFile.getFileName() + "\" selected.");
-//}

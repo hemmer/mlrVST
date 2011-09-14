@@ -25,79 +25,67 @@ public:
         currentSample.release();
     }
 
-    enum SampleStripParam
+    // TODO: typedef make this short to type
+    enum SampleStripParameter
     {
-
+        ParamCurrentChannel,
+        ParamNumChunks
     };
 
-    AudioSample* getCurrentSample() { return currentSample; }
+    String getParameterName(const int &parameterID) const
+    {
+        switch(parameterID)
+        {
+        case ParamCurrentChannel : return "current channel";
+        case ParamNumChunks : return "num chunks";
+        default : return "parameter not found";
+        }
+    }
+
+
+    AudioSample* getCurrentSample() const { return currentSample; }
     void setCurrentSample(AudioSample *newSample);
 
-    // getters / setters
-    int getSampleLength() const
-    {
-        return sampleLength;
-    }
-    int getSampleStart() const
-    {
-        return sampleStart;
-    }
-    int getSampleEnd() const
-    {
-        return sampleEnd;
-    }
-    int getNumBlocks() const
-    {
-        return numBlocks;
-    }
-    int getBlockSize() const
-    {
-        return blockSize;
-    }
-    int getCurrentChannel() const
-    {
-        return currentChannel;
-    }
-    //int getStripID() const { return stripID; }
+    //int getSampleLength() const { return sampleLength; }
 
-    // void setSampleLength(const int &newSampleLength) { sampleLength = newSampleLength; }
+    // these return the key sample points (taking selection into account)
+    int getSampleStart() const { return selectionStart; }
+    int getSampleEnd() const { return selectionEnd; }
+    int getBlockSize() const { return blockSize; }
+    int getCurrentChannel() const { return currentChannel; }
+
+    // TODO: have this set through setParameter
+    int getNumChunks() const { return numChunks; }
 
     void setSampleSelection(const float &start, const float &end)
     {
-        sampleSelectionStart = start;
-        sampleSelectionEnd = end;
+        fractionalSampleStart = start;
+        fractionalSampleEnd = end;
 
         // TODO: check this rounding is OK
-        sampleStart = (int)(sampleSelectionStart * sampleLength);
-        sampleEnd = (int)(sampleSelectionEnd * sampleLength);
+        selectionStart = (int)(fractionalSampleStart * totalSampleLength);
+        selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
+        selectionLength = selectionEnd - selectionStart;
+        blockSize = (int) (selectionLength / (float) numChunks);
 
-        DBG("sample start: " + String(sampleStart) + " " + String(sampleSelectionStart));
-        DBG("sample end: " + String(sampleEnd) + " " + String(sampleSelectionEnd));
+        DBG("sample start: " + String(selectionStart) + " " + String(fractionalSampleStart));
+        DBG("sample end: " + String(selectionEnd) + " " + String(fractionalSampleEnd));
     }
 
-    void setNumBlocks(const int &newNumBlocks)
-    {
-        numBlocks = newNumBlocks;
-        blockSize = (int)(sampleLength / (double) numBlocks);
-    }
-    void setCurrentChannel(const int &newChannel)
-    {
-        currentChannel = newChannel;
-    }
+    void setSampleStripParameter(const int &parameterID, const int &newValue);
 
 private:
 
-    //int stripID;
-
     // Pointer to currently selected sample
     ScopedPointer<AudioSample> currentSample;
+    int totalSampleLength;
 
-    int sampleLength;
-    // start / end points (fractional)
-    float sampleSelectionStart, sampleSelectionEnd;
-    // start / end points (in samples)
-    int sampleStart, sampleEnd;
-    int numBlocks, blockSize;
+    // start / end points (fractional, i.e. 0.5 is half way through)
+    float fractionalSampleStart, fractionalSampleEnd;
+    // start / end / length of the selection (in samples)
+    int selectionStart, selectionEnd, selectionLength;
+
+    int numChunks, blockSize;
 
     int currentChannel;
 };

@@ -1,13 +1,13 @@
 mlrVST
 ======
 
-VST port of the popular monome app using JUCE. At this stage, the app is very much in the experimental phase, so probably code is quite possibly not in a working state! 
+VST port of the popular monome app using JUCE. At this stage, the app is very much in the experimental phase, so code is quite possibly not in a working state! 
 
 Current Status
 --------------
 
 UI is starting to take shape (at least in terms of functionality). Variable number of channels can be set at runtime.
-Very basic audio processing can be done. Initial OSC tests are sucessful.
+Basic sample playback can be done. Incoming OSC messages can trigger samples.
 
 
 Possible Upcoming Features

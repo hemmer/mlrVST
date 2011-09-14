@@ -82,7 +82,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     masterGainSlider.setSliderStyle(Slider::LinearVertical);
     masterGainSlider.addListener(this);
     masterGainSlider.setRange(0.0, 1.0, 0.01);
-    masterGainSlider.setValue(0.05);
+    masterGainSlider.setValue(0.6);
     masterGainSlider.setBounds(PAD_AMOUNT, 540, 30, 190);
     masterGainSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
 
@@ -188,9 +188,6 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
     }
    
 }
-
-
-
 
 void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 {

@@ -84,7 +84,7 @@ protected:
             // examples below.
             osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
             osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-            DBG(m.AddressPattern());
+            //DBG(m.AddressPattern());
 
             if (strcmp(m.AddressPattern(), "/mlrvst/press") == 0)
             {
@@ -93,7 +93,7 @@ protected:
                 args >> a1 >> a2 >> a3 >> osc::EndMessage;
                 sendMessage(a1, a2, a3);
 
-                DBG("received '/mlrvst' message with arguments: " << a1 << " " << a2 << " " << a3 << "\n");
+                //DBG("received '/mlrvst' message with arguments: " << a1 << " " << a2 << " " << a3 << "\n");
             }
 
         }

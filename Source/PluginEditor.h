@@ -61,7 +61,13 @@ public:
     
 
     // Pass SampleStripControl messages back to the plugin processor
-    File getSampleSourceFile(const int &index) { return getProcessor()->getSample(index)->getSampleFile(); }
+    File getSampleSourceFile(const int &index) const { return getProcessor()->getSample(index)->getSampleFile(); }
+
+    // pass all int parameters to SampleStrip
+    void updateSampleStripParameter(const int &parameterID, const int &newValue, const int &stripID)
+    {
+        getProcessor()->setSampleStripParameter(parameterID, newValue, stripID);
+    }
 
     void updateSampleStripSample(const int &samplePoolIndex, const int &stripID)
     {

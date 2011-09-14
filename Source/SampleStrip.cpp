@@ -13,8 +13,8 @@
 SampleStrip::SampleStrip() :
     //stripID(newStripID),
     currentSample(0),
-    sampleLength(0), sampleSelectionStart(0), sampleSelectionEnd(0),
-    numBlocks(0), blockSize(0),
+    totalSampleLength(0), fractionalSampleStart(0), fractionalSampleEnd(0),
+    numChunks(0), blockSize(0),
     currentChannel(0)
 {
 
@@ -22,14 +22,27 @@ SampleStrip::SampleStrip() :
 
 void SampleStrip::setCurrentSample(AudioSample *newSample)
 {
-    DBG("new sapjds");
     if (newSample != 0)
     {
         DBG("new sapjds LEGIT");
         currentSample = newSample;
-        sampleLength = currentSample->getSampleLength();
-        sampleStart = (int)(sampleSelectionStart * sampleLength);
-        sampleEnd = (int)(sampleSelectionEnd * sampleLength);
+        totalSampleLength = currentSample->getSampleLength();
+        selectionStart = (int)(fractionalSampleStart * totalSampleLength);
+        selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
+
+        selectionLength = (selectionEnd - selectionStart);
+        blockSize = (int) (selectionLength / (float) numChunks);
         //TODO do we set selection variables here?
+    }
+}
+
+void SampleStrip::setSampleStripParameter(const int &parameterID, const int &newValue)
+{
+    DBG("param \"" + getParameterName(parameterID) + "\" updated to: " + String(newValue));
+
+    switch (parameterID)
+    {
+    case ParamCurrentChannel : currentChannel = newValue; break;
+    case ParamNumChunks : numChunks = newValue; break;
     }
 }

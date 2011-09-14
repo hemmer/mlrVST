@@ -15,6 +15,7 @@
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 
 #include "AudioSample.h"
+#include "SampleStrip.h"
 
 // forward declaration
 class mlrVSTAudioProcessor;
@@ -28,7 +29,7 @@ public:
     ChannelProcessor();
 
     // Normal constructor
-    ChannelProcessor(const int &channelIDNo, const Colour &col, mlrVSTAudioProcessor *owner);
+    ChannelProcessor(const int &channelIDNo, const Colour &col, mlrVSTAudioProcessor *owner, SampleStrip *initialSampleStrip);
 
     // Deconstructor
     ~ChannelProcessor();
@@ -81,11 +82,12 @@ public:
         blockSize is the size of each block in samples
     */
     void startSamplePlaying(const int &block, const int &blockSize);
-
     void stopSamplePlaying();
 
     // The lets the ChannelProcessor know which sample to read
-    void setCurrentSample(const AudioSample* currentSample);
+    //void setCurrentSample(const AudioSample* currentSample);
+    void setCurrentSampleStrip(const SampleStrip* newSampleStrip);
+
     void setChannelGain(const float &vol)
     { 
         channelGain = vol;
@@ -115,10 +117,11 @@ private:
     // pointer to the current sample in the sample pool
     // NOTE: "const" qualifier means we can't change the
     // sample which this pointer points at
+    const SampleStrip *currentSampleStrip;
     const AudioSample *currentSample;
 
-    // which position in the sample to start playing from (measured in samples)
-    int sampleStartPosition;
+    // which parts of the sample can we play
+    int sampleStartPosition, sampleEndPosition, selectionLength;
     // where we are in the sample at the moment
     int sampleCurrentPosition;
 

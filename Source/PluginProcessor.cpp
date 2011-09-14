@@ -44,7 +44,8 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     DBG("finished OSC tests");
     // END TEST
 
-
+    File test("C:\\Users\\Hemmer\\Desktop\\funky.wav");
+    samplePool.add(new AudioSample(test));
 
     // Set up some default values..
     masterGain = 1.0f;
@@ -115,7 +116,7 @@ void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
     for (int c = 0; c < numChannels; c++)
     {   
         Colour channelColour((float) (0.1f * c), 0.5f, 0.5f, 1.0f);
-        channelProcessorArray.add(new ChannelProcessor(c, channelColour, this));
+        channelProcessorArray.add(new ChannelProcessor(c, channelColour, this, sampleStripArray.getFirst()));
     }
 
     // resume processing
@@ -243,7 +244,7 @@ void mlrVSTAudioProcessor::prepareToPlay(double sampleRate, int /*samplesPerBloc
     // initialisation that you need..
     // TODO: does ChannelProcessor need this?
     //synth.setCurrentPlaybackSampleRate (sampleRate);
-    keyboardState.reset();
+    monomeState.reset();
     delayBuffer.clear();
 }
 
@@ -251,7 +252,7 @@ void mlrVSTAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
-    keyboardState.reset();
+    monomeState.reset();
 }
 
 void mlrVSTAudioProcessor::reset()
@@ -272,6 +273,11 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
     maybe strip channel 0 messages (for control options)
 
     */
+
+    /* this adds the OSC messages from the monome which have been converted
+       to midi messages (where channel is row, note number is column) */
+    monomeState.processNextMidiBuffer(midiMessages, 0, numSamples, true);
+
 
     // for each channel, add its contributions
     // Remember to set the correct sample
@@ -426,7 +432,12 @@ void mlrVSTAudioProcessor::setSampleStripSelection(const float &start, const flo
     sampleStripArray[stripID]->setSampleSelection(start, end);
 }
 
-
+void mlrVSTAudioProcessor::setSampleStripParameter(const int &parameterID,
+                                                    const int &newValue,
+                                                    const int &stripID)
+{
+    sampleStripArray[stripID]->setSampleStripParameter(parameterID, newValue);
+}
 
 void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
 {
@@ -461,7 +472,38 @@ SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index)
     return tempStrip;
 }
 
-void mlrVSTAudioProcessor::processOSCMessage(const int &a1, const int &a2, const int &a3)
+void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &monomeRow, const int &state)
 {
-    DBG("HOIASDOIH" + String(a1) + String(a2) + String(a3));
+
+    
+    if (monomeRow == 0)
+    {
+        // TODO control mappings for top row 
+    } 
+    else if (monomeRow <= numSampleStrips && monomeRow >= 0)
+    {
+        // now treat the second row as the starting row
+        int effectiveMonomeRow = monomeRow - 1;
+
+        // find the channel of the strip matching the incoming row 
+        int channel = sampleStripArray[effectiveMonomeRow]->getCurrentChannel();
+
+        DBG("audio processor recieved OSC message: " + String(monomeCol) + " " + String(monomeRow) + " " + String(state) + " channel: " + String(channel));
+
+        channelProcessorArray[channel]->setCurrentSampleStrip(sampleStripArray[effectiveMonomeRow]);
+
+        // only pass on messages that are from the allowed range of columns
+        // NOTE: midi messages may still be passed from other sources that
+        // are outside this range so the channelProcessor must be aware of 
+        // numChunks too.
+        int numChunks = sampleStripArray[effectiveMonomeRow]->getNumChunks();
+
+        if (monomeCol < numChunks)
+        {
+            // + 1 is because midi channels start at 1 not 0!
+            if (state) monomeState.noteOn(channel + 1, monomeCol, 1.0f);
+            else monomeState.noteOff(channel + 1, monomeCol);
+        }
+    }
+
 }
