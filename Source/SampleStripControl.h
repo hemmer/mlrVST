@@ -50,7 +50,12 @@ public:
 
 
     void updateThumbnail(const File &newFile);
-
+    void updatePlayStatus(const bool &isPlaying_, const float &newPercentage)
+    {
+        isPlaying = isPlaying_;
+        playbackPercentage = newPercentage;
+        repaint();
+    }
     void buildNumBlocksList(const int &newMaxNumBlocks);
 
 private:
@@ -76,7 +81,9 @@ private:
        properties of the AudioSample. This means we can have
        different start points on different rows for the same sample
        ============================================================*/
-    bool isReversed;
+    bool isReversed, isPlaying;
+    float playbackPercentage;
+
     // these are the same, except refering to the component
     // rather than the sample
     int visualSelectionStart, visualSelectionEnd;

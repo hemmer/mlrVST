@@ -74,7 +74,17 @@ public:
 
     void setSampleStripParameter(const int &parameterID, const int &newValue);
 
+    void setPlaybackPercentage(const float &newPlaybackPercentage) { playbackPercentage = newPlaybackPercentage; }
+    void setPlaybackStatus(const bool &isPlaying_) { isPlaying = isPlaying_; }
+
+    bool getPlaybackStatus() const { return isPlaying; }
+    float getPlaybackPercentage() const { return playbackPercentage; }
+
 private:
+
+    // These are just so the GUI can show where in the sample we are
+    bool isPlaying;
+    float playbackPercentage;
 
     // Pointer to currently selected sample
     ScopedPointer<AudioSample> currentSample;

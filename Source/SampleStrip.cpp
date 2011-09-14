@@ -15,7 +15,8 @@ SampleStrip::SampleStrip() :
     currentSample(0),
     totalSampleLength(0), fractionalSampleStart(0), fractionalSampleEnd(0),
     numChunks(0), blockSize(0),
-    currentChannel(0)
+    currentChannel(0),
+    isPlaying(false), playbackPercentage(0.0)
 {
 
 }

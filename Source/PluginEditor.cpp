@@ -150,6 +150,12 @@ void mlrVSTAudioProcessorEditor::timerCallback()
     for(int i = 0; i < slidersArray.size(); ++i)
         slidersArray[i]->setValue( ourProcessor->channelGains[i] );
     
+    for(int i = 0; i < sampleStripControlArray.size(); ++i)
+    {
+        bool isPlaying = ourProcessor->getSampleStrip(i)->getPlaybackStatus();
+        float playbackPercentage = ourProcessor->getSampleStrip(i)->getPlaybackPercentage();
+        sampleStripControlArray[i]->updatePlayStatus(isPlaying, playbackPercentage);
+    }
 }
 
 // This is our Slider::Listener callback, when the user drags a slider.

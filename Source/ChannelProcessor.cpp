@@ -35,7 +35,7 @@ ChannelProcessor::~ChannelProcessor()
     parent.release();
 }
 
-void ChannelProcessor::setCurrentSampleStrip(const SampleStrip* newSampleStrip)
+void ChannelProcessor::setCurrentSampleStrip(SampleStrip* newSampleStrip)
 {
     currentSampleStrip = newSampleStrip;
     currentSample = currentSampleStrip->getCurrentSample();
@@ -50,6 +50,7 @@ void ChannelProcessor::startSamplePlaying(const int &startBlock, const int &bloc
 
 void ChannelProcessor::stopSamplePlaying()
 {
+    currentSampleStrip->setPlaybackStatus(false);
     isPlaying = false;
 }
 
@@ -92,10 +93,12 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
             if (currentSampleStrip->getCurrentSample() != 0)
             {
                 sampleCurrentPosition = sampleStartPosition + monomeCol * blockSize;
-                DBG("blocksize" + String(blockSize) + " monomecol " + String(monomeCol));
-                int tempSampleLength = currentSampleStrip->getCurrentSample()->getSampleLength();
-                DBG("start sample " + String(sampleStartPosition) + ", end sample " + String(sampleEndPosition) + ", starting pos " + String(sampleCurrentPosition) + " sample length " + String(tempSampleLength) );
+                //DBG("blocksize" + String(blockSize) + " monomecol " + String(monomeCol));
+                //int tempSampleLength = currentSampleStrip->getCurrentSample()->getSampleLength();
+                //DBG("start sample " + String(sampleStartPosition) + ", end sample " + String(sampleEndPosition) + ", starting pos " + String(sampleCurrentPosition) + " sample length " + String(tempSampleLength) );
                 isPlaying = true;
+                currentSampleStrip->setPlaybackStatus(true);
+                currentSampleStrip->setPlaybackPercentage(getCurrentPlaybackPercentage());
             }
 
         }
@@ -248,5 +251,6 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
                 break;
             }
         }
+        currentSampleStrip->setPlaybackPercentage(getCurrentPlaybackPercentage());
     }
 }

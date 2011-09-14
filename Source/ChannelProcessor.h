@@ -85,8 +85,7 @@ public:
     void stopSamplePlaying();
 
     // The lets the ChannelProcessor know which sample to read
-    //void setCurrentSample(const AudioSample* currentSample);
-    void setCurrentSampleStrip(const SampleStrip* newSampleStrip);
+    void setCurrentSampleStrip(SampleStrip* newSampleStrip);
 
     void setChannelGain(const float &vol)
     { 
@@ -105,6 +104,19 @@ public:
          LOOP_BLOCK             - loop the current block while held
     */
     enum PlayMode{ LOOP_FULL, LOOP_BLOCK, PLAY_TO_END };
+
+    /* If playing returns a value between 0.0 and 1.0,
+       if stopped returns -1 */
+    float getCurrentPlaybackPercentage() const
+    {
+        if (isPlaying && (sampleEndPosition != sampleStartPosition))
+        {
+            return (sampleCurrentPosition - sampleStartPosition)
+                    / (float) (sampleEndPosition - sampleStartPosition);
+        }
+        else return -1.0;
+    }
+
 private:
 
     ScopedPointer<mlrVSTAudioProcessor> parent;
@@ -117,7 +129,7 @@ private:
     // pointer to the current sample in the sample pool
     // NOTE: "const" qualifier means we can't change the
     // sample which this pointer points at
-    const SampleStrip *currentSampleStrip;
+    SampleStrip *currentSampleStrip;
     const AudioSample *currentSample;
 
     // which parts of the sample can we play

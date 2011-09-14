@@ -88,7 +88,6 @@ SampleStripControl::~SampleStripControl()
     thumbnail.removeChangeListener(this);
 }
 
-
 void SampleStripControl::buttonClicked(Button *btn)
 {
     // get pointer to parent class
@@ -315,6 +314,12 @@ void SampleStripControl::paint(Graphics& g)
     {
         g.setFont(12.0f);
         g.drawFittedText("(No audio file selected)", 0, 15, componentWidth, componentHeight - 15, Justification::centred, 2);
+    }
+
+    if (isPlaying)
+    {
+        g.setColour(Colours::black);
+        g.drawFittedText("Playback at " + String(playbackPercentage), 0, 15, componentWidth, componentHeight - 15, Justification::centred, 2);
     }
 }
 

@@ -267,15 +267,8 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
     const int numSamples = buffer.getNumSamples();
     int channel, dp = 0;
 
-    /*  Eventually should have something like
-
-    MonomeBuffer &monomeMessages - format (monomeRow, monomeCol, status)
-    maybe strip channel 0 messages (for control options)
-
-    */
-
     /* this adds the OSC messages from the monome which have been converted
-       to midi messages (where channel is row, note number is column) */
+       to midi messages (where MIDI channel is row, note number is column) */
     monomeState.processNextMidiBuffer(midiMessages, 0, numSamples, true);
 
 
@@ -283,6 +276,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
     // Remember to set the correct sample
     for (int c = 0; c < channelProcessorArray.size(); c++)
     {
+        channelProcessorArray[c]->getCurrentPlaybackPercentage();
         channelProcessorArray[c]->renderNextBlock(buffer, midiMessages, 0, numSamples);
     }
 
