@@ -200,6 +200,9 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
                 {
                     // -1 is to correct for +1 in for loop above
                     --fileChoice;
+
+
+
                     // update thumbnails
                     updateThumbnail(demoPage->getSampleSourceFile(fileChoice));
                     // and let the audio processor update the sample strip
@@ -212,6 +215,7 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
                     visualChunkSize = (visualSelectionLength / (float) numChunks);
                     
                     demoPage->updateSampleStripSelection(0.0, 1.0, sampleStripID);
+
                     repaint();
                 }
             }

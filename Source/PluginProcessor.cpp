@@ -44,8 +44,9 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     DBG("finished OSC tests");
     // END TEST
 
-    File test("C:\\Users\\Hemmer\\Desktop\\funky.wav");
-    samplePool.add(new AudioSample(test));
+    //File test("C:\\Users\\Hemmer\\Desktop\\funky.wav");
+    //samplePool.add(new AudioSample(test));
+    samplePool.clear();
 
     // Set up some default values..
     masterGain = 1.0f;
@@ -456,7 +457,6 @@ void mlrVSTAudioProcessor::setSampleStripSample(const int &samplePoolIndex, cons
 {
     AudioSample *tempSample = samplePool[samplePoolIndex];
     sampleStripArray[stripID]->setCurrentSample(tempSample);
-    DBG("hiahoi!" + sampleStripArray[stripID]->getCurrentSample()->getSampleFile().getFullPathName());
 }
 
 SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index) 

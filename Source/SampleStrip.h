@@ -21,8 +21,6 @@ public:
     SampleStrip();
     ~SampleStrip()
     {
-        // make sure we don't unload the sample twice!
-        currentSample.release();
     }
 
     // TODO: typedef make this short to type
@@ -43,8 +41,8 @@ public:
     }
 
 
-    AudioSample* getCurrentSample() const { return currentSample; }
-    void setCurrentSample(AudioSample *newSample);
+    const AudioSample* getCurrentSample() const { return currentSample; }
+    void setCurrentSample(const AudioSample *newSample);
 
     //int getSampleLength() const { return sampleLength; }
 
@@ -87,7 +85,7 @@ private:
     float playbackPercentage;
 
     // Pointer to currently selected sample
-    ScopedPointer<AudioSample> currentSample;
+    const AudioSample *currentSample;
     int totalSampleLength;
 
     // start / end points (fractional, i.e. 0.5 is half way through)

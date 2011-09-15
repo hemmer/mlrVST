@@ -59,7 +59,6 @@ public:
     // this returns false if the file failed to load, true otherwise
     bool loadSampleFromFile(File &sampleFile) { return getProcessor()->addNewSample(sampleFile); }
     
-
     // Pass SampleStripControl messages back to the plugin processor
     File getSampleSourceFile(const int &index) const { return getProcessor()->getSample(index)->getSampleFile(); }
 

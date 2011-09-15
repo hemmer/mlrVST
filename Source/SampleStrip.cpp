@@ -11,7 +11,6 @@
 #include "SampleStrip.h"
 
 SampleStrip::SampleStrip() :
-    //stripID(newStripID),
     currentSample(0),
     totalSampleLength(0), fractionalSampleStart(0), fractionalSampleEnd(0),
     numChunks(0), blockSize(0),
@@ -21,11 +20,10 @@ SampleStrip::SampleStrip() :
 
 }
 
-void SampleStrip::setCurrentSample(AudioSample *newSample)
+void SampleStrip::setCurrentSample(const AudioSample *newSample)
 {
     if (newSample != 0)
     {
-        DBG("new sapjds LEGIT");
         currentSample = newSample;
         totalSampleLength = currentSample->getSampleLength();
         selectionStart = (int)(fractionalSampleStart * totalSampleLength);
