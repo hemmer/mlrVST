@@ -42,6 +42,9 @@ void SampleStrip::setSampleStripParameter(const int &parameterID, const int &new
     switch (parameterID)
     {
     case ParamCurrentChannel : currentChannel = newValue; break;
-    case ParamNumChunks : numChunks = newValue; break;
+    case ParamNumChunks : 
+        numChunks = newValue;
+        blockSize = (int) (int) (selectionLength / (float) numChunks);
+        break;
     }
 }

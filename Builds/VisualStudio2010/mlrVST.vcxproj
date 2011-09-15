@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -14,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BC07A08E-8205-B220-39D4-B2685FFC59CA}</ProjectGuid>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props"/>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
@@ -26,13 +25,12 @@
     <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props"/>
-  <ImportGroup Label="ExtensionSettings"/>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')"
-            Label="LocalAppDataPlatform"/>
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <PropertyGroup Label="UserMacros"/>
+  <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\Debug\</OutDir>
@@ -41,6 +39,8 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\Release\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">mlrVST</TargetName>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files %28x86%29\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files %28x86%29\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
@@ -48,7 +48,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <HeaderFileName/>
+      <HeaderFileName />
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -57,7 +57,7 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;DEBUG;_DEBUG;JUCER_VS2010_78A501D=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PrecompiledHeader/>
+      <PrecompiledHeader />
       <AssemblerListingLocation>.\Debug\</AssemblerListingLocation>
       <ObjectFileName>.\Debug\</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug\</ProgramDataBaseFileName>
@@ -87,7 +87,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <HeaderFileName/>
+      <HeaderFileName />
     </Midl>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
@@ -95,7 +95,7 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;JUCER_VS2010_78A501D=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PrecompiledHeader/>
+      <PrecompiledHeader />
       <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
       <ObjectFileName>.\Release\</ObjectFileName>
       <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
@@ -122,51 +122,51 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp"/>
-    <ClCompile Include="..\..\oscpack\ip\win32\NetworkingUtils.cpp"/>
-    <ClCompile Include="..\..\oscpack\ip\win32\UdpSocket.cpp"/>
-    <ClCompile Include="..\..\oscpack\osc\OscOutboundPacketStream.cpp"/>
-    <ClCompile Include="..\..\oscpack\osc\OscPrintReceivedElements.cpp"/>
-    <ClCompile Include="..\..\oscpack\osc\OscReceivedElements.cpp"/>
-    <ClCompile Include="..\..\oscpack\osc\OscTypes.cpp"/>
-    <ClCompile Include="..\..\Source\SampleStrip.cpp"/>
-    <ClCompile Include="..\..\Source\AudioSample.cpp"/>
-    <ClCompile Include="..\..\Source\ChannelProcessor.cpp"/>
-    <ClCompile Include="..\..\Source\OSCHandler.cpp"/>
-    <ClCompile Include="..\..\Source\SampleStripControl.cpp"/>
-    <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
-    <ClCompile Include="..\..\Source\PluginEditor.cpp"/>
-    <ClCompile Include="..\..\..\..\..\..\..\..\SDKs\juce\src\audio\plugin_client\VST\juce_VST_Wrapper.cpp"/>
-    <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode1.cpp"/>
-    <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode2.cpp"/>
-    <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode3.cpp"/>
-    <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode4.cpp"/>
+    <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp" />
+    <ClCompile Include="..\..\oscpack\ip\win32\NetworkingUtils.cpp" />
+    <ClCompile Include="..\..\oscpack\ip\win32\UdpSocket.cpp" />
+    <ClCompile Include="..\..\oscpack\osc\OscOutboundPacketStream.cpp" />
+    <ClCompile Include="..\..\oscpack\osc\OscPrintReceivedElements.cpp" />
+    <ClCompile Include="..\..\oscpack\osc\OscReceivedElements.cpp" />
+    <ClCompile Include="..\..\oscpack\osc\OscTypes.cpp" />
+    <ClCompile Include="..\..\Source\SampleStrip.cpp" />
+    <ClCompile Include="..\..\Source\AudioSample.cpp" />
+    <ClCompile Include="..\..\Source\ChannelProcessor.cpp" />
+    <ClCompile Include="..\..\Source\OSCHandler.cpp" />
+    <ClCompile Include="..\..\Source\SampleStripControl.cpp" />
+    <ClCompile Include="..\..\Source\PluginProcessor.cpp" />
+    <ClCompile Include="..\..\Source\PluginEditor.cpp" />
+    <ClCompile Include="..\..\..\..\..\..\..\..\SDKs\juce\src\audio\plugin_client\VST\juce_VST_Wrapper.cpp" />
+    <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode1.cpp" />
+    <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode2.cpp" />
+    <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode3.cpp" />
+    <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode4.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\oscpack\ip\IpEndpointName.h"/>
-    <ClInclude Include="..\..\oscpack\ip\NetworkingUtils.h"/>
-    <ClInclude Include="..\..\oscpack\ip\PacketListener.h"/>
-    <ClInclude Include="..\..\oscpack\ip\TimerListener.h"/>
-    <ClInclude Include="..\..\oscpack\ip\UdpSocket.h"/>
-    <ClInclude Include="..\..\oscpack\osc\MessageMappingOscPacketListener.h"/>
-    <ClInclude Include="..\..\oscpack\osc\OscException.h"/>
-    <ClInclude Include="..\..\oscpack\osc\OscHostEndianness.h"/>
-    <ClInclude Include="..\..\oscpack\osc\OscOutboundPacketStream.h"/>
-    <ClInclude Include="..\..\oscpack\osc\OscPacketListener.h"/>
-    <ClInclude Include="..\..\oscpack\osc\OscPrintReceivedElements.h"/>
-    <ClInclude Include="..\..\oscpack\osc\OscReceivedElements.h"/>
-    <ClInclude Include="..\..\oscpack\osc\OscTypes.h"/>
-    <ClInclude Include="..\..\Source\SampleStrip.h"/>
-    <ClInclude Include="..\..\Source\AudioSample.h"/>
-    <ClInclude Include="..\..\Source\ChannelProcessor.h"/>
-    <ClInclude Include="..\..\Source\OSCHandler.h"/>
-    <ClInclude Include="..\..\Source\SampleStripControl.h"/>
-    <ClInclude Include="..\..\Source\PluginProcessor.h"/>
-    <ClInclude Include="..\..\Source\PluginEditor.h"/>
-    <ClInclude Include="..\..\JuceLibraryCode\AppConfig.h"/>
-    <ClInclude Include="..\..\JuceLibraryCode\JuceHeader.h"/>
-    <ClInclude Include="..\..\JuceLibraryCode\JucePluginCharacteristics.h"/>
+    <ClInclude Include="..\..\oscpack\ip\IpEndpointName.h" />
+    <ClInclude Include="..\..\oscpack\ip\NetworkingUtils.h" />
+    <ClInclude Include="..\..\oscpack\ip\PacketListener.h" />
+    <ClInclude Include="..\..\oscpack\ip\TimerListener.h" />
+    <ClInclude Include="..\..\oscpack\ip\UdpSocket.h" />
+    <ClInclude Include="..\..\oscpack\osc\MessageMappingOscPacketListener.h" />
+    <ClInclude Include="..\..\oscpack\osc\OscException.h" />
+    <ClInclude Include="..\..\oscpack\osc\OscHostEndianness.h" />
+    <ClInclude Include="..\..\oscpack\osc\OscOutboundPacketStream.h" />
+    <ClInclude Include="..\..\oscpack\osc\OscPacketListener.h" />
+    <ClInclude Include="..\..\oscpack\osc\OscPrintReceivedElements.h" />
+    <ClInclude Include="..\..\oscpack\osc\OscReceivedElements.h" />
+    <ClInclude Include="..\..\oscpack\osc\OscTypes.h" />
+    <ClInclude Include="..\..\Source\SampleStrip.h" />
+    <ClInclude Include="..\..\Source\AudioSample.h" />
+    <ClInclude Include="..\..\Source\ChannelProcessor.h" />
+    <ClInclude Include="..\..\Source\OSCHandler.h" />
+    <ClInclude Include="..\..\Source\SampleStripControl.h" />
+    <ClInclude Include="..\..\Source\PluginProcessor.h" />
+    <ClInclude Include="..\..\Source\PluginEditor.h" />
+    <ClInclude Include="..\..\JuceLibraryCode\AppConfig.h" />
+    <ClInclude Include="..\..\JuceLibraryCode\JuceHeader.h" />
+    <ClInclude Include="..\..\JuceLibraryCode\JucePluginCharacteristics.h" />
   </ItemGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>
-  <ImportGroup Label="ExtensionTargets"/>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

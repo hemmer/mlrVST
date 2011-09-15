@@ -129,9 +129,9 @@ private:
     // pointer to the current sample in the sample pool
     // NOTE: "const" qualifier means we can't change the
     // sample which this pointer points at
-    SampleStrip *currentSampleStrip;
     const AudioSample *currentSample;
 
+    SampleStrip *currentSampleStrip;
     // which parts of the sample can we play
     int sampleStartPosition, sampleEndPosition, selectionLength;
     // where we are in the sample at the moment

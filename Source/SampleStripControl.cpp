@@ -99,7 +99,6 @@ void SampleStripControl::buttonClicked(Button *btn)
         if (channelButtonArray[i] == btn)
         {
             backgroundColour = channelButtonArray[i]->getBackgroundColour();
-            backgroundColourDark = backgroundColour.darker().darker();
             currentChannel = i;
             pluginUI->updateSampleStripParameter(SampleStrip::ParamCurrentChannel, currentChannel, sampleStripID);
             repaint();
@@ -134,7 +133,6 @@ void SampleStripControl::addChannel(const int &id, const Colour &col)
     // old channel setting no longer exists
     currentChannel = 0;
     backgroundColour = channelButtonArray.getFirst()->getBackgroundColour();
-    backgroundColourDark = backgroundColour.darker().darker();
     // let the UI know
     repaint();
 
@@ -284,11 +282,12 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
 
 void SampleStripControl::paint(Graphics& g)
 {
+    // Start with the background colour
     g.fillAll(backgroundColour);
 
     if (isPlaying)
     {
-        g.setColour(backgroundColour.darker());
+        g.setColour(Colours::black.withAlpha(0.15f));
         int visualPlaybackPoint = (playbackPercentage * visualSelectionLength);
         g.fillRect(visualSelectionStart, 15, visualPlaybackPoint, componentHeight - 15);
 
@@ -296,6 +295,7 @@ void SampleStripControl::paint(Graphics& g)
         g.drawFittedText("Playback at " + String(playbackPercentage), 0, 15, componentWidth, componentHeight - 15, Justification::centred, 2);
     }
 
+    // Draw the current sample waveform in white
     g.setColour(Colours::white);
     if (thumbnail.getTotalLength() > 0)
     {
@@ -309,18 +309,37 @@ void SampleStripControl::paint(Graphics& g)
 
 
 
-    // this may seem complicated but we need to be able to
-    // paint the strip even if the selection is made backwards!
+    /* Finally we grey out the parts of the sample which aren't in
+    the selection. The if statements are because we need to be
+    able to paint the strip even if the selection is made backwards!
+    */
     g.setColour(Colours::black.withAlpha(0.6f));
     if (visualSelectionEnd > visualSelectionStart)
     {
         g.fillRect(0, 15, visualSelectionStart, componentHeight - 15); 
         g.fillRect(visualSelectionEnd, 15, componentWidth - visualSelectionEnd, componentHeight - 15); 
+
+        /* Add alternate strips to make it clear which
+        button plays which part of the sample. */
+        g.setColour(Colours::black.withAlpha(0.1f));
+        for(int i = 1; i < numChunks; i+=2)
+        {
+            g.fillRect((float) (visualSelectionStart + i * visualChunkSize),
+                15.0f, visualChunkSize, componentHeight - 15.0f);
+        }
     }
     else
     {
         g.fillRect(0, 15, visualSelectionEnd, componentHeight - 15); 
         g.fillRect(visualSelectionStart, 15, componentWidth - visualSelectionStart, componentHeight - 15); 
+        /* Add alternate strips to make it clear which
+        button plays which part of the sample. */
+        g.setColour(Colours::black.withAlpha(0.1f));
+        for(int i = 1; i < numChunks; i+=2)
+        {
+            g.fillRect((float) (visualSelectionEnd + i * visualChunkSize),
+                15.0f, visualChunkSize, componentHeight - 15.0f);
+        }
     }
 
 

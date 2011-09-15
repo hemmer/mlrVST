@@ -104,7 +104,7 @@ private:
     double thumbnailLength;
 
     // main strip background colour
-    Colour backgroundColour, backgroundColourDark;
+    Colour backgroundColour;
 };
 
 
