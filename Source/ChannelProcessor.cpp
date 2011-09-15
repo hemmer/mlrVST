@@ -57,22 +57,35 @@ void ChannelProcessor::stopSamplePlaying()
 
 void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
 {
-    /* Due to the design of JUCE, for now OSC messages are 
-       handled as MIDI messages. The monome row message has
-       already been used to load the all the sample strip
-       information we need at this point so we only need 
-       the monome column.
-
-       The spec for those interested is:
+    /* Due to the design of JUCE, for now OSC messages are handled
+       as MIDI messages. The spec is:
 
        monomeRow - MIDI message channel
-       monomeCol - MIDI message note (0-15)
-    */
+       monomeCol - MIDI message note (0-15)                 */
+    
 
+    /* First stop any existing samples from playing. It
+       doesn't actually matter if it is a note on or off
+       message as we would stop the current sample for 
+       either a button lift or the arrive of a new sample
+       from a different strip.              
+    */
+    stopSamplePlaying();
+
+    /* NOTE: The -1 is here because the first monome
+       row is reserved for mappings, making the second
+       row effectively the first.
+    */
+    int effectiveMonomeRow = m.getChannel() - 1;
     int monomeCol = m.getNoteNumber();
 
-    // We are only interested in columns that are
-    // within the allowed number of chunks.
+    /* Load the new sample strip (this contains information
+       about which sample to play etc). */
+    setCurrentSampleStrip(parent->getSampleStrip(effectiveMonomeRow));
+
+    /* We are only interested in columns that are
+       within the allowed number of chunks.
+    */
     if (monomeCol < currentSampleStrip->getNumChunks())
     {
 
@@ -81,32 +94,20 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
         if (m.isNoteOn())
         {
 
-            //jassert( tempStrip->getCurrentSample() == 0);
             int blockSize = currentSampleStrip->getBlockSize();
             sampleStartPosition = currentSampleStrip->getSampleStart();
             sampleEndPosition = currentSampleStrip->getSampleEnd();
-            //selectionLength = (sampleEndPosition - sampleStartPosition);
 
-            //jassert( sampleEndPosition <= sampleLength);
-            //startSamplePlaying(monomeCol, tempStrip->getBlockSize());
-
+            // We can save some effort by ignore cases where this is no sample!
             if (currentSampleStrip->getCurrentSample() != 0)
             {
                 sampleCurrentPosition = sampleStartPosition + monomeCol * blockSize;
-                //DBG("blocksize" + String(blockSize) + " monomecol " + String(monomeCol));
-                //int tempSampleLength = currentSampleStrip->getCurrentSample()->getSampleLength();
-                //DBG("start sample " + String(sampleStartPosition) + ", end sample " + String(sampleEndPosition) + ", starting pos " + String(sampleCurrentPosition) + " sample length " + String(tempSampleLength) );
                 isPlaying = true;
                 currentSampleStrip->setPlaybackStatus(true);
                 currentSampleStrip->setPlaybackPercentage(getCurrentPlaybackPercentage());
             }
 
         }
-        else if (m.isNoteOff())
-        {
-            stopSamplePlaying();
-        }
-
     }
 }
 
@@ -134,10 +135,14 @@ void ChannelProcessor::renderNextBlock(AudioSampleBuffer& outputBuffer,
         int midiEventPos;
         // try to find a corresponding MIDI event and see if it's within range
         // and is the correct channel
-        const bool useEvent = midiIterator.getNextEvent(m, midiEventPos)
-                              && (midiEventPos < startSample + numSamples)
-                              && ((m.getChannel() - 1) == channelIDNumber);
-
+        bool useEvent = false;
+        
+        if(midiIterator.getNextEvent(m, midiEventPos))
+        {
+           if ((midiEventPos < startSample + numSamples) &&
+               (parent->getSampleStrip(m.getChannel() - 1)->getCurrentChannel() == channelIDNumber))
+               useEvent = true;
+        }
         // if there was an event, process up until that position
         // otherwise process until the end
         const int numThisTime = useEvent ? midiEventPos - startSample
