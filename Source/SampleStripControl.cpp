@@ -284,33 +284,19 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
 
 void SampleStripControl::paint(Graphics& g)
 {
-    g.fillAll(backgroundColourDark);
-    g.setColour(backgroundColour);
+    g.fillAll(backgroundColour);
 
-    // this may seem complicated but we need to be able to
-    // paint the strip even if the selection is made backwards!
-    if (visualSelectionEnd > visualSelectionStart)
+    if (isPlaying)
     {
-        for(int c = 0; c < numChunks; ++c)
-        {
-            Rectangle<float> chunkC((float) (visualSelectionStart + c * visualChunkSize),
-                                    15.0f, visualChunkSize, (float) (componentHeight - 15.0f));
-            g.fillRoundedRectangle(chunkC, 8.0f);
-        }
+        g.setColour(backgroundColour.darker());
+        int visualPlaybackPoint = (playbackPercentage * visualSelectionLength);
+        g.fillRect(visualSelectionStart, 15, visualPlaybackPoint, componentHeight - 15);
+
+        g.setColour(Colours::white);
+        g.drawFittedText("Playback at " + String(playbackPercentage), 0, 15, componentWidth, componentHeight - 15, Justification::centred, 2);
     }
-    else
-    {
-        for(int c = 0; c < numChunks; ++c)
-        {
-            Rectangle<float> chunkC((float) (visualSelectionEnd + c * (visualChunkSize)),
-                                    15.0f, visualChunkSize, (float) (componentHeight - 15.0f));
-            g.fillRoundedRectangle(chunkC, 8.0f);
-        }
-    }
-        
-    // TODO: grey out waveform outside selection
+
     g.setColour(Colours::white);
-
     if (thumbnail.getTotalLength() > 0)
     {
         thumbnail.drawChannels(g, waveformPaintBounds, 0, thumbnailLength, 1.0f);
@@ -321,11 +307,24 @@ void SampleStripControl::paint(Graphics& g)
         g.drawFittedText("(No audio file selected)", 0, 15, componentWidth, componentHeight - 15, Justification::centred, 2);
     }
 
-    if (isPlaying)
+
+
+    // this may seem complicated but we need to be able to
+    // paint the strip even if the selection is made backwards!
+    g.setColour(Colours::black.withAlpha(0.6f));
+    if (visualSelectionEnd > visualSelectionStart)
     {
-        g.setColour(Colours::black);
-        g.drawFittedText("Playback at " + String(playbackPercentage), 0, 15, componentWidth, componentHeight - 15, Justification::centred, 2);
+        g.fillRect(0, 15, visualSelectionStart, componentHeight - 15); 
+        g.fillRect(visualSelectionEnd, 15, componentWidth - visualSelectionEnd, componentHeight - 15); 
     }
+    else
+    {
+        g.fillRect(0, 15, visualSelectionEnd, componentHeight - 15); 
+        g.fillRect(visualSelectionStart, 15, componentWidth - visualSelectionStart, componentHeight - 15); 
+    }
+
+
+
 }
 
 void SampleStripControl::changeListenerCallback(ChangeBroadcaster*)
