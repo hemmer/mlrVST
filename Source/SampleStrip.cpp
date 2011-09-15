@@ -15,7 +15,8 @@ SampleStrip::SampleStrip() :
     totalSampleLength(0), fractionalSampleStart(0), fractionalSampleEnd(0),
     numChunks(0), blockSize(0),
     currentChannel(0),
-    isPlaying(false), playbackPercentage(0.0)
+    isPlaying(false), playbackPercentage(0.0),
+    currentPlayMode(LOOP), isReversed(false)
 {
 
 }
@@ -35,16 +36,33 @@ void SampleStrip::setCurrentSample(const AudioSample *newSample)
     }
 }
 
-void SampleStrip::setSampleStripParameter(const int &parameterID, const int &newValue)
+void SampleStrip::setSampleStripParam(const int &parameterID, const int &newValue)
 {
     DBG("param \"" + getParameterName(parameterID) + "\" updated to: " + String(newValue));
 
     switch (parameterID)
     {
-    case ParamCurrentChannel : currentChannel = newValue; break;
-    case ParamNumChunks : 
+    case ParamCurrentChannel :
+        currentChannel = newValue; break;
+    case ParamNumChunks :
         numChunks = newValue;
-        blockSize = (int) (int) (selectionLength / (float) numChunks);
-        break;
+        blockSize = (int) (int) (selectionLength / (float) numChunks); break;
+    case ParamPlayMode :
+        currentPlayMode = newValue; break;
+    }
+}
+
+int SampleStrip::getSampleStripParam(const int &parameterID) const
+{
+    switch (parameterID)
+    {
+    case ParamCurrentChannel :
+        return currentChannel; 
+    case ParamNumChunks :
+        return numChunks;
+    case ParamPlayMode :
+        return currentPlayMode;
+    default: 
+        return -1;      // this should never happen!
     }
 }

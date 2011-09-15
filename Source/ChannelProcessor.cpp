@@ -23,9 +23,9 @@ ChannelProcessor::ChannelProcessor(const int &channelIDNo,
     currentSample(0),
     sampleStartPosition(0), sampleEndPosition(0), selectionLength(0),
     isPlaying(false),
-    isSampleReversed(false),
     channelColour(col),
-    currentSampleStrip(initialSampleStrip)
+    currentSampleStrip(initialSampleStrip),
+    isReversed(false), playMode(-1), chunkSize(-1), playbackStartPosition(-1)
 {
 
 }
@@ -82,11 +82,15 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
     /* Load the new sample strip (this contains information
        about which sample to play etc). */
     setCurrentSampleStrip(parent->getSampleStrip(effectiveMonomeRow));
+    
+    playMode = currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlayMode);
+
+    DBG("Current play mode: " + String());
 
     /* We are only interested in columns that are
        within the allowed number of chunks.
     */
-    if (monomeCol < currentSampleStrip->getNumChunks())
+    if (monomeCol < currentSampleStrip->getSampleStripParam(SampleStrip::ParamNumChunks))
     {
 
         DBG("message received. note " + String(m.getNoteNumber()) + ", channel " + String(m.getChannel()));
@@ -94,14 +98,15 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
         if (m.isNoteOn())
         {
 
-            int blockSize = currentSampleStrip->getBlockSize();
+            chunkSize = currentSampleStrip->getBlockSize();
             sampleStartPosition = currentSampleStrip->getSampleStart();
             sampleEndPosition = currentSampleStrip->getSampleEnd();
+            playbackStartPosition = sampleStartPosition + monomeCol * chunkSize;
 
             // We can save some effort by ignore cases where this is no sample!
             if (currentSampleStrip->getCurrentSample() != 0)
             {
-                sampleCurrentPosition = sampleStartPosition + monomeCol * blockSize;
+                sampleCurrentPosition = playbackStartPosition;
                 isPlaying = true;
                 currentSampleStrip->setPlaybackStatus(true);
                 currentSampleStrip->setPlaybackPercentage(getCurrentPlaybackPercentage());
@@ -250,10 +255,26 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
 
             sampleCurrentPosition += 1;
 
-            if (sampleCurrentPosition > sampleEndPosition)
+            switch (playMode)
             {
-                stopSamplePlaying();
-                break;
+            case SampleStrip::LOOP_CHUNK :
+                if (sampleCurrentPosition > (playbackStartPosition + chunkSize))
+                {
+                    sampleCurrentPosition = playbackStartPosition;
+                    break;
+                }
+            case SampleStrip::LOOP :
+                if (sampleCurrentPosition > sampleEndPosition)
+                {
+                    stopSamplePlaying();
+                    break;
+                }
+            case SampleStrip::LOOP_WHILE_HELD :
+                if (sampleCurrentPosition > sampleEndPosition)
+                {
+                    sampleCurrentPosition = sampleStartPosition;
+                    break;
+                }
             }
         }
         currentSampleStrip->setPlaybackPercentage(getCurrentPlaybackPercentage());

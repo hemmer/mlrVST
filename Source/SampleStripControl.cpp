@@ -28,7 +28,7 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     numChunks(8),
     thumbnailLength(0.0),
     visualSelectionStart(0), visualSelectionEnd(0), visualChunkSize(0.0), visualSelectionLength(0),
-    selNumChunks()
+    selNumChunks(), selPlayMode()
 {
 
     addAndMakeVisible(&filenameLbl);
@@ -53,6 +53,16 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     addAndMakeVisible(&selNumChunks);
     selNumChunks.addListener(this);
     selNumChunks.setBounds(200, 0, 30, 15);
+
+    addAndMakeVisible(&selPlayMode);
+    selPlayMode.addListener(this);
+    selPlayMode.addItem("loop", SampleStrip::LOOP);
+    selPlayMode.addItem("loop while held", SampleStrip::LOOP_WHILE_HELD);
+    selPlayMode.addItem("loop chunk", SampleStrip::LOOP_CHUNK);
+    selPlayMode.addItem("play to end", SampleStrip::PLAY_TO_END);
+    selPlayMode.setBounds(250, 0, 50, 15);
+    // set LOOP as default mode and send a change message
+    selPlayMode.setSelectedId(SampleStrip::LOOP, false);
 }
 
 void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
@@ -81,6 +91,13 @@ void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
                                              sampleStripID);
         repaint();
     }
+    else if (comboBoxThatHasChanged == &selPlayMode)
+    {
+        pluginUI->updateSampleStripParameter(SampleStrip::ParamPlayMode,
+                                             selPlayMode.getSelectedId(),
+                                             sampleStripID);
+    }
+
 }
 
 SampleStripControl::~SampleStripControl()

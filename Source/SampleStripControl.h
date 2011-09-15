@@ -60,7 +60,7 @@ public:
 
 private:
 
-    ComboBox selNumChunks;
+    ComboBox selNumChunks, selPlayMode;
 
     const int componentHeight, componentWidth;
     Rectangle<int> waveformPaintBounds;

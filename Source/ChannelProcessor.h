@@ -55,13 +55,11 @@ public:
 
     /** Creates the next block of audio output.
 
-        This will process the next numSamples of data from all the voices, and add that output
-        to the audio block supplied, starting from the offset specified. Note that the
-        data will be added to the current contents of the buffer, so you should clear it
-        before calling this method if necessary.
+        This will process the next numSamples of data, and add that output
+        to the audio block supplied, starting from the offset specified. 
 
         The midi events in the inputMidi buffer are parsed for note and controller events,
-        and these are used to trigger the voices. Note that the startSample offset applies
+        and these are used to trigger the samples. Note that the startSample offset applies
         both to the audio output buffer and the midi input buffer, so any midi events
         with timestamps outside the specified region will be ignored.
     */
@@ -96,17 +94,10 @@ public:
     // TODO: eventually this could be channel colourscheme
     Colour getChannelColour() const { return channelColour; }
 
-    //==========================================
-    /**  LOOP_FULL              - loop back to sample start once finished
-         LOOP_FULL_WHILE_HELD   - loop back to sample start once
-                                  finished though only if button still held
-         PLAY_TO_END            - play from current position to end of sample
-         LOOP_BLOCK             - loop the current block while held
-    */
-    enum PlayMode{ LOOP_FULL, LOOP_BLOCK, PLAY_TO_END };
 
-    /* If playing returns a value between 0.0 and 1.0,
-       if stopped returns -1 */
+    /* If playing returns a value between 0.0 and 1.0, if stopped
+       returns -1 (as a sanity check more than anything.
+    */
     float getCurrentPlaybackPercentage() const
     {
         if (isPlaying && (sampleEndPosition != sampleStartPosition))
@@ -134,11 +125,19 @@ private:
     SampleStrip *currentSampleStrip;
     // which parts of the sample can we play
     int sampleStartPosition, sampleEndPosition, selectionLength;
+    // where playback actually starts from
+    int playbackStartPosition;
     // where we are in the sample at the moment
     int sampleCurrentPosition;
+    // size of each chunk
+    int chunkSize;
 
     // status of sample playback
-    bool isInAttack, isInRelease, isPlaying, isSampleReversed;
+    bool isInAttack, isInRelease, isPlaying;
+    
+    // playback style attributes
+    bool isReversed;
+    int playMode;
 
     void handleMidiEvent(const MidiMessage& m);
 

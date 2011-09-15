@@ -27,8 +27,18 @@ public:
     enum SampleStripParameter
     {
         ParamCurrentChannel,
-        ParamNumChunks
+        ParamNumChunks,
+        ParamPlayMode
     };
+
+    enum PlayMode
+    { 
+        LOOP = 1,                   // starts the sample looping
+        LOOP_WHILE_HELD,        // same but only while button held
+        LOOP_CHUNK,             // loops the chunk associated with a button
+        PLAY_TO_END             // plays from current point until the end then stops
+    };
+
 
     String getParameterName(const int &parameterID) const
     {
@@ -36,6 +46,7 @@ public:
         {
         case ParamCurrentChannel : return "current channel";
         case ParamNumChunks : return "num chunks";
+        case ParamPlayMode : return "playmode";
         default : return "parameter not found";
         }
     }
@@ -52,9 +63,6 @@ public:
     int getBlockSize() const { return blockSize; }
     int getCurrentChannel() const { return currentChannel; }
 
-    // TODO: have this set through setParameter
-    int getNumChunks() const { return numChunks; }
-
     void setSampleSelection(const float &start, const float &end)
     {
         fractionalSampleStart = start;
@@ -65,12 +73,11 @@ public:
         selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
         selectionLength = selectionEnd - selectionStart;
         blockSize = (int) (selectionLength / (float) numChunks);
-
-        DBG("sample start: " + String(selectionStart) + " " + String(fractionalSampleStart));
-        DBG("sample end: " + String(selectionEnd) + " " + String(fractionalSampleEnd));
     }
 
-    void setSampleStripParameter(const int &parameterID, const int &newValue);
+    // these are for getting / setting the int parameters
+    void setSampleStripParam(const int &parameterID, const int &newValue);
+    int getSampleStripParam(const int &parameterID) const;
 
     void setPlaybackPercentage(const float &newPlaybackPercentage) { playbackPercentage = newPlaybackPercentage; }
     void setPlaybackStatus(const bool &isPlaying_) { isPlaying = isPlaying_; }
@@ -93,9 +100,16 @@ private:
     // start / end / length of the selection (in samples)
     int selectionStart, selectionEnd, selectionLength;
 
-    int numChunks, blockSize;
+    // How many blocks the sample is split up into...
+    int numChunks;
+    // ...and what size are they (in samples).
+    int blockSize;
 
     int currentChannel;
+
+    // Playback options
+    int currentPlayMode;
+    bool isReversed;
 };
 
 

@@ -130,7 +130,7 @@ void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
     // and make sure each strip is reset to the first channel
     for(int strip = 0; strip < sampleStripArray.size(); ++strip)
     {
-        sampleStripArray[strip]->setSampleStripParameter(SampleStrip::ParamCurrentChannel, 0);
+        sampleStripArray[strip]->setSampleStripParam(SampleStrip::ParamCurrentChannel, 0);
     }
 
     // resume processing
@@ -154,25 +154,26 @@ float mlrVSTAudioProcessor::getParameter(int index)
     // UI-related, or anything at all that may block in any way!
     switch (index)
     {
-        case masterGainParam:       return masterGain;
-
-        case delayParam:            return delay;
-
-        case channel0GainParam:     return channelGains[0];
-
-        case channel1GainParam:     return channelGains[1];
-
-        case channel2GainParam:     return channelGains[2];
-
-        case channel3GainParam:     return channelGains[3];
-
-        case channel4GainParam:     return channelGains[4];
-
-        case channel5GainParam:     return channelGains[5];
-
-        case channel6GainParam:     return channelGains[6];
-
-        case channel7GainParam:     return channelGains[7];
+        case masterGainParam:
+            return masterGain;
+        case delayParam:
+            return delay;
+        case channel0GainParam:
+            return channelGains[0];
+        case channel1GainParam:
+            return channelGains[1];
+        case channel2GainParam:
+            return channelGains[2];
+        case channel3GainParam:
+            return channelGains[3];
+        case channel4GainParam:
+            return channelGains[4];
+        case channel5GainParam:
+            return channelGains[5];
+        case channel6GainParam:
+            return channelGains[6];
+        case channel7GainParam:
+            return channelGains[7];
 
         default:            return 0.0f;
     }
@@ -453,7 +454,7 @@ void mlrVSTAudioProcessor::setSampleStripParameter(const int &parameterID,
                                                     const int &newValue,
                                                     const int &stripID)
 {
-    sampleStripArray[stripID]->setSampleStripParameter(parameterID, newValue);
+    sampleStripArray[stripID]->setSampleStripParam(parameterID, newValue);
 }
 
 void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
@@ -504,7 +505,7 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
            numChunks too to filter these. The -1 is because we are treating
            the second row as the first "effective" row.
         */
-        int numChunks = sampleStripArray[monomeRow - 1]->getNumChunks();
+        int numChunks = sampleStripArray[monomeRow - 1]->getSampleStripParam(SampleStrip::ParamNumChunks);
 
         if (monomeCol < numChunks)
         {
