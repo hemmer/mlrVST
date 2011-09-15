@@ -181,6 +181,7 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
             {
                 // TODO: can this be cached and only repopulated when the sample pool changes?
                 PopupMenu p = PopupMenu();
+                
                 // TODO: add option to select "no file?
                 // TODO: middle click to delete sample under cursor in menu?
 

@@ -104,14 +104,16 @@ void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
     // update the number of channels
     numChannels = newNumChannels;
 
-    // make sure we're not using the channelProcessorArray while (re)building it
+
+    // make sure all channels stop playing
+    for (int c = 0; c < channelProcessorArray.size(); c++)
+        channelProcessorArray[c]->stopSamplePlaying();
+    // clear MIDI queue
+    monomeState.reset();
+    // make sure we're not doing any audio processing while (re)building it
     suspendProcessing(true);
 
-    // reset the gains to the default
-    channelGains.clear();
-    for (int c = 0; c < maxChannels; c++)
-        channelGains.add(defaultChannelGain);
-
+    
     // reset the list of channels
     channelProcessorArray.clear();
     for (int c = 0; c < numChannels; c++)
@@ -120,8 +122,21 @@ void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
         channelProcessorArray.add(new ChannelProcessor(c, channelColour, this, sampleStripArray.getFirst()));
     }
 
+    // reset the gains to the default
+    channelGains.clear();
+    for (int c = 0; c < maxChannels; c++)
+        channelGains.add(defaultChannelGain);
+
+    // and make sure each strip is reset to the first channel
+    for(int strip = 0; strip < sampleStripArray.size(); ++strip)
+    {
+        sampleStripArray[strip]->setSampleStripParameter(SampleStrip::ParamCurrentChannel, 0);
+    }
+
     // resume processing
     suspendProcessing(false);
+
+
 }
 
 
@@ -265,67 +280,74 @@ void mlrVSTAudioProcessor::reset()
 
 void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
 {
-    const int numSamples = buffer.getNumSamples();
-    int channel, dp = 0;
-
-    /* this adds the OSC messages from the monome which have been converted
-       to midi messages (where MIDI channel is row, note number is column) */
-    monomeState.processNextMidiBuffer(midiMessages, 0, numSamples, true);
-
-
-    // for each channel, add its contributions
-    // Remember to set the correct sample
-    for (int c = 0; c < channelProcessorArray.size(); c++)
+    if (!isSuspended())
     {
-        channelProcessorArray[c]->getCurrentPlaybackPercentage();
-        channelProcessorArray[c]->renderNextBlock(buffer, midiMessages, 0, numSamples);
-    }
+        const int numSamples = buffer.getNumSamples();
+        int channel, dp = 0;
 
-    // Apply our delay effect to the new output..
-    for (channel = 0; channel < getNumInputChannels(); ++channel)
-    {
-        float* channelData = buffer.getSampleData(channel);
-        float* delayData = delayBuffer.getSampleData(jmin(channel, delayBuffer.getNumChannels() - 1));
-        dp = delayPosition;
+        /* this adds the OSC messages from the monome which have been converted
+        to midi messages (where MIDI channel is row, note number is column) */
+        monomeState.processNextMidiBuffer(midiMessages, 0, numSamples, true);
 
-        for (int i = 0; i < numSamples; ++i)
+
+        // for each channel, add its contributions
+        // Remember to set the correct sample
+        for (int c = 0; c < channelProcessorArray.size(); c++)
         {
-            const float in = channelData[i];
-            channelData[i] += delayData[dp];
-            delayData[dp] = (delayData[dp] + in) * delay;
-
-            if (++dp > delayBuffer.getNumSamples())
-                dp = 0;
+            channelProcessorArray[c]->getCurrentPlaybackPercentage();
+            channelProcessorArray[c]->renderNextBlock(buffer, midiMessages, 0, numSamples);
         }
-    }
 
-    delayPosition = dp;
+        // Apply our delay effect to the new output..
+        for (channel = 0; channel < getNumInputChannels(); ++channel)
+        {
+            float* channelData = buffer.getSampleData(channel);
+            float* delayData = delayBuffer.getSampleData(jmin(channel, delayBuffer.getNumChannels() - 1));
+            dp = delayPosition;
 
-    // Go through the outgoing data, and apply our master gain to it...
-    for (channel = 0; channel < getNumInputChannels(); ++channel)
-        buffer.applyGain(channel, 0, buffer.getNumSamples(), masterGain);
+            for (int i = 0; i < numSamples; ++i)
+            {
+                const float in = channelData[i];
+                channelData[i] += delayData[dp];
+                delayData[dp] = (delayData[dp] + in) * delay;
+
+                if (++dp > delayBuffer.getNumSamples())
+                    dp = 0;
+            }
+        }
+
+        delayPosition = dp;
+
+        // Go through the outgoing data, and apply our master gain to it...
+        for (channel = 0; channel < getNumInputChannels(); ++channel)
+            buffer.applyGain(channel, 0, buffer.getNumSamples(), masterGain);
 
 
-    // In case we have more outputs than inputs, we'll clear any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    for (int i = getNumInputChannels(); i < getNumOutputChannels(); ++i)
-        buffer.clear(i, 0, buffer.getNumSamples());
+        // In case we have more outputs than inputs, we'll clear any output
+        // channels that didn't contain input data, (because these aren't
+        // guaranteed to be empty - they may contain garbage).
+        for (int i = getNumInputChannels(); i < getNumOutputChannels(); ++i)
+            buffer.clear(i, 0, buffer.getNumSamples());
 
 
 
-    // ask the host for the current time so we can display it...
-    AudioPlayHead::CurrentPositionInfo newTime;
+        // ask the host for the current time so we can display it...
+        AudioPlayHead::CurrentPositionInfo newTime;
 
-    if (getPlayHead() != 0 && getPlayHead()->getCurrentPosition(newTime))
-    {
-        // Successfully got the current time from the host..
-        lastPosInfo = newTime;
+        if (getPlayHead() != 0 && getPlayHead()->getCurrentPosition(newTime))
+        {
+            // Successfully got the current time from the host..
+            lastPosInfo = newTime;
+        }
+        else
+        {
+            // If the host fails to fill-in the current time, we'll just clear it to a default..
+            lastPosInfo.resetToDefault();
+        }
     }
     else
     {
-        // If the host fails to fill-in the current time, we'll just clear it to a default..
-        lastPosInfo.resetToDefault();
+        //silence
     }
 }
 
@@ -484,7 +506,8 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
 
         DBG("audio processor recieved OSC message: " + String(monomeCol) + " " + String(monomeRow) + " " + String(state) + " channel: " + String(channel));
 
-        channelProcessorArray[channel]->setCurrentSampleStrip(sampleStripArray[effectiveMonomeRow]);
+        SampleStrip *temp = sampleStripArray[effectiveMonomeRow];
+        channelProcessorArray[channel]->setCurrentSampleStrip(temp);
 
         // only pass on messages that are from the allowed range of columns
         // NOTE: midi messages may still be passed from other sources that

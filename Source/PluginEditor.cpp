@@ -210,7 +210,7 @@ void mlrVSTAudioProcessorEditor::comboBoxChanged (ComboBox* comboBoxThatHasChang
     if (comboBoxThatHasChanged == &selNumChannels)
     {
         numChannels = comboBoxThatHasChanged->getSelectedId();
-        DBG(numChannels);
+        DBG("Number of channels changed to: " + String(numChannels));
         getProcessor()->buildChannelProcessorArray(numChannels);
         slidersArray.clear();
 
