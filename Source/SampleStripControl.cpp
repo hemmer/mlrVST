@@ -12,6 +12,7 @@ Custom component to display a waveform (corresponding to an mlr row)
 
 
 #include "PluginEditor.h"
+#include <cstdlib>
 
 SampleStripControl::SampleStripControl(const int &id,
                                        const int &width,
@@ -31,7 +32,9 @@ SampleStripControl::SampleStripControl(const int &id,
     numChunks(8),
     thumbnailLength(0.0),
     visualSelectionStart(0), visualSelectionEnd(0), visualChunkSize(0.0), visualSelectionLength(0),
-    selNumChunks(), selPlayMode()
+    selNumChunks(), selPlayMode(),
+    isLatchedBtn("latch"),
+    isReversedBtn("reversed"), selectionPointToChange(0)
 {
 
     addAndMakeVisible(&filenameLbl);
@@ -63,12 +66,19 @@ SampleStripControl::SampleStripControl(const int &id,
     addAndMakeVisible(&selPlayMode);
     selPlayMode.addListener(this);
     selPlayMode.addItem("loop", SampleStrip::LOOP);
-    selPlayMode.addItem("loop while held", SampleStrip::LOOP_WHILE_HELD);
     selPlayMode.addItem("loop chunk", SampleStrip::LOOP_CHUNK);
     selPlayMode.addItem("play to end", SampleStrip::PLAY_TO_END);
     selPlayMode.setBounds(250, 0, 50, 15);
     // set LOOP as default mode and send a change message
     // selPlayMode.setSelectedId(SampleStrip::LOOP, false);
+
+    addAndMakeVisible(&isLatchedBtn);
+    isLatchedBtn.setBounds(350, 0, 50, 15);
+    isLatchedBtn.addListener(this);
+
+    addAndMakeVisible(&isReversedBtn);
+    isReversedBtn.setBounds(450, 0, 70, 15);
+    isReversedBtn.addListener(this);
 }
 
 void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
@@ -113,16 +123,29 @@ SampleStripControl::~SampleStripControl()
 
 void SampleStripControl::buttonClicked(Button *btn)
 {
-    
-    // see if any of the channel selection buttons were chosen
+    mlrVSTAudioProcessorEditor* pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
+
+    // See if any of the channel selection buttons were chosen
     for (int i = 0; i < channelButtonArray.size(); ++i)
     {
         if (channelButtonArray[i] == btn)
         {
-            
-            // update the GUI
+            // update the processor / GUI
             setChannel(i);
         }
+    }
+
+    if (btn == &isLatchedBtn)
+    {
+        isLatched = !isLatched;
+        pluginUI->setSampleStripParameter(SampleStrip::ParamIsLatched, &isLatched, sampleStripID);
+    }
+    else if (btn == &isReversedBtn)
+    {
+        isReversed = !isReversed;
+        pluginUI->setSampleStripParameter(SampleStrip::ParamIsReversed, &isReversed, sampleStripID);
+        String newButtonText = (isReversed) ? "reversed" : "normal";
+        isReversedBtn.setButtonText(newButtonText);
     }
 }
 
@@ -133,7 +156,6 @@ void SampleStripControl::setChannel(const int &newChannel)
     // ...so we can let the processor know
     pluginUI->setSampleStripParameter(SampleStrip::ParamCurrentChannel, &newChannel, sampleStripID);
 
-    DBG("#1 channel is now " << newChannel << " " << sampleStripID);
     backgroundColour = channelButtonArray[newChannel]->getBackgroundColour();
     repaint();
 }
@@ -157,13 +179,13 @@ void SampleStripControl::buildChannelButtonList(const int &newNumChannels)
         channelButtonArray.getLast()->setBackgroundColours(chanColour, chanColour);
     }
 
-    DBG("resetting to chan 0");
+
     int previousChannel = *static_cast<const int*>(pluginUI->getSampleStripParameter(SampleStrip::ParamCurrentChannel, sampleStripID));
     if (previousChannel >= numChannels){
+        DBG("Current channel outside range: resetting to channel 0.");
         setChannel(0);
     }
 }
-
 
 
 void SampleStripControl::setZoomFactor(double /*amount*/)
@@ -190,6 +212,8 @@ void SampleStripControl::mouseWheelMove(const MouseEvent&, float /*wheelIncremen
 
 void SampleStripControl::mouseDown(const MouseEvent &e)
 {
+    // TODO save mods
+    //mouseDownMods = static_cast<int>(e.mods);
 
     if (e.mods == ModifierKeys::rightButtonModifier && e.y > 15)
     {
@@ -249,11 +273,18 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
             }
         }
     }
-    //else if(e.mods = ModifierKeys::leftButtonModifier)
-    //{
-    //    visualSelectionStart = e.getMouseDownX();
-    //    visualSelectionEnd = visualSelectionStart;
-    //}
+    else if (e.mods == ModifierKeys::middleButtonModifier)
+    {
+        selectionStartBeforeDrag = visualSelectionStart;
+    }
+    else if (e.mods == (ModifierKeys::ctrlModifier + ModifierKeys::leftButtonModifier))
+    {
+        if ( abs(e.x - visualSelectionStart) > abs(e.x - visualSelectionEnd) )
+            selectionPointToChange = &visualSelectionEnd;
+        else
+            selectionPointToChange = &visualSelectionStart;
+        dragStart = e.x;
+    }
 }
 
 void SampleStripControl::mouseUp(const MouseEvent &e)
@@ -282,26 +313,67 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
     {
 
         int mouseX = e.x;
-        int mouseStartX = e.getMouseDownX();
+        //int mouseStartX = e.getMouseDownX();
 
         // Make sure we don't select outside the waveform
         if (mouseX > componentWidth) mouseX = componentWidth;
         if (mouseX < 0) mouseX = 0;
 
-        if (mouseX > mouseStartX)
+        visualSelectionStart = e.getMouseDownX();
+        visualSelectionEnd = mouseX;
+        //if (mouseX > mouseStartX)
+        //{
+        //    visualSelectionStart = mouseStartX;
+        //    visualSelectionEnd = mouseX;
+        //}
+        //else
+        //{
+        //    visualSelectionStart = mouseX;
+        //    visualSelectionEnd = mouseStartX;
+        //}
+
+
+    }
+    else if (e.mods == ModifierKeys::middleButtonModifier)
+    {
+        // Don't select outside the component!
+        int newStart = selectionStartBeforeDrag + e.getDistanceFromDragStartX();
+        int newEnd = newStart + visualSelectionLength;
+        if(newStart < 0)
         {
-            visualSelectionStart = mouseStartX;
-            visualSelectionEnd = mouseX;
+            newStart = 0;
+            newEnd = visualSelectionLength;
         }
-        else
+        else if (newEnd > componentWidth)
         {
-            visualSelectionStart = mouseX;
-            visualSelectionEnd = mouseStartX;
+            newEnd = componentWidth;
+            newStart = newEnd - visualSelectionLength;
         }
 
-        visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
-        visualChunkSize = (visualSelectionLength / (float) numChunks);
+        visualSelectionStart = newStart;
+        visualSelectionEnd = newEnd;
     }
+    else if (e.mods == (ModifierKeys::ctrlModifier + ModifierKeys::leftButtonModifier))
+    {
+        // Don't select outside the component!
+        int newValue = e.x;
+        if (newValue < 0) newValue = 0;
+        else if (newValue > componentWidth) newValue = componentWidth;
+
+        // TODO: This will crash if control is pressing during drag
+        *selectionPointToChange = newValue;
+    }
+
+    // Swap if inverse selection
+    if (visualSelectionEnd < visualSelectionStart)
+    {
+        int temp = visualSelectionStart;
+        visualSelectionStart = visualSelectionEnd;
+        visualSelectionEnd = temp;
+    }
+
+    visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
+    visualChunkSize = (visualSelectionLength / (float) numChunks);
 
     // try to send the new selection to the SampleStrips
     mlrVSTAudioProcessorEditor *pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
@@ -316,7 +388,6 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
     // redraw to reflect new selection
     repaint();
 }
-
 
 void SampleStripControl::paint(Graphics& g)
 {
@@ -443,7 +514,6 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
         {
             int newCurrentChannel = *static_cast<const int*>(newValue);
             setChannel(newCurrentChannel);
-            DBG("From SampleStrip: channel is now " + String(newCurrentChannel));
             break;
         }
 
@@ -458,20 +528,31 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
     case SampleStrip::ParamPlayMode :
         {
             int newPlayMode = *static_cast<const int*>(newValue);
-            selPlayMode.setSelectedId(newPlayMode); break;
+            selPlayMode.setSelectedId(newPlayMode);
+            break;
+        }
+
+    case SampleStrip::ParamIsLatched :
+        {
+            isLatched = *static_cast<const bool*>(newValue);
+            isLatchedBtn.setToggleState(isLatched, false);
+            break;
         }
 
     case SampleStrip::ParamIsReversed :
         {
-            bool newIsReversed = *static_cast<const bool*>(newValue);
-            isReversed = newIsReversed; break;
+            isReversed = *static_cast<const bool*>(newValue);
+            isReversedBtn.setToggleState(isReversed, false);
+            break;
         }
 
     case SampleStrip::ParamIsPlaying :
-        isPlaying = *static_cast<const bool*>(newValue); break;
+        isPlaying = *static_cast<const bool*>(newValue);
+        break;
 
     case SampleStrip::ParamPlaybackPercentage :
-        playbackPercentage = *static_cast<const float*>(newValue); break;
+        playbackPercentage = *static_cast<const float*>(newValue);
+        break;
 
 
     case SampleStrip::ParamFractionalStart :

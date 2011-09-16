@@ -78,7 +78,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
         for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
         {
             const void *newValue = getProcessor()->getSampleStripParameter(p, i);
-            sampleStripControlArray[i]->recallParam(p, newValue, false);
+            sampleStripControlArray[i]->recallParam(p, newValue, true);
         }
         DBG("params loaded for #" << i);
 	}
@@ -127,7 +127,7 @@ void mlrVSTAudioProcessorEditor::buildSliders()
     slidersArray.clear();
 
     // work out the correct width
-    int sliderWidth = (int)(300 / (float) (numChannels + 1));
+    int sliderWidth = (int)(290 / (float) (numChannels + 1));
 
     // Set master volume first
     addAndMakeVisible(&masterGainSlider);
@@ -145,7 +145,7 @@ void mlrVSTAudioProcessorEditor::buildSliders()
         slidersArray[i]->addListener(this);
         slidersArray[i]->setRange(0.0, 1.0, 0.01);
         slidersArray[i]->setValue(0.8);
-        slidersArray[i]->setBounds((i + 1) * sliderWidth, 540, sliderWidth, 190);
+        slidersArray[i]->setBounds(PAD_AMOUNT + (i + 1) * sliderWidth, 540, sliderWidth, 190);
         Colour sliderColour = getProcessor()->getChannelProcessor(i)->getChannelColour();
         slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
         slidersArray[i]->setColour(Slider::backgroundColourId, sliderColour);

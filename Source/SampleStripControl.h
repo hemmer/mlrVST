@@ -58,6 +58,7 @@ public:
 private:
 
     ComboBox selNumChunks, selPlayMode;
+    ToggleButton isLatchedBtn, isReversedBtn;
 
     const int componentHeight, componentWidth;
     Rectangle<int> waveformPaintBounds;
@@ -77,7 +78,7 @@ private:
        properties of the AudioSample. This means we can have
        different start points on different rows for the same sample
        ============================================================*/
-    bool isReversed, isPlaying;
+    bool isReversed, isPlaying, isLatched;
     float playbackPercentage;
 
     // these are the same, except refering to the component
@@ -90,7 +91,11 @@ private:
     // standard monome) and what size (in samples) they are
     int numChunks;
 
-
+    // This is so we can drag with middle mouse
+    int selectionStartBeforeDrag;
+    int *selectionPointToChange;
+    int dragStart;
+    ModifierKeys mouseDownMods;
 
     // stuff for drawing waveforms
     // TODO: should this be associated with the AudioSample?

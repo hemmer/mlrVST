@@ -110,6 +110,8 @@ public:
 
 private:
 
+    void refreshPlaybackParameters();
+
     ScopedPointer<mlrVSTAudioProcessor> parent;
 
     // each channel has an individual ID
@@ -140,6 +142,7 @@ private:
     int playMode;
 
     void handleMidiEvent(const MidiMessage& m);
+    int effectiveMonomeRow, monomeCol;
 
     Colour channelColour;
 

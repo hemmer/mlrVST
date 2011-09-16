@@ -496,14 +496,20 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
            numChunks too to filter these. The -1 is because we are treating
            the second row as the first "effective" row.
         */
+        int effectiveMonomeRow = monomeRow - 1;
+
         int numChunks = *static_cast<const int*>
-                        (sampleStripArray[monomeRow - 1]->getSampleStripParam(SampleStrip::ParamNumChunks));
+                        (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamNumChunks));
 
         if (monomeCol < numChunks)
         {
-            // The implicit +1 here is because midi channels start at 1 not 0!
-            if (state) monomeState.noteOn(monomeRow, monomeCol, 1.0f);
-            else monomeState.noteOff(monomeRow, monomeCol);
+            bool isLatched = *static_cast<const bool*>
+                (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamIsLatched));
+
+            // The +1 here is because midi channels start at 1 not 0!
+            if (state) monomeState.noteOn(effectiveMonomeRow + 1, monomeCol, 1.0f);
+            // only bother with note off if we aren't on latched mode
+            else if (!isLatched) monomeState.noteOff(effectiveMonomeRow + 1, monomeCol);
         }
     }
 

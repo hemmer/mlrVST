@@ -31,6 +31,7 @@ public:
         ParamCurrentChannel,        
         ParamNumChunks,
         ParamPlayMode,
+        ParamIsLatched,
         ParamIsReversed,
         ParamFractionalStart,
         ParamFractionalEnd,
@@ -47,7 +48,6 @@ public:
     enum PlayMode
     { 
         LOOP = 1,               // starts the sample looping
-        LOOP_WHILE_HELD,        // same but only while button held
         LOOP_CHUNK,             // loops the chunk associated with a button
         PLAY_TO_END             // plays from current point until the end then stops
     };
@@ -60,6 +60,7 @@ public:
         case ParamCurrentChannel : return "current channel";
         case ParamNumChunks : return "num chunks";
         case ParamPlayMode : return "playmode";
+        case ParamIsLatched : return "is latched";
         case ParamIsReversed : return "is reversed";
         case ParamIsPlaying : return "is playing";
         case ParamChunkSize : return "chunk size";
@@ -99,7 +100,7 @@ private:
 
     // Playback options
     int currentPlayMode;
-    bool isReversed;
+    bool isReversed, isLatched;
 };
 
 
