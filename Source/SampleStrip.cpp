@@ -21,21 +21,6 @@ SampleStrip::SampleStrip() :
 
 }
 
-//void SampleStrip::setCurrentSample(const AudioSample *newSample)
-//{
-//    if (newSample != 0)
-//    {
-//        currentSample = newSample;
-//        totalSampleLength = currentSample->getSampleLength();
-//        selectionStart = (int)(fractionalSampleStart * totalSampleLength);
-//        selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
-//
-//        selectionLength = (selectionEnd - selectionStart);
-//        chunkSize = (int) (selectionLength / (float) numChunks);
-//        //TODO do we set selection variables here?
-//    }
-//}
-
 void SampleStrip::setSampleStripParam(const int &parameterID, const void *newValue)
 {
     //DBG("param \"" + getParameterName(parameterID) + "\" updated to: " + String(newValue));
@@ -54,8 +39,14 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
     case ParamPlayMode :
         currentPlayMode = *static_cast<const int*>(newValue); break;
 
+    case ParamIsPlaying :
+        isPlaying = *static_cast<const bool*>(newValue); break;
+
     case ParamIsReversed :
         isReversed = *static_cast<const bool*>(newValue); break;
+
+    case ParamPlaybackPercentage :
+        playbackPercentage = *static_cast<const float*>(newValue); break;
 
     case ParamFractionalStart :
         fractionalSampleStart = *static_cast<const float*>(newValue);
@@ -101,6 +92,10 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
         p = &currentPlayMode; break;
     case ParamIsReversed :
         p = &isReversed; break;
+    case ParamIsPlaying :
+        p = &isPlaying; break;
+    case ParamPlaybackPercentage :
+        p = &playbackPercentage; break;
     case ParamFractionalStart :
         p = &fractionalSampleStart; break;
     case ParamFractionalEnd :

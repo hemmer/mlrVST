@@ -10,7 +10,7 @@ Custom component to display a waveform (corresponding to an mlr row)
 ==============================================================================
 */
 
-#include "SampleStripControl.h"
+
 #include "PluginEditor.h"
 
 SampleStripControl::SampleStripControl(const int &id,
@@ -191,7 +191,7 @@ void SampleStripControl::mouseWheelMove(const MouseEvent&, float /*wheelIncremen
 void SampleStripControl::mouseDown(const MouseEvent &e)
 {
 
-    if (e.mods == ModifierKeys::rightButtonModifier)
+    if (e.mods == ModifierKeys::rightButtonModifier && e.y > 15)
     {
         mlrVSTAudioProcessorEditor *demoPage = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
 
@@ -249,62 +249,71 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
             }
         }
     }
-    else
-    {
-        visualSelectionStart = e.getMouseDownX();
-        visualSelectionEnd = visualSelectionStart;
-    }
+    //else if(e.mods = ModifierKeys::leftButtonModifier)
+    //{
+    //    visualSelectionStart = e.getMouseDownX();
+    //    visualSelectionEnd = visualSelectionStart;
+    //}
 }
 
 void SampleStripControl::mouseUp(const MouseEvent &e)
 {
     if (e.mods == ModifierKeys::leftButtonModifier)
     {
+        //// try to send the new selection to the SampleStrips
+        //mlrVSTAudioProcessorEditor *pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
+        //// let the sample strip know about the change
+        //if (pluginUI != 0)
+        //{
+        //    float fractionalStart = visualSelectionStart / (float) componentWidth;
+        //    float fractionalEnd = visualSelectionEnd / (float) componentWidth;
+        //    pluginUI->setSampleStripParameter(SampleStrip::ParamFractionalStart, &fractionalStart, sampleStripID);
+        //    pluginUI->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &fractionalEnd, sampleStripID);
+        //}
 
-        // we might have selected backwards
-        if (e.x > visualSelectionStart) visualSelectionEnd = e.x;
-        else
-        {
-            visualSelectionEnd = visualSelectionStart;
-            visualSelectionStart = e.x;
-        }
-        // Make sure we don't select outside the waveform
-        if (visualSelectionEnd > componentWidth) visualSelectionEnd = componentWidth;
-        if (visualSelectionStart < 0) visualSelectionStart = 0;
-
-        visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
-        visualChunkSize = (visualSelectionLength / (float) numChunks);
-
-        // try to send the new selection to the SampleStrips
-        mlrVSTAudioProcessorEditor *demoPage = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
-        // let the sample strip know about the change
-        if (demoPage != 0)
-        {
-            float fractionalStart = visualSelectionStart / (float) componentWidth;
-            float fractionalEnd = visualSelectionEnd / (float) componentWidth;
-            demoPage->setSampleStripParameter(SampleStrip::ParamFractionalStart, &fractionalStart, sampleStripID);
-            demoPage->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &fractionalEnd, sampleStripID);
-        }
-
-        // redraw to reflect new selection
-        repaint();
+        //// redraw to reflect new selection
+        //repaint();
     }
 }
 
 void SampleStripControl::mouseDrag(const MouseEvent &e)
 {
-    visualSelectionEnd = e.x;
+    if (e.mods == ModifierKeys::leftButtonModifier)
+    {
 
-    // Make sure we don't select outside the waveform
-    if (visualSelectionEnd > componentWidth) visualSelectionEnd = componentWidth;
-    if (visualSelectionEnd < 0) visualSelectionEnd = 0;
+        int mouseX = e.x;
+        int mouseStartX = e.getMouseDownX();
 
-    if (visualSelectionEnd > visualSelectionStart)
+        // Make sure we don't select outside the waveform
+        if (mouseX > componentWidth) mouseX = componentWidth;
+        if (mouseX < 0) mouseX = 0;
+
+        if (mouseX > mouseStartX)
+        {
+            visualSelectionStart = mouseStartX;
+            visualSelectionEnd = mouseX;
+        }
+        else
+        {
+            visualSelectionStart = mouseX;
+            visualSelectionEnd = mouseStartX;
+        }
+
         visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
-    else
-        visualSelectionLength = (visualSelectionStart - visualSelectionEnd);
+        visualChunkSize = (visualSelectionLength / (float) numChunks);
+    }
 
-    visualChunkSize = (visualSelectionLength / (float) numChunks);
+    // try to send the new selection to the SampleStrips
+    mlrVSTAudioProcessorEditor *pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
+    if (pluginUI != 0)
+    {
+        float fractionalStart = visualSelectionStart / (float) componentWidth;
+        float fractionalEnd = visualSelectionEnd / (float) componentWidth;
+        pluginUI->setSampleStripParameter(SampleStrip::ParamFractionalStart, &fractionalStart, sampleStripID);
+        pluginUI->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &fractionalEnd, sampleStripID);
+    }
+
+    // redraw to reflect new selection
     repaint();
 }
 
@@ -426,7 +435,7 @@ void SampleStripControl::updateThumbnail(const File &newFile)
 }
 
 
-void SampleStripControl::recallParam(const int &paramID, const void *newValue)
+void SampleStripControl::recallParam(const int &paramID, const void *newValue, const bool &doRepaint)
 {
     switch (paramID)
     {
@@ -458,6 +467,13 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue)
             isReversed = newIsReversed; break;
         }
 
+    case SampleStrip::ParamIsPlaying :
+        isPlaying = *static_cast<const bool*>(newValue); break;
+
+    case SampleStrip::ParamPlaybackPercentage :
+        playbackPercentage = *static_cast<const float*>(newValue); break;
+
+
     case SampleStrip::ParamFractionalStart :
         {
             float fractionalStart = *static_cast<const float*>(newValue);
@@ -481,6 +497,5 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue)
         DBG("Param not found");
     }
 
-    //DBG("##" + String(sampleStripID) + " " + String(newValue));
-    repaint();
+    if(doRepaint) repaint();
 }

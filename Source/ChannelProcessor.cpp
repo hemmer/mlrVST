@@ -52,7 +52,8 @@ void ChannelProcessor::startSamplePlaying(const int &startBlock, const int &bloc
 
 void ChannelProcessor::stopSamplePlaying()
 {
-    currentSampleStrip->setPlaybackStatus(false);
+    bool stopPlay = false;
+    currentSampleStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &stopPlay);
     isPlaying = false;
 }
 
@@ -119,8 +120,10 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
             {
                 sampleCurrentPosition = playbackStartPosition;
                 isPlaying = true;
-                currentSampleStrip->setPlaybackStatus(true);
-                currentSampleStrip->setPlaybackPercentage(getCurrentPlaybackPercentage());
+
+                float playbackPercentage = getCurrentPlaybackPercentage();
+                currentSampleStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &isPlaying);
+                currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
             }
 
         }
@@ -292,6 +295,8 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
                 }
             }
         }
-        currentSampleStrip->setPlaybackPercentage(getCurrentPlaybackPercentage());
+
+        float playbackPercentage = getCurrentPlaybackPercentage();
+        currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
     }
 }

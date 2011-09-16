@@ -23,11 +23,12 @@ public:
     {
     }
 
-    // TODO: typedef make this short to type
     enum SampleStripParameter
     {
-        FirstParam,                 
-        ParamCurrentChannel = 0,    // This is so we can loop over params
+        FirstParam,                     // This is so we can loop over GUI params
+        ParamIsPlaying = 0,
+        ParamPlaybackPercentage,
+        ParamCurrentChannel,        
         ParamNumChunks,
         ParamPlayMode,
         ParamIsReversed,
@@ -35,6 +36,7 @@ public:
         ParamFractionalEnd,
         NumGUIParams,
         // The above are the only params needed by the GUI
+
         ParamChunkSize,
         ParamSampleStart,       // these return the key sample points
         ParamSampleEnd,         // (taking selection into account)
@@ -57,28 +59,20 @@ public:
         {
         case ParamCurrentChannel : return "current channel";
         case ParamNumChunks : return "num chunks";
-        case ParamChunkSize : return "chunk size";
         case ParamPlayMode : return "playmode";
-        case ParamFractionalStart : return "ParamFractionalStart";
-        case ParamFractionalEnd : return "ParamFractionalEnd";
+        case ParamIsReversed : return "is reversed";
+        case ParamIsPlaying : return "is playing";
+        case ParamChunkSize : return "chunk size";
+        case ParamFractionalStart : return "fractional start";
+        case ParamFractionalEnd : return "fractional end";
         default : return "parameter not found";
         }
     }
 
 
-    //const AudioSample* getCurrentSample() const { return currentSample; }
-    //void setCurrentSample(const AudioSample *newSample);
-
-
     // these are for getting / setting the int parameters
     void setSampleStripParam(const int &parameterID, const void *newValue);
     const void* getSampleStripParam(const int &parameterID) const;
-
-    void setPlaybackPercentage(const float &newPlaybackPercentage) { playbackPercentage = newPlaybackPercentage; }
-    void setPlaybackStatus(const bool &isPlaying_) { isPlaying = isPlaying_; }
-
-    bool getPlaybackStatus() const { return isPlaying; }
-    float getPlaybackPercentage() const { return playbackPercentage; }
 
 
 private:

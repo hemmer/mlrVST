@@ -77,8 +77,8 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
         // do this as a loop
         for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
         {
-            const void *newValue = getProcessor()->getSampleStrip(i)->getSampleStripParam(p);
-            sampleStripControlArray[i]->recallParam(p, newValue);
+            const void *newValue = getProcessor()->getSampleStripParameter(p, i);
+            sampleStripControlArray[i]->recallParam(p, newValue, false);
         }
         DBG("params loaded for #" << i);
 	}
@@ -183,11 +183,15 @@ void mlrVSTAudioProcessorEditor::timerCallback()
     for(int i = 0; i < slidersArray.size(); ++i)
         slidersArray[i]->setValue( ourProcessor->channelGains[i] );
     
-    for(int i = 0; i < sampleStripControlArray.size(); ++i)
+    // Update sample strip parameters
+    // TODO maybe change callback?
+    for (int strip = 0; strip < sampleStripControlArray.size(); ++strip)
     {
-        bool isPlaying = ourProcessor->getSampleStrip(i)->getPlaybackStatus();
-        float playbackPercentage = ourProcessor->getSampleStrip(i)->getPlaybackPercentage();
-        sampleStripControlArray[i]->updatePlayStatus(isPlaying, playbackPercentage);
+        for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
+        {
+            const void *newValue = getProcessor()->getSampleStripParameter(p, strip);
+            sampleStripControlArray[strip]->recallParam(p, newValue, false);
+        }
     }
 }
 

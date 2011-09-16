@@ -16,6 +16,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "AudioSample.h"
+#include "SampleStripControl.h"
 
 class SampleStripControl :  public Component,
     public ChangeListener,
@@ -48,16 +49,10 @@ public:
     void setChannel(const int &newChannel);
 
     // These recall settings when the 
-    void recallParam(const int &paramID, const void *newValue);
+    void recallParam(const int &paramID, const void *newValue, const bool &doRepaint);
 
 
     void updateThumbnail(const File &newFile);
-    void updatePlayStatus(const bool &isPlaying_, const float &newPercentage)
-    {
-        isPlaying = isPlaying_;
-        playbackPercentage = newPercentage;
-        repaint();
-    }
     void buildNumBlocksList(const int &newMaxNumBlocks);
 
 private:
