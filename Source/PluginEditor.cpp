@@ -11,14 +11,14 @@
 
 
 //==============================================================================
-mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter)
+mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter, const int &newNumChannels)
     : AudioProcessorEditor (ownerFilter),
       infoLabel(), helloLabel("", "Hello"), logoLabel("", "mlrVST"), delayLabel("", "Delay:"),
       delaySlider("delay"), masterGainSlider("master gain"),
       selNumChannels("select number of channels"),
 	  sampleStripControlArray(),
       waveformControlHeight(90), waveformControlWidth(700),
-	  numChannels(8),
+	  numChannels(newNumChannels),
       numStrips(7),
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
       slidersArray()
@@ -63,29 +63,28 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	helloLabel.setBounds(50, 150, 100, 100);
 	helloLabel.setColour(Label::backgroundColourId, Colours::bisque);
 
-    // add waveform strips
-    
+    // Add SampleStripControls, loading settings from the corresponding SampleStrip
     for(int i = 0; i < numStrips; ++i){
 
-        int waveX = getWidth() - waveformControlWidth - PAD_AMOUNT;
-        int waveY = 40 + i * (waveformControlHeight + PAD_AMOUNT);
-        sampleStripControlArray.add(new SampleStripControl(i, waveformControlWidth, waveformControlHeight));
-        sampleStripControlArray[i]->setBounds(waveX, waveY, waveformControlWidth, waveformControlHeight);
+        int stripX = getWidth() - waveformControlWidth - PAD_AMOUNT;
+        int stripY = 40 + i * (waveformControlHeight + PAD_AMOUNT);
+        sampleStripControlArray.add(new SampleStripControl(i, waveformControlWidth, waveformControlHeight, numChannels));
+        sampleStripControlArray[i]->setBounds(stripX, stripY, waveformControlWidth, waveformControlHeight);
         addAndMakeVisible( sampleStripControlArray[i] );
+
+        sampleStripControlArray[i]->buildChannelButtonList(numChannels);
+
+        // do this as a loop
+        for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
+        {
+            const void *newValue = getProcessor()->getSampleStrip(i)->getSampleStripParam(p);
+            sampleStripControlArray[i]->recallParam(p, newValue);
+        }
+        DBG("params loaded for #" << i);
 	}
 
-    /////////////////////////////
-    // Add all volume controls //
-    /////////////////////////////
-    // Master volume
-    addAndMakeVisible(&masterGainSlider);
-    masterGainSlider.setSliderStyle(Slider::LinearVertical);
     masterGainSlider.addListener(this);
-    masterGainSlider.setRange(0.0, 1.0, 0.01);
-    masterGainSlider.setValue(0.6);
-    masterGainSlider.setBounds(PAD_AMOUNT, 540, 30, 190);
-    masterGainSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
-
+    buildSliders();
 
     // combobox to select the number of channels
     addAndMakeVisible(&selNumChannels);
@@ -94,7 +93,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     selNumChannels.setBounds(50, 400, 100, 30);
     // NOTE: false flag forces the number of channels to be (re)built,
     // this is where the individual channel volume controls get added
-    selNumChannels.setSelectedId(numChannels, false);
+    selNumChannels.setSelectedId(numChannels, true);
 
 
     // test adding basic samples to pool
@@ -118,6 +117,40 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
 {
     DBG("GUI unloaded");
+}
+
+
+void mlrVSTAudioProcessorEditor::buildSliders()
+{
+
+    // clear any existing sliders
+    slidersArray.clear();
+
+    // work out the correct width
+    int sliderWidth = (int)(300 / (float) (numChannels + 1));
+
+    // Set master volume first
+    addAndMakeVisible(&masterGainSlider);
+    masterGainSlider.setSliderStyle(Slider::LinearVertical);
+    masterGainSlider.setRange(0.0, 1.0, 0.01);
+    masterGainSlider.setValue(0.6);
+    masterGainSlider.setBounds(PAD_AMOUNT, 540, sliderWidth, 190);
+    masterGainSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
+
+    for(int i = 0; i < numChannels; ++i)
+    {
+        slidersArray.add(new Slider("channel " + String(i) + " vol"));
+        addAndMakeVisible(slidersArray[i]);
+        slidersArray[i]->setSliderStyle(Slider::LinearVertical);
+        slidersArray[i]->addListener(this);
+        slidersArray[i]->setRange(0.0, 1.0, 0.01);
+        slidersArray[i]->setValue(0.8);
+        slidersArray[i]->setBounds((i + 1) * sliderWidth, 540, sliderWidth, 190);
+        Colour sliderColour = getProcessor()->getChannelProcessor(i)->getChannelColour();
+        slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
+        slidersArray[i]->setColour(Slider::backgroundColourId, sliderColour);
+    }
+
 }
 
 
@@ -211,34 +244,16 @@ void mlrVSTAudioProcessorEditor::comboBoxChanged (ComboBox* comboBoxThatHasChang
     {
         numChannels = comboBoxThatHasChanged->getSelectedId();
         DBG("Number of channels changed to: " + String(numChannels));
+        
+        // Let the audio processor change the number of processing channels
         getProcessor()->buildChannelProcessorArray(numChannels);
-        slidersArray.clear();
 
-        for(int i = 0; i < numChannels; ++i)
-        {
-            slidersArray.add(new Slider("channel " + String(i) + " vol"));
-            addAndMakeVisible(slidersArray[i]);
-            slidersArray[i]->setSliderStyle(Slider::LinearVertical);
-            slidersArray[i]->addListener(this);
-            slidersArray[i]->setRange(0.0, 1.0, 0.01);
-            slidersArray[i]->setValue(0.8);
-            slidersArray[i]->setBounds(40 + i*33, 540, 33, 190);
-            Colour sliderColour = getProcessor()->getChannelProcessor(i)->getChannelColour();
-            slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
-            slidersArray[i]->setColour(Slider::backgroundColourId, sliderColour);
+        // we need to rebuild the sliders array
+	    buildSliders();
 
-
-        }
-
+        // let the SampleStrips add the right number of buttons
         for(int i = 0; i < sampleStripControlArray.size(); ++i)
-        {
-            sampleStripControlArray[i]->clearChannelList();
-            for(int chan = 0; chan < numChannels; ++chan)
-            {
-                Colour sliderColour = getProcessor()->getChannelProcessor(chan)->getChannelColour();
-                sampleStripControlArray[i]->addChannel(chan, sliderColour);
-            }
-	    }
+            sampleStripControlArray[i]->buildChannelButtonList(numChannels);
     }
 }
 

@@ -32,7 +32,7 @@ class mlrVSTAudioProcessorEditor  : public AudioProcessorEditor,
                                     public FileDragAndDropTarget
 {
 public:
-    mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter);
+    mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter, const int &newNumChannels);
     ~mlrVSTAudioProcessorEditor();
 
     //==============================================================================
@@ -55,29 +55,33 @@ public:
     int getSamplePoolSize() { return getProcessor()->getSamplePoolSize(); }
     String getSampleName(const int &index) { return getProcessor()->getSampleName(index); }
     // AudioSample* getSample(const int &index) { return getProcessor()->getSample(index); }
-    AudioSample* getLatestSample() { return getProcessor()->getLatestSample(); }
+    // AudioSample* getLatestSample() { return getProcessor()->getLatestSample(); }
     // this returns false if the file failed to load, true otherwise
     bool loadSampleFromFile(File &sampleFile) { return getProcessor()->addNewSample(sampleFile); }
     
     // Pass SampleStripControl messages back to the plugin processor
     File getSampleSourceFile(const int &index) const { return getProcessor()->getSample(index)->getSampleFile(); }
 
-    // pass all int parameters to SampleStrip
-    void updateSampleStripParameter(const int &parameterID, const int &newValue, const int &stripID)
+
+
+    // Forwards get / set requests for SampleStrips to the processor
+    void setSampleStripParameter(const int &parameterID, const void *newValue, const int &stripID)
     {
         getProcessor()->setSampleStripParameter(parameterID, newValue, stripID);
     }
+    const void * getSampleStripParameter(const int &parameterID, const int &stripID)
+    {
+        return getProcessor()->getSampleStripParameter(parameterID, stripID);
+    }
+
+
 
     void updateSampleStripSample(const int &samplePoolIndex, const int &stripID)
     {
         getProcessor()->setSampleStripSample(samplePoolIndex, stripID);
     }
 
-    void updateSampleStripSelection(const float &start, const float &end, const int &stripID)
-    {
-        getProcessor()->setSampleStripSelection(start, end, stripID);
-    }
-
+    Colour getChannelColour(const int &chan) const { return getProcessor()->getChannelProcessor(chan)->getChannelColour(); }
 private:
     Label infoLabel, delayLabel, helloLabel, logoLabel;
     Slider delaySlider, masterGainSlider;
@@ -101,6 +105,7 @@ private:
 	int numChannels;
 
     OwnedArray<Slider> slidersArray;
+    void buildSliders();
 
     // For simplicity, let's stick to a fixed size GUI
     static const int GUI_HEIGHT = 750;

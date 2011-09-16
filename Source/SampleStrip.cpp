@@ -13,56 +13,113 @@
 SampleStrip::SampleStrip() :
     currentSample(0),
     totalSampleLength(0), fractionalSampleStart(0), fractionalSampleEnd(0),
-    numChunks(0), blockSize(0),
+    numChunks(8), chunkSize(0),
     currentChannel(0),
     isPlaying(false), playbackPercentage(0.0),
-    currentPlayMode(LOOP), isReversed(false)
+    currentPlayMode(LOOP_CHUNK), isReversed(false)
 {
 
 }
 
-void SampleStrip::setCurrentSample(const AudioSample *newSample)
+//void SampleStrip::setCurrentSample(const AudioSample *newSample)
+//{
+//    if (newSample != 0)
+//    {
+//        currentSample = newSample;
+//        totalSampleLength = currentSample->getSampleLength();
+//        selectionStart = (int)(fractionalSampleStart * totalSampleLength);
+//        selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
+//
+//        selectionLength = (selectionEnd - selectionStart);
+//        chunkSize = (int) (selectionLength / (float) numChunks);
+//        //TODO do we set selection variables here?
+//    }
+//}
+
+void SampleStrip::setSampleStripParam(const int &parameterID, const void *newValue)
 {
-    if (newSample != 0)
+    //DBG("param \"" + getParameterName(parameterID) + "\" updated to: " + String(newValue));
+
+    switch (parameterID)
     {
-        currentSample = newSample;
+    case ParamCurrentChannel :
+        currentChannel = *static_cast<const int*>(newValue);
+        DBG("SampleStrip set to chan: " << currentChannel);
+        break;
+
+    case ParamNumChunks :
+        numChunks = *static_cast<const int*>(newValue);
+        chunkSize = (int) (selectionLength / (float) numChunks); break;
+
+    case ParamPlayMode :
+        currentPlayMode = *static_cast<const int*>(newValue); break;
+
+    case ParamIsReversed :
+        isReversed = *static_cast<const bool*>(newValue); break;
+
+    case ParamFractionalStart :
+        fractionalSampleStart = *static_cast<const float*>(newValue);
+        selectionStart = (int)(fractionalSampleStart * totalSampleLength);
+        selectionLength = selectionEnd - selectionStart;
+        chunkSize = (int) (selectionLength / (float) numChunks);
+        break;
+
+    case ParamFractionalEnd :
+        fractionalSampleEnd = *static_cast<const float*>(newValue);
+        selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
+        selectionLength = selectionEnd - selectionStart;
+        chunkSize = (int) (selectionLength / (float) numChunks);
+        break;
+
+    case ParamAudioSample :
+        currentSample = static_cast<const AudioSample*>(newValue);
+        // update associated params
         totalSampleLength = currentSample->getSampleLength();
         selectionStart = (int)(fractionalSampleStart * totalSampleLength);
         selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
-
         selectionLength = (selectionEnd - selectionStart);
-        blockSize = (int) (selectionLength / (float) numChunks);
-        //TODO do we set selection variables here?
+        chunkSize = (int) (selectionLength / (float) numChunks);
+        break;
+
+        // TODO when ParamSampleStart is changes, make sure we change fractional too!
+    default :
+        jassert(false);     // we should NOT be here!
     }
 }
 
-void SampleStrip::setSampleStripParam(const int &parameterID, const int &newValue)
+const void* SampleStrip::getSampleStripParam(const int &parameterID) const
 {
-    DBG("param \"" + getParameterName(parameterID) + "\" updated to: " + String(newValue));
+    const void *p;
 
     switch (parameterID)
     {
     case ParamCurrentChannel :
-        currentChannel = newValue; break;
+        p = &currentChannel; break;
     case ParamNumChunks :
-        numChunks = newValue;
-        blockSize = (int) (int) (selectionLength / (float) numChunks); break;
+        p = &numChunks; break;
     case ParamPlayMode :
-        currentPlayMode = newValue; break;
-    }
-}
+        p = &currentPlayMode; break;
+    case ParamIsReversed :
+        p = &isReversed; break;
+    case ParamFractionalStart :
+        p = &fractionalSampleStart; break;
+    case ParamFractionalEnd :
+        p = &fractionalSampleEnd; break;
 
-int SampleStrip::getSampleStripParam(const int &parameterID) const
-{
-    switch (parameterID)
-    {
-    case ParamCurrentChannel :
-        return currentChannel; 
-    case ParamNumChunks :
-        return numChunks;
-    case ParamPlayMode :
-        return currentPlayMode;
-    default: 
-        return -1;      // this should never happen!
+    // Audio processing only params
+    case ParamChunkSize :
+        p = &chunkSize; break;
+    case ParamSampleStart :
+        p = &selectionStart; break;
+    case ParamSampleEnd :
+        p = &selectionEnd; break;
+    case ParamAudioSample :
+        p = currentSample; break;
+    default:
+        DBG("Param not found!");
+        jassert(false);
+        p = 0;      // this should never happen!
     }
+
+    return p;
 }

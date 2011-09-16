@@ -26,14 +26,25 @@ public:
     // TODO: typedef make this short to type
     enum SampleStripParameter
     {
-        ParamCurrentChannel,
+        FirstParam,                 
+        ParamCurrentChannel = 0,    // This is so we can loop over params
         ParamNumChunks,
-        ParamPlayMode
+        ParamPlayMode,
+        ParamIsReversed,
+        ParamFractionalStart,
+        ParamFractionalEnd,
+        NumGUIParams,
+        // The above are the only params needed by the GUI
+        ParamChunkSize,
+        ParamSampleStart,       // these return the key sample points
+        ParamSampleEnd,         // (taking selection into account)
+        ParamAudioSample,
+        TotalNumParams
     };
 
     enum PlayMode
     { 
-        LOOP = 1,                   // starts the sample looping
+        LOOP = 1,               // starts the sample looping
         LOOP_WHILE_HELD,        // same but only while button held
         LOOP_CHUNK,             // loops the chunk associated with a button
         PLAY_TO_END             // plays from current point until the end then stops
@@ -46,44 +57,29 @@ public:
         {
         case ParamCurrentChannel : return "current channel";
         case ParamNumChunks : return "num chunks";
+        case ParamChunkSize : return "chunk size";
         case ParamPlayMode : return "playmode";
+        case ParamFractionalStart : return "ParamFractionalStart";
+        case ParamFractionalEnd : return "ParamFractionalEnd";
         default : return "parameter not found";
         }
     }
 
 
-    const AudioSample* getCurrentSample() const { return currentSample; }
-    void setCurrentSample(const AudioSample *newSample);
+    //const AudioSample* getCurrentSample() const { return currentSample; }
+    //void setCurrentSample(const AudioSample *newSample);
 
-    //int getSampleLength() const { return sampleLength; }
-
-    // these return the key sample points (taking selection into account)
-    int getSampleStart() const { return selectionStart; }
-    int getSampleEnd() const { return selectionEnd; }
-    int getBlockSize() const { return blockSize; }
-    int getCurrentChannel() const { return currentChannel; }
-
-    void setSampleSelection(const float &start, const float &end)
-    {
-        fractionalSampleStart = start;
-        fractionalSampleEnd = end;
-
-        // TODO: check this rounding is OK
-        selectionStart = (int)(fractionalSampleStart * totalSampleLength);
-        selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
-        selectionLength = selectionEnd - selectionStart;
-        blockSize = (int) (selectionLength / (float) numChunks);
-    }
 
     // these are for getting / setting the int parameters
-    void setSampleStripParam(const int &parameterID, const int &newValue);
-    int getSampleStripParam(const int &parameterID) const;
+    void setSampleStripParam(const int &parameterID, const void *newValue);
+    const void* getSampleStripParam(const int &parameterID) const;
 
     void setPlaybackPercentage(const float &newPlaybackPercentage) { playbackPercentage = newPlaybackPercentage; }
     void setPlaybackStatus(const bool &isPlaying_) { isPlaying = isPlaying_; }
 
     bool getPlaybackStatus() const { return isPlaying; }
     float getPlaybackPercentage() const { return playbackPercentage; }
+
 
 private:
 
@@ -103,7 +99,7 @@ private:
     // How many blocks the sample is split up into...
     int numChunks;
     // ...and what size are they (in samples).
-    int blockSize;
+    int chunkSize;
 
     int currentChannel;
 

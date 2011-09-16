@@ -24,7 +24,7 @@ class SampleStripControl :  public Component,
     public FileDragAndDropTarget
 {
 public:
-    SampleStripControl(const int &id, const int &height, const int &width);
+    SampleStripControl(const int &id, const int &height, const int &width, const int &newNumChannels);
     ~SampleStripControl();
 
     //void setFile (const File& file);
@@ -43,10 +43,12 @@ public:
     bool isInterestedInFileDrag(const StringArray& files);
     void filesDropped(const StringArray& files, int x, int y);
 
-    // if the number of channels changes, we can update the strips
-    void addChannel(const int &id, const Colour &col);
-    void clearChannelList();
+    // Update the strips if the number of channels changes
+    void buildChannelButtonList(const int &newNumChannels);
+    void setChannel(const int &newChannel);
 
+    // These recall settings when the 
+    void recallParam(const int &paramID, const void *newValue);
 
 
     void updateThumbnail(const File &newFile);
@@ -72,7 +74,6 @@ private:
     Label trackNumberLbl, filenameLbl;
     OwnedArray<DrawableButton> channelButtonArray;
 
-    int currentChannel;     // which channel audio is currently going to
     int numChannels;        // total number of channels available
 
     /* ============================================================

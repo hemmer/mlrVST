@@ -13,7 +13,10 @@ Custom component to display a waveform (corresponding to an mlr row)
 #include "SampleStripControl.h"
 #include "PluginEditor.h"
 
-SampleStripControl::SampleStripControl(const int &id, const int &width, const int &height) :
+SampleStripControl::SampleStripControl(const int &id,
+                                       const int &width,
+                                       const int &height,
+                                       const int &newNumChannels) :
     componentHeight(height), componentWidth(width),
     waveformPaintBounds(0, 15, componentWidth, componentHeight - 15),
     thumbnailCache(5),
@@ -22,7 +25,7 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     trackNumberLbl("track number", String(sampleStripID)),
     filenameLbl("filename", "No File"),
     sampleStripID(id),
-    currentChannel(0), numChannels(0),
+    numChannels(newNumChannels),
     channelButtonArray(),
     isReversed(false),
     numChunks(8),
@@ -48,11 +51,14 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     trackNumberLbl.setColour(Label::textColourId, Colours::white);
     trackNumberLbl.setFont(10.0f);
 
+
     // this will eventually be loaded from a setting
     buildNumBlocksList(8);
     addAndMakeVisible(&selNumChunks);
     selNumChunks.addListener(this);
     selNumChunks.setBounds(200, 0, 30, 15);
+
+
 
     addAndMakeVisible(&selPlayMode);
     selPlayMode.addListener(this);
@@ -62,7 +68,7 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     selPlayMode.addItem("play to end", SampleStrip::PLAY_TO_END);
     selPlayMode.setBounds(250, 0, 50, 15);
     // set LOOP as default mode and send a change message
-    selPlayMode.setSelectedId(SampleStrip::LOOP, false);
+    // selPlayMode.setSelectedId(SampleStrip::LOOP, false);
 }
 
 void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
@@ -73,7 +79,7 @@ void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
 
     // select the max number of blocks (comboBoxChanged will 
     // be informed).
-    selNumChunks.setSelectedId(newMaxNumBlocks);
+    // selNumChunks.setSelectedId(newMaxNumBlocks);
 }
 
 void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
@@ -86,16 +92,16 @@ void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
     {
         numChunks = selNumChunks.getSelectedId();
         visualChunkSize = (visualSelectionLength / (float) numChunks);
-        pluginUI->updateSampleStripParameter(SampleStrip::ParamNumChunks,
-                                             numChunks,
+        pluginUI->setSampleStripParameter(SampleStrip::ParamNumChunks,
+                                             &numChunks,
                                              sampleStripID);
         repaint();
     }
     else if (comboBoxThatHasChanged == &selPlayMode)
     {
-        pluginUI->updateSampleStripParameter(SampleStrip::ParamPlayMode,
-                                             selPlayMode.getSelectedId(),
-                                             sampleStripID);
+        int newPlayMode = selPlayMode.getSelectedId();
+        pluginUI->setSampleStripParameter(SampleStrip::ParamPlayMode,
+                                             &newPlayMode, sampleStripID);
     }
 
 }
@@ -107,55 +113,57 @@ SampleStripControl::~SampleStripControl()
 
 void SampleStripControl::buttonClicked(Button *btn)
 {
-    // get pointer to parent class
-    mlrVSTAudioProcessorEditor* pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
-
+    
     // see if any of the channel selection buttons were chosen
     for (int i = 0; i < channelButtonArray.size(); ++i)
     {
         if (channelButtonArray[i] == btn)
         {
-            backgroundColour = channelButtonArray[i]->getBackgroundColour();
-            currentChannel = i;
-            pluginUI->updateSampleStripParameter(SampleStrip::ParamCurrentChannel, currentChannel, sampleStripID);
-            repaint();
+            
+            // update the GUI
+            setChannel(i);
         }
     }
 }
 
-void SampleStripControl::clearChannelList()
+void SampleStripControl::setChannel(const int &newChannel)
 {
-    // if there are existing buttons, remove them
-    if (channelButtonArray.size() != 0) channelButtonArray.clear();
-    numChannels = 0;
-}
+    // Get pointer to parent class...
+    mlrVSTAudioProcessorEditor* pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
+    // ...so we can let the processor know
+    pluginUI->setSampleStripParameter(SampleStrip::ParamCurrentChannel, &newChannel, sampleStripID);
 
-
-/* Used to (re)add Buttons to control the switching channels.
-   Useful if we want to change the total number of channels at runtime. */
-void SampleStripControl::addChannel(const int &id, const Colour &col)
-{
-
-    channelButtonArray.add(new DrawableButton("button" + String(numChannels), DrawableButton::ImageRaw));
-    addAndMakeVisible(channelButtonArray.getLast());
-    channelButtonArray.getLast()->setBounds(15 + numChannels * 15, 0, 15, 15);
-    channelButtonArray.getLast()->addListener(this);
-    channelButtonArray.getLast()->setBackgroundColours(col, col);
-
-
-    // once we've added all the buttons, add the filename
-    // TODO NOW: filenameLbl.setBounds((i+1)*15, 0, 500, 15);
-
-    // reset channel to first channel just in case
-    // old channel setting no longer exists
-    currentChannel = 0;
-    backgroundColour = channelButtonArray.getFirst()->getBackgroundColour();
-    // let the UI know
+    DBG("#1 channel is now " << newChannel << " " << sampleStripID);
+    backgroundColour = channelButtonArray[newChannel]->getBackgroundColour();
     repaint();
-
-    ++numChannels;
-
 }
+
+// This is particuarly usful if the number of channels changes
+void SampleStripControl::buildChannelButtonList(const int &newNumChannels)
+{
+    numChannels = newNumChannels;
+    // clear existing buttons
+    channelButtonArray.clear();
+
+    mlrVSTAudioProcessorEditor *pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
+
+    for(int chan = 0; chan < numChannels; ++chan)
+    {
+        channelButtonArray.add(new DrawableButton("button" + String(chan), DrawableButton::ImageRaw));
+        addAndMakeVisible(channelButtonArray.getLast());
+        channelButtonArray.getLast()->setBounds(15 + chan * 15, 0, 15, 15);
+        channelButtonArray.getLast()->addListener(this);
+        Colour chanColour = pluginUI->getChannelColour(chan);
+        channelButtonArray.getLast()->setBackgroundColours(chanColour, chanColour);
+    }
+
+    DBG("resetting to chan 0");
+    int previousChannel = *static_cast<const int*>(pluginUI->getSampleStripParameter(SampleStrip::ParamCurrentChannel, sampleStripID));
+    if (previousChannel >= numChannels){
+        setChannel(0);
+    }
+}
+
 
 
 void SampleStripControl::setZoomFactor(double /*amount*/)
@@ -230,7 +238,11 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
                     visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
                     visualChunkSize = (visualSelectionLength / (float) numChunks);
                     
-                    demoPage->updateSampleStripSelection(0.0, 1.0, sampleStripID);
+                    // update the selection
+                    float start = 0.0f, end = 1.0f;
+                    demoPage->setSampleStripParameter(SampleStrip::ParamFractionalStart, &start, sampleStripID);
+                    demoPage->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &end, sampleStripID);
+                        
 
                     repaint();
                 }
@@ -265,13 +277,13 @@ void SampleStripControl::mouseUp(const MouseEvent &e)
 
         // try to send the new selection to the SampleStrips
         mlrVSTAudioProcessorEditor *demoPage = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
-
         // let the sample strip know about the change
         if (demoPage != 0)
         {
-            demoPage->updateSampleStripSelection(visualSelectionStart / (float) componentWidth,
-                                                 visualSelectionEnd / (float) componentWidth,
-                                                 sampleStripID);
+            float fractionalStart = visualSelectionStart / (float) componentWidth;
+            float fractionalEnd = visualSelectionEnd / (float) componentWidth;
+            demoPage->setSampleStripParameter(SampleStrip::ParamFractionalStart, &fractionalStart, sampleStripID);
+            demoPage->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &fractionalEnd, sampleStripID);
         }
 
         // redraw to reflect new selection
@@ -305,7 +317,7 @@ void SampleStripControl::paint(Graphics& g)
     if (isPlaying)
     {
         g.setColour(Colours::black.withAlpha(0.15f));
-        int visualPlaybackPoint = (playbackPercentage * visualSelectionLength);
+        int visualPlaybackPoint = (int)(playbackPercentage * visualSelectionLength);
         g.fillRect(visualSelectionStart, 15, visualPlaybackPoint, componentHeight - 15);
 
         g.setColour(Colours::white);
@@ -411,4 +423,64 @@ void SampleStripControl::updateThumbnail(const File &newFile)
     filenameLbl.setText(newFile.getFullPathName(), false);
 
     DBG("Waveform strip " + String(sampleStripID) + ": file \"" + newFile.getFileName() + "\" selected.");
+}
+
+
+void SampleStripControl::recallParam(const int &paramID, const void *newValue)
+{
+    switch (paramID)
+    {
+    case SampleStrip::ParamCurrentChannel :
+        {
+            int newCurrentChannel = *static_cast<const int*>(newValue);
+            setChannel(newCurrentChannel);
+            DBG("From SampleStrip: channel is now " + String(newCurrentChannel));
+            break;
+        }
+
+    case SampleStrip::ParamNumChunks :
+        {
+            const int newNumChunks = *static_cast<const int*>(newValue);
+            selNumChunks.setSelectedId(newNumChunks);
+            visualChunkSize = (float)(visualSelectionLength / (float) newNumChunks);
+            break;
+        }
+
+    case SampleStrip::ParamPlayMode :
+        {
+            int newPlayMode = *static_cast<const int*>(newValue);
+            selPlayMode.setSelectedId(newPlayMode); break;
+        }
+
+    case SampleStrip::ParamIsReversed :
+        {
+            bool newIsReversed = *static_cast<const bool*>(newValue);
+            isReversed = newIsReversed; break;
+        }
+
+    case SampleStrip::ParamFractionalStart :
+        {
+            float fractionalStart = *static_cast<const float*>(newValue);
+            visualSelectionStart = (int)(fractionalStart * componentWidth);
+            visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
+            visualChunkSize = (visualSelectionLength / (float) numChunks);
+            break;
+        }
+
+    case SampleStrip::ParamFractionalEnd :
+        {
+            float fractionalEnd = *static_cast<const float*>(newValue);
+            visualSelectionEnd = (int)(fractionalEnd * componentWidth);
+            visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
+            visualChunkSize = (visualSelectionLength / (float) numChunks);
+            break;
+        }
+
+    default :
+        jassert(false);
+        DBG("Param not found");
+    }
+
+    //DBG("##" + String(sampleStripID) + " " + String(newValue));
+    repaint();
 }

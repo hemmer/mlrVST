@@ -38,7 +38,9 @@ ChannelProcessor::~ChannelProcessor()
 void ChannelProcessor::setCurrentSampleStrip(SampleStrip* newSampleStrip)
 {
     currentSampleStrip = newSampleStrip;
-    currentSample = currentSampleStrip->getCurrentSample();
+    //currentSample = currentSampleStrip->getCurrentSample();
+    currentSample = static_cast<const AudioSample*>
+        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamAudioSample));
 }
 
 void ChannelProcessor::startSamplePlaying(const int &startBlock, const int &blockSize)
@@ -83,14 +85,17 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
        about which sample to play etc). */
     setCurrentSampleStrip(parent->getSampleStrip(effectiveMonomeRow));
     
-    playMode = currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlayMode);
+    playMode = *static_cast<const int*>
+               (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlayMode));
 
     DBG("Current play mode: " + String());
 
     /* We are only interested in columns that are
        within the allowed number of chunks.
     */
-    if (monomeCol < currentSampleStrip->getSampleStripParam(SampleStrip::ParamNumChunks))
+    int numChunks = *static_cast<const int*>
+                    (currentSampleStrip->getSampleStripParam(SampleStrip::ParamNumChunks));
+    if (monomeCol < numChunks)
     {
 
         DBG("message received. note " + String(m.getNoteNumber()) + ", channel " + String(m.getChannel()));
@@ -98,13 +103,19 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
         if (m.isNoteOn())
         {
 
-            chunkSize = currentSampleStrip->getBlockSize();
-            sampleStartPosition = currentSampleStrip->getSampleStart();
-            sampleEndPosition = currentSampleStrip->getSampleEnd();
+            // Load sample strip details
+            chunkSize = *static_cast<const int*>
+                        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamChunkSize));
+            sampleStartPosition = *static_cast<const int*>
+                        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleStart));
+            sampleEndPosition = *static_cast<const int*>
+                        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleEnd));
+
+            // Then use the column to find which point to start at
             playbackStartPosition = sampleStartPosition + monomeCol * chunkSize;
 
             // We can save some effort by ignore cases where this is no sample!
-            if (currentSampleStrip->getCurrentSample() != 0)
+            if (currentSample != 0)
             {
                 sampleCurrentPosition = playbackStartPosition;
                 isPlaying = true;
@@ -141,11 +152,15 @@ void ChannelProcessor::renderNextBlock(AudioSampleBuffer& outputBuffer,
         // try to find a corresponding MIDI event and see if it's within range
         // and is the correct channel
         bool useEvent = false;
-        
         if(midiIterator.getNextEvent(m, midiEventPos))
         {
+            // Get the selected channel associated with the row
+            // as determined from MIDI message m
+            int messageSelChannel = *static_cast<const int*>
+                (parent->getSampleStrip(m.getChannel() - 1)->getSampleStripParam(SampleStrip::ParamCurrentChannel));
+
            if ((midiEventPos < startSample + numSamples) &&
-               (parent->getSampleStrip(m.getChannel() - 1)->getCurrentChannel() == channelIDNumber))
+               (messageSelChannel == channelIDNumber))
                useEvent = true;
         }
         // if there was an event, process up until that position
@@ -184,9 +199,9 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
     {
         
         // TODO: can we remove a level of abstraction from here?
-        const float* const inL = currentSampleStrip->getCurrentSample()->getAudioData()->getSampleData(0, 0);
-        const float* const inR = currentSampleStrip->getCurrentSample()->getNumChannels() > 1
-                               ? currentSampleStrip->getCurrentSample()->getAudioData()->getSampleData(1, 0) : nullptr;
+        const float* const inL = currentSample->getAudioData()->getSampleData(0, 0);
+        const float* const inR = currentSample->getNumChannels() > 1
+                               ? currentSample->getAudioData()->getSampleData(1, 0) : nullptr;
 
         float* outL = outputBuffer.getSampleData(0, startSample);
         float* outR = outputBuffer.getNumChannels() > 1 ? outputBuffer.getSampleData (1, startSample) : nullptr;

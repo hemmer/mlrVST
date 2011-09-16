@@ -22,7 +22,7 @@ It contains the basic startup code for a Juce application.
 //==============================================================================
 mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     delayBuffer(2, 12000),
-    channelProcessorArray(), numChannels(4),
+    channelProcessorArray(), numChannels(8),
     sampleStripArray(), numSampleStrips(7),
     channelGains(), defaultChannelGain(0.8),
     samplePool(),               // sample pool is initially empty
@@ -104,7 +104,6 @@ void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
     // update the number of channels
     numChannels = newNumChannels;
 
-
     // make sure all channels stop playing
     for (int c = 0; c < channelProcessorArray.size(); c++)
         channelProcessorArray[c]->stopSamplePlaying();
@@ -130,13 +129,14 @@ void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
     // and make sure each strip is reset to the first channel
     for(int strip = 0; strip < sampleStripArray.size(); ++strip)
     {
-        sampleStripArray[strip]->setSampleStripParam(SampleStrip::ParamCurrentChannel, 0);
+        int initialChannel = 0;
+        sampleStripArray[strip]->setSampleStripParam(SampleStrip::ParamCurrentChannel, &initialChannel);
     }
+
+    DBG("Channel processor array built");
 
     // resume processing
     suspendProcessing(false);
-
-
 }
 
 
@@ -355,7 +355,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 //==============================================================================
 AudioProcessorEditor* mlrVSTAudioProcessor::createEditor()
 {
-    return new mlrVSTAudioProcessorEditor(this);
+    return new mlrVSTAudioProcessorEditor(this, numChannels);
 }
 
 //==============================================================================
@@ -442,21 +442,11 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 
 
-// SampleStrip stuff
 
-// This is called from the GUI to update the range of the sample being played
-void mlrVSTAudioProcessor::setSampleStripSelection(const float &start, const float &end, const int &stripID)
-{
-    sampleStripArray[stripID]->setSampleSelection(start, end);
-}
 
-void mlrVSTAudioProcessor::setSampleStripParameter(const int &parameterID,
-                                                    const int &newValue,
-                                                    const int &stripID)
-{
-    sampleStripArray[stripID]->setSampleStripParam(parameterID, newValue);
-}
-
+///////////////////////
+// SampleStrip stuff //
+///////////////////////
 void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
 {
     // make sure we're not using the sampleStripArray while (re)building it
@@ -471,6 +461,7 @@ void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
         sampleStripArray.add(new SampleStrip());    
     }
 
+    DBG("SampleStrip array built");
 
     // resume processing
     suspendProcessing(false);
@@ -479,7 +470,7 @@ void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
 void mlrVSTAudioProcessor::setSampleStripSample(const int &samplePoolIndex, const int &stripID)
 {
     AudioSample *tempSample = samplePool[samplePoolIndex];
-    sampleStripArray[stripID]->setCurrentSample(tempSample);
+    sampleStripArray[stripID]->setSampleStripParam(SampleStrip::ParamAudioSample, tempSample);
 }
 
 SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index) 
@@ -505,7 +496,8 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
            numChunks too to filter these. The -1 is because we are treating
            the second row as the first "effective" row.
         */
-        int numChunks = sampleStripArray[monomeRow - 1]->getSampleStripParam(SampleStrip::ParamNumChunks);
+        int numChunks = *static_cast<const int*>
+                        (sampleStripArray[monomeRow - 1]->getSampleStripParam(SampleStrip::ParamNumChunks));
 
         if (monomeCol < numChunks)
         {

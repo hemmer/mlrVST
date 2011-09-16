@@ -109,7 +109,7 @@ public:
     // adds a sample to the sample pool
     bool addNewSample(File &sampleFile);
     void setSampleStripSample(const int &samplePoolIndex, const int &stripID);
-    void setSampleStripSelection(const float &start, const float &end, const int &stripID);
+    //void setSampleStripSelection(const float &start, const float &end, const int &stripID);
 
     int getSamplePoolSize() { return samplePool.size(); }
     // TODO: bounds checking?
@@ -137,7 +137,16 @@ public:
     void buildSampleStripArray(const int &numSampleStrips);
 
     SampleStrip* getSampleStrip(const int &index);
-    void setSampleStripParameter(const int &parameterID, const int &newValue, const int &stripID);
+
+    void setSampleStripParameter(const int &parameterID, const void *newValue, const int &stripID)
+    {
+        sampleStripArray[stripID]->setSampleStripParam(parameterID, newValue);
+    }
+
+    const void* getSampleStripParameter(const int &parameterID, const int &stripID)
+    {
+        return sampleStripArray[stripID]->getSampleStripParam(parameterID);   
+    }
 
 private:
     //==============================================================================
