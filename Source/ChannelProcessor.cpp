@@ -304,10 +304,13 @@ void ChannelProcessor::refreshPlaybackParameters()
     // Then use the column to find which point to start at
     playbackStartPosition = sampleStartPosition + monomeCol * chunkSize;
 
-    //
+    // If we reselect this keeps the currently playing point in sync
     if (sampleStartPosition > sampleCurrentPosition)
         sampleCurrentPosition = playbackStartPosition;
 
     stripGain = *static_cast<const float *>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamStripVolume));
+
+    isPlaying = *static_cast<const bool *>
+        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsPlaying));
 }

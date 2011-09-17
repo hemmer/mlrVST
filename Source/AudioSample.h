@@ -23,6 +23,7 @@ public:
     AudioSampleBuffer* getAudioData() const { return data; }
 
     int getSampleLength() const { return sampleLength; }
+    float getSampleLengthSeconds() const { return (float) (sampleLength / sampleSampleRate); }
     int getNumChannels() const { return numChannels; }
     String getSampleName() const { return sampleName; }
     File getSampleFile() const { return sampleFile; }

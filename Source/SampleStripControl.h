@@ -51,7 +51,7 @@ public:
     void sliderValueChanged(Slider *sldr);
 
     // This allows us to load samples by Drag n' Drop
-    bool isInterestedInFileDrag(const StringArray& files);
+    bool isInterestedInFileDrag(const StringArray&) { return true; }
     void filesDropped(const StringArray& files, int x, int y);
 
     // Update the strips if the number of channels changes
@@ -116,6 +116,8 @@ private:
     AudioThumbnailCache thumbnailCache;
     AudioThumbnail thumbnail;
     double thumbnailLength;
+
+    const AudioSample *currentSample;
 
     // main strip background colour
     Colour backgroundColour;

@@ -19,20 +19,18 @@ SampleStripControl::SampleStripControl(const int &id,
                                        const int &height,
                                        const int &newNumChannels,
                                        mlrVSTAudioProcessorEditor * const owner) :
-    componentHeight(height), componentWidth(width),
+    componentHeight(height), componentWidth(width), sampleStripID(id),
     waveformPaintBounds(0, 15, componentWidth, componentHeight - 15),
-    thumbnailCache(5),
-    thumbnail(512, formatManager, thumbnailCache),
     backgroundColour(Colours::black),
+    thumbnailCache(5), thumbnail(512, formatManager, thumbnailCache),
+    thumbnailLength(0.0),
     trackNumberLbl("track number", String(sampleStripID)),
     filenameLbl("filename", "No File"),
-    sampleStripID(id),
     numChannels(newNumChannels),
     channelButtonArray(),
     isReversed(false),
-    numChunks(8),
-    thumbnailLength(0.0),
-    visualSelectionStart(0), visualSelectionEnd(0), visualChunkSize(0.0), visualSelectionLength(0),
+    numChunks(8), currentSample(0),
+    visualSelectionStart(0), visualSelectionEnd(componentWidth), visualChunkSize(0.0), visualSelectionLength(0),
     selNumChunks(), selPlayMode(),
     isLatchedBtn("latch"), isReversedBtn("reversed"),
     stripVolumeSldr("strip volume"),
@@ -49,9 +47,6 @@ SampleStripControl::SampleStripControl(const int &id,
     filenameLbl.setBounds(0, 0, componentWidth, 15);
     filenameLbl.setFont(10.0f);
 
-    formatManager.registerBasicFormats();
-    thumbnail.addChangeListener(this);
-
     addAndMakeVisible(&trackNumberLbl);
     trackNumberLbl.setBounds(0, 0, 15, 15);
     trackNumberLbl.setColour(Label::backgroundColourId, Colours::black);
@@ -65,7 +60,8 @@ SampleStripControl::SampleStripControl(const int &id,
     selNumChunks.addListener(this);
     selNumChunks.setBounds(200, 0, 30, 15);
 
-
+    formatManager.registerBasicFormats();
+    thumbnail.addChangeListener(this);
 
     addAndMakeVisible(&selPlayMode);
     selPlayMode.addListener(this);
@@ -104,6 +100,12 @@ void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
     // select the max number of blocks (comboBoxChanged will 
     // be informed).
     // selNumChunks.setSelectedId(newMaxNumBlocks);
+}
+
+void SampleStripControl::changeListenerCallback(ChangeBroadcaster*)
+{
+    // this method is called by the thumbnail when it has changed, so we should repaint it..
+    repaint();
 }
 
 void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
@@ -157,7 +159,7 @@ void SampleStripControl::sliderValueChanged(Slider *sldr)
 {
     if (sldr == &stripVolumeSldr)
     {
-        float newStripVol = stripVolumeSldr.getValue();
+        float newStripVol = (float)(stripVolumeSldr.getValue());
         mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamStripVolume, &newStripVol, sampleStripID);
     }
 }
@@ -235,32 +237,39 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
         if (currentSamplePoolSize != 0)
         {
             // TODO: can this be cached and only repopulated when the sample pool changes?
-            PopupMenu p = PopupMenu();
-
-            // TODO: add option to select "no file?
             // TODO: middle click to delete sample under cursor in menu?
 
+            PopupMenu p = PopupMenu();
+
+            p.addItem(1, "None");
             // for each sample, add it to the list
             for (int i = 0; i < currentSamplePoolSize; ++i)
             {
-                // +1 is because 0 is result for no item clicked
+                // +1 because 0 is result for no item clicked
+                // +1 because "none" is also an option
                 String iFileName = mlrVSTEditor->getSampleName(i);
-                p.addItem(i + 1, iFileName);
+                p.addItem(i + 2, iFileName);
             }
 
             // show the menu and store choice
             int fileChoice = p.showMenu(PopupMenu::Options().withTargetComponent(&filenameLbl));
 
-            // if a menu option has been chosen
-            if (fileChoice != 0)
+            // If "none is selected"
+            if (fileChoice == 1)
             {
-                // -1 is to correct for +1 in for loop above
-                --fileChoice;
+                const AudioSample *newSample = 0;
+                mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamAudioSample, newSample, sampleStripID);
 
+                bool isPlaying = false;
+                mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamIsPlaying, &isPlaying, sampleStripID);
+            }
+            // If a menu option has been chosen that is a file
+            else if (fileChoice != 0)
+            {
+                // -1 to correct for +1 in for loop above
+                // -1 to correct for "none" option
+                fileChoice -= 2;
 
-
-                // update thumbnails
-                updateThumbnail(mlrVSTEditor->getSampleSourceFile(fileChoice));
                 // and let the audio processor update the sample strip
                 mlrVSTEditor->updateSampleStripSample(fileChoice, sampleStripID);
 
@@ -409,7 +418,8 @@ void SampleStripControl::paint(Graphics& g)
 
     // Draw the current sample waveform in white
     g.setColour(Colours::white);
-    if (thumbnail.getTotalLength() > 0)
+
+    if(currentSample && thumbnailLength > 0)
     {
         thumbnail.drawChannels(g, waveformPaintBounds, 0, thumbnailLength, 1.0f);
     }
@@ -422,52 +432,24 @@ void SampleStripControl::paint(Graphics& g)
 
 
     /* Finally we grey out the parts of the sample which aren't in
-    the selection. The if statements are because we need to be
-    able to paint the strip even if the selection is made backwards!
+       the selection and paint stripes to indicate what button 
+       will do what.
     */
     g.setColour(Colours::black.withAlpha(0.6f));
-    if (visualSelectionEnd > visualSelectionStart)
-    {
-        g.fillRect(0, 15, visualSelectionStart, componentHeight - 15); 
-        g.fillRect(visualSelectionEnd, 15, componentWidth - visualSelectionEnd, componentHeight - 15); 
+    g.fillRect(0, 15, visualSelectionStart, componentHeight - 15); 
+    g.fillRect(visualSelectionEnd, 15, componentWidth - visualSelectionEnd, componentHeight - 15); 
 
-        /* Add alternate strips to make it clear which
-        button plays which part of the sample. */
-        g.setColour(Colours::black.withAlpha(0.1f));
-        for(int i = 1; i < numChunks; i+=2)
-        {
-            g.fillRect((float) (visualSelectionStart + i * visualChunkSize),
-                15.0f, visualChunkSize, componentHeight - 15.0f);
-        }
-    }
-    else
+    /* Add alternate strips to make it clear which
+    button plays which part of the sample. */
+    g.setColour(Colours::black.withAlpha(0.1f));
+    for(int i = 1; i < numChunks; i+=2)
     {
-        g.fillRect(0, 15, visualSelectionEnd, componentHeight - 15); 
-        g.fillRect(visualSelectionStart, 15, componentWidth - visualSelectionStart, componentHeight - 15); 
-        /* Add alternate strips to make it clear which
-        button plays which part of the sample. */
-        g.setColour(Colours::black.withAlpha(0.1f));
-        for(int i = 1; i < numChunks; i+=2)
-        {
-            g.fillRect((float) (visualSelectionEnd + i * visualChunkSize),
-                15.0f, visualChunkSize, componentHeight - 15.0f);
-        }
+        g.fillRect((float) (visualSelectionStart + i * visualChunkSize),
+            15.0f, visualChunkSize, componentHeight - 15.0f);
     }
 
-
-
 }
 
-void SampleStripControl::changeListenerCallback(ChangeBroadcaster*)
-{
-    // this method is called by the thumbnail when it has changed, so we should repaint it..
-    repaint();
-}
-
-bool SampleStripControl::isInterestedInFileDrag(const StringArray& /*files*/)
-{
-    return true;
-}
 
 void SampleStripControl::filesDropped(const StringArray& files, int /*x*/, int /*y*/)
 {
@@ -492,17 +474,6 @@ void SampleStripControl::filesDropped(const StringArray& files, int /*x*/, int /
     // set latest sample in the pool as the current sample
     // DESIGN: is this correct behaviour?
     //if(pluginUI->getLatestSample() != 0) setAudioSample(pluginUI->getLatestSample());
-}
-
-void SampleStripControl::updateThumbnail(const File &newFile)
-{
-    thumbnail.setSource(new FileInputSource(newFile));
-    thumbnailLength = thumbnail.getTotalLength();
-
-    // update filename label
-    filenameLbl.setText(newFile.getFullPathName(), false);
-
-    DBG("Waveform strip " + String(sampleStripID) + ": file \"" + newFile.getFileName() + "\" selected.");
 }
 
 
@@ -577,6 +548,27 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
         {
             float newStripVolume = *static_cast<const float*>(newValue);
             stripVolumeSldr.setValue(newStripVolume);
+            break;
+        }
+
+    case SampleStrip::ParamAudioSample :
+        {
+            const AudioSample *newSample = static_cast<const AudioSample*>(newValue);
+
+            // Only update if we have to as reloading thumbnail is expensive
+            if (newSample != currentSample )
+            {
+                currentSample = newSample;
+                // If the new sample exists
+                if (newSample)
+                {
+                    thumbnail.setSource(new FileInputSource(currentSample->getSampleFile()));
+                    thumbnailLength = thumbnail.getTotalLength();
+                    filenameLbl.setText(currentSample->getSampleName(), false);
+                }
+                else filenameLbl.setText("No file", false);
+            }
+            
             break;
         }
 

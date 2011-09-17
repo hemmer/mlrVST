@@ -26,7 +26,7 @@ public:
     enum SampleStripParameter
     {
         FirstParam,                     // This is so we can loop over GUI params
-        ParamIsPlaying = 0,
+        ParamIsPlaying = FirstParam,
         ParamCurrentChannel,        
         ParamNumChunks,
         ParamPlayMode,
@@ -36,13 +36,14 @@ public:
         ParamPlaybackPercentage,
         ParamFractionalStart,
         ParamFractionalEnd,
+        ParamAudioSample,
         NumGUIParams,
         // The above are the only params needed by the GUI
-
-        ParamChunkSize,
+         
+        ParamChunkSize = NumGUIParams,
         ParamSampleStart,       // these return the key sample points
         ParamSampleEnd,         // (taking selection into account)
-        ParamAudioSample,
+
         TotalNumParams
     };
 

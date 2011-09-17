@@ -69,12 +69,20 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
 
     case ParamAudioSample :
         currentSample = static_cast<const AudioSample*>(newValue);
-        // update associated params
-        totalSampleLength = currentSample->getSampleLength();
-        selectionStart = (int)(fractionalSampleStart * totalSampleLength);
-        selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
-        selectionLength = (selectionEnd - selectionStart);
-        chunkSize = (int) (selectionLength / (float) numChunks);
+        // update associated params if there is a sample
+        if (currentSample)
+        {
+            totalSampleLength = currentSample->getSampleLength();
+            selectionStart = (int)(fractionalSampleStart * totalSampleLength);
+            selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
+            selectionLength = (selectionEnd - selectionStart);
+            chunkSize = (int) (selectionLength / (float) numChunks);
+        }
+        else
+        {
+            // SANITY CHECK: these should never be recalled!
+            totalSampleLength = selectionStart = selectionEnd = selectionLength = chunkSize = 0;
+        }
         break;
 
         // TODO when ParamSampleStart is changes, make sure we change fractional too!
