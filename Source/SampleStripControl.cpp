@@ -34,7 +34,8 @@ SampleStripControl::SampleStripControl(const int &id,
     visualSelectionStart(0), visualSelectionEnd(0), visualChunkSize(0.0), visualSelectionLength(0),
     selNumChunks(), selPlayMode(),
     isLatchedBtn("latch"),
-    isReversedBtn("reversed"), selectionPointToChange(0)
+    isReversedBtn("reversed"), selectionPointToChange(0),
+    mouseDownMods()
 {
 
     addAndMakeVisible(&filenameLbl);
@@ -212,8 +213,8 @@ void SampleStripControl::mouseWheelMove(const MouseEvent&, float /*wheelIncremen
 
 void SampleStripControl::mouseDown(const MouseEvent &e)
 {
-    // TODO save mods
-    //mouseDownMods = static_cast<int>(e.mods);
+    // Save modifers of the initial press
+    mouseDownMods = e.mods;
 
     if (e.mods == ModifierKeys::rightButtonModifier && e.y > 15)
     {
@@ -309,7 +310,7 @@ void SampleStripControl::mouseUp(const MouseEvent &e)
 
 void SampleStripControl::mouseDrag(const MouseEvent &e)
 {
-    if (e.mods == ModifierKeys::leftButtonModifier)
+    if (mouseDownMods == ModifierKeys::leftButtonModifier)
     {
 
         int mouseX = e.x;
@@ -334,7 +335,7 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
 
 
     }
-    else if (e.mods == ModifierKeys::middleButtonModifier)
+    else if (mouseDownMods == ModifierKeys::middleButtonModifier)
     {
         // Don't select outside the component!
         int newStart = selectionStartBeforeDrag + e.getDistanceFromDragStartX();
@@ -353,7 +354,7 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
         visualSelectionStart = newStart;
         visualSelectionEnd = newEnd;
     }
-    else if (e.mods == (ModifierKeys::ctrlModifier + ModifierKeys::leftButtonModifier))
+    else if (mouseDownMods == (ModifierKeys::ctrlModifier + ModifierKeys::leftButtonModifier))
     {
         // Don't select outside the component!
         int newValue = e.x;

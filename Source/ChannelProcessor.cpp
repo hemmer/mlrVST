@@ -303,4 +303,8 @@ void ChannelProcessor::refreshPlaybackParameters()
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleEnd));
     // Then use the column to find which point to start at
     playbackStartPosition = sampleStartPosition + monomeCol * chunkSize;
+
+    //
+    if (sampleStartPosition > sampleCurrentPosition)
+        sampleCurrentPosition = playbackStartPosition;
 }

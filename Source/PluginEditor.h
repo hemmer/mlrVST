@@ -117,6 +117,7 @@ private:
 
     void displayPositionInfo (const AudioPlayHead::CurrentPositionInfo& pos);
 
+    OldSchoolLookAndFeel oldLookAndFeel;
 };
 
 

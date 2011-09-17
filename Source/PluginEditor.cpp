@@ -21,7 +21,8 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	  numChannels(newNumChannels),
       numStrips(7),
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
-      slidersArray()
+      slidersArray(),
+      oldLookAndFeel()
 {
     
     DBG("GUI loaded");
@@ -33,7 +34,9 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	logoLabel.setColour(Label::backgroundColourId, Colours::black);
     logoLabel.setColour(Label::textColourId, Colours::white);
     logoLabel.setJustificationType(Justification::bottomRight);
-    logoLabel.setFont(30.0f);
+    Font logoFont(Font::getDefaultSansSerifFontName(), 30.0f, Font::plain); 
+    logoLabel.setFont(logoFont);
+
 
 
     // DELAY stuff (may eventually go)
@@ -106,10 +109,8 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
     formatManager.registerBasicFormats();
     
-    // This doesn't seem to work 
     // TODO: Make custom look and feel
-    // OldSchoolLookAndFeel oldLookAndFeel;
-    // LookAndFeel::setDefaultLookAndFeel(&oldLookAndFeel);
+    LookAndFeel::setDefaultLookAndFeel(&oldLookAndFeel);
 	
     startTimer(50);
 }
@@ -122,6 +123,7 @@ mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
 
 void mlrVSTAudioProcessorEditor::buildSliders()
 {
+    // TODO: get gain slider values from the host
 
     // clear any existing sliders
     slidersArray.clear();
@@ -144,7 +146,6 @@ void mlrVSTAudioProcessorEditor::buildSliders()
         slidersArray[i]->setSliderStyle(Slider::LinearVertical);
         slidersArray[i]->addListener(this);
         slidersArray[i]->setRange(0.0, 1.0, 0.01);
-        slidersArray[i]->setValue(0.8);
         slidersArray[i]->setBounds(PAD_AMOUNT + (i + 1) * sliderWidth, 540, sliderWidth, 190);
         Colour sliderColour = getProcessor()->getChannelProcessor(i)->getChannelColour();
         slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
