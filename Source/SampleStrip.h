@@ -33,6 +33,7 @@ public:
         ParamIsLatched,
         ParamIsReversed,
         ParamStripVolume,
+        ParamPlaySpeed,
         ParamPlaybackPercentage,
         ParamFractionalStart,
         ParamFractionalEnd,
@@ -65,6 +66,7 @@ public:
         case ParamIsLatched : return "is latched";
         case ParamIsReversed : return "is reversed";
         case ParamStripVolume : return "strip volume";
+        case ParamPlaySpeed : return "play speed";
         case ParamIsPlaying : return "is playing";
         case ParamChunkSize : return "chunk size";
         case ParamFractionalStart : return "fractional start";
@@ -104,7 +106,7 @@ private:
     // Playback options
     int currentPlayMode;
     bool isReversed, isLatched;
-    float stripVolume;
+    float stripVolume, playSpeed;
 };
 
 

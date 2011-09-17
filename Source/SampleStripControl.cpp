@@ -23,7 +23,7 @@ SampleStripControl::SampleStripControl(const int &id,
     waveformPaintBounds(0, 15, componentWidth, componentHeight - 15),
     backgroundColour(Colours::black),
     thumbnailCache(5), thumbnail(512, formatManager, thumbnailCache),
-    thumbnailLength(0.0),
+    thumbnailLength(0.0), thumbnailScaleFactor(1.0),
     trackNumberLbl("track number", String(sampleStripID)),
     filenameLbl("filename", "No File"),
     numChannels(newNumChannels),
@@ -68,7 +68,7 @@ SampleStripControl::SampleStripControl(const int &id,
     selPlayMode.addItem("loop", SampleStrip::LOOP);
     selPlayMode.addItem("loop chunk", SampleStrip::LOOP_CHUNK);
     selPlayMode.addItem("play to end", SampleStrip::PLAY_TO_END);
-    selPlayMode.setBounds(250, 0, 50, 15);
+    selPlayMode.setBounds(250, 0, 100, 15);
 
     addAndMakeVisible(&isLatchedBtn);
     isLatchedBtn.setBounds(350, 0, 50, 15);
@@ -84,6 +84,13 @@ SampleStripControl::SampleStripControl(const int &id,
     stripVolumeSldr.setBounds(500, 0, 50, 15);
     stripVolumeSldr.setRange(0.0, 2.0, 0.01);
     stripVolumeSldr.addListener(this);
+
+    addAndMakeVisible(&playbackSpeedSldr);
+    playbackSpeedSldr.setSliderStyle(Slider::LinearBar);
+    playbackSpeedSldr.setColour(Slider::textBoxTextColourId, Colours::white);
+    playbackSpeedSldr.setBounds(570, 0, 50, 15);
+    playbackSpeedSldr.setRange(0.0, 2.0, 0.01);
+    playbackSpeedSldr.addListener(this);
 }
 
 SampleStripControl::~SampleStripControl()
@@ -160,7 +167,13 @@ void SampleStripControl::sliderValueChanged(Slider *sldr)
     if (sldr == &stripVolumeSldr)
     {
         float newStripVol = (float)(stripVolumeSldr.getValue());
+        thumbnailScaleFactor = newStripVol;
         mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamStripVolume, &newStripVol, sampleStripID);
+    }
+    else if(sldr = &playbackSpeedSldr)
+    {
+        float newPlaySpeed = (float)(playbackSpeedSldr.getValue());
+        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamPlaySpeed, &newPlaySpeed, sampleStripID);
     }
 }
 
@@ -172,6 +185,9 @@ void SampleStripControl::setChannel(const int &newChannel)
     backgroundColour = channelButtonArray[newChannel]->getBackgroundColour();
     stripVolumeSldr.setColour(Slider::thumbColourId, backgroundColour);
     stripVolumeSldr.setColour(Slider::backgroundColourId, backgroundColour.darker());
+
+    playbackSpeedSldr.setColour(Slider::thumbColourId, backgroundColour);
+    playbackSpeedSldr.setColour(Slider::backgroundColourId, backgroundColour.darker());
     repaint();
 }
 
@@ -421,7 +437,7 @@ void SampleStripControl::paint(Graphics& g)
 
     if(currentSample && thumbnailLength > 0)
     {
-        thumbnail.drawChannels(g, waveformPaintBounds, 0, thumbnailLength, 1.0f);
+        thumbnail.drawChannels(g, waveformPaintBounds, 0, thumbnailLength, thumbnailScaleFactor);
     }
     else
     {
@@ -547,7 +563,14 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
     case SampleStrip::ParamStripVolume :
         {
             float newStripVolume = *static_cast<const float*>(newValue);
-            stripVolumeSldr.setValue(newStripVolume);
+            stripVolumeSldr.setValue(newStripVolume, true);
+            break;
+        }
+
+    case SampleStrip::ParamPlaySpeed :
+        {
+            float newPlaySpeed = *static_cast<const float*>(newValue);
+            playbackSpeedSldr.setValue(newPlaySpeed, true);
             break;
         }
 

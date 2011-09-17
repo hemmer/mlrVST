@@ -71,7 +71,7 @@ private:
 
     ComboBox selNumChunks, selPlayMode;
     ToggleButton isLatchedBtn, isReversedBtn;
-    Slider stripVolumeSldr;
+    Slider stripVolumeSldr, playbackSpeedSldr;
 
     const int componentHeight, componentWidth;
     Rectangle<int> waveformPaintBounds;
@@ -115,8 +115,7 @@ private:
     AudioFormatManager formatManager;
     AudioThumbnailCache thumbnailCache;
     AudioThumbnail thumbnail;
-    double thumbnailLength;
-
+    double thumbnailLength, thumbnailScaleFactor;
     const AudioSample *currentSample;
 
     // main strip background colour

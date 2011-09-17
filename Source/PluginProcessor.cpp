@@ -24,7 +24,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     delayBuffer(2, 12000),
     channelProcessorArray(), numChannels(8),
     sampleStripArray(), numSampleStrips(7),
-    channelGains(), defaultChannelGain(0.8),
+    channelGains(), defaultChannelGain(0.8f),
     samplePool(),               // sample pool is initially empty
     oscMsgListener(this)
 {

@@ -17,7 +17,7 @@ SampleStrip::SampleStrip() :
     currentChannel(0),
     isPlaying(false), playbackPercentage(0.0),
     currentPlayMode(LOOP_CHUNK), isReversed(false), isLatched(false),
-    stripVolume(1.0f)
+    stripVolume(1.0f), playSpeed(1.0f)
 {
 
 }
@@ -49,6 +49,9 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
 
     case ParamStripVolume :
         stripVolume = *static_cast<const float*>(newValue); break;
+
+    case ParamPlaySpeed :
+        playSpeed = *static_cast<const float*>(newValue); break;
 
     case ParamPlaybackPercentage :
         playbackPercentage = *static_cast<const float*>(newValue); break;
@@ -114,6 +117,9 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
 
     case ParamStripVolume :
         p = &stripVolume; break;
+
+    case ParamPlaySpeed :
+        p = &playSpeed; break;
 
     case ParamIsPlaying :
         p = &isPlaying; break;
