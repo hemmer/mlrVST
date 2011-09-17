@@ -16,7 +16,8 @@ SampleStrip::SampleStrip() :
     numChunks(8), chunkSize(0),
     currentChannel(0),
     isPlaying(false), playbackPercentage(0.0),
-    currentPlayMode(LOOP_CHUNK), isReversed(false), isLatched(false)
+    currentPlayMode(LOOP_CHUNK), isReversed(false), isLatched(false),
+    stripVolume(1.0f)
 {
 
 }
@@ -45,6 +46,9 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
 
     case ParamIsReversed :
         isReversed = *static_cast<const bool*>(newValue); break;
+
+    case ParamStripVolume :
+        stripVolume = *static_cast<const float*>(newValue); break;
 
     case ParamPlaybackPercentage :
         playbackPercentage = *static_cast<const float*>(newValue); break;
@@ -99,6 +103,9 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
 
     case ParamIsReversed :
         p = &isReversed; break;
+
+    case ParamStripVolume :
+        p = &stripVolume; break;
 
     case ParamIsPlaying :
         p = &isPlaying; break;

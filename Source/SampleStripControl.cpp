@@ -17,7 +17,8 @@ Custom component to display a waveform (corresponding to an mlr row)
 SampleStripControl::SampleStripControl(const int &id,
                                        const int &width,
                                        const int &height,
-                                       const int &newNumChannels) :
+                                       const int &newNumChannels,
+                                       mlrVSTAudioProcessorEditor * const owner) :
     componentHeight(height), componentWidth(width),
     waveformPaintBounds(0, 15, componentWidth, componentHeight - 15),
     thumbnailCache(5),
@@ -33,9 +34,11 @@ SampleStripControl::SampleStripControl(const int &id,
     thumbnailLength(0.0),
     visualSelectionStart(0), visualSelectionEnd(0), visualChunkSize(0.0), visualSelectionLength(0),
     selNumChunks(), selPlayMode(),
-    isLatchedBtn("latch"),
-    isReversedBtn("reversed"), selectionPointToChange(0),
-    mouseDownMods()
+    isLatchedBtn("latch"), isReversedBtn("reversed"),
+    stripVolumeSldr("strip volume"),
+    selectionPointToChange(0),
+    mouseDownMods(),
+    mlrVSTEditor(owner)
 {
 
     addAndMakeVisible(&filenameLbl);
@@ -70,8 +73,6 @@ SampleStripControl::SampleStripControl(const int &id,
     selPlayMode.addItem("loop chunk", SampleStrip::LOOP_CHUNK);
     selPlayMode.addItem("play to end", SampleStrip::PLAY_TO_END);
     selPlayMode.setBounds(250, 0, 50, 15);
-    // set LOOP as default mode and send a change message
-    // selPlayMode.setSelectedId(SampleStrip::LOOP, false);
 
     addAndMakeVisible(&isLatchedBtn);
     isLatchedBtn.setBounds(350, 0, 50, 15);
@@ -80,6 +81,18 @@ SampleStripControl::SampleStripControl(const int &id,
     addAndMakeVisible(&isReversedBtn);
     isReversedBtn.setBounds(450, 0, 70, 15);
     isReversedBtn.addListener(this);
+
+    addAndMakeVisible(&stripVolumeSldr);
+    stripVolumeSldr.setSliderStyle(Slider::LinearBar);
+    stripVolumeSldr.setColour(Slider::textBoxTextColourId, Colours::white);
+    stripVolumeSldr.setBounds(500, 0, 50, 15);
+    stripVolumeSldr.setRange(0.0, 2.0, 0.01);
+    stripVolumeSldr.addListener(this);
+}
+
+SampleStripControl::~SampleStripControl()
+{
+    thumbnail.removeChangeListener(this);
 }
 
 void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
@@ -95,15 +108,12 @@ void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
 
 void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
 {
-    // get pointer to parent class
-    mlrVSTAudioProcessorEditor* pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
-
 
     if (comboBoxThatHasChanged == &selNumChunks)
     {
         numChunks = selNumChunks.getSelectedId();
         visualChunkSize = (visualSelectionLength / (float) numChunks);
-        pluginUI->setSampleStripParameter(SampleStrip::ParamNumChunks,
+        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamNumChunks,
                                              &numChunks,
                                              sampleStripID);
         repaint();
@@ -111,21 +121,14 @@ void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
     else if (comboBoxThatHasChanged == &selPlayMode)
     {
         int newPlayMode = selPlayMode.getSelectedId();
-        pluginUI->setSampleStripParameter(SampleStrip::ParamPlayMode,
+        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamPlayMode,
                                              &newPlayMode, sampleStripID);
     }
 
 }
 
-SampleStripControl::~SampleStripControl()
-{
-    thumbnail.removeChangeListener(this);
-}
-
 void SampleStripControl::buttonClicked(Button *btn)
 {
-    mlrVSTAudioProcessorEditor* pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
-
     // See if any of the channel selection buttons were chosen
     for (int i = 0; i < channelButtonArray.size(); ++i)
     {
@@ -139,25 +142,34 @@ void SampleStripControl::buttonClicked(Button *btn)
     if (btn == &isLatchedBtn)
     {
         isLatched = !isLatched;
-        pluginUI->setSampleStripParameter(SampleStrip::ParamIsLatched, &isLatched, sampleStripID);
+        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamIsLatched, &isLatched, sampleStripID);
     }
     else if (btn == &isReversedBtn)
     {
         isReversed = !isReversed;
-        pluginUI->setSampleStripParameter(SampleStrip::ParamIsReversed, &isReversed, sampleStripID);
+        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamIsReversed, &isReversed, sampleStripID);
         String newButtonText = (isReversed) ? "reversed" : "normal";
         isReversedBtn.setButtonText(newButtonText);
     }
 }
 
+void SampleStripControl::sliderValueChanged(Slider *sldr)
+{
+    if (sldr == &stripVolumeSldr)
+    {
+        float newStripVol = stripVolumeSldr.getValue();
+        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamStripVolume, &newStripVol, sampleStripID);
+    }
+}
+
 void SampleStripControl::setChannel(const int &newChannel)
 {
-    // Get pointer to parent class...
-    mlrVSTAudioProcessorEditor* pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
     // ...so we can let the processor know
-    pluginUI->setSampleStripParameter(SampleStrip::ParamCurrentChannel, &newChannel, sampleStripID);
+    mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamCurrentChannel, &newChannel, sampleStripID);
 
     backgroundColour = channelButtonArray[newChannel]->getBackgroundColour();
+    stripVolumeSldr.setColour(Slider::thumbColourId, backgroundColour);
+    stripVolumeSldr.setColour(Slider::backgroundColourId, backgroundColour.darker());
     repaint();
 }
 
@@ -168,20 +180,18 @@ void SampleStripControl::buildChannelButtonList(const int &newNumChannels)
     // clear existing buttons
     channelButtonArray.clear();
 
-    mlrVSTAudioProcessorEditor *pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
-
     for(int chan = 0; chan < numChannels; ++chan)
     {
         channelButtonArray.add(new DrawableButton("button" + String(chan), DrawableButton::ImageRaw));
         addAndMakeVisible(channelButtonArray.getLast());
         channelButtonArray.getLast()->setBounds(15 + chan * 15, 0, 15, 15);
         channelButtonArray.getLast()->addListener(this);
-        Colour chanColour = pluginUI->getChannelColour(chan);
+        Colour chanColour = mlrVSTEditor->getChannelColour(chan);
         channelButtonArray.getLast()->setBackgroundColours(chanColour, chanColour);
     }
 
 
-    int previousChannel = *static_cast<const int*>(pluginUI->getSampleStripParameter(SampleStrip::ParamCurrentChannel, sampleStripID));
+    int previousChannel = *static_cast<const int*>(mlrVSTEditor->getSampleStripParameter(SampleStrip::ParamCurrentChannel, sampleStripID));
     if (previousChannel >= numChannels){
         DBG("Current channel outside range: resetting to channel 0.");
         setChannel(0);
@@ -218,61 +228,57 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
 
     if (e.mods == ModifierKeys::rightButtonModifier && e.y > 15)
     {
-        mlrVSTAudioProcessorEditor *demoPage = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
 
-        if (demoPage != 0)
+        int currentSamplePoolSize = mlrVSTEditor->getSamplePoolSize();
+
+        // only show the menu if we have samples in the pool
+        if (currentSamplePoolSize != 0)
         {
-            int currentSamplePoolSize = demoPage->getSamplePoolSize();
+            // TODO: can this be cached and only repopulated when the sample pool changes?
+            PopupMenu p = PopupMenu();
 
-            // only show the menu if we have samples in the pool
-            if (currentSamplePoolSize != 0)
+            // TODO: add option to select "no file?
+            // TODO: middle click to delete sample under cursor in menu?
+
+            // for each sample, add it to the list
+            for (int i = 0; i < currentSamplePoolSize; ++i)
             {
-                // TODO: can this be cached and only repopulated when the sample pool changes?
-                PopupMenu p = PopupMenu();
-                
-                // TODO: add option to select "no file?
-                // TODO: middle click to delete sample under cursor in menu?
+                // +1 is because 0 is result for no item clicked
+                String iFileName = mlrVSTEditor->getSampleName(i);
+                p.addItem(i + 1, iFileName);
+            }
 
-                // for each sample, add it to the list
-                for (int i = 0; i < currentSamplePoolSize; ++i)
-                {
-                    // +1 is because 0 is result for no item clicked
-                    String iFileName = demoPage->getSampleName(i);
-                    p.addItem(i + 1, iFileName);
-                }
+            // show the menu and store choice
+            int fileChoice = p.showMenu(PopupMenu::Options().withTargetComponent(&filenameLbl));
 
-                // show the menu and store choice
-                int fileChoice = p.showMenu(PopupMenu::Options().withTargetComponent(&filenameLbl));
-
-                // if a menu option has been chosen
-                if (fileChoice != 0)
-                {
-                    // -1 is to correct for +1 in for loop above
-                    --fileChoice;
+            // if a menu option has been chosen
+            if (fileChoice != 0)
+            {
+                // -1 is to correct for +1 in for loop above
+                --fileChoice;
 
 
 
-                    // update thumbnails
-                    updateThumbnail(demoPage->getSampleSourceFile(fileChoice));
-                    // and let the audio processor update the sample strip
-                    demoPage->updateSampleStripSample(fileChoice, sampleStripID);
+                // update thumbnails
+                updateThumbnail(mlrVSTEditor->getSampleSourceFile(fileChoice));
+                // and let the audio processor update the sample strip
+                mlrVSTEditor->updateSampleStripSample(fileChoice, sampleStripID);
 
-                    // select whole sample by default
-                    visualSelectionStart = 0;
-                    visualSelectionEnd = componentWidth;
-                    visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
-                    visualChunkSize = (visualSelectionLength / (float) numChunks);
-                    
-                    // update the selection
-                    float start = 0.0f, end = 1.0f;
-                    demoPage->setSampleStripParameter(SampleStrip::ParamFractionalStart, &start, sampleStripID);
-                    demoPage->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &end, sampleStripID);
-                        
+                // select whole sample by default
+                visualSelectionStart = 0;
+                visualSelectionEnd = componentWidth;
+                visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
+                visualChunkSize = (visualSelectionLength / (float) numChunks);
 
-                    repaint();
-                }
+                // update the selection
+                float start = 0.0f, end = 1.0f;
+                mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalStart, &start, sampleStripID);
+                mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &end, sampleStripID);
+
+                repaint();
             }
         }
+
     }
     else if (e.mods == ModifierKeys::middleButtonModifier)
     {
@@ -377,14 +383,10 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
     visualChunkSize = (visualSelectionLength / (float) numChunks);
 
     // try to send the new selection to the SampleStrips
-    mlrVSTAudioProcessorEditor *pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
-    if (pluginUI != 0)
-    {
-        float fractionalStart = visualSelectionStart / (float) componentWidth;
-        float fractionalEnd = visualSelectionEnd / (float) componentWidth;
-        pluginUI->setSampleStripParameter(SampleStrip::ParamFractionalStart, &fractionalStart, sampleStripID);
-        pluginUI->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &fractionalEnd, sampleStripID);
-    }
+    float fractionalStart = visualSelectionStart / (float) componentWidth;
+    float fractionalEnd = visualSelectionEnd / (float) componentWidth;
+    mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalStart, &fractionalStart, sampleStripID);
+    mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &fractionalEnd, sampleStripID);
 
     // redraw to reflect new selection
     repaint();
@@ -469,16 +471,13 @@ bool SampleStripControl::isInterestedInFileDrag(const StringArray& /*files*/)
 
 void SampleStripControl::filesDropped(const StringArray& files, int /*x*/, int /*y*/)
 {
-    // get pointer to parent class
-    mlrVSTAudioProcessorEditor* pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
-
     // try to add each of the loaded files to the sample pool
     for (int i = 0; i < files.size(); ++i)
     {
         File currentSampleFile(files[i]);
         DBG("Dragged file: " << files[i]);
 
-        pluginUI->loadSampleFromFile(currentSampleFile);
+        mlrVSTEditor->loadSampleFromFile(currentSampleFile);
 
         // try to load the sample
         //if (pluginUI->loadSampleFromFile(currentSampleFile))
@@ -571,6 +570,13 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
             visualSelectionEnd = (int)(fractionalEnd * componentWidth);
             visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
             visualChunkSize = (visualSelectionLength / (float) numChunks);
+            break;
+        }
+
+    case SampleStrip::ParamStripVolume :
+        {
+            float newStripVolume = *static_cast<const float*>(newValue);
+            stripVolumeSldr.setValue(newStripVolume);
             break;
         }
 

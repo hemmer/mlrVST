@@ -18,13 +18,13 @@ ChannelProcessor::ChannelProcessor(const int &channelIDNo,
                                    mlrVSTAudioProcessor *owner,
                                    SampleStrip *initialSampleStrip) :
     parent(owner),
+    currentSampleStrip(initialSampleStrip),
     channelIDNumber(channelIDNo),
-    channelGain(0.8f),
+    channelGain(0.8f), stripGain(0.0f),
     currentSample(0),
     sampleStartPosition(0), sampleEndPosition(0), selectionLength(0),
     isPlaying(false),
     channelColour(col),
-    currentSampleStrip(initialSampleStrip),
     isReversed(false), playMode(-1), chunkSize(-1), playbackStartPosition(-1),
     effectiveMonomeRow(-1), monomeCol(-1)
 {
@@ -247,8 +247,8 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
             // if no right channel, clone in the left channel
             float r = (inR != nullptr) ? inR[sampleCurrentPosition] : l;
 
-            l *=  channelGain;
-            r *=  channelGain;
+            l *=  channelGain * stripGain;
+            r *=  channelGain * stripGain;
 
             // if we have stereo output avaiable 
             if (outR != nullptr)
@@ -307,4 +307,7 @@ void ChannelProcessor::refreshPlaybackParameters()
     //
     if (sampleStartPosition > sampleCurrentPosition)
         sampleCurrentPosition = playbackStartPosition;
+
+    stripGain = *static_cast<const float *>
+        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamStripVolume));
 }

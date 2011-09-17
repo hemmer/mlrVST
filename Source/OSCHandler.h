@@ -24,12 +24,12 @@ class OSCHandler :  public osc::OscPacketListener,
 private:
     int port;
     UdpListeningReceiveSocket s;
-    mlrVSTAudioProcessor *parent;
+    mlrVSTAudioProcessor * const parent;
 
 public:
 
     // Constructor
-    OSCHandler(mlrVSTAudioProcessor *owner) :
+    OSCHandler(mlrVSTAudioProcessor * const owner) :
         Thread("OscListener Thread"),
         port(8000),
         s(IpEndpointName("localhost", port), this),

@@ -27,12 +27,13 @@ public:
     {
         FirstParam,                     // This is so we can loop over GUI params
         ParamIsPlaying = 0,
-        ParamPlaybackPercentage,
         ParamCurrentChannel,        
         ParamNumChunks,
         ParamPlayMode,
         ParamIsLatched,
         ParamIsReversed,
+        ParamStripVolume,
+        ParamPlaybackPercentage,
         ParamFractionalStart,
         ParamFractionalEnd,
         NumGUIParams,
@@ -62,6 +63,7 @@ public:
         case ParamPlayMode : return "playmode";
         case ParamIsLatched : return "is latched";
         case ParamIsReversed : return "is reversed";
+        case ParamStripVolume : return "strip volume";
         case ParamIsPlaying : return "is playing";
         case ParamChunkSize : return "chunk size";
         case ParamFractionalStart : return "fractional start";
@@ -101,6 +103,7 @@ private:
     // Playback options
     int currentPlayMode;
     bool isReversed, isLatched;
+    float stripVolume;
 };
 
 

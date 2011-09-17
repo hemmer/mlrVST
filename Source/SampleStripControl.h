@@ -18,14 +18,23 @@
 #include "AudioSample.h"
 #include "SampleStripControl.h"
 
+/* Forward declaration to set up pointer arrangement 
+   to allow sample strips to access the UI */
+class mlrVSTAudioProcessorEditor;
+
 class SampleStripControl :  public Component,
     public ChangeListener,
     public ButtonListener,
     public ComboBoxListener,
+    public SliderListener,
     public FileDragAndDropTarget
 {
 public:
-    SampleStripControl(const int &id, const int &height, const int &width, const int &newNumChannels);
+    SampleStripControl(const int &id,
+                       const int &height,
+                       const int &width,
+                       const int &newNumChannels,
+                       mlrVSTAudioProcessorEditor * const owner);
     ~SampleStripControl();
 
     //void setFile (const File& file);
@@ -37,8 +46,9 @@ public:
 
     void paint(Graphics& g);
     void changeListenerCallback(ChangeBroadcaster*);
-    void buttonClicked(Button *btn);
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
+    void buttonClicked(Button *btn);
+    void sliderValueChanged(Slider *sldr);
 
     // This allows us to load samples by Drag n' Drop
     bool isInterestedInFileDrag(const StringArray& files);
@@ -57,8 +67,11 @@ public:
 
 private:
 
+    mlrVSTAudioProcessorEditor * const mlrVSTEditor;
+
     ComboBox selNumChunks, selPlayMode;
     ToggleButton isLatchedBtn, isReversedBtn;
+    Slider stripVolumeSldr;
 
     const int componentHeight, componentWidth;
     Rectangle<int> waveformPaintBounds;

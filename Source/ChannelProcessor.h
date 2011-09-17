@@ -110,21 +110,26 @@ public:
 
 private:
 
+    SampleStrip *currentSampleStrip;
+    ScopedPointer<mlrVSTAudioProcessor> parent;
+
     void refreshPlaybackParameters();
 
-    ScopedPointer<mlrVSTAudioProcessor> parent;
+
 
     // each channel has an individual ID
     const int channelIDNumber;
     // and a gain level
     float channelGain;
 
+
+
     // pointer to the current sample in the sample pool
     // NOTE: "const" qualifier means we can't change the
     // sample which this pointer points at
     const AudioSample *currentSample;
 
-    SampleStrip *currentSampleStrip;
+
     // which parts of the sample can we play
     int sampleStartPosition, sampleEndPosition, selectionLength;
     // where playback actually starts from
@@ -133,6 +138,8 @@ private:
     int sampleCurrentPosition;
     // size of each chunk
     int chunkSize;
+    // volume of the specific strip (different to channel volume)
+    float stripGain;
 
     // status of sample playback
     bool isInAttack, isInRelease, isPlaying;

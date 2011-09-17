@@ -71,7 +71,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
         int stripX = getWidth() - waveformControlWidth - PAD_AMOUNT;
         int stripY = 40 + i * (waveformControlHeight + PAD_AMOUNT);
-        sampleStripControlArray.add(new SampleStripControl(i, waveformControlWidth, waveformControlHeight, numChannels));
+        sampleStripControlArray.add(new SampleStripControl(i, waveformControlWidth, waveformControlHeight, numChannels, this));
         sampleStripControlArray[i]->setBounds(stripX, stripY, waveformControlWidth, waveformControlHeight);
         addAndMakeVisible( sampleStripControlArray[i] );
 
