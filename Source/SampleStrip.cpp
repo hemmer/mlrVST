@@ -18,7 +18,8 @@ SampleStrip::SampleStrip() :
     currentChannel(0),
     isPlaying(false), playbackPercentage(0.0),
     currentPlayMode(LOOP_CHUNK), isReversed(false), isLatched(false),
-    stripVolume(1.0f), playSpeed(1.0)
+    stripVolume(1.0f), playSpeed(1.0),
+    previousBPM(120.0)
 {
 
 }
@@ -85,6 +86,7 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
         }
         else
         {
+            playSpeed = 1.0;
             // SANITY CHECK: these values should never be used by processor!
             totalSampleLength = selectionStart = selectionEnd = selectionLength = chunkSize = 0;
             sampleSampleRate = 0.0;
@@ -158,32 +160,46 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
     return p;
 }
 
-
-void SampleStrip::findPlaySpeed(const float &BPM, const float &hostSampleRate, const bool &reduceToNormalSpeed)
+void SampleStrip::updatePlaySpeedForBPMChange(const double &newBPM)
 {
-    double numSamplesInFourBars = ((BPM / 960.0) * hostSampleRate);
-    playSpeed = (double)(selectionLength / sampleSampleRate) * (numSamplesInFourBars / hostSampleRate);
+    playSpeed *= (newBPM / previousBPM);
+    previousBPM = newBPM;
+}
 
-    // This uses multiples of two to find closest speed to 1.0
-    if (reduceToNormalSpeed)
+void SampleStrip::findPlaySpeed(const double &newBPM, const float &hostSampleRate, const bool &reduceToNormalSpeed)
+{
+    if (currentSample)
     {
-        double newPlaySpeed = playSpeed;
-        if (playSpeed > 1.0)
-        {
-            while ( abs(newPlaySpeed / 2 - 1.0) < abs(newPlaySpeed - 1.0) )
-            {
-                newPlaySpeed /= 2.0;
-            }
-        }
-        else
-        {
-            while ( abs(newPlaySpeed * 2 - 1.0) < abs(newPlaySpeed - 1.0) )
-            {
-                newPlaySpeed *= 2.0;
-            }
-        }
-        playSpeed = newPlaySpeed;
-    }
+        double numSamplesInFourBars = ((newBPM / 960.0) * hostSampleRate);
+        playSpeed = (double)(selectionLength / sampleSampleRate) * (numSamplesInFourBars / hostSampleRate);
 
+        /* reduceToNormal speed is set when a file is first selected.
+           It uses multiples of two to find the closest speed to 1.0,
+           and sets the tempo to use in updatePlaySpeedForBPMChange
+           
+        */
+        if (reduceToNormalSpeed)
+        {
+            previousBPM = newBPM;
+            double newPlaySpeed = playSpeed;
+            if (playSpeed > 1.0)
+            {
+                while ( abs(newPlaySpeed / 2 - 1.0) < abs(newPlaySpeed - 1.0) )
+                {
+                    newPlaySpeed /= 2.0;
+                }
+            }
+            else
+            {
+                while ( abs(newPlaySpeed * 2 - 1.0) < abs(newPlaySpeed - 1.0) )
+                {
+                    newPlaySpeed *= 2.0;
+                }
+            }
+            playSpeed = newPlaySpeed;
+        }
+
+    }
+    else playSpeed = 1.0; 
 
 }

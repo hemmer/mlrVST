@@ -29,7 +29,11 @@ public:
     ChannelProcessor();
 
     // Normal constructor
-    ChannelProcessor(const int &channelIDNo, const Colour &col, mlrVSTAudioProcessor *owner, SampleStrip *initialSampleStrip);
+    ChannelProcessor(const int &channelIDNo,
+                     const Colour &col,
+                     mlrVSTAudioProcessor *owner,
+                     SampleStrip *initialSampleStrip,
+                     const int &totalSampleStrips);
 
     // Deconstructor
     ~ChannelProcessor();
@@ -111,8 +115,11 @@ public:
 
 private:
 
+
     SampleStrip *currentSampleStrip;
     ScopedPointer<mlrVSTAudioProcessor> parent;
+
+    const int numSampleStrips;
 
     void refreshPlaybackParameters();
 

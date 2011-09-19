@@ -290,6 +290,7 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
                 const AudioSample * newSample = mlrVSTEditor->getAudioSample(fileChoice);
                 mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamAudioSample, newSample, sampleStripID);
 
+
                 // select whole sample by default
                 visualSelectionStart = 0;
                 visualSelectionEnd = componentWidth;
@@ -300,6 +301,9 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
                 float start = 0.0f, end = 1.0f;
                 mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalStart, &start, sampleStripID);
                 mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &end, sampleStripID);
+
+                // and try to find the best playback speed (i.e. closest to 1).
+                mlrVSTEditor->calcPlaySpeed(sampleStripID, true);
 
                 repaint();
             }

@@ -120,6 +120,8 @@ private:
 
     // main strip background colour
     Colour backgroundColour;
+
+    JUCE_LEAK_DETECTOR(SampleStripControl);  
 };
 
 

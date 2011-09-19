@@ -16,12 +16,13 @@
 ChannelProcessor::ChannelProcessor(const int &channelIDNo,
                                    const Colour &col,
                                    mlrVSTAudioProcessor *owner,
-                                   SampleStrip *initialSampleStrip) :
-    parent(owner), currentBPM(120.0f),
+                                   SampleStrip *initialSampleStrip,
+                                   const int &totalSampleStrips) :
+    parent(owner), numSampleStrips(totalSampleStrips),
     currentSampleStrip(initialSampleStrip),
     channelIDNumber(channelIDNo),
     channelGain(0.8f), stripGain(0.0f),
-    currentSample(0), playSpeed(1.0),
+    currentSample(0), playSpeed(1.0), currentBPM(120.0f),
     sampleStartPosition(0), sampleEndPosition(0), selectionLength(0),
     sampleCurrentPosition(0.0),
     isPlaying(false),
@@ -156,14 +157,18 @@ void ChannelProcessor::renderNextBlock(AudioSampleBuffer& outputBuffer,
         bool useEvent = false;
         if(midiIterator.getNextEvent(m, midiEventPos))
         {
-            // Get the selected channel associated with the row
-            // as determined from MIDI message m
-            int messageSelChannel = *static_cast<const int*>
-                (parent->getSampleStrip(m.getChannel() - 1)->getSampleStripParam(SampleStrip::ParamCurrentChannel));
+            // First get the sample strip from the channel
+            int stripRow = m.getChannel() - 1;
+            if (stripRow < 0 || stripRow > numSampleStrips) break;
 
-           if ((midiEventPos < startSample + numSamples) &&
-               (messageSelChannel == channelIDNumber))
-               useEvent = true;
+            // Then get the channel associated with that sample strip
+            int messageSelChannel = *static_cast<const int*>
+                (parent->getSampleStrip(stripRow)->getSampleStripParam(SampleStrip::ParamCurrentChannel));
+
+            // If the channel matches THIS channel then use the event
+            if ((midiEventPos < startSample + numSamples) &&
+                (messageSelChannel == channelIDNumber))
+                useEvent = true;
         }
         // if there was an event, process up until that position
         // otherwise process until the end

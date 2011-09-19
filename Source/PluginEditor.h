@@ -115,6 +115,8 @@ private:
     void displayPositionInfo (const AudioPlayHead::CurrentPositionInfo& pos);
 
     OldSchoolLookAndFeel oldLookAndFeel;
+
+    JUCE_LEAK_DETECTOR(mlrVSTAudioProcessorEditor);  
 };
 
 

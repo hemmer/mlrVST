@@ -117,7 +117,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
 mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
 {
-    DBG("GUI unloaded");
+    DBG("GUI destructor called.");
 }
 
 

@@ -21,7 +21,7 @@ It contains the basic startup code for a Juce application.
 
 //==============================================================================
 mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
-    delayBuffer(2, 12000),
+    delayBuffer(2, 12000), currentBPM(120.0),
     channelProcessorArray(), numChannels(8),
     sampleStripArray(), numSampleStrips(7),
     channelGains(), defaultChannelGain(0.8f),
@@ -65,6 +65,9 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
 mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
 {
     samplePool.clear();
+    sampleStripArray.clear();
+
+    DBG("Processor destructor finished.");
 }
 
 // returns true if the sample was sucessfully loaded (or pre-existing)
@@ -118,7 +121,7 @@ void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
     for (int c = 0; c < numChannels; c++)
     {   
         Colour channelColour((float) (0.1f * c), 0.5f, 0.5f, 1.0f);
-        channelProcessorArray.add(new ChannelProcessor(c, channelColour, this, sampleStripArray.getFirst()));
+        channelProcessorArray.add(new ChannelProcessor(c, channelColour, this, sampleStripArray.getFirst(), numSampleStrips));
     }
 
     // reset the gains to the default
@@ -138,7 +141,6 @@ void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
     // resume processing
     suspendProcessing(false);
 }
-
 
 
 //==============================================================================
@@ -290,11 +292,12 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
         {
             // Successfully got the current time from the host..
             lastPosInfo = newTime;
-            if (currentBPM != lastPosInfo.bpm)
+            if (currentBPM != lastPosInfo.bpm && lastPosInfo.bpm > 1.0)
             {
+                // If the tempo has changed, adjust the playspeeds accordingly
                 currentBPM = lastPosInfo.bpm;
                 for (int s = 0; s < sampleStripArray.size(); ++s)
-                    calcPlaySpeed(s, false);
+                    calcPlaySpeedForNewBPM(s);
             }
         }
         else
@@ -476,6 +479,11 @@ void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
 void mlrVSTAudioProcessor::calcPlaySpeed(const int &stripID, const bool &normalizeTempo)
 {
     sampleStripArray[stripID]->findPlaySpeed(currentBPM, 44100.0, normalizeTempo);
+}
+
+void mlrVSTAudioProcessor::calcPlaySpeedForNewBPM(const int &stripID)
+{
+    sampleStripArray[stripID]->updatePlaySpeedForBPMChange(currentBPM);
 }
 
 AudioSample * mlrVSTAudioProcessor::getAudioSample(const int &samplePoolIndex)

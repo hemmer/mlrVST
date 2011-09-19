@@ -129,6 +129,7 @@ public:
     AudioSample* getLatestSample() { return samplePool.getLast(); }
 
     void calcPlaySpeed(const int &stripID, const bool &normalizeTempo);
+    void calcPlaySpeedForNewBPM(const int &stripID);
 
     void processOSCKeyPress(const int &monomeCol, const int &monomeRow, const int &state);
 

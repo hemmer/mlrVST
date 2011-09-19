@@ -71,7 +71,9 @@ public:
         case ParamChunkSize : return "chunk size";
         case ParamFractionalStart : return "fractional start";
         case ParamFractionalEnd : return "fractional end";
-        default : return "parameter not found";
+        case ParamAudioSample : return "audio sample";
+        case ParamPlaybackPercentage : return "playback percentage";
+        default : jassert(false); return "parameter not found";
         }
     }
 
@@ -80,7 +82,8 @@ public:
     void setSampleStripParam(const int &parameterID, const void *newValue);
     const void* getSampleStripParam(const int &parameterID) const;
 
-    void findPlaySpeed(const float &BPM, const float &hostSampleRate, const bool &reduceToNormalSpeed);
+    void updatePlaySpeedForBPMChange(const double &newBPM);
+    void findPlaySpeed(const double &BPM, const float &hostSampleRate, const bool &reduceToNormalSpeed);
 
 private:
 
@@ -110,6 +113,8 @@ private:
     bool isReversed, isLatched;
     float stripVolume;
     double playSpeed;
+
+    double previousBPM;
 };
 
 
