@@ -84,7 +84,7 @@ public:
 
     void updatePlaySpeedForBPMChange(const double &newBPM);
     void findPlaySpeed(const double &BPM, const float &hostSampleRate, const bool &reduceToNormalSpeed);
-
+    void modPlaySpeed(const double &factor) { playSpeed *= factor; }
 private:
 
     // These are just so the GUI can show where in the sample we are

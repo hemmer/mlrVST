@@ -17,6 +17,7 @@
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "PluginProcessor.h"
 #include "SampleStripControl.h"
+#include "mlrVSTLookAndFeel.h"
 
 
 class WaveformControl;
@@ -75,13 +76,14 @@ public:
     }
 
     void calcPlaySpeed(const int &stripID, const bool &normalizeTempo) { getProcessor()->calcPlaySpeed(stripID, normalizeTempo); }
-
+    void modPlaySpeed(const double &factor, const int &stripID) { getProcessor()->modPlaySpeed(factor, stripID); }
     AudioSample * getAudioSample(const int &poolIndex) const { return getProcessor()->getAudioSample(poolIndex); }
 
     Colour getChannelColour(const int &chan) const { return getProcessor()->getChannelProcessor(chan)->getChannelColour(); }
+
 private:
-    Label infoLabel, delayLabel, helloLabel, logoLabel;
-    Slider delaySlider, masterGainSlider;
+    Label infoLabel, helloLabel, logoLabel;
+    Slider masterGainSlider;
 	DrawableButton debugButton;
 
     ComboBox selNumChannels;
@@ -114,7 +116,7 @@ private:
 
     void displayPositionInfo (const AudioPlayHead::CurrentPositionInfo& pos);
 
-    OldSchoolLookAndFeel oldLookAndFeel;
+    mlrVSTLookAndFeel myLookAndFeel;
 
     JUCE_LEAK_DETECTOR(mlrVSTAudioProcessorEditor);  
 };

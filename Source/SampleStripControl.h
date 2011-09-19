@@ -37,9 +37,6 @@ public:
                        mlrVSTAudioProcessorEditor * const owner);
     ~SampleStripControl();
 
-    //void setFile (const File& file);
-    void setZoomFactor(double amount);
-    void mouseWheelMove(const MouseEvent&, float wheelIncrementX, float wheelIncrementY);
     void mouseDown(const MouseEvent&);
     void mouseDrag(const MouseEvent&);
     void mouseUp(const MouseEvent&);
@@ -55,8 +52,12 @@ public:
     void filesDropped(const StringArray& files, int x, int y);
 
     // Update the strips if the number of channels changes
-    void buildChannelButtonList(const int &newNumChannels);
+    void buildUI();
     void setChannel(const int &newChannel);
+    void setNumChannels(const int &newNumChannels) {
+        numChannels = newNumChannels;
+        buildUI();  // reflect changes
+    }
 
     // These recall settings when the 
     void recallParam(const int &paramID, const void *newValue, const bool &doRepaint);
@@ -67,21 +68,25 @@ public:
 
 private:
 
+    // Pointer to parent GUI component
     mlrVSTAudioProcessorEditor * const mlrVSTEditor;
+    // which strip we are representing
+    const int sampleStripID;
 
+    // GUI components
+    Label trackNumberLbl, filenameLbl, chanLbl, volLbl, modeLbl, playSpeedLbl;
+    OwnedArray<DrawableButton> channelButtonArray;
     ComboBox selNumChunks, selPlayMode;
-    ToggleButton isLatchedBtn, isReversedBtn;
+    ToggleButton isLatchedBtn, isReversedBtn, times2, div2;
     Slider stripVolumeSldr, playbackSpeedSldr;
 
     const int componentHeight, componentWidth;
+    const int controlbarSize;
     Rectangle<int> waveformPaintBounds;
 
-    // which strip we are representing
-    int sampleStripID;
 
-    // GUI components
-    Label trackNumberLbl, filenameLbl;
-    OwnedArray<DrawableButton> channelButtonArray;
+
+
 
     int numChannels;        // total number of channels available
 
@@ -122,6 +127,8 @@ private:
     Colour backgroundColour;
 
     JUCE_LEAK_DETECTOR(SampleStripControl);  
+
+    const float fontSize;
 };
 
 

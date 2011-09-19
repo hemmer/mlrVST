@@ -1,8 +1,12 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
+
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="mlrVST">
       <UniqueIdentifier>{6155B00E-5CD3-D100-3C52-4A58C1AE9E57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mlrVST\Resources">
+      <UniqueIdentifier>{80445BD3-F2EC-47BC-75A6-07D67B03B154}</UniqueIdentifier>
     </Filter>
     <Filter Include="mlrVST\oscpack">
       <UniqueIdentifier>{BD7D9051-B731-76F5-BF06-8B29D11880A8}</UniqueIdentifier>
@@ -24,6 +28,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Resources\silkfont">
+      <Filter>mlrVST\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\CHANGES">
+      <Filter>mlrVST\oscpack</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp">
       <Filter>mlrVST\oscpack\ip</Filter>
     </ClCompile>
@@ -32,6 +42,9 @@
     </ClCompile>
     <ClCompile Include="..\..\oscpack\ip\win32\UdpSocket.cpp">
       <Filter>mlrVST\oscpack\ip\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\LICENSE">
+      <Filter>mlrVST\oscpack</Filter>
     </ClCompile>
     <ClCompile Include="..\..\oscpack\osc\OscOutboundPacketStream.cpp">
       <Filter>mlrVST\oscpack\osc</Filter>
@@ -44,6 +57,12 @@
     </ClCompile>
     <ClCompile Include="..\..\oscpack\osc\OscTypes.cpp">
       <Filter>mlrVST\oscpack\osc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\README">
+      <Filter>mlrVST\oscpack</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\TODO">
+      <Filter>mlrVST\oscpack</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\SampleStrip.cpp">
       <Filter>mlrVST</Filter>
@@ -66,8 +85,14 @@
     <ClCompile Include="..\..\Source\PluginEditor.cpp">
       <Filter>mlrVST</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\..\..\SDKs\juce\src\audio\plugin_client\VST\juce_VST_Wrapper.cpp">
       <Filter>Juce VST Wrapper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JuceLibraryCode\BinaryData.cpp">
+      <Filter>Juce Library Code</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode1.cpp">
       <Filter>Juce Library Code</Filter>
@@ -143,7 +168,13 @@
     <ClInclude Include="..\..\Source\PluginEditor.h">
       <Filter>mlrVST</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\JuceLibraryCode\AppConfig.h">
+      <Filter>Juce Library Code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JuceLibraryCode\BinaryData.h">
       <Filter>Juce Library Code</Filter>
     </ClInclude>
     <ClInclude Include="..\..\JuceLibraryCode\JuceHeader.h">

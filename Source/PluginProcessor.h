@@ -102,7 +102,7 @@ public:
         totalNumParams
     };
 
-    float masterGain, delay;
+    float masterGain;
     // individual channel volumes
     Array<float> channelGains;
 
@@ -130,6 +130,7 @@ public:
 
     void calcPlaySpeed(const int &stripID, const bool &normalizeTempo);
     void calcPlaySpeedForNewBPM(const int &stripID);
+    void modPlaySpeed(const double &factor, const int &stripID);
 
     void processOSCKeyPress(const int &monomeCol, const int &monomeRow, const int &state);
 
@@ -159,9 +160,6 @@ private:
     OwnedArray<AudioSample> samplePool;
 
     double currentBPM;
-
-    AudioSampleBuffer delayBuffer;
-    int delayPosition;
 
     // eventually this will be an array for all the channels
     int numChannels;

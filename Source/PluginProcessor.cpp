@@ -21,7 +21,7 @@ It contains the basic startup code for a Juce application.
 
 //==============================================================================
 mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
-    delayBuffer(2, 12000), currentBPM(120.0),
+    currentBPM(120.0),
     channelProcessorArray(), numChannels(8),
     sampleStripArray(), numSampleStrips(7),
     channelGains(), defaultChannelGain(0.8f),
@@ -50,7 +50,6 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
 
     // Set up some default values..
     masterGain = 1.0f;
-    delay = 0.5f;
 
     // create our SampleStrip objects 
     buildSampleStripArray(numSampleStrips);
@@ -59,7 +58,6 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
 
 
     lastPosInfo.resetToDefault();
-    delayPosition = 0;
 }
 
 mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
@@ -158,8 +156,6 @@ float mlrVSTAudioProcessor::getParameter(int index)
     {
         case masterGainParam:
             return masterGain;
-        case delayParam:
-            return delay;
         case channel0GainParam:
             return channelGains[0];
         case channel1GainParam:
@@ -189,8 +185,6 @@ void mlrVSTAudioProcessor::setParameter(int index, float newValue)
     switch (index)
     {
         case masterGainParam:       masterGain = newValue;  break;
-
-        case delayParam:            delay = newValue;  break;
 
             // TODO: there might be a neater way to do this!
         case channel0GainParam:
@@ -264,7 +258,6 @@ void mlrVSTAudioProcessor::prepareToPlay(double sampleRate, int /*samplesPerBloc
     // TODO: does ChannelProcessor need this?
     //synth.setCurrentPlaybackSampleRate (sampleRate);
     monomeState.reset();
-    delayBuffer.clear();
 }
 
 void mlrVSTAudioProcessor::releaseResources()
@@ -278,7 +271,6 @@ void mlrVSTAudioProcessor::reset()
 {
     // Use this method as the place to clear any delay lines, buffers, etc, as it
     // means there's been a break in the audio's continuity.
-    delayBuffer.clear();
 }
 
 void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
@@ -323,26 +315,6 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
             channelProcessorArray[c]->renderNextBlock(buffer, midiMessages, 0, numSamples);
         }
 
-        // Apply our delay effect to the new output..
-        for (channel = 0; channel < getNumInputChannels(); ++channel)
-        {
-            float* channelData = buffer.getSampleData(channel);
-            float* delayData = delayBuffer.getSampleData(jmin(channel, delayBuffer.getNumChannels() - 1));
-            dp = delayPosition;
-
-            for (int i = 0; i < numSamples; ++i)
-            {
-                const float in = channelData[i];
-                channelData[i] += delayData[dp];
-                delayData[dp] = (delayData[dp] + in) * delay;
-
-                if (++dp > delayBuffer.getNumSamples())
-                    dp = 0;
-            }
-        }
-
-        delayPosition = dp;
-
         // Go through the outgoing data, and apply our master gain to it...
         for (channel = 0; channel < getNumInputChannels(); ++channel)
             buffer.applyGain(channel, 0, buffer.getNumSamples(), masterGain);
@@ -378,7 +350,6 @@ void mlrVSTAudioProcessor::getStateInformation(MemoryBlock& destData)
 
     // add some attributes to it..
     xml.setAttribute("master gain", masterGain);
-    xml.setAttribute("delay", delay);
 
     // then use this helper function to stuff it into the binary blob and return it..
     copyXmlToBinary(xml, destData);
@@ -399,7 +370,6 @@ void mlrVSTAudioProcessor::setStateInformation(const void* data, int sizeInBytes
         {
             // ok, now pull out our parameters...
             masterGain  = (float) xmlState->getDoubleAttribute("master gain", masterGain);
-            delay = (float) xmlState->getDoubleAttribute("delay", delay);
         }
     }
 }
@@ -484,6 +454,11 @@ void mlrVSTAudioProcessor::calcPlaySpeed(const int &stripID, const bool &normali
 void mlrVSTAudioProcessor::calcPlaySpeedForNewBPM(const int &stripID)
 {
     sampleStripArray[stripID]->updatePlaySpeedForBPMChange(currentBPM);
+}
+
+void mlrVSTAudioProcessor::modPlaySpeed(const double &factor, const int &stripID)
+{
+    sampleStripArray[stripID]->modPlaySpeed(factor);
 }
 
 AudioSample * mlrVSTAudioProcessor::getAudioSample(const int &samplePoolIndex)

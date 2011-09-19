@@ -13,43 +13,29 @@
 //==============================================================================
 mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter, const int &newNumChannels)
     : AudioProcessorEditor (ownerFilter),
-      infoLabel(), helloLabel("", "Hello"), logoLabel("", "mlrVST"), delayLabel("", "Delay:"),
-      delaySlider("delay"), masterGainSlider("master gain"),
+      infoLabel(), helloLabel("", "Hello"), logoLabel("", "mlrVST"),
+      masterGainSlider("master gain"),
       selNumChannels("select number of channels"),
 	  sampleStripControlArray(),
-      waveformControlHeight(90), waveformControlWidth(700),
+      waveformControlHeight(95), waveformControlWidth(700),
 	  numChannels(newNumChannels),
       numStrips(7),
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
       slidersArray(),
-      oldLookAndFeel()
+      myLookAndFeel()
 {
     
     DBG("GUI loaded");
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
     // add logo strip to top
-	addAndMakeVisible(&logoLabel);
+	//addAndMakeVisible(&logoLabel);
     logoLabel.setBounds(0, 0, getWidth(), 30);
 	logoLabel.setColour(Label::backgroundColourId, Colours::black);
     logoLabel.setColour(Label::textColourId, Colours::white);
     logoLabel.setJustificationType(Justification::bottomRight);
     Font logoFont(Font::getDefaultSansSerifFontName(), 30.0f, Font::plain); 
     logoLabel.setFont(logoFont);
-
-
-
-    // DELAY stuff (may eventually go)
-    addAndMakeVisible(&delaySlider);
-	delaySlider.setSliderStyle(Slider::LinearVertical);
-    delaySlider.addListener(this);
-    delaySlider.setRange(0.0, 1.0, 0.01);
-	delaySlider.setValue(0.02);
-	delaySlider.setBounds(50, 80, 150, 40);
-    // attach label
-    delayLabel.attachToComponent(&delaySlider, false);
-    delayLabel.setFont (Font (11.0f));
-
 
     // add a label that will display the current timecode and status..
     addAndMakeVisible(&infoLabel);
@@ -70,12 +56,10 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     for(int i = 0; i < numStrips; ++i){
 
         int stripX = getWidth() - waveformControlWidth - PAD_AMOUNT;
-        int stripY = 40 + i * (waveformControlHeight + PAD_AMOUNT);
+        int stripY = PAD_AMOUNT + i * (waveformControlHeight + PAD_AMOUNT);
         sampleStripControlArray.add(new SampleStripControl(i, waveformControlWidth, waveformControlHeight, numChannels, this));
         sampleStripControlArray[i]->setBounds(stripX, stripY, waveformControlWidth, waveformControlHeight);
         addAndMakeVisible( sampleStripControlArray[i] );
-
-        sampleStripControlArray[i]->buildChannelButtonList(numChannels);
 
         // do this as a loop
         for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
@@ -110,7 +94,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     formatManager.registerBasicFormats();
     
     // TODO: Make custom look and feel
-    LookAndFeel::setDefaultLookAndFeel(&oldLookAndFeel);
+    LookAndFeel::setDefaultLookAndFeel(&myLookAndFeel);
 	
     startTimer(50);
 }
@@ -177,7 +161,6 @@ void mlrVSTAudioProcessorEditor::timerCallback()
 
     // TODO: use mlrVSTAudioProcessor::getParameter
     // instead of accessing member variables directly?
-    delaySlider.setValue(ourProcessor->delay, false);
     masterGainSlider.setValue(ourProcessor->masterGain, false);
 
     // check the if the channel volumes have changed
@@ -206,11 +189,6 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
         // that they've changed.
         getProcessor()->setParameterNotifyingHost(mlrVSTAudioProcessor::masterGainParam,
                                                    (float) masterGainSlider.getValue());
-    }
-    else if (slider == &delaySlider)
-    {
-        getProcessor()->setParameterNotifyingHost(mlrVSTAudioProcessor::delayParam,
-                                                   (float) delaySlider.getValue());
     }
 
     // check the channel volume notifications
@@ -258,7 +236,7 @@ void mlrVSTAudioProcessorEditor::comboBoxChanged (ComboBox* comboBoxThatHasChang
 
         // let the SampleStrips add the right number of buttons
         for(int i = 0; i < sampleStripControlArray.size(); ++i)
-            sampleStripControlArray[i]->buildChannelButtonList(numChannels);
+            sampleStripControlArray[i]->setNumChannels(numChannels);
     }
 }
 

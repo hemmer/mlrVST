@@ -25,6 +25,9 @@
                    headerPath="..\..\oscpack"/>
   </CONFIGURATIONS>
   <MAINGROUP id="dYAMo6Ykd" name="mlrVST">
+    <GROUP id="cgKTwY" name="Resources">
+      <FILE id="OOHl59" name="silkfont" compile="0" resource="1" file="Resources/silkfont"/>
+    </GROUP>
     <GROUP id="mkBFQj" name="oscpack">
       <FILE id="nDRTg8" name="CHANGES" compile="0" resource="0" file="oscpack/CHANGES"/>
       <GROUP id="IZH4cp" name="ip">
@@ -93,6 +96,10 @@
           file="Source/PluginEditor.cpp"/>
     <FILE id="Iif5nfHL" name="PluginEditor.h" compile="0" resource="0"
           file="Source/PluginEditor.h"/>
+    <FILE id="SDq6w" name="mlrVSTLookAndFeel.cpp" compile="1" resource="0"
+          file="Source/mlrVSTLookAndFeel.cpp"/>
+    <FILE id="YJ20Gh" name="mlrVSTLookAndFeel.h" compile="0" resource="0"
+          file="Source/mlrVSTLookAndFeel.h"/>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_QUICKTIME="disabled" JUCE_FORCE_DEBUG="default" JUCE_LOG_ASSERTIONS="default"
                JUCE_ASIO="default" JUCE_WASAPI="default" JUCE_DIRECTSOUND="default"
