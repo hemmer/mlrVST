@@ -84,6 +84,7 @@ public:
 
     // The lets the ChannelProcessor know which sample to read
     void setCurrentSampleStrip(SampleStrip* newSampleStrip);
+    void setBPM(const double &newBPM) { currentBPM = newBPM; }
 
     void setChannelGain(const float &vol)
     { 
@@ -96,13 +97,13 @@ public:
 
 
     /* If playing returns a value between 0.0 and 1.0, if stopped
-       returns -1 (as a sanity check more than anything.
+       returns -1 (as a sanity check more than anything).
     */
     float getCurrentPlaybackPercentage() const
     {
         if (isPlaying && (sampleEndPosition != sampleStartPosition))
         {
-            return (sampleCurrentPosition - sampleStartPosition)
+            return (float) (sampleCurrentPosition - sampleStartPosition)
                     / (float) (sampleEndPosition - sampleStartPosition);
         }
         else return -1.0;
@@ -115,7 +116,7 @@ private:
 
     void refreshPlaybackParameters();
 
-
+    double currentBPM;
 
     // each channel has an individual ID
     const int channelIDNumber;
@@ -128,14 +129,14 @@ private:
     // NOTE: "const" qualifier means we can't change the
     // sample which this pointer points at
     const AudioSample *currentSample;
-
+    double playSpeed;
 
     // which parts of the sample can we play
     int sampleStartPosition, sampleEndPosition, selectionLength;
     // where playback actually starts from
     int playbackStartPosition;
     // where we are in the sample at the moment
-    int sampleCurrentPosition;
+    double sampleCurrentPosition;
     // size of each chunk
     int chunkSize;
     // volume of the specific strip (different to channel volume)

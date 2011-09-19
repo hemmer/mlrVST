@@ -80,6 +80,7 @@ public:
     void setSampleStripParam(const int &parameterID, const void *newValue);
     const void* getSampleStripParam(const int &parameterID) const;
 
+    void findPlaySpeed(const float &BPM, const float &hostSampleRate, const bool &reduceToNormalSpeed);
 
 private:
 
@@ -90,6 +91,7 @@ private:
     // Pointer to currently selected sample
     const AudioSample *currentSample;
     int totalSampleLength;
+    double sampleSampleRate;
 
     // start / end points (fractional, i.e. 0.5 is half way through)
     float fractionalSampleStart, fractionalSampleEnd;
@@ -106,7 +108,8 @@ private:
     // Playback options
     int currentPlayMode;
     bool isReversed, isLatched;
-    float stripVolume, playSpeed;
+    float stripVolume;
+    double playSpeed;
 };
 
 

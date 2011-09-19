@@ -283,6 +283,26 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 {
     if (!isSuspended())
     {
+        // ask the host for the current time so we can display it...
+        AudioPlayHead::CurrentPositionInfo newTime;
+
+        if (getPlayHead() != 0 && getPlayHead()->getCurrentPosition(newTime))
+        {
+            // Successfully got the current time from the host..
+            lastPosInfo = newTime;
+            if (currentBPM != lastPosInfo.bpm)
+            {
+                currentBPM = lastPosInfo.bpm;
+                for (int s = 0; s < sampleStripArray.size(); ++s)
+                    calcPlaySpeed(s, false);
+            }
+        }
+        else
+        {
+            // If the host fails to fill-in the current time, we'll just clear it to a default..
+            lastPosInfo.resetToDefault();
+        }
+
         const int numSamples = buffer.getNumSamples();
         int channel, dp = 0;
 
@@ -295,6 +315,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
         // Remember to set the correct sample
         for (int c = 0; c < channelProcessorArray.size(); c++)
         {
+            channelProcessorArray[c]->setBPM(currentBPM);
             channelProcessorArray[c]->getCurrentPlaybackPercentage();
             channelProcessorArray[c]->renderNextBlock(buffer, midiMessages, 0, numSamples);
         }
@@ -330,21 +351,6 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
         for (int i = getNumInputChannels(); i < getNumOutputChannels(); ++i)
             buffer.clear(i, 0, buffer.getNumSamples());
 
-
-
-        // ask the host for the current time so we can display it...
-        AudioPlayHead::CurrentPositionInfo newTime;
-
-        if (getPlayHead() != 0 && getPlayHead()->getCurrentPosition(newTime))
-        {
-            // Successfully got the current time from the host..
-            lastPosInfo = newTime;
-        }
-        else
-        {
-            // If the host fails to fill-in the current time, we'll just clear it to a default..
-            lastPosInfo.resetToDefault();
-        }
     }
     else
     {
@@ -467,10 +473,16 @@ void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
     suspendProcessing(false);
 }
 
-void mlrVSTAudioProcessor::setSampleStripSample(const int &samplePoolIndex, const int &stripID)
+void mlrVSTAudioProcessor::calcPlaySpeed(const int &stripID, const bool &normalizeTempo)
 {
-    AudioSample *tempSample = samplePool[samplePoolIndex];
-    sampleStripArray[stripID]->setSampleStripParam(SampleStrip::ParamAudioSample, tempSample);
+    sampleStripArray[stripID]->findPlaySpeed(currentBPM, 44100.0, normalizeTempo);
+}
+
+AudioSample * mlrVSTAudioProcessor::getAudioSample(const int &samplePoolIndex)
+{
+    if (samplePoolIndex >= 0 && samplePoolIndex < samplePool.size())
+        return samplePool[samplePoolIndex];
+    else return 0;
 }
 
 SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index) 

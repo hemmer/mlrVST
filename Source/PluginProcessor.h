@@ -108,8 +108,8 @@ public:
 
     // adds a sample to the sample pool
     bool addNewSample(File &sampleFile);
-    void setSampleStripSample(const int &samplePoolIndex, const int &stripID);
-    //void setSampleStripSelection(const float &start, const float &end, const int &stripID);
+    AudioSample * getAudioSample(const int &samplePoolIndex);
+    
 
     int getSamplePoolSize() { return samplePool.size(); }
     // TODO: bounds checking?
@@ -128,7 +128,7 @@ public:
     
     AudioSample* getLatestSample() { return samplePool.getLast(); }
 
-
+    void calcPlaySpeed(const int &stripID, const bool &normalizeTempo);
 
     void processOSCKeyPress(const int &monomeCol, const int &monomeRow, const int &state);
 
@@ -157,7 +157,7 @@ private:
     // store array of samplePool objects
     OwnedArray<AudioSample> samplePool;
 
-
+    double currentBPM;
 
     AudioSampleBuffer delayBuffer;
     int delayPosition;

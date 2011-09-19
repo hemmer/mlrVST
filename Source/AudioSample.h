@@ -27,6 +27,7 @@ public:
     int getNumChannels() const { return numChannels; }
     String getSampleName() const { return sampleName; }
     File getSampleFile() const { return sampleFile; }
+    double getSampleRate() const { return sampleSampleRate; }
 
     // override comparison operator == 
     bool operator== (const AudioSample &s1) const;

@@ -8,23 +8,24 @@
   ==============================================================================
 */
 
+#include <cmath>
 #include "SampleStrip.h"
 
 SampleStrip::SampleStrip() :
-    currentSample(0),
+    currentSample(0), sampleSampleRate(0.0),
     totalSampleLength(0), fractionalSampleStart(0), fractionalSampleEnd(0),
     numChunks(8), chunkSize(0),
     currentChannel(0),
     isPlaying(false), playbackPercentage(0.0),
     currentPlayMode(LOOP_CHUNK), isReversed(false), isLatched(false),
-    stripVolume(1.0f), playSpeed(1.0f)
+    stripVolume(1.0f), playSpeed(1.0)
 {
 
 }
 
 void SampleStrip::setSampleStripParam(const int &parameterID, const void *newValue)
 {
-    //DBG("param \"" + getParameterName(parameterID) + "\" updated to: " + String(newValue));
+    DBG("param \"" << getParameterName(parameterID) << "\" updated");
 
     switch (parameterID)
     {
@@ -51,7 +52,7 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
         stripVolume = *static_cast<const float*>(newValue); break;
 
     case ParamPlaySpeed :
-        playSpeed = *static_cast<const float*>(newValue); break;
+        playSpeed = *static_cast<const double*>(newValue); break;
 
     case ParamPlaybackPercentage :
         playbackPercentage = *static_cast<const float*>(newValue); break;
@@ -80,11 +81,13 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
             selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
             selectionLength = (selectionEnd - selectionStart);
             chunkSize = (int) (selectionLength / (float) numChunks);
+            sampleSampleRate = currentSample->getSampleRate();
         }
         else
         {
-            // SANITY CHECK: these should never be recalled!
+            // SANITY CHECK: these values should never be used by processor!
             totalSampleLength = selectionStart = selectionEnd = selectionLength = chunkSize = 0;
+            sampleSampleRate = 0.0;
         }
         break;
 
@@ -153,4 +156,34 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
     }
 
     return p;
+}
+
+
+void SampleStrip::findPlaySpeed(const float &BPM, const float &hostSampleRate, const bool &reduceToNormalSpeed)
+{
+    double numSamplesInFourBars = ((BPM / 960.0) * hostSampleRate);
+    playSpeed = (double)(selectionLength / sampleSampleRate) * (numSamplesInFourBars / hostSampleRate);
+
+    // This uses multiples of two to find closest speed to 1.0
+    if (reduceToNormalSpeed)
+    {
+        double newPlaySpeed = playSpeed;
+        if (playSpeed > 1.0)
+        {
+            while ( abs(newPlaySpeed / 2 - 1.0) < abs(newPlaySpeed - 1.0) )
+            {
+                newPlaySpeed /= 2.0;
+            }
+        }
+        else
+        {
+            while ( abs(newPlaySpeed * 2 - 1.0) < abs(newPlaySpeed - 1.0) )
+            {
+                newPlaySpeed *= 2.0;
+            }
+        }
+        playSpeed = newPlaySpeed;
+    }
+
+
 }

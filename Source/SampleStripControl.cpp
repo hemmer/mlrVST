@@ -88,8 +88,8 @@ SampleStripControl::SampleStripControl(const int &id,
     addAndMakeVisible(&playbackSpeedSldr);
     playbackSpeedSldr.setSliderStyle(Slider::LinearBar);
     playbackSpeedSldr.setColour(Slider::textBoxTextColourId, Colours::white);
-    playbackSpeedSldr.setBounds(570, 0, 50, 15);
-    playbackSpeedSldr.setRange(0.0, 2.0, 0.01);
+    playbackSpeedSldr.setBounds(570, 0, 100, 15);
+    playbackSpeedSldr.setRange(0.0, 4.0, 0.001);
     playbackSpeedSldr.addListener(this);
 }
 
@@ -145,6 +145,8 @@ void SampleStripControl::buttonClicked(Button *btn)
         {
             // update the processor / GUI
             setChannel(i);
+            // ...so we can let the processor know
+            mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamCurrentChannel, &i, sampleStripID);
         }
     }
 
@@ -170,17 +172,15 @@ void SampleStripControl::sliderValueChanged(Slider *sldr)
         thumbnailScaleFactor = newStripVol;
         mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamStripVolume, &newStripVol, sampleStripID);
     }
-    else if(sldr = &playbackSpeedSldr)
+    else if(sldr == &playbackSpeedSldr)
     {
-        float newPlaySpeed = (float)(playbackSpeedSldr.getValue());
+        double newPlaySpeed = playbackSpeedSldr.getValue();
         mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamPlaySpeed, &newPlaySpeed, sampleStripID);
     }
 }
 
 void SampleStripControl::setChannel(const int &newChannel)
 {
-    // ...so we can let the processor know
-    mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamCurrentChannel, &newChannel, sampleStripID);
 
     backgroundColour = channelButtonArray[newChannel]->getBackgroundColour();
     stripVolumeSldr.setColour(Slider::thumbColourId, backgroundColour);
@@ -287,7 +287,8 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
                 fileChoice -= 2;
 
                 // and let the audio processor update the sample strip
-                mlrVSTEditor->updateSampleStripSample(fileChoice, sampleStripID);
+                const AudioSample * newSample = mlrVSTEditor->getAudioSample(fileChoice);
+                mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamAudioSample, newSample, sampleStripID);
 
                 // select whole sample by default
                 visualSelectionStart = 0;
@@ -413,6 +414,7 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
     mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalStart, &fractionalStart, sampleStripID);
     mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &fractionalEnd, sampleStripID);
 
+    mlrVSTEditor->calcPlaySpeed(sampleStripID, false);
     // redraw to reflect new selection
     repaint();
 }
@@ -437,7 +439,7 @@ void SampleStripControl::paint(Graphics& g)
 
     if(currentSample && thumbnailLength > 0)
     {
-        thumbnail.drawChannels(g, waveformPaintBounds, 0, thumbnailLength, thumbnailScaleFactor);
+        thumbnail.drawChannels(g, waveformPaintBounds, 0, thumbnailLength, (float) thumbnailScaleFactor);
     }
     else
     {
@@ -569,8 +571,8 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
 
     case SampleStrip::ParamPlaySpeed :
         {
-            float newPlaySpeed = *static_cast<const float*>(newValue);
-            playbackSpeedSldr.setValue(newPlaySpeed, true);
+            double newPlaySpeed = *static_cast<const double*>(newValue);
+            playbackSpeedSldr.setValue(newPlaySpeed, false);
             break;
         }
 
@@ -583,13 +585,17 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
             {
                 currentSample = newSample;
                 // If the new sample exists
-                if (newSample)
+                if (currentSample)
                 {
                     thumbnail.setSource(new FileInputSource(currentSample->getSampleFile()));
                     thumbnailLength = thumbnail.getTotalLength();
                     filenameLbl.setText(currentSample->getSampleName(), false);
                 }
-                else filenameLbl.setText("No file", false);
+                else
+                {
+                    filenameLbl.setText("No file", false);
+                    playbackSpeedSldr.setValue(1.0, true);
+                }
             }
             
             break;

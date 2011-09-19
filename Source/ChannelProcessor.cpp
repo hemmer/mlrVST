@@ -17,12 +17,13 @@ ChannelProcessor::ChannelProcessor(const int &channelIDNo,
                                    const Colour &col,
                                    mlrVSTAudioProcessor *owner,
                                    SampleStrip *initialSampleStrip) :
-    parent(owner),
+    parent(owner), currentBPM(120.0f),
     currentSampleStrip(initialSampleStrip),
     channelIDNumber(channelIDNo),
     channelGain(0.8f), stripGain(0.0f),
-    currentSample(0),
+    currentSample(0), playSpeed(1.0),
     sampleStartPosition(0), sampleEndPosition(0), selectionLength(0),
+    sampleCurrentPosition(0.0),
     isPlaying(false),
     channelColour(col),
     isReversed(false), playMode(-1), chunkSize(-1), playbackStartPosition(-1),
@@ -47,7 +48,7 @@ void ChannelProcessor::setCurrentSampleStrip(SampleStrip* newSampleStrip)
 void ChannelProcessor::startSamplePlaying(const int &startBlock, const int &blockSize)
 {
     sampleStartPosition = startBlock * blockSize;
-    sampleCurrentPosition = sampleStartPosition;
+    sampleCurrentPosition = (double) sampleStartPosition;
     isPlaying = true;
 }
 
@@ -107,13 +108,16 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
 
         if (m.isNoteOn())
         {
-            // this gets the latest start and end points for the sample
-            refreshPlaybackParameters();
+
 
             // We can save some effort by ignore cases where this is no sample!
             if (currentSample != 0)
             {
-                sampleCurrentPosition = playbackStartPosition;
+
+                // this gets the latest start and end points for the sample
+                refreshPlaybackParameters();
+
+                sampleCurrentPosition = (float) playbackStartPosition;
                 isPlaying = true;
 
                 float playbackPercentage = getCurrentPlaybackPercentage();
@@ -203,49 +207,14 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
         while (--numSamples >= 0)
         {
             // NEXT: what is sourceSamplePosition??????????????????
-            //const int pos = (int) sourceSamplePosition;
-            //const float alpha = (float) (sourceSamplePosition - pos);
-            //const float invAlpha = 1.0f - alpha;
+            const int pos = (int) sampleCurrentPosition;
+            const double alpha = (double) (sampleCurrentPosition - pos);
+            const double invAlpha = 1.0f - alpha;
+
             // just using a very simple linear interpolation here..
-            //float l = (inL [pos] * invAlpha + inL [pos + 1] * alpha);
-            //float r = (inR != nullptr) ? (inR [pos] * invAlpha + inR [pos + 1] * alpha)
-            //                           : l;
-
-            // we only have one velocity
-            //l *= lgain;
-            //r *= rgain;
-            //
-            //if (isInAttack)
-            //{
-            //    l *= attackReleaseLevel;
-            //    r *= attackReleaseLevel;
-
-            //    attackReleaseLevel += attackDelta;
-
-            //    if (attackReleaseLevel >= 1.0f)
-            //    {
-            //        attackReleaseLevel = 1.0f;
-            //        isInAttack = false;
-            //    }
-            //}
-            //else if (isInRelease)
-            //{
-            //    l *= attackReleaseLevel;
-            //    r *= attackReleaseLevel;
-
-            //    attackReleaseLevel += releaseDelta;
-
-            //    if (attackReleaseLevel <= 0.0f)
-            //    {
-            //        stopNote (false);
-            //        break;
-            //    }
-            //}
-
-
-            float l = inL[sampleCurrentPosition];
-            // if no right channel, clone in the left channel
-            float r = (inR != nullptr) ? inR[sampleCurrentPosition] : l;
+            // TODO should l/r be double
+            float l = (float)(inL [pos] * invAlpha + inL [pos + 1] * alpha);
+            float r = (inR != nullptr) ? (float)(inR [pos] * invAlpha + inR [pos + 1] * alpha) : l;
 
             l *=  channelGain * stripGain;
             r *=  channelGain * stripGain;
@@ -262,14 +231,14 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
                 *outL++ += (l + r) * 0.5f;
             }
 
-            sampleCurrentPosition += 1;
+            sampleCurrentPosition += playSpeed;
 
             switch (playMode)
             {
             case SampleStrip::LOOP_CHUNK :
                 if (sampleCurrentPosition > (playbackStartPosition + chunkSize))
                 {
-                    sampleCurrentPosition = playbackStartPosition;
+                    sampleCurrentPosition = (float) playbackStartPosition;
                     break;
                 }
             case SampleStrip::PLAY_TO_END :
@@ -281,7 +250,7 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
             case SampleStrip::LOOP :
                 if (sampleCurrentPosition > sampleEndPosition)
                 {
-                    sampleCurrentPosition = sampleStartPosition;
+                    sampleCurrentPosition = (float) sampleStartPosition;
                     break;
                 }
             }
@@ -304,13 +273,18 @@ void ChannelProcessor::refreshPlaybackParameters()
     // Then use the column to find which point to start at
     playbackStartPosition = sampleStartPosition + monomeCol * chunkSize;
 
+    selectionLength = sampleEndPosition - sampleStartPosition;
+
     // If we reselect this keeps the currently playing point in sync
     if (sampleStartPosition > sampleCurrentPosition)
-        sampleCurrentPosition = playbackStartPosition;
+        sampleCurrentPosition = (double) playbackStartPosition;
 
     stripGain = *static_cast<const float *>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamStripVolume));
 
     isPlaying = *static_cast<const bool *>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsPlaying));
+
+    playSpeed = *static_cast<const double *>
+        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlaySpeed));
 }
