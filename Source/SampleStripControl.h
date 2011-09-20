@@ -77,7 +77,13 @@ private:
     Label trackNumberLbl, filenameLbl, chanLbl, volLbl, modeLbl, playSpeedLbl;
     OwnedArray<DrawableButton> channelButtonArray;
     ComboBox selNumChunks, selPlayMode;
-    ToggleButton isLatchedBtn, isReversedBtn, times2, div2;
+    ToggleButton isLatchedBtn, isReversedBtn;
+    TextButton times2, div2;
+    
+    DrawableButton speedLockBtn;
+    DrawableImage lockImg, unlockImg;
+    bool isSpeedLocked;
+
     Slider stripVolumeSldr, playbackSpeedSldr;
 
     const int componentHeight, componentWidth;

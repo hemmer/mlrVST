@@ -268,6 +268,9 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
 
 void ChannelProcessor::refreshPlaybackParameters()
 {
+    currentSample = static_cast<const AudioSample*>
+        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamAudioSample));
+
     // Load sample strip details
     chunkSize = *static_cast<const int*>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamChunkSize));
@@ -292,4 +295,7 @@ void ChannelProcessor::refreshPlaybackParameters()
 
     playSpeed = *static_cast<const double *>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlaySpeed));
+
+    playMode = *static_cast<const int *>
+        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlayMode));
 }

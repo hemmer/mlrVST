@@ -18,15 +18,15 @@ SampleStrip::SampleStrip() :
     currentChannel(0),
     isPlaying(false), playbackPercentage(0.0),
     currentPlayMode(LOOP_CHUNK), isReversed(false), isLatched(false),
-    stripVolume(1.0f), playSpeed(1.0),
-    previousBPM(120.0)
+    stripVolume(1.0f), playSpeed(1.0), isPlaySpeedLocked(false),
+    previousBPM(120.0), previousSelectionLength(0)
 {
 
 }
 
 void SampleStrip::setSampleStripParam(const int &parameterID, const void *newValue)
 {
-    DBG("param \"" << getParameterName(parameterID) << "\" updated");
+    //DBG("param \"" << getParameterName(parameterID) << "\" updated");
 
     switch (parameterID)
     {
@@ -54,6 +54,9 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
 
     case ParamPlaySpeed :
         playSpeed = *static_cast<const double*>(newValue); break;
+
+    case ParamIsPlaySpeedLocked :
+        isPlaySpeedLocked = *static_cast<const bool*>(newValue); break;
 
     case ParamPlaybackPercentage :
         playbackPercentage = *static_cast<const float*>(newValue); break;
@@ -126,6 +129,9 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
     case ParamPlaySpeed :
         p = &playSpeed; break;
 
+    case ParamIsPlaySpeedLocked :
+        p = &isPlaySpeedLocked; break;
+
     case ParamIsPlaying :
         p = &isPlaying; break;
 
@@ -162,25 +168,39 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
 
 void SampleStrip::updatePlaySpeedForBPMChange(const double &newBPM)
 {
-    playSpeed *= (newBPM / previousBPM);
-    previousBPM = newBPM;
+    if (!isPlaySpeedLocked && currentSample)
+    {
+        playSpeed *= (newBPM / previousBPM);
+        previousBPM = newBPM;
+    }
 }
 
-void SampleStrip::findPlaySpeed(const double &newBPM, const float &hostSampleRate, const bool &reduceToNormalSpeed)
+void SampleStrip::updatePlaySpeedForSelectionChange()
+{
+
+    if (!isPlaySpeedLocked && currentSample)
+    {
+        jassert(previousSelectionLength > 0);
+        playSpeed *= (selectionLength / (double) previousSelectionLength);
+        previousSelectionLength = selectionLength;
+    }
+
+    DBG("new playspeed" << playSpeed);
+}
+
+void SampleStrip::findInitialPlaySpeed(const double &newBPM, const float &hostSampleRate)
 {
     if (currentSample)
     {
         double numSamplesInFourBars = ((newBPM / 960.0) * hostSampleRate);
         playSpeed = (double)(selectionLength / sampleSampleRate) * (numSamplesInFourBars / hostSampleRate);
 
-        /* reduceToNormal speed is set when a file is first selected.
-           It uses multiples of two to find the closest speed to 1.0,
-           and sets the tempo to use in updatePlaySpeedForBPMChange
-           
+        /* This uses multiples of two to find the closest speed to 1.0,
+           and sets the tempo to use in updatePlaySpeedForBPMChange()
+           and updatePlaySpeedForSelectionChange()
         */
-        if (reduceToNormalSpeed)
-        {
             previousBPM = newBPM;
+            previousSelectionLength = selectionLength;
             double newPlaySpeed = playSpeed;
             if (playSpeed > 1.0)
             {
@@ -198,8 +218,4 @@ void SampleStrip::findPlaySpeed(const double &newBPM, const float &hostSampleRat
             }
             playSpeed = newPlaySpeed;
         }
-
-    }
-    else playSpeed = 1.0; 
-
 }

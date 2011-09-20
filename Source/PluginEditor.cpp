@@ -101,7 +101,9 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
 mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
 {
-    DBG("GUI destructor called.");
+    sampleStripControlArray.clear(true);
+
+    DBG("GUI destructor finished.");
 }
 
 

@@ -34,6 +34,7 @@ public:
         ParamIsReversed,
         ParamStripVolume,
         ParamPlaySpeed,
+        ParamIsPlaySpeedLocked,
         ParamPlaybackPercentage,
         ParamFractionalStart,
         ParamFractionalEnd,
@@ -67,6 +68,7 @@ public:
         case ParamIsReversed : return "is reversed";
         case ParamStripVolume : return "strip volume";
         case ParamPlaySpeed : return "play speed";
+        case ParamIsPlaySpeedLocked : return "is play speed locked";
         case ParamIsPlaying : return "is playing";
         case ParamChunkSize : return "chunk size";
         case ParamFractionalStart : return "fractional start";
@@ -83,7 +85,9 @@ public:
     const void* getSampleStripParam(const int &parameterID) const;
 
     void updatePlaySpeedForBPMChange(const double &newBPM);
-    void findPlaySpeed(const double &BPM, const float &hostSampleRate, const bool &reduceToNormalSpeed);
+    void updatePlaySpeedForSelectionChange();
+    void findInitialPlaySpeed(const double &BPM, const float &hostSampleRate);
+
     void modPlaySpeed(const double &factor) { playSpeed *= factor; }
 private:
 
@@ -113,8 +117,10 @@ private:
     bool isReversed, isLatched;
     float stripVolume;
     double playSpeed;
+    bool isPlaySpeedLocked;
 
     double previousBPM;
+    int previousSelectionLength;
 };
 
 

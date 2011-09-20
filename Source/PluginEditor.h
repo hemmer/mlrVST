@@ -75,7 +75,8 @@ public:
         return getProcessor()->getSampleStripParameter(parameterID, stripID);
     }
 
-    void calcPlaySpeed(const int &stripID, const bool &normalizeTempo) { getProcessor()->calcPlaySpeed(stripID, normalizeTempo); }
+    void calcInitialPlaySpeed(const int &stripID) { getProcessor()->calcInitialPlaySpeed(stripID); }
+    void updatePlaySpeedForNewSelection(const int &stripID) { getProcessor()->calcPlaySpeedForSelectionChange(stripID); }
     void modPlaySpeed(const double &factor, const int &stripID) { getProcessor()->modPlaySpeed(factor, stripID); }
     AudioSample * getAudioSample(const int &poolIndex) const { return getProcessor()->getAudioSample(poolIndex); }
 

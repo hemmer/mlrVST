@@ -62,8 +62,8 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
 
 mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
 {
-    samplePool.clear();
-    sampleStripArray.clear();
+    samplePool.clear(true);
+    sampleStripArray.clear(true);
 
     DBG("Processor destructor finished.");
 }
@@ -446,20 +446,26 @@ void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
     suspendProcessing(false);
 }
 
-void mlrVSTAudioProcessor::calcPlaySpeed(const int &stripID, const bool &normalizeTempo)
-{
-    sampleStripArray[stripID]->findPlaySpeed(currentBPM, 44100.0, normalizeTempo);
-}
 
+void mlrVSTAudioProcessor::calcInitialPlaySpeed(const int &stripID)
+{
+    // TODO insert proper host speed here
+    sampleStripArray[stripID]->findInitialPlaySpeed(currentBPM, 44100.0);
+}
 void mlrVSTAudioProcessor::calcPlaySpeedForNewBPM(const int &stripID)
 {
     sampleStripArray[stripID]->updatePlaySpeedForBPMChange(currentBPM);
 }
-
+void mlrVSTAudioProcessor::calcPlaySpeedForSelectionChange(const int &stripID)
+{
+    sampleStripArray[stripID]->updatePlaySpeedForSelectionChange();
+}
 void mlrVSTAudioProcessor::modPlaySpeed(const double &factor, const int &stripID)
 {
     sampleStripArray[stripID]->modPlaySpeed(factor);
 }
+
+
 
 AudioSample * mlrVSTAudioProcessor::getAudioSample(const int &samplePoolIndex)
 {

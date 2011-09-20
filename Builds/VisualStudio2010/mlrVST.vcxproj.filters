@@ -28,6 +28,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Resources\locked.png">
+      <Filter>mlrVST\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resources\unlocked.png">
+      <Filter>mlrVST\Resources</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Resources\silkfont">
       <Filter>mlrVST\Resources</Filter>
     </ClCompile>

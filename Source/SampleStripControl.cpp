@@ -35,17 +35,15 @@ SampleStripControl::SampleStripControl(const int &id,
     visualSelectionStart(0), visualSelectionEnd(componentWidth), visualChunkSize(0.0), visualSelectionLength(0),
     selNumChunks(), selPlayMode(),
     isLatchedBtn("LATCH"), isReversedBtn("NORM"), times2("x2"), div2("/2"),
+    speedLockBtn("speed lock", DrawableButton::ImageRaw), isSpeedLocked(false),
+    lockImg(), unlockImg(),
     stripVolumeSldr("strip volume"),
     selectionPointToChange(0),
     mouseDownMods(),
     mlrVSTEditor(owner)
 {
-    // This is the track number
-    addAndMakeVisible(&trackNumberLbl);
-    trackNumberLbl.setBounds(0, componentHeight - controlbarSize, controlbarSize, controlbarSize);
-    trackNumberLbl.setColour(Label::backgroundColourId, Colours::black);
-    trackNumberLbl.setColour(Label::textColourId, Colours::white);
-    trackNumberLbl.setFont(11.0f);
+    lockImg.setImage(ImageCache::getFromMemory(BinaryData::locked_png, BinaryData::locked_pngSize));
+    unlockImg.setImage(ImageCache::getFromMemory(BinaryData::unlocked_png, BinaryData::unlocked_pngSize));
 
     // does the heavy UI positioning   
     buildUI();
@@ -63,11 +61,13 @@ SampleStripControl::SampleStripControl(const int &id,
     selNumChunks.addListener(this);
     times2.addListener(this);
     div2.addListener(this);
+    speedLockBtn.addListener(this);
 }
 
 SampleStripControl::~SampleStripControl()
 {
     thumbnail.removeChangeListener(this);
+    channelButtonArray.clear(true);
 }
 
 void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
@@ -75,10 +75,6 @@ void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
     selNumChunks.clear();
     for (int i = 1; i <= newMaxNumBlocks; ++i)
         selNumChunks.addItem(String(i), i);
-
-    // select the max number of blocks (comboBoxChanged will 
-    // be informed).
-    // selNumChunks.setSelectedId(newMaxNumBlocks);
 }
 
 void SampleStripControl::changeListenerCallback(ChangeBroadcaster*)
@@ -142,6 +138,12 @@ void SampleStripControl::buttonClicked(Button *btn)
     {
         mlrVSTEditor->modPlaySpeed(0.5, sampleStripID);
     }
+    else if (btn == &speedLockBtn)
+    {
+        bool newIsSpeedLocked = !isSpeedLocked;
+        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamIsPlaySpeedLocked,
+                                              &newIsSpeedLocked, sampleStripID);
+    }
 
 }
 
@@ -174,12 +176,27 @@ void SampleStripControl::setChannel(const int &newChannel)
     playbackSpeedSldr.setColour(Slider::thumbColourId, backgroundColour);
     playbackSpeedSldr.setColour(Slider::backgroundColourId, backgroundColour.darker());
     repaint();
+
+    isLatchedBtn.setColour(ToggleButton::textColourId, backgroundColour);
+    isReversedBtn.setColour(ToggleButton::textColourId, backgroundColour);
+
+    times2.setColour(TextButton::buttonColourId, backgroundColour);
+    div2.setColour(TextButton::buttonColourId, backgroundColour);
+    speedLockBtn.setBackgroundColours(backgroundColour, backgroundColour);
 }
 
 // This is particuarly usful if the number of channels changes
 void SampleStripControl::buildUI()
 {
     int newXposition = 0;
+
+    // This is the track number
+    addAndMakeVisible(&trackNumberLbl);
+    trackNumberLbl.setBounds(0, componentHeight - controlbarSize, controlbarSize, controlbarSize);
+    trackNumberLbl.setColour(Label::backgroundColourId, Colours::black);
+    trackNumberLbl.setColour(Label::textColourId, Colours::white);
+    trackNumberLbl.setFont(fontSize);
+
 
     addAndMakeVisible(&chanLbl);
     chanLbl.setBounds(0, 0, 35, controlbarSize);
@@ -229,6 +246,7 @@ void SampleStripControl::buildUI()
     stripVolumeSldr.setColour(Slider::textBoxTextColourId, Colours::white);
     stripVolumeSldr.setBounds(newXposition, 0, 60, controlbarSize);
     stripVolumeSldr.setRange(0.0, 2.0, 0.01);
+    stripVolumeSldr.setTextBoxIsEditable(false);
 
     newXposition += 60;
 
@@ -271,6 +289,12 @@ void SampleStripControl::buildUI()
 
     newXposition += 80;
 
+    addAndMakeVisible(&speedLockBtn);
+    speedLockBtn.setImages(&unlockImg);
+    speedLockBtn.setBounds(newXposition, 0, 16, 16);
+
+    newXposition += 16;
+
     addAndMakeVisible(&isReversedBtn);
     isReversedBtn.setBounds(newXposition, 0, 35, controlbarSize);
 
@@ -284,8 +308,12 @@ void SampleStripControl::buildUI()
     addAndMakeVisible(&div2);
     div2.setBounds(newXposition, 0, 20, controlbarSize);
 
+    newXposition += 20;
+
+
+
     addAndMakeVisible(&selNumChunks);
-    selNumChunks.setBounds(650, 0, 30, controlbarSize);
+    selNumChunks.setBounds(newXposition, 0, 30, controlbarSize);
 
 }
 
@@ -307,7 +335,7 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
             // TODO: can this be cached and only repopulated when the sample pool changes?
             // TODO: middle click to delete sample under cursor in menu?
             PopupMenu p = PopupMenu();
-
+            
             p.addItem(1, "None");
             // for each sample, add it to the list
             for (int i = 0; i < currentSamplePoolSize; ++i)
@@ -354,7 +382,7 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
                 mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &end, sampleStripID);
 
                 // and try to find the best playback speed (i.e. closest to 1).
-                mlrVSTEditor->calcPlaySpeed(sampleStripID, true);
+                mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);
 
                 repaint();
             }
@@ -459,7 +487,7 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
     mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &fractionalEnd, sampleStripID);
 
     if (mouseDownMods != ModifierKeys::middleButtonModifier)
-        mlrVSTEditor->calcPlaySpeed(sampleStripID, false);
+        mlrVSTEditor->updatePlaySpeedForNewSelection(sampleStripID);
 
     // redraw to reflect new selection
     repaint();
@@ -516,7 +544,6 @@ void SampleStripControl::paint(Graphics& g)
     }
 }
 
-
 void SampleStripControl::filesDropped(const StringArray& files, int /*x*/, int /*y*/)
 {
     // try to add each of the loaded files to the sample pool
@@ -541,7 +568,6 @@ void SampleStripControl::filesDropped(const StringArray& files, int /*x*/, int /
     // DESIGN: is this correct behaviour?
     //if(pluginUI->getLatestSample() != 0) setAudioSample(pluginUI->getLatestSample());
 }
-
 
 void SampleStripControl::recallParam(const int &paramID, const void *newValue, const bool &doRepaint)
 {
@@ -621,6 +647,26 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
         {
             double newPlaySpeed = *static_cast<const double*>(newValue);
             playbackSpeedSldr.setValue(newPlaySpeed, false);
+            break;
+        }
+
+    case SampleStrip::ParamIsPlaySpeedLocked :
+        {
+            bool newIsSpeedLocked = *static_cast<const bool*>(newValue);
+            if (newIsSpeedLocked != isSpeedLocked)
+            {
+                isSpeedLocked = newIsSpeedLocked;
+                if (isSpeedLocked)
+                {
+                    speedLockBtn.setImages(&lockImg);
+                    playbackSpeedSldr.setEnabled(false);
+                }
+                else
+                {
+                    speedLockBtn.setImages(&unlockImg);
+                    playbackSpeedSldr.setEnabled(true);
+                }
+            }
             break;
         }
 

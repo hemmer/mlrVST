@@ -48,30 +48,27 @@ public:
     virtual ~mlrVSTLookAndFeel();
 
     //==============================================================================
-    /** Draws the lozenge-shaped background for a standard button. */
-    virtual void drawButtonBackground (Graphics& g,
-                                       Button& button,
+    /** Draws the background for a standard button. */
+    virtual void drawButtonBackground (Graphics& g, Button& button,
                                        const Colour& backgroundColour,
                                        bool isMouseOverButton,
                                        bool isButtonDown);
 
+    virtual void drawButtonText (Graphics& g, TextButton& button,
+                                 bool isMouseOverButton, bool isButtonDown);
 
     /** Draws the contents of a standard ToggleButton. */
-    virtual void drawToggleButton (Graphics& g,
-                                   ToggleButton& button,
+    virtual void drawToggleButton (Graphics& g, ToggleButton& button,
                                    bool isMouseOverButton,
                                    bool isButtonDown);
 
     virtual void drawLabel(Graphics& g, Label& label);
     virtual const Typeface::Ptr getTypefaceForFont(const Font &font );
 
-    virtual void drawTickBox (Graphics& g,
-                              Component& component,
+    virtual void drawTickBox (Graphics& g, Component& component,
                               float x, float y, float w, float h,
-                              bool ticked,
-                              bool isEnabled,
-                              bool isMouseOverButton,
-                              bool isButtonDown);
+                              bool ticked, bool isEnabled,
+                              bool isMouseOverButton, bool isButtonDown);
 
     //==============================================================================
     virtual void drawProgressBar (Graphics& g, ProgressBar& progressBar,
@@ -79,38 +76,25 @@ public:
                                   double progress, const String& textToShow);
 
     //==============================================================================
-    virtual void drawScrollbarButton (Graphics& g,
-                                      ScrollBar& scrollbar,
-                                      int width, int height,
-                                      int buttonDirection,
-                                      bool isScrollbarVertical,
-                                      bool isMouseOverButton,
+    virtual void drawScrollbarButton (Graphics& g, ScrollBar& scrollbar,
+                                      int width, int height, int buttonDirection,
+                                      bool isScrollbarVertical, bool isMouseOverButton,
                                       bool isButtonDown);
 
-    virtual void drawScrollbar (Graphics& g,
-                                ScrollBar& scrollbar,
-                                int x, int y,
-                                int width, int height,
-                                bool isScrollbarVertical,
-                                int thumbStartPosition,
-                                int thumbSize,
-                                bool isMouseOver,
-                                bool isMouseDown);
+    virtual void drawScrollbar (Graphics& g, ScrollBar& scrollbar,
+                                int x, int y, int width, int height,
+                                bool isScrollbarVertical, int thumbStartPosition,
+                                int thumbSize, bool isMouseOver, bool isMouseDown);
 
     virtual ImageEffectFilter* getScrollbarEffect();
 
-    //==============================================================================
-    virtual void drawTextEditorOutline (Graphics& g,
-                                        int width, int height,
-                                        TextEditor& textEditor);
 
     //==============================================================================
     /** Fills the background of a popup menu component. */
     virtual void drawPopupMenuBackground (Graphics& g, int width, int height);
 
     virtual void drawMenuBarBackground (Graphics& g, int width, int height,
-                                        bool isMouseOverBar,
-                                        MenuBarComponent& menuBar);
+                                        bool isMouseOverBar, MenuBarComponent& menuBar);
 
     //==============================================================================
     virtual void drawComboBox (Graphics& g, int width, int height,
@@ -119,7 +103,8 @@ public:
                                int buttonW, int buttonH,
                                ComboBox& box);
 
-    virtual const Font getComboBoxFont (ComboBox& box);
+    virtual const Font getComboBoxFont(ComboBox& box);
+    virtual const Font getPopupMenuFont();
 
     //==============================================================================
     virtual void drawLinearSlider (Graphics& g,
@@ -160,6 +145,7 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTLookAndFeel);
 
+    const float silkFontSize;
     Typeface::Ptr typeSilk;
 };
 

@@ -26,6 +26,8 @@
   </CONFIGURATIONS>
   <MAINGROUP id="dYAMo6Ykd" name="mlrVST">
     <GROUP id="cgKTwY" name="Resources">
+      <FILE id="E6gKfJ" name="locked.png" compile="0" resource="1" file="Resources/locked.png"/>
+      <FILE id="hbVbph" name="unlocked.png" compile="0" resource="1" file="Resources/unlocked.png"/>
       <FILE id="OOHl59" name="silkfont" compile="0" resource="1" file="Resources/silkfont"/>
     </GROUP>
     <GROUP id="mkBFQj" name="oscpack">

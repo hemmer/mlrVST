@@ -27,7 +27,8 @@
 
 
 //==============================================================================
-mlrVSTLookAndFeel::mlrVSTLookAndFeel()
+mlrVSTLookAndFeel::mlrVSTLookAndFeel() :
+    silkFontSize(7.4f)
 {
     setColour (TextButton::buttonColourId,          Colour (0xffbbbbff));
     setColour (ListBox::outlineColourId,            findColour (ComboBox::outlineColourId));
@@ -55,51 +56,43 @@ mlrVSTLookAndFeel::~mlrVSTLookAndFeel()
 }
 
 //==============================================================================
-void mlrVSTLookAndFeel::drawButtonBackground (Graphics& g,
-                                                 Button& button,
-                                                 const Colour& backgroundColour,
-                                                 bool isMouseOverButton,
-                                                 bool isButtonDown)
+void mlrVSTLookAndFeel::drawButtonBackground (Graphics& g, Button& button,
+                                              const Colour& backgroundColour,
+                                              bool isMouseOverButton,
+                                              bool isButtonDown)
 {
-    const int width = button.getWidth();
-    const int height = button.getHeight();
+    if (isButtonDown)
+        g.setColour(backgroundColour);
+    else
+        g.setColour(Colours::white);
 
-    const float indent = 2.0f;
-    const int cornerSize = jmin (roundToInt (width * 0.4f),
-                                 roundToInt (height * 0.4f));
+    g.fillRect(0, 0, button.getWidth(), button.getHeight());
 
-    Path p;
-    p.addRoundedRectangle (indent, indent,
-                           width - indent * 2.0f,
-                           height - indent * 2.0f,
-                           (float) cornerSize);
-
-    Colour bc (backgroundColour.withMultipliedSaturation (0.3f));
-
-    if (isMouseOverButton)
-    {
-        if (isButtonDown)
-            bc = bc.brighter();
-        else if (bc.getBrightness() > 0.5f)
-            bc = bc.darker (0.1f);
-        else
-            bc = bc.brighter (0.1f);
-    }
-
-    g.setColour (bc);
-    g.fillPath (p);
-
-    g.setColour (bc.contrasting().withAlpha ((isMouseOverButton) ? 0.6f : 0.4f));
-    g.strokePath (p, PathStrokeType ((isMouseOverButton) ? 2.0f : 1.4f));
 }
 
-void mlrVSTLookAndFeel::drawTickBox (Graphics& g,
-                                        Component& /*component*/,
-                                        float x, float y, float w, float h,
-                                        const bool ticked,
-                                        const bool isEnabled,
-                                        const bool /*isMouseOverButton*/,
-                                        const bool isButtonDown)
+void mlrVSTLookAndFeel::drawButtonText (Graphics& g, TextButton& button,
+                                        bool isMouseOverButton, bool isButtonDown)
+{
+    Font font(getFontForTextButton(button));
+    g.setFont(font);
+    g.setFont(silkFontSize);
+
+    if (isButtonDown)
+        g.setColour(Colours::white);
+    else
+        g.setColour(button.findColour(TextButton::buttonColourId));
+
+    g.drawFittedText (button.getButtonText(), 4, 4,
+        button.getWidth() - 2, button.getHeight() - 8,
+        Justification::centredLeft, 10);
+}
+
+
+void mlrVSTLookAndFeel::drawTickBox (Graphics& g, Component& /*component*/,
+                                     float x, float y, float w, float h,
+                                     const bool ticked, const bool isEnabled,
+                                     const bool /*isMouseOverButton*/,
+                                     const bool isButtonDown)
 {
     Path box;
     box.addRoundedRectangle (0.0f, 2.0f, 6.0f, 6.0f, 1.0f);
@@ -144,7 +137,7 @@ void mlrVSTLookAndFeel::drawToggleButton (Graphics& g,
         g.setColour(button.findColour(ToggleButton::textColourId));
     }
 
-    g.setFont (7.4f);
+    g.setFont(silkFontSize);
 
     if (! button.isEnabled()) g.setOpacity (0.5f);
 
@@ -156,7 +149,7 @@ void mlrVSTLookAndFeel::drawToggleButton (Graphics& g,
 
 void mlrVSTLookAndFeel::drawLabel(Graphics& g, Label& label)
 {
-    g.fillAll (label.findColour (Label::backgroundColourId));
+    g.fillAll (label.findColour(Label::backgroundColourId));
 
 
     const float alpha = label.isEnabled() ? 1.0f : 0.5f;
@@ -335,27 +328,16 @@ ImageEffectFilter* mlrVSTLookAndFeel::getScrollbarEffect()
 //==============================================================================
 void mlrVSTLookAndFeel::drawPopupMenuBackground (Graphics& g, int width, int height)
 {
-    g.fillAll (findColour (PopupMenu::backgroundColourId));
+    g.fillAll(findColour (PopupMenu::backgroundColourId));
 
-    g.setColour (Colours::black.withAlpha (0.6f));
-    g.drawRect (0, 0, width, height);
+    g.setColour(Colours::black.withAlpha (0.6f));
+    g.drawRect(0, 0, width, height);
 }
 
 void mlrVSTLookAndFeel::drawMenuBarBackground (Graphics& g, int /*width*/, int /*height*/,
                                                   bool, MenuBarComponent& menuBar)
 {
-    g.fillAll (menuBar.findColour (PopupMenu::backgroundColourId));
-}
-
-
-//==============================================================================
-void mlrVSTLookAndFeel::drawTextEditorOutline (Graphics& g, int width, int height, TextEditor& textEditor)
-{
-    if (textEditor.isEnabled())
-    {
-        g.setColour (textEditor.findColour (TextEditor::outlineColourId));
-        g.drawRect (0, 0, width, height);
-    }
+    g.fillAll(menuBar.findColour (PopupMenu::backgroundColourId));
 }
 
 //==============================================================================
@@ -380,13 +362,10 @@ void mlrVSTLookAndFeel::drawComboBox (Graphics& g, int width, int height,
     if (box.isEnabled())
     {
         Path p;
-        p.addTriangle (buttonX + buttonW * 0.5f,            buttonY + buttonH * (0.45f - arrowH),
-                       buttonX + buttonW * (1.0f - arrowX), buttonY + buttonH * 0.45f,
-                       buttonX + buttonW * arrowX,          buttonY + buttonH * 0.45f);
 
-        p.addTriangle (buttonX + buttonW * 0.5f,            buttonY + buttonH * (0.55f + arrowH),
-                       buttonX + buttonW * (1.0f - arrowX), buttonY + buttonH * 0.55f,
-                       buttonX + buttonW * arrowX,          buttonY + buttonH * 0.55f);
+        p.addTriangle (buttonX + buttonW * 0.5f,            buttonY + buttonH * (0.35f + arrowH),
+                       buttonX + buttonW * (1.0f - arrowX), buttonY + buttonH * 0.35f,
+                       buttonX + buttonW * arrowX,          buttonY + buttonH * 0.35f);
 
         g.setColour (box.findColour ((isButtonDown) ? ComboBox::backgroundColourId
                                                     : ComboBox::buttonColourId));
@@ -394,10 +373,17 @@ void mlrVSTLookAndFeel::drawComboBox (Graphics& g, int width, int height,
     }
 }
 
-const Font mlrVSTLookAndFeel::getComboBoxFont (ComboBox& box)
+const Font mlrVSTLookAndFeel::getComboBoxFont(ComboBox& box)
 {
-    Font f(11.0f);
-    f.setHorizontalScale (0.9f);
+    Font f(silkFontSize);
+    //f.setHorizontalScale(0.9f);
+    return f;
+}
+
+
+const Font mlrVSTLookAndFeel::getPopupMenuFont()
+{
+    Font f(silkFontSize);
     return f;
 }
 

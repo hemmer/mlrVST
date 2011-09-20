@@ -7,6 +7,12 @@
 
 namespace BinaryData
 {
+    extern const char*   locked_png;
+    const int            locked_pngSize = 1232;
+
+    extern const char*   unlocked_png;
+    const int            unlocked_pngSize = 1242;
+
     extern const char*   silkfont;
     const int            silkfontSize = 1649;
 
