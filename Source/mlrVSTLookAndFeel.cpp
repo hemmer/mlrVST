@@ -155,10 +155,10 @@ void mlrVSTLookAndFeel::drawLabel(Graphics& g, Label& label)
     const float alpha = label.isEnabled() ? 1.0f : 0.5f;
 
     g.setColour (label.findColour (Label::textColourId).withMultipliedAlpha (alpha));
-    g.setFont(label.getFont());
-    g.drawFittedText(label.getText(), 1, 1,
-        label.getWidth() - 2, label.getHeight() - 2,
-        Justification::centred, 1,
+    g.setFont(silkFontSize);
+    g.drawFittedText(label.getText(), 4, 4,
+        label.getWidth() - 2, label.getHeight() - 8,
+        Justification::centredLeft, 1,
         label.getMinimumHorizontalScale());
 
     g.setColour (label.findColour (Label::outlineColourId).withMultipliedAlpha (alpha));

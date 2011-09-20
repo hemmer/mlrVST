@@ -73,6 +73,7 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
         selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
         selectionLength = selectionEnd - selectionStart;
         chunkSize = (int) (selectionLength / (float) numChunks);
+        DBG("new sel length" << selectionLength);
         break;
 
     case ParamAudioSample :
@@ -178,7 +179,7 @@ void SampleStrip::updatePlaySpeedForBPMChange(const double &newBPM)
 void SampleStrip::updatePlaySpeedForSelectionChange()
 {
 
-    if (!isPlaySpeedLocked && currentSample)
+    if (!isPlaySpeedLocked && currentSample && selectionLength > 0)
     {
         jassert(previousSelectionLength > 0);
         playSpeed *= (selectionLength / (double) previousSelectionLength);
@@ -196,26 +197,27 @@ void SampleStrip::findInitialPlaySpeed(const double &newBPM, const float &hostSa
         playSpeed = (double)(selectionLength / sampleSampleRate) * (numSamplesInFourBars / hostSampleRate);
 
         /* This uses multiples of two to find the closest speed to 1.0,
-           and sets the tempo to use in updatePlaySpeedForBPMChange()
-           and updatePlaySpeedForSelectionChange()
+        and sets the tempo to use in updatePlaySpeedForBPMChange()
+        and updatePlaySpeedForSelectionChange()
         */
-            previousBPM = newBPM;
-            previousSelectionLength = selectionLength;
-            double newPlaySpeed = playSpeed;
-            if (playSpeed > 1.0)
+        previousBPM = newBPM;
+        previousSelectionLength = selectionLength;
+
+        double newPlaySpeed = playSpeed;
+        if (playSpeed > 1.0)
+        {
+            while ( abs(newPlaySpeed / 2 - 1.0) < abs(newPlaySpeed - 1.0) )
             {
-                while ( abs(newPlaySpeed / 2 - 1.0) < abs(newPlaySpeed - 1.0) )
-                {
-                    newPlaySpeed /= 2.0;
-                }
+                newPlaySpeed /= 2.0;
             }
-            else
-            {
-                while ( abs(newPlaySpeed * 2 - 1.0) < abs(newPlaySpeed - 1.0) )
-                {
-                    newPlaySpeed *= 2.0;
-                }
-            }
-            playSpeed = newPlaySpeed;
         }
+        else
+        {
+            while ( abs(newPlaySpeed * 2 - 1.0) < abs(newPlaySpeed - 1.0) )
+            {
+                newPlaySpeed *= 2.0;
+            }
+        }
+        playSpeed = newPlaySpeed;
+    }
 }
