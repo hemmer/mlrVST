@@ -196,6 +196,13 @@ void SampleStripControl::buildUI()
     trackNumberLbl.setColour(Label::backgroundColourId, Colours::black);
     trackNumberLbl.setColour(Label::textColourId, Colours::white);
     trackNumberLbl.setFont(fontSize);
+    
+    addAndMakeVisible(&filenameLbl);
+    filenameLbl.setColour(Label::backgroundColourId, Colours::white.withAlpha(0.5f));
+    filenameLbl.setColour(Label::textColourId, Colours::black);
+    filenameLbl.setJustificationType(Justification::right);
+    filenameLbl.setBounds(controlbarSize, componentHeight - controlbarSize, 200, controlbarSize);
+    filenameLbl.setFont(fontSize);
 
 
     addAndMakeVisible(&chanLbl);
@@ -204,12 +211,7 @@ void SampleStripControl::buildUI()
     chanLbl.setColour(Label::textColourId, Colours::white);
     chanLbl.setFont(fontSize);
 
-    //addAndMakeVisible(&filenameLbl);
-    //filenameLbl.setColour(Label::backgroundColourId, Colours::white);
-    //filenameLbl.setColour(Label::textColourId, Colours::black);
-    //filenameLbl.setJustificationType(Justification::right);
-    //filenameLbl.setBounds(0, 0, componentWidth, controlbarSize);
-    //filenameLbl.setFont(10.0f);
+
 
 
     // clear existing buttons
