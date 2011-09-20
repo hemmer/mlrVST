@@ -236,27 +236,49 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
                 *outL++ += (l + r) * 0.5f;
             }
 
-            sampleCurrentPosition += playSpeed;
+            
 
-            switch (playMode)
+            if (!isReversed)
             {
-            case SampleStrip::LOOP_CHUNK :
-                if (sampleCurrentPosition > (playbackStartPosition + chunkSize))
+                sampleCurrentPosition += playSpeed;
+
+                switch (playMode)
                 {
-                    sampleCurrentPosition = (float) playbackStartPosition;
-                    break;
+                case SampleStrip::LOOP_CHUNK :
+                    if (sampleCurrentPosition > (playbackStartPosition + chunkSize))
+                    {
+                        sampleCurrentPosition = (float) playbackStartPosition; break;
+                    }
+                case SampleStrip::PLAY_TO_END :
+                    if (sampleCurrentPosition > sampleEndPosition)
+                    {
+                        stopSamplePlaying(); break;
+                    }
+                case SampleStrip::LOOP :
+                    if (sampleCurrentPosition > sampleEndPosition)
+                    {
+                        sampleCurrentPosition = (float) sampleStartPosition; break;
+                    }
                 }
-            case SampleStrip::PLAY_TO_END :
-                if (sampleCurrentPosition > sampleEndPosition)
+            }
+            else
+            {
+                // go back in time...
+                sampleCurrentPosition -= playSpeed;
+
+                if (sampleCurrentPosition < playbackStartPosition)
                 {
-                    stopSamplePlaying();
-                    break;
-                }
-            case SampleStrip::LOOP :
-                if (sampleCurrentPosition > sampleEndPosition)
-                {
-                    sampleCurrentPosition = (float) sampleStartPosition;
-                    break;
+                    switch (playMode)
+                    {
+                    case SampleStrip::LOOP_CHUNK :
+                        sampleCurrentPosition = (float)(playbackStartPosition + chunkSize); break;
+
+                    case SampleStrip::PLAY_TO_END :
+                        stopSamplePlaying(); break;
+
+                    case SampleStrip::LOOP :
+                        sampleCurrentPosition = (float) sampleEndPosition; break;
+                    }
                 }
             }
         }
@@ -292,6 +314,9 @@ void ChannelProcessor::refreshPlaybackParameters()
 
     isPlaying = *static_cast<const bool *>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsPlaying));
+
+    isReversed = *static_cast<const bool *>
+        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsReversed));
 
     playSpeed = *static_cast<const double *>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlaySpeed));
