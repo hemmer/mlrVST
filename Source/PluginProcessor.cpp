@@ -291,6 +291,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
             lastPosInfo.resetToDefault();
         }
 
+
         const int numSamples = buffer.getNumSamples();
         int channel, dp = 0;
 
@@ -456,7 +457,7 @@ void mlrVSTAudioProcessor::timerCallback()
 
 void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &monomeRow, const int &state)
 {
-    
+    DBG(state);
     if (monomeRow == 0)
     {
         // TODO control mappings for top row 
@@ -603,4 +604,13 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
      
     //File testFile("C:\\Users\\Hemmer\Desktop\\test.xml");
     DBG(xml.createDocument(" "));
+}
+
+void mlrVSTAudioProcessor::switchChannels(const int &newChan, const int &stripID)
+{
+    int currentChannel = *static_cast<const int*>
+        (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamCurrentChannel));
+
+    // Stop the current channel and store where it stopped
+    double currentPosition = channelProcessorArray[currentChannel]->stopSamplePlaying();
 }

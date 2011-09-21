@@ -86,6 +86,7 @@ protected:
                 osc::int32 a1, a2, a3;
                 args >> a1 >> a2 >> a3 >> osc::EndMessage;
                 sendMessage(a1, a2, a3);
+                DBG("press" << a1 << a2 << a3);
             }
 
         }

@@ -75,11 +75,12 @@ public:
         return getProcessor()->getSampleStripParameter(parameterID, stripID);
     }
 
-    void calcInitialPlaySpeed(const int &stripID) { getProcessor()->calcInitialPlaySpeed(stripID); }
+    void calcInitialPlaySpeed(const int &stripID) const { getProcessor()->calcInitialPlaySpeed(stripID); }
     void updatePlaySpeedForNewSelection(const int &stripID) { getProcessor()->calcPlaySpeedForSelectionChange(stripID); }
     void modPlaySpeed(const double &factor, const int &stripID) { getProcessor()->modPlaySpeed(factor, stripID); }
     AudioSample * getAudioSample(const int &poolIndex) const { return getProcessor()->getAudioSample(poolIndex); }
 
+    void switchChannels(const int &newChan, const int &stripID) const { getProcessor()->switchChannels(newChan, stripID); }
     Colour getChannelColour(const int &chan) const { return getProcessor()->getChannelProcessor(chan)->getChannelColour(); }
 
 private:

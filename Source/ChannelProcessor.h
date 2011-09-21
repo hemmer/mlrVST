@@ -84,7 +84,7 @@ public:
         blockSize is the size of each block in samples
     */
     void startSamplePlaying(const int &block, const int &blockSize);
-    void stopSamplePlaying();
+    double stopSamplePlaying();
 
     // The lets the ChannelProcessor know which sample to read
     void setCurrentSampleStrip(SampleStrip* newSampleStrip);

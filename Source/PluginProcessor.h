@@ -127,6 +127,7 @@ public:
     void calcPlaySpeedForNewBPM(const int &stripID);
     void calcPlaySpeedForSelectionChange(const int &stripID);
     void modPlaySpeed(const double &factor, const int &stripID);
+    void switchChannels(const int &newChan, const int &stripID);
 
     void processOSCKeyPress(const int &monomeCol, const int &monomeRow, const int &state);
 
