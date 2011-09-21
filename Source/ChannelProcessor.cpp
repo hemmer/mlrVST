@@ -211,12 +211,13 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
 
         while (--numSamples >= 0)
         {
-            // NEXT: what is sourceSamplePosition??????????????????
+
+            // just using a very simple linear interpolation here..
             const int pos = (int) sampleCurrentPosition;
             const double alpha = (double) (sampleCurrentPosition - pos);
             const double invAlpha = 1.0f - alpha;
 
-            // just using a very simple linear interpolation here..
+
             // TODO should l/r be double
             float l = (float)(inL [pos] * invAlpha + inL [pos + 1] * alpha);
             float r = (inR != nullptr) ? (float)(inR [pos] * invAlpha + inR [pos + 1] * alpha) : l;
@@ -288,6 +289,7 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
     }
 }
 
+
 void ChannelProcessor::refreshPlaybackParameters()
 {
     currentSample = static_cast<const AudioSample*>
@@ -306,8 +308,10 @@ void ChannelProcessor::refreshPlaybackParameters()
     selectionLength = sampleEndPosition - sampleStartPosition;
 
     // If we reselect this keeps the currently playing point in sync
-    if (sampleStartPosition > sampleCurrentPosition)
+    // Also if the new sample is shorted
+    if ((sampleStartPosition > sampleCurrentPosition) || (sampleCurrentPosition > sampleEndPosition))
         sampleCurrentPosition = (double) playbackStartPosition;
+
 
     stripGain = *static_cast<const float *>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamStripVolume));

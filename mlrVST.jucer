@@ -12,7 +12,8 @@
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" vstFolder="~/SDKs/vstsdk2.4" rtasFolder="~/SDKs/PT_80_SDK"
                juceFolder="../../.." objCExtraSuffix="JuceDemo"/>
-    <LINUX_MAKE targetFolder="Builds/Linux" vstFolder="~/SDKs/vstsdk2.4" juceFolder="../../.."/>
+    <LINUX_MAKE targetFolder="Builds/Linux" vstFolder="~/SDKs/vstsdk2.4" juceFolder="../../.."
+                extraCompilerFlags="-DOSC_HOST_LITTLE_ENDIAN"/>
     <VS2010 targetFolder="Builds/VisualStudio2010" libraryType="1" juceFolder="c:\SDKs\juce"
             vstFolder="c:\SDKs\vstsdk2.4"/>
   </EXPORTFORMATS>
