@@ -46,13 +46,33 @@ void ChannelProcessor::setCurrentSampleStrip(SampleStrip* newSampleStrip)
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamAudioSample));
 }
 
-void ChannelProcessor::startSamplePlaying(const int &startBlock, const int &blockSize)
+void ChannelProcessor::startSamplePlaying(const int &newStartPosition)
 {
-    jassertfalse;
-    sampleStartPosition = startBlock * blockSize;
-    sampleCurrentPosition = (double) sampleStartPosition;
+    // this gets the latest start and end points for the sample
+    refreshPlaybackParameters();
+
+    sampleCurrentPosition = (float) newStartPosition;
     isPlaying = true;
+
+    float playbackPercentage = getCurrentPlaybackPercentage();
+    currentSampleStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &isPlaying);
+    currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
 }
+
+// If no argument given start at playbackStartPosition
+void ChannelProcessor::startSamplePlaying()
+{
+    // this gets the latest start and end points for the sample
+    refreshPlaybackParameters();
+
+    sampleCurrentPosition = (float) playbackStartPosition;
+    isPlaying = true;
+
+    float playbackPercentage = getCurrentPlaybackPercentage();
+    currentSampleStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &isPlaying);
+    currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
+}
+
 
 // Return the point at which it stopped
 double ChannelProcessor::stopSamplePlaying()
@@ -117,23 +137,9 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
 
         if (m.isNoteOn())
         {
-
-
             // We can save some effort by ignore cases where this is no sample!
             if (currentSample != 0)
-            {
-
-                // this gets the latest start and end points for the sample
-                refreshPlaybackParameters();
-
-                sampleCurrentPosition = (float) playbackStartPosition;
-                isPlaying = true;
-
-                float playbackPercentage = getCurrentPlaybackPercentage();
-                currentSampleStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &isPlaying);
-                currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
-            }
-
+                startSamplePlaying();
         }
     }
 }
@@ -202,11 +208,12 @@ void ChannelProcessor::renderNextBlock(AudioSampleBuffer& outputBuffer,
 
 void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
 {
-    // this gets the latest start and end points for the sample
-    refreshPlaybackParameters();
 
     if (currentSample != 0 && isPlaying)
     {
+        // TODO this should be above the if statement above, but crashes
+        // this gets the latest start and end points for the sample
+        refreshPlaybackParameters();
 
         const float* const inL = currentSample->getAudioData()->getSampleData(0, 0);
         const float* const inR = currentSample->getNumChannels() > 1

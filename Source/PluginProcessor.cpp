@@ -608,9 +608,21 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
 
 void mlrVSTAudioProcessor::switchChannels(const int &newChan, const int &stripID)
 {
-    int currentChannel = *static_cast<const int*>
-        (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamCurrentChannel));
+    // NOT WORKING YET
+    //int currentChannel = *static_cast<const int*>
+    //    (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamCurrentChannel));
 
-    // Stop the current channel and store where it stopped
-    double currentPosition = channelProcessorArray[currentChannel]->stopSamplePlaying();
+    //bool isPlaying = *static_cast<const bool*>
+    //    (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamIsPlaying));
+
+    //// Stop the current channel and store where it stopped
+    //double currentPosition = channelProcessorArray[currentChannel]->stopSamplePlaying();
+
+    //sampleStripArray[stripID]->setSampleStripParam(SampleStrip::ParamCurrentChannel, &newChan);
+
+    //if (isPlaying)
+    //{
+    //    // restart the new channel
+    //    channelProcessorArray[newChan]->startSamplePlaying(currentPosition);
+    //}
 }

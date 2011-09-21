@@ -83,7 +83,8 @@ public:
         block is which segment is being played from
         blockSize is the size of each block in samples
     */
-    void startSamplePlaying(const int &block, const int &blockSize);
+    void startSamplePlaying(const int &newStartPos);
+    void startSamplePlaying();
     double stopSamplePlaying();
 
     // The lets the ChannelProcessor know which sample to read
