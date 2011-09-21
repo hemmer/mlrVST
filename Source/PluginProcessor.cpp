@@ -43,6 +43,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     // add our channel processors
     buildChannelProcessorArray(numChannels);
 
+    //savePreset("testaods");
 
     lastPosInfo.resetToDefault();
 
@@ -334,14 +335,22 @@ AudioProcessorEditor* mlrVSTAudioProcessor::createEditor()
 //==============================================================================
 void mlrVSTAudioProcessor::getStateInformation(MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // Here's an example of how you can use XML to make it easy and more robust:
+    // This method stores parameters in the memory block
 
     // Create an outer XML element..
-    XmlElement xml("MYPLUGINSETTINGS");
+    XmlElement xml("Global Settings");
 
     // add some attributes to it..
+
     xml.setAttribute("master gain", masterGain);
+    for (int c = 0; c < channelGains.size(); c++)
+    {
+        String name("channel gain ");
+        name += c;
+        xml.setAttribute(name, channelGains[c]);
+    }
+     
+    xml.setAttribute("current preset", "none");
 
     // then use this helper function to stuff it into the binary blob and return it..
     copyXmlToBinary(xml, destData);
@@ -358,10 +367,16 @@ void mlrVSTAudioProcessor::setStateInformation(const void* data, int sizeInBytes
     if (xmlState != 0)
     {
         // make sure that it's actually our type of XML object..
-        if (xmlState->hasTagName("MYPLUGINSETTINGS"))
+        if (xmlState->hasTagName("Global Settings"))
         {
             // ok, now pull out our parameters...
             masterGain  = (float) xmlState->getDoubleAttribute("master gain", masterGain);
+            for (int c = 0; c < channelGains.size(); c++)
+            {
+                String name("channel gain ");
+                name += c;
+                channelGains.set(c, (float) xmlState->getDoubleAttribute(name, channelGains[c]));
+            }
         }
     }
 }
@@ -528,4 +543,64 @@ SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index)
     jassert( index < sampleStripArray.size() );
     SampleStrip *tempStrip = sampleStripArray[index];
     return tempStrip;
+}
+
+void mlrVSTAudioProcessor::savePreset(const String &presetName)
+{
+    // Create an outer XML element..
+    XmlElement xml("PRESET");
+
+    xml.setAttribute("name", presetName);
+
+    // Store settings of each strip
+    for (int strip = 0; strip < sampleStripArray.size(); ++strip)
+    {
+        XmlElement *stripXml = new XmlElement("STRIP");
+        stripXml->setAttribute("id", strip);
+
+        // write all parameters to XML
+        for (int param = 0; param < SampleStrip::NumGUIParams; ++param)
+        {
+            int paramType = sampleStripArray[strip]->getParameterType(param);
+            String paramName = sampleStripArray[strip]->getParameterName(param);
+
+            const void *p = sampleStripArray[strip]->getSampleStripParam(param);
+
+            switch (paramType)
+            {
+            case SampleStrip::TypeBool :
+                stripXml->setAttribute(paramName, (int)(*static_cast<const bool*>(p)));
+                break;
+
+            case SampleStrip::TypeInt :
+                stripXml->setAttribute(paramName, *static_cast<const int*>(p));
+                break;
+
+            case SampleStrip::TypeDouble :
+                stripXml->setAttribute(paramName, *static_cast<const double*>(p));
+                break;
+
+            case SampleStrip::TypeFloat :
+                stripXml->setAttribute(paramName, (double)(*static_cast<const float*>(p)));
+                break;
+
+            case SampleStrip::TypeAudioSample :
+                {
+                    const AudioSample * sample = static_cast<const AudioSample*>(p);
+                    if (sample)
+                    {
+                        String samplePath = sample->getSampleFile().getFullPathName();
+                        stripXml->setAttribute(paramName, samplePath);
+                    }
+                    break;
+                }
+            default : jassertfalse;
+            }
+        }
+
+        xml.addChildElement(stripXml);
+    }
+     
+    //File testFile("C:\\Users\\Hemmer\Desktop\\test.xml");
+    DBG(xml.createDocument(" "));
 }

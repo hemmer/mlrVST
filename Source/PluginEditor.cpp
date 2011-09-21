@@ -13,13 +13,14 @@
 //==============================================================================
 mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter, const int &newNumChannels)
     : AudioProcessorEditor (ownerFilter),
-      infoLabel(), helloLabel("", "Hello"), logoLabel("", "mlrVST"),
+      infoLabel(), helloLabel("", "Hello"), 
+      bpmLabel("bpm"),
       masterGainSlider("master gain"),
       selNumChannels("select number of channels"),
 	  sampleStripControlArray(),
       waveformControlHeight(95), waveformControlWidth(700),
 	  numChannels(newNumChannels),
-      numStrips(7),
+      numStrips(7), fontSize(7.4f),
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
       slidersArray(),
       myLookAndFeel()
@@ -28,14 +29,9 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     DBG("GUI loaded");
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
-    // add logo strip to top
-	//addAndMakeVisible(&logoLabel);
-    logoLabel.setBounds(0, 0, getWidth(), 30);
-	logoLabel.setColour(Label::backgroundColourId, Colours::black);
-    logoLabel.setColour(Label::textColourId, Colours::white);
-    logoLabel.setJustificationType(Justification::bottomRight);
-    Font logoFont(Font::getDefaultSansSerifFontName(), 30.0f, Font::plain); 
-    logoLabel.setFont(logoFont);
+    addAndMakeVisible(&bpmLabel);
+    bpmLabel.setBounds(PAD_AMOUNT, PAD_AMOUNT, 200, 50);
+    bpmLabel.setFont(4*fontSize);
 
     // add a label that will display the current timecode and status..
     addAndMakeVisible(&infoLabel);
@@ -83,14 +79,6 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     selNumChannels.setSelectedId(numChannels, true);
 
 
-    // test adding basic samples to pool
-    //File testFile1 = File("C:\\Users\\Hemmer\\Desktop\\funky.wav");
-    //File testFile2 = File("C:\\Users\\Hemmer\\Desktop\\sillyset.wav");
-    //samplePool.add(new AudioSample(testFile1));
-    //samplePool.add(new AudioSample(testFile2));
-    
-
-
     formatManager.registerBasicFormats();
     
     // TODO: Make custom look and feel
@@ -109,8 +97,6 @@ mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
 
 void mlrVSTAudioProcessorEditor::buildSliders()
 {
-    // TODO: get gain slider values from the host
-
     // clear any existing sliders
     slidersArray.clear();
 
@@ -133,6 +119,8 @@ void mlrVSTAudioProcessorEditor::buildSliders()
         slidersArray[i]->addListener(this);
         slidersArray[i]->setRange(0.0, 1.0, 0.01);
         slidersArray[i]->setBounds(PAD_AMOUNT + (i + 1) * sliderWidth, 540, sliderWidth, 190);
+        slidersArray[i]->setValue(getProcessor()->getChannelProcessor(i)->getChannelGain());
+
         Colour sliderColour = getProcessor()->getChannelProcessor(i)->getChannelColour();
         slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
         slidersArray[i]->setColour(Slider::backgroundColourId, sliderColour);
@@ -159,7 +147,11 @@ void mlrVSTAudioProcessorEditor::timerCallback()
     AudioPlayHead::CurrentPositionInfo newPos(ourProcessor->lastPosInfo);
 
     if (lastDisplayedPosition != newPos)
-        displayPositionInfo (newPos);
+    {
+        String bpmLabelText(newPos.bpm);
+        bpmLabelText += " bpm";//(newPos.timeSigNumerator + " / " + newPos.timeSigDenominator);
+        bpmLabel.setText(bpmLabelText, false);
+    }
 
     // TODO: use mlrVSTAudioProcessor::getParameter
     // instead of accessing member variables directly?
@@ -215,11 +207,11 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
 
 void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 {
- //   // Manually load a file
-	//if(btn == &button)
- //   {
-
-	//}
+    // Manually load a file
+	if(btn == &debugButton)
+    {
+        getProcessor()->savePreset("test");
+	}
 }
 
 // Combo box handling

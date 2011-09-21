@@ -90,11 +90,8 @@ public:
     void setCurrentSampleStrip(SampleStrip* newSampleStrip);
     void setBPM(const double &newBPM) { currentBPM = newBPM; }
 
-    void setChannelGain(const float &vol)
-    { 
-        channelGain = vol;
-        DBG("channel " + String(channelIDNumber) + " " + String(vol));
-    }
+    void setChannelGain(const float &vol){ channelGain = vol; }
+    float getChannelGain() const { return channelGain; }
 
     // TODO: eventually this could be channel colourscheme
     Colour getChannelColour() const { return channelColour; }

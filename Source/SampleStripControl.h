@@ -17,6 +17,7 @@
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "AudioSample.h"
 #include "SampleStripControl.h"
+#include "mlrVSTLookAndFeel.h"
 
 /* Forward declaration to set up pointer arrangement 
    to allow sample strips to access the UI */
@@ -91,7 +92,7 @@ private:
     Rectangle<int> waveformPaintBounds;
 
 
-
+    menuLookandFeel menuLF;
 
 
     int numChannels;        // total number of channels available

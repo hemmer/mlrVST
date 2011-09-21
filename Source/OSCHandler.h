@@ -22,11 +22,12 @@ class OSCHandler :  public osc::OscPacketListener,
 {
 
 private:
-    // incoming
+    // incoming messages
     int incomingPort;
     UdpListeningReceiveSocket s;
     mlrVSTAudioProcessor * const parent;
 
+    // outgoing messages
     char buffer[1536];
     osc::OutboundPacketStream p;
     UdpTransmitSocket transmitSocket;
@@ -70,11 +71,6 @@ protected:
 
     void ProcessMessage(const osc::ReceivedMessage& m, const IpEndpointName& /*remoteEndpoint*/)
     {
-        // a more complex scheme involving std::map or some other method of
-        // processing address patterns could be used here
-        // (see MessageMappingOscPacketListener.h for example). however, the main
-        // purpose of this example is to illustrate and test different argument
-        // parsing methods
 
         try
         {
@@ -82,7 +78,7 @@ protected:
             // examples below.
             osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
             osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-            //DBG(m.AddressPattern());
+
 
             if (strcmp(m.AddressPattern(), "/mlrvst/press") == 0)
             {
@@ -90,8 +86,6 @@ protected:
                 osc::int32 a1, a2, a3;
                 args >> a1 >> a2 >> a3 >> osc::EndMessage;
                 sendMessage(a1, a2, a3);
-
-                //DBG("received '/mlrvst' message with arguments: " << a1 << " " << a2 << " " << a3 << "\n");
             }
 
         }

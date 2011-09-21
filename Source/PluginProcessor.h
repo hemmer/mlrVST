@@ -105,9 +105,8 @@ public:
     // adds a sample to the sample pool
     bool addNewSample(File &sampleFile);
     AudioSample * getAudioSample(const int &samplePoolIndex);
-    
-
     int getSamplePoolSize() { return samplePool.size(); }
+
     // TODO: bounds checking?
     String getSampleName(const int &index)
     {
@@ -146,6 +145,10 @@ public:
     {
         return sampleStripArray[stripID]->getSampleStripParam(parameterID);   
     }
+
+
+    // Preset stuff
+    void savePreset(const String &presetName);
 
 private:
     //==============================================================================

@@ -83,13 +83,13 @@ public:
     Colour getChannelColour(const int &chan) const { return getProcessor()->getChannelProcessor(chan)->getChannelColour(); }
 
 private:
-    Label infoLabel, helloLabel, logoLabel;
+    Label infoLabel, helloLabel, bpmLabel;
     Slider masterGainSlider;
 	DrawableButton debugButton;
-
     ComboBox selNumChannels;
-
 	ListBox fileList;
+
+    float fontSize;
 
 	AudioFormatManager formatManager;
 

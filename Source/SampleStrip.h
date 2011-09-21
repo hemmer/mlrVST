@@ -49,6 +49,17 @@ public:
         TotalNumParams
     };
 
+    
+    enum SampleStripParameterType
+    {
+        TypeInt,
+        TypeDouble,
+        TypeFloat,
+        TypeBool,
+        TypeString, 
+        TypeAudioSample
+    };
+
     enum PlayMode
     { 
         LOOP = 1,               // starts the sample looping
@@ -56,30 +67,53 @@ public:
         PLAY_TO_END             // plays from current point until the end then stops
     };
 
-
     String getParameterName(const int &parameterID) const
     {
         switch(parameterID)
         {
-        case ParamCurrentChannel : return "current channel";
-        case ParamNumChunks : return "num chunks";
+        case ParamCurrentChannel : return "current_channel";
+        case ParamNumChunks : return "num_chunks";
         case ParamPlayMode : return "playmode";
-        case ParamIsLatched : return "is latched";
-        case ParamIsReversed : return "is reversed";
-        case ParamStripVolume : return "strip volume";
-        case ParamPlaySpeed : return "play speed";
-        case ParamIsPlaySpeedLocked : return "is play speed locked";
-        case ParamIsPlaying : return "is playing";
-        case ParamChunkSize : return "chunk size";
-        case ParamFractionalStart : return "fractional start";
-        case ParamFractionalEnd : return "fractional end";
-        case ParamAudioSample : return "audio sample";
-        case ParamPlaybackPercentage : return "playback percentage";
-        default : jassert(false); return "parameter not found";
+        case ParamIsLatched : return "is_latched";
+        case ParamIsReversed : return "is_reversed";
+        case ParamStripVolume : return "strip_volume";
+        case ParamPlaySpeed : return "play_speed";
+        case ParamIsPlaySpeedLocked : return "is_play_speed_locked";
+        case ParamIsPlaying : return "is_playing";
+        case ParamChunkSize : return "chunk_size";
+        case ParamFractionalStart : return "fractional_start";
+        case ParamFractionalEnd : return "fractional_end";
+        case ParamAudioSample : return "audio_sample";
+        case ParamPlaybackPercentage : return "playback_percentage";
+        case ParamSampleStart : return "sample_start";
+        case ParamSampleEnd : return "sample_end";
+        default : jassert(false); return "parameter_not_found";
         }
     }
 
-
+    int getParameterType(const int &parameterID) const
+    {
+        switch(parameterID)
+        {
+        case ParamCurrentChannel : return TypeInt;
+        case ParamNumChunks : return TypeInt;
+        case ParamPlayMode : return TypeInt;
+        case ParamIsLatched : return TypeBool;
+        case ParamIsReversed : return TypeBool;
+        case ParamStripVolume : return TypeFloat;
+        case ParamPlaySpeed : return TypeDouble;
+        case ParamIsPlaySpeedLocked : return TypeBool;
+        case ParamIsPlaying : return TypeBool;
+        case ParamChunkSize : return TypeInt;
+        case ParamFractionalStart : return TypeFloat;
+        case ParamFractionalEnd : return TypeFloat;
+        case ParamAudioSample : return TypeAudioSample;
+        case ParamPlaybackPercentage : return TypeFloat;
+        case ParamSampleStart : return TypeInt;
+        case ParamSampleEnd : return TypeInt;
+        default : jassert(false); return -1;
+        }
+    }
     // these are for getting / setting the int parameters
     void setSampleStripParam(const int &parameterID, const void *newValue);
     const void* getSampleStripParam(const int &parameterID) const;

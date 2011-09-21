@@ -194,12 +194,11 @@ void ChannelProcessor::renderNextBlock(AudioSampleBuffer& outputBuffer,
 
 void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
 {
-
+    // this gets the latest start and end points for the sample
+    refreshPlaybackParameters();
 
     if (currentSample != 0 && isPlaying)
     {
-        // this gets the latest start and end points for the sample
-        refreshPlaybackParameters();
 
         // TODO: can we remove a level of abstraction from here?
         const float* const inL = currentSample->getAudioData()->getSampleData(0, 0);
@@ -295,6 +294,8 @@ void ChannelProcessor::refreshPlaybackParameters()
     currentSample = static_cast<const AudioSample*>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamAudioSample));
 
+    if (currentSample)
+    {
     // Load sample strip details
     chunkSize = *static_cast<const int*>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamChunkSize));
@@ -327,4 +328,9 @@ void ChannelProcessor::refreshPlaybackParameters()
 
     playMode = *static_cast<const int *>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlayMode));
+    }
+    else
+    {
+        stopSamplePlaying();
+    }
 }
