@@ -211,12 +211,13 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
 
         while (--numSamples >= 0)
         {
-            // NEXT: what is sourceSamplePosition??????????????????
+
+            // just using a very simple linear interpolation here..
             const int pos = (int) sampleCurrentPosition;
             const double alpha = (double) (sampleCurrentPosition - pos);
             const double invAlpha = 1.0f - alpha;
 
-            // just using a very simple linear interpolation here..
+
             // TODO should l/r be double
             float l = (float)(inL [pos] * invAlpha + inL [pos + 1] * alpha);
             float r = (inR != nullptr) ? (float)(inR [pos] * invAlpha + inR [pos + 1] * alpha) : l;
@@ -236,27 +237,49 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
                 *outL++ += (l + r) * 0.5f;
             }
 
-            sampleCurrentPosition += playSpeed;
+            
 
-            switch (playMode)
+            if (!isReversed)
             {
-            case SampleStrip::LOOP_CHUNK :
-                if (sampleCurrentPosition > (playbackStartPosition + chunkSize))
+                sampleCurrentPosition += playSpeed;
+
+                switch (playMode)
                 {
-                    sampleCurrentPosition = (float) playbackStartPosition;
-                    break;
+                case SampleStrip::LOOP_CHUNK :
+                    if (sampleCurrentPosition > (playbackStartPosition + chunkSize))
+                    {
+                        sampleCurrentPosition = (float) playbackStartPosition; break;
+                    }
+                case SampleStrip::PLAY_TO_END :
+                    if (sampleCurrentPosition > sampleEndPosition)
+                    {
+                        stopSamplePlaying(); break;
+                    }
+                case SampleStrip::LOOP :
+                    if (sampleCurrentPosition > sampleEndPosition)
+                    {
+                        sampleCurrentPosition = (float) sampleStartPosition; break;
+                    }
                 }
-            case SampleStrip::PLAY_TO_END :
-                if (sampleCurrentPosition > sampleEndPosition)
+            }
+            else
+            {
+                // go back in time...
+                sampleCurrentPosition -= playSpeed;
+
+                if (sampleCurrentPosition < playbackStartPosition)
                 {
-                    stopSamplePlaying();
-                    break;
-                }
-            case SampleStrip::LOOP :
-                if (sampleCurrentPosition > sampleEndPosition)
-                {
-                    sampleCurrentPosition = (float) sampleStartPosition;
-                    break;
+                    switch (playMode)
+                    {
+                    case SampleStrip::LOOP_CHUNK :
+                        sampleCurrentPosition = (float)(playbackStartPosition + chunkSize); break;
+
+                    case SampleStrip::PLAY_TO_END :
+                        stopSamplePlaying(); break;
+
+                    case SampleStrip::LOOP :
+                        sampleCurrentPosition = (float) sampleEndPosition; break;
+                    }
                 }
             }
         }
@@ -265,6 +288,7 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
         currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
     }
 }
+
 
 void ChannelProcessor::refreshPlaybackParameters()
 {
@@ -284,14 +308,19 @@ void ChannelProcessor::refreshPlaybackParameters()
     selectionLength = sampleEndPosition - sampleStartPosition;
 
     // If we reselect this keeps the currently playing point in sync
-    if (sampleStartPosition > sampleCurrentPosition)
+    // Also if the new sample is shorted
+    if ((sampleStartPosition > sampleCurrentPosition) || (sampleCurrentPosition > sampleEndPosition))
         sampleCurrentPosition = (double) playbackStartPosition;
+
 
     stripGain = *static_cast<const float *>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamStripVolume));
 
     isPlaying = *static_cast<const bool *>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsPlaying));
+
+    isReversed = *static_cast<const bool *>
+        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsReversed));
 
     playSpeed = *static_cast<const double *>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlaySpeed));

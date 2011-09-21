@@ -196,6 +196,13 @@ void SampleStripControl::buildUI()
     trackNumberLbl.setColour(Label::backgroundColourId, Colours::black);
     trackNumberLbl.setColour(Label::textColourId, Colours::white);
     trackNumberLbl.setFont(fontSize);
+    
+    addAndMakeVisible(&filenameLbl);
+    filenameLbl.setColour(Label::backgroundColourId, Colours::white.withAlpha(0.5f));
+    filenameLbl.setColour(Label::textColourId, Colours::black);
+    filenameLbl.setJustificationType(Justification::right);
+    filenameLbl.setBounds(controlbarSize, componentHeight - controlbarSize, 200, controlbarSize);
+    filenameLbl.setFont(fontSize);
 
 
     addAndMakeVisible(&chanLbl);
@@ -204,12 +211,7 @@ void SampleStripControl::buildUI()
     chanLbl.setColour(Label::textColourId, Colours::white);
     chanLbl.setFont(fontSize);
 
-    //addAndMakeVisible(&filenameLbl);
-    //filenameLbl.setColour(Label::backgroundColourId, Colours::white);
-    //filenameLbl.setColour(Label::textColourId, Colours::black);
-    //filenameLbl.setJustificationType(Justification::right);
-    //filenameLbl.setBounds(0, 0, componentWidth, controlbarSize);
-    //filenameLbl.setFont(10.0f);
+
 
 
     // clear existing buttons
@@ -251,21 +253,21 @@ void SampleStripControl::buildUI()
     newXposition += 60;
 
     addAndMakeVisible(&modeLbl);
-    modeLbl.setBounds(newXposition, 0, 38, controlbarSize);
+    modeLbl.setBounds(newXposition, 0, 33, controlbarSize);
     modeLbl.setColour(Label::backgroundColourId, Colours::black);
     modeLbl.setColour(Label::textColourId, Colours::white);
     modeLbl.setFont(fontSize);
 
-    newXposition += 38;
+    newXposition += 33;
 
     addAndMakeVisible(&selPlayMode);
     selPlayMode.clear();
     selPlayMode.addItem("LOOP", SampleStrip::LOOP);
     selPlayMode.addItem("LOOP CHNK", SampleStrip::LOOP_CHUNK);
     selPlayMode.addItem("PLAY TO END", SampleStrip::PLAY_TO_END);
-    selPlayMode.setBounds(newXposition, 0, 85, controlbarSize);
+    selPlayMode.setBounds(newXposition, 0, 86, controlbarSize);
     
-    newXposition += 85;
+    newXposition += 86;
 
     addAndMakeVisible(&isLatchedBtn);
     isLatchedBtn.setBounds(newXposition, 0, 40, controlbarSize);
@@ -274,12 +276,12 @@ void SampleStripControl::buildUI()
     newXposition += 40;
 
     addAndMakeVisible(&playSpeedLbl);
-    playSpeedLbl.setBounds(newXposition, 0, 60, controlbarSize);
+    playSpeedLbl.setBounds(newXposition, 0, 64, controlbarSize);
     playSpeedLbl.setColour(Label::backgroundColourId, Colours::black);
     playSpeedLbl.setColour(Label::textColourId, Colours::white);
     playSpeedLbl.setFont(fontSize);
 
-    newXposition += 60;
+    newXposition += 64;
 
     addAndMakeVisible(&playbackSpeedSldr);
     playbackSpeedSldr.setSliderStyle(Slider::LinearBar);
@@ -310,10 +312,8 @@ void SampleStripControl::buildUI()
 
     newXposition += 20;
 
-
-
     addAndMakeVisible(&selNumChunks);
-    selNumChunks.setBounds(newXposition, 0, 30, controlbarSize);
+    selNumChunks.setBounds(newXposition, 0, 32, controlbarSize);
 
 }
 
@@ -516,9 +516,17 @@ void SampleStripControl::paint(Graphics& g)
     {
         g.setColour(Colours::black.withAlpha(0.25f));
         int visualPlaybackPoint = (int)(playbackPercentage * visualSelectionLength);
+        
+        if (!isReversed)
+        {
         g.fillRect(visualSelectionStart, controlbarSize,
                    visualPlaybackPoint, componentHeight - controlbarSize);
-
+        }
+        else
+        {
+            g.fillRect(visualSelectionStart + visualPlaybackPoint, controlbarSize,
+                visualSelectionLength - visualPlaybackPoint, componentHeight - controlbarSize);
+        }
         g.setColour(Colours::white);
         g.drawFittedText("Playback at " + String(playbackPercentage), 0,
                          controlbarSize, componentWidth,
@@ -530,7 +538,7 @@ void SampleStripControl::paint(Graphics& g)
        the selection and paint stripes to indicate what button 
        will do what.
     */
-    g.setColour(Colours::black.withAlpha(0.4f));
+    g.setColour(Colours::black.withAlpha(0.5f));
     g.fillRect(0, controlbarSize, visualSelectionStart, componentHeight - controlbarSize); 
     g.fillRect(visualSelectionEnd, controlbarSize, componentWidth - visualSelectionEnd, componentHeight - controlbarSize); 
 

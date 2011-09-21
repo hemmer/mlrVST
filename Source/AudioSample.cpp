@@ -22,7 +22,7 @@ AudioSample::AudioSample(const File &sampleSource) :
     sampleName = sampleSource.getFileName();
     fileType = sampleSource.getFileExtension();
 
-    ScopedPointer<AudioFormatReader> audioReader = 0;
+    ScopedPointer<AudioFormatReader> audioReader;
 
     if(fileType == ".wav")
     {

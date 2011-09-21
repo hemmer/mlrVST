@@ -1,6 +1,14 @@
 Code Overview for Developers
 ============================
 
+First a few general points:
+
+Every time the GUI (PluginEditor) is closed in the host, its destructor is called. This means that everything that needs to persist must originate in the PluginProcessor class (hence why AudioSamples and SampleStrips are stored there).
+
+The OSCpack library is cross platform but as yet I haven't figured out how to include it in a JUCE project in a way that Visual Studio is happy. So for now if you are on Mac, you will need to open the Jucer, remove the oscpack/ip/win32 folder and drag the oscpack/ip/posix folder into the project and Save (this will regenerate the Xcode project files).
+
+This is still in alpha, I have found in windows that if a Release build hangs, a restart is required! If you're running in in Visual Studio (using the PluginHost.exe included in utilities) then you can handle crashes without needing a restart.
+
 
 Audio Processing
 ================
@@ -15,7 +23,7 @@ This handles the actual sample manipulation for each channel. If we have four se
 
 SampleStrip
 -----------
-This contains the properties of a SampleStripControl, things like the current sample, how much of it is selected etc. Any changes to a SampleStrip control should update the corresponding SampleStrip.
+This contains the properties of a SampleStripControl, things like the current sample, how much of it is selected etc. Any changes to a SampleStrip control should update the corresponding SampleStrip. SampleStripControl communicates with the sample strip using a Parameter enum through intermediate functions in PluginEditor and PluginProcessor.
 
 
 

@@ -2,15 +2,13 @@ mlrVST TODO
 
 HIGH PRIORTIY
 
-- right click on Waveform and cancelling selects file 0
-- file drag/drop for samples
+- changing channel while playing leads to crash
+- preset system
 - (advanced) options panel
 	- could include envelopes for sample playback
-- per sample volumes (add to AudioSample)
 - handle different sample rates
 - exception handling (if file is deleted while playing)
 - add SplashScreen
-- use static types for adding IDs
 - Allow MIDI clips too
 	- Have AudioSample subclass Sample to allow MIDISample
 - arpeggio mode, hold down button sequence to trigger blocks in that order
