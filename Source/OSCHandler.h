@@ -86,7 +86,7 @@ protected:
             osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
             //DBG(m.AddressPattern());
 
-            if (strcmp(m.AddressPattern(), "/mlrvst/press") == 0)
+            if (strcmp(m.AddressPattern(), "/mlrvst/grid/key") == 0)
             {
                 // example #1:
                 osc::int32 a1, a2, a3;
