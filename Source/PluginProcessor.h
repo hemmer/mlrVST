@@ -23,7 +23,7 @@
 //==============================================================================
 /**
 */
-class mlrVSTAudioProcessor : public AudioProcessor
+class mlrVSTAudioProcessor : public AudioProcessor, public Timer
 {
 public:
     //==============================================================================
@@ -73,16 +73,12 @@ public:
     void getStateInformation (MemoryBlock& destData);
     void setStateInformation (const void* data, int sizeInBytes);
 
-    //==============================================================================
-    // These properties are public so that our editor component can access them
-    // A bit of a hacky way to do it, but it's only a demo! Obviously in your own
-    // code you'll do this much more neatly..
-    // TODO: FIX THIS!
-
 
     // this keeps a copy of the last set of time info that was acquired during an audio
     // callback - the UI component will read this and display it.
     AudioPlayHead::CurrentPositionInfo lastPosInfo;
+
+    void timerCallback();
 
     //==============================================================================
     // Note we may not need all these parameters, but if the host is to allow them,
@@ -175,7 +171,7 @@ private:
     OwnedArray<SampleStrip> sampleStripArray;
     int numSampleStrips;
 
-    OSCHandler oscMsgListener;
+    OSCHandler oscMsgHandler;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTAudioProcessor);
 };

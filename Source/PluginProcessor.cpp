@@ -14,9 +14,6 @@ It contains the basic startup code for a Juce application.
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-#include "osc/OscOutboundPacketStream.h"
-#include "ip/IpEndpointName.h"
-
 #include "OSCHandler.h"
 
 //==============================================================================
@@ -26,23 +23,13 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     sampleStripArray(), numSampleStrips(7),
     channelGains(), defaultChannelGain(0.8f),
     samplePool(),               // sample pool is initially empty
-    oscMsgListener(this)
+    oscMsgHandler(this)
 {
     
     DBG("starting OSC thread");
     
-    oscMsgListener.startThread();
-
-    // TEST: oscpack sending data
-    DBG("starting OSC tests");
-    char buffer[1536];
-    osc::OutboundPacketStream p(buffer, 1536);
-    UdpTransmitSocket socket(IpEndpointName("localhost", 8080));
-    p.Clear();
-    p << osc::BeginMessage("/mlrvst/led") << 1 << 1 << 0 << osc::EndMessage;
-    socket.Send(p.Data(), p.Size());
-    DBG("finished OSC tests");
-    // END TEST
+    // start listening for messages
+    oscMsgHandler.startThread();
 
     //File test("C:\\Users\\Hemmer\\Desktop\\funky.wav");
     //samplePool.add(new AudioSample(test));
@@ -58,10 +45,15 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
 
 
     lastPosInfo.resetToDefault();
+
+    startTimer(200);
 }
 
 mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
 {
+    // be polite!
+    oscMsgHandler.clearGrid();
+
     samplePool.clear(true);
     sampleStripArray.clear(true);
 
@@ -420,7 +412,67 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 }
 
 
+//////////////////////
+// OSC Stuff        //
+//////////////////////
 
+void mlrVSTAudioProcessor::timerCallback()
+{
+
+    // TODO: this is a HORRIBLE way to do this, and needs fixing
+    oscMsgHandler.clearGrid();
+
+    for (int row = 0; row < sampleStripArray.size(); ++row)
+    {
+        float percentage = *static_cast<const float*>
+            (getSampleStripParameter(SampleStrip::ParamPlaybackPercentage, row));
+        int numChunks = *static_cast<const int*>
+            (getSampleStripParameter(SampleStrip::ParamNumChunks, row));
+
+        bool isPlaying = *static_cast<const bool*>
+            (getSampleStripParameter(SampleStrip::ParamIsPlaying, row));
+
+        if (isPlaying)
+            oscMsgHandler.setLED((int)(percentage * numChunks), row + 1, 1);
+    }
+
+    
+}
+
+void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &monomeRow, const int &state)
+{
+    
+    if (monomeRow == 0)
+    {
+        // TODO control mappings for top row 
+    } 
+    else if (monomeRow <= numSampleStrips && monomeRow >= 0)
+    {
+
+        /* Only pass on messages that are from the allowed range of columns.
+           NOTE: MIDI messages may still be passed from other sources that
+           are outside this range so the channelProcessor must be aware of 
+           numChunks too to filter these. The -1 is because we are treating
+           the second row as the first "effective" row.
+        */
+        int effectiveMonomeRow = monomeRow - 1;
+
+        int numChunks = *static_cast<const int*>
+                        (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamNumChunks));
+
+        if (monomeCol < numChunks)
+        {
+            bool isLatched = *static_cast<const bool*>
+                (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamIsLatched));
+
+            // The +1 here is because midi channels start at 1 not 0!
+            if (state) monomeState.noteOn(effectiveMonomeRow + 1, monomeCol, 1.0f);
+            // only bother with note off if we aren't on latched mode
+            else if (!isLatched) monomeState.noteOff(effectiveMonomeRow + 1, monomeCol);
+        }
+    }
+
+}
 
 
 ///////////////////////
@@ -465,53 +517,15 @@ void mlrVSTAudioProcessor::modPlaySpeed(const double &factor, const int &stripID
     sampleStripArray[stripID]->modPlaySpeed(factor);
 }
 
-
-
 AudioSample * mlrVSTAudioProcessor::getAudioSample(const int &samplePoolIndex)
 {
     if (samplePoolIndex >= 0 && samplePoolIndex < samplePool.size())
         return samplePool[samplePoolIndex];
     else return 0;
 }
-
 SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index) 
 {
     jassert( index < sampleStripArray.size() );
     SampleStrip *tempStrip = sampleStripArray[index];
     return tempStrip;
-}
-
-void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &monomeRow, const int &state)
-{
-    
-    if (monomeRow == 0)
-    {
-        // TODO control mappings for top row 
-    } 
-    else if (monomeRow <= numSampleStrips && monomeRow >= 0)
-    {
-
-        /* Only pass on messages that are from the allowed range of columns.
-           NOTE: MIDI messages may still be passed from other sources that
-           are outside this range so the channelProcessor must be aware of 
-           numChunks too to filter these. The -1 is because we are treating
-           the second row as the first "effective" row.
-        */
-        int effectiveMonomeRow = monomeRow - 1;
-
-        int numChunks = *static_cast<const int*>
-                        (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamNumChunks));
-
-        if (monomeCol < numChunks)
-        {
-            bool isLatched = *static_cast<const bool*>
-                (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamIsLatched));
-
-            // The +1 here is because midi channels start at 1 not 0!
-            if (state) monomeState.noteOn(effectiveMonomeRow + 1, monomeCol, 1.0f);
-            // only bother with note off if we aren't on latched mode
-            else if (!isLatched) monomeState.noteOff(effectiveMonomeRow + 1, monomeCol);
-        }
-    }
-
 }

@@ -4,8 +4,8 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 
 // OSC send includes
-//#include "osc/OscOutboundPacketStream.h"
-//#include "ip/IpEndpointName.h"
+#include "osc/OscOutboundPacketStream.h"
+#include "ip/IpEndpointName.h"
 // OSC receive includes
 #include "osc/OscReceivedElements.h"
 #include "osc/OscPacketListener.h"
@@ -22,30 +22,26 @@ class OSCHandler :  public osc::OscPacketListener,
 {
 
 private:
-    int port;
+    // incoming
+    int incomingPort;
     UdpListeningReceiveSocket s;
     mlrVSTAudioProcessor * const parent;
+
+    char buffer[1536];
+    osc::OutboundPacketStream p;
+    UdpTransmitSocket transmitSocket;
 
 public:
 
     // Constructor
     OSCHandler(mlrVSTAudioProcessor * const owner) :
         Thread("OscListener Thread"),
-        port(8000),
-        s(IpEndpointName("localhost", port), this),
-        parent(owner)
+        incomingPort(8000), parent(owner),
+        s(IpEndpointName("localhost", incomingPort), this),
+        transmitSocket(IpEndpointName("localhost", 8080)), p(buffer, 1536)
     {
         
     }
-
-    //// Constructor
-    //OSCHandler() :
-    //    Thread("OscListener Thread"),
-    //    port(8000),
-    //    s(IpEndpointName("localhost", port), this)
-    //{
-
-    //}
 
 
     ~OSCHandler()
@@ -67,6 +63,8 @@ public:
 
     void sendMessage(const int &a1, const int &a2, const int &a3);
 
+    void setLED(const int &row, const int &col, const int &val);
+    void clearGrid();
 
 protected:
 

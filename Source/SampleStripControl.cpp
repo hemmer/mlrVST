@@ -401,6 +401,24 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
             selectionPointToChange = &visualSelectionStart;
         dragStart = e.x;
     }
+    // double click to select whole waveform
+    else if (e.mods == ModifierKeys::leftButtonModifier && e.getNumberOfClicks() == 2)
+    {
+        // select whole sample by default
+        visualSelectionStart = 0;
+        visualSelectionEnd = componentWidth;
+        visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
+        visualChunkSize = (visualSelectionLength / (float) numChunks);
+
+        // update the selection
+        float start = 0.0f, end = 1.0f;
+        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalStart, &start, sampleStripID);
+        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &end, sampleStripID);
+
+        mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);
+
+        repaint();
+    }
 }
 
 void SampleStripControl::mouseUp(const MouseEvent &e)
