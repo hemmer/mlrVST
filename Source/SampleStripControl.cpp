@@ -13,6 +13,7 @@ Custom component to display a waveform (corresponding to an mlr row)
 
 #include "PluginEditor.h"
 #include <cstdlib>
+#include <cmath>
 
 SampleStripControl::SampleStripControl(const int &id,
                                        const int &width,
@@ -42,6 +43,7 @@ SampleStripControl::SampleStripControl(const int &id,
     mouseDownMods(),
     mlrVSTEditor(owner), menuLF()
 {
+    // load binary data for lock icon
     lockImg.setImage(ImageCache::getFromMemory(BinaryData::locked_png, BinaryData::locked_pngSize));
     unlockImg.setImage(ImageCache::getFromMemory(BinaryData::unlocked_png, BinaryData::unlocked_pngSize));
 
@@ -112,10 +114,9 @@ void SampleStripControl::buttonClicked(Button *btn)
         if (channelButtonArray[i] == btn)
         {
             // update the processor / GUI
-            setChannel(i);
+            updateChannelColours(i);
             // ...so we can let the processor know
             mlrVSTEditor->switchChannels(i, sampleStripID);
-            //mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamCurrentChannel, &i, sampleStripID);
         }
     }
 
@@ -163,7 +164,7 @@ void SampleStripControl::sliderValueChanged(Slider *sldr)
     }
 }
 
-void SampleStripControl::setChannel(const int &newChannel)
+void SampleStripControl::updateChannelColours(const int &newChannel)
 {
 
     backgroundColour = channelButtonArray[newChannel]->getBackgroundColour();
@@ -190,8 +191,6 @@ void SampleStripControl::setChannel(const int &newChannel)
 void SampleStripControl::buildUI()
 {
 
-    
-
     int newXposition = 0;
 
     // This is the track number
@@ -215,9 +214,6 @@ void SampleStripControl::buildUI()
     chanLbl.setColour(Label::textColourId, Colours::white);
     chanLbl.setFont(fontSize);
 
-
-
-
     // clear existing buttons
     channelButtonArray.clear();
 
@@ -234,7 +230,8 @@ void SampleStripControl::buildUI()
     int previousChannel = *static_cast<const int*>(mlrVSTEditor->getSampleStripParameter(SampleStrip::ParamCurrentChannel, sampleStripID));
     if (previousChannel >= numChannels){
         DBG("Current channel outside range: resetting to channel 0.");
-        setChannel(0);
+        updateChannelColours(0);
+        mlrVSTEditor->switchChannels(0, sampleStripID);
     }
 
     newXposition = 35 + (numChannels) * controlbarSize;
@@ -396,18 +393,29 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
         }
 
     }
+
+    // middle click-drag to move the selection
     else if (e.mods == ModifierKeys::middleButtonModifier)
     {
         selectionStartBeforeDrag = visualSelectionStart;
     }
-    else if (e.mods == (ModifierKeys::ctrlModifier + ModifierKeys::leftButtonModifier))
+
+    // ctrl-left and ctrl-shift-left move one of the end points
+    else if ((e.mods == (ModifierKeys::ctrlModifier + 
+                         ModifierKeys::leftButtonModifier)) ||
+             (e.mods == (ModifierKeys::ctrlModifier + 
+                         ModifierKeys::leftButtonModifier + 
+                         ModifierKeys::shiftModifier)))
     {
         if ( abs(e.x - visualSelectionStart) > abs(e.x - visualSelectionEnd) )
             selectionPointToChange = &visualSelectionEnd;
         else
             selectionPointToChange = &visualSelectionStart;
         dragStart = e.x;
+
+        DBG("storing start");
     }
+
     // double click to select whole waveform
     else if (e.mods == ModifierKeys::leftButtonModifier && e.getNumberOfClicks() == 2)
     {
@@ -454,7 +462,6 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
     {
 
         int mouseX = e.x;
-        //int mouseStartX = e.getMouseDownX();
 
         // Make sure we don't select outside the waveform
         if (mouseX > componentWidth) mouseX = componentWidth;
@@ -493,6 +500,26 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
         // TODO: This will crash if control is pressing during drag
         *selectionPointToChange = newValue;
     }
+
+    ///* SNAPPING CODE, not yet working */
+    //else if ((e.mods == (ModifierKeys::ctrlModifier + 
+    //                     ModifierKeys::leftButtonModifier +
+    //                     ModifierKeys::shiftModifier)))
+    //{
+    //    // TODO: have snapping interval as an option
+    //    float eighth = componentWidth / 8.0;
+    //    float snapPos = fmod(e.x, eighth);
+    //    int newSeg = (int) (e.x / eighth);
+
+    //    if (snapPos > eighth / 2.0)
+    //    {
+    //        newSeg += 1;
+    //    }
+    //    *selectionPointToChange = (int)(newSeg * eighth);
+    //}
+    //DBG(visualSelectionStart);
+    //DBG(visualSelectionEnd);
+
 
     // Swap if inverse selection
     if (visualSelectionEnd < visualSelectionStart)
@@ -609,7 +636,7 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
     case SampleStrip::ParamCurrentChannel :
         {
             int newCurrentChannel = *static_cast<const int*>(newValue);
-            setChannel(newCurrentChannel);
+            updateChannelColours(newCurrentChannel);
             break;
         }
 

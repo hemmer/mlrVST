@@ -54,7 +54,7 @@ public:
 
     // Update the strips if the number of channels changes
     void buildUI();
-    void setChannel(const int &newChannel);
+    void updateChannelColours(const int &newChannel);
     void setNumChannels(const int &newNumChannels) {
         numChannels = newNumChannels;
         buildUI();  // reflect changes

@@ -73,7 +73,6 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
         selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
         selectionLength = selectionEnd - selectionStart;
         chunkSize = (int) (selectionLength / (float) numChunks);
-        DBG("new sel length" << selectionLength);
         break;
 
     case ParamAudioSample :
@@ -185,8 +184,6 @@ void SampleStrip::updatePlaySpeedForSelectionChange()
         playSpeed *= (selectionLength / (double) previousSelectionLength);
         previousSelectionLength = selectionLength;
     }
-
-    DBG("new playspeed" << playSpeed);
 }
 
 void SampleStrip::findInitialPlaySpeed(const double &newBPM, const float &hostSampleRate)
