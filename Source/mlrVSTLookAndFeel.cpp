@@ -26,9 +26,11 @@
 #include "mlrVSTLookAndFeel.h"
 
 
+
 //==============================================================================
 mlrVSTLookAndFeel::mlrVSTLookAndFeel() :
-    silkFontSize(7.4f)
+    silkFontSizeSmall(7.4f),
+    silkFontSizeBig(11.8f)
 {
     setColour (TextButton::buttonColourId,          Colour (0xffbbbbff));
     setColour (ListBox::outlineColourId,            findColour (ComboBox::outlineColourId));
@@ -75,7 +77,7 @@ void mlrVSTLookAndFeel::drawButtonText (Graphics& g, TextButton& button,
 {
     Font font(getFontForTextButton(button));
     g.setFont(font);
-    g.setFont(silkFontSize);
+    g.setFont(silkFontSizeSmall);
 
     if (isButtonDown)
         g.setColour(Colours::white);
@@ -137,7 +139,7 @@ void mlrVSTLookAndFeel::drawToggleButton (Graphics& g,
         g.setColour(button.findColour(ToggleButton::textColourId));
     }
 
-    g.setFont(silkFontSize);
+    g.setFont(silkFontSizeSmall);
 
     if (! button.isEnabled()) g.setOpacity (0.5f);
 
@@ -155,7 +157,7 @@ void mlrVSTLookAndFeel::drawLabel(Graphics& g, Label& label)
     const float alpha = label.isEnabled() ? 1.0f : 0.5f;
 
     g.setColour (label.findColour (Label::textColourId).withMultipliedAlpha (alpha));
-    g.setFont(silkFontSize);
+    g.setFont(label.getFont());
     g.drawFittedText(label.getText(), 4, 4,
         label.getWidth() - 2, label.getHeight() - 8,
         Justification::centredLeft, 1,
@@ -375,7 +377,7 @@ void mlrVSTLookAndFeel::drawComboBox (Graphics& g, int width, int height,
 
 const Font mlrVSTLookAndFeel::getComboBoxFont(ComboBox& box)
 {
-    Font f(silkFontSize);
+    Font f(silkFontSizeSmall);
     //f.setHorizontalScale(0.9f);
     return f;
 }
@@ -383,7 +385,7 @@ const Font mlrVSTLookAndFeel::getComboBoxFont(ComboBox& box)
 
 const Font mlrVSTLookAndFeel::getPopupMenuFont()
 {
-    Font f(silkFontSize);
+    Font f(silkFontSizeBig);
     return f;
 }
 

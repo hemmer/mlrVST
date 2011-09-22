@@ -9,6 +9,15 @@ The OSCpack library is cross platform but as yet I haven't figured out how to in
 
 This is still in alpha, I have found in windows that if a Release build hangs, a restart is required! If you're running in in Visual Studio (using the PluginHost.exe included in utilities) then you can handle crashes without needing a restart.
 
+Compiling
+=========
+
+Win
+---
+
+You need to download both JUCE and the vstsdk2.4 (available from Steinberg or elsewhere). Then open the file mlrVST.jucer in the Introjucer (downloads on SourceForge) and edit so that the paths to JUCE and the vstsdk are correct. Save then open in VisualStudio and compile!
+
+
 
 Audio Processing
 ================

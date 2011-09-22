@@ -32,6 +32,7 @@
 
 
 
+
 //==============================================================================
 /**
     The original Juce look-and-feel.
@@ -145,8 +146,36 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTLookAndFeel);
 
-    const float silkFontSize;
     Typeface::Ptr typeSilk;
+
+protected:
+    const float silkFontSizeSmall, silkFontSizeBig;
+};
+
+
+
+class menuLookandFeel : public mlrVSTLookAndFeel
+{
+
+public:
+
+    void drawLabel(Graphics& g, Label& label)
+    {
+        g.fillAll (label.findColour(Label::backgroundColourId));
+
+        const float alpha = label.isEnabled() ? 1.0f : 0.5f;
+
+        g.setColour (label.findColour (Label::textColourId).withMultipliedAlpha (alpha));
+        g.setFont(silkFontSizeSmall);
+        g.drawFittedText(label.getText(), 4, 4,
+            label.getWidth() - 2, label.getHeight() - 8,
+            Justification::centredLeft, 1,
+            label.getMinimumHorizontalScale());
+
+        g.setColour (label.findColour (Label::outlineColourId).withMultipliedAlpha (alpha));
+        g.drawRect (0, 0, label.getWidth(), label.getHeight());
+
+    }
 };
 
 

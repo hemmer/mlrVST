@@ -40,7 +40,7 @@ SampleStripControl::SampleStripControl(const int &id,
     stripVolumeSldr("strip volume"),
     selectionPointToChange(0),
     mouseDownMods(),
-    mlrVSTEditor(owner)
+    mlrVSTEditor(owner), menuLF()
 {
     lockImg.setImage(ImageCache::getFromMemory(BinaryData::locked_png, BinaryData::locked_pngSize));
     unlockImg.setImage(ImageCache::getFromMemory(BinaryData::unlocked_png, BinaryData::unlocked_pngSize));
@@ -114,6 +114,7 @@ void SampleStripControl::buttonClicked(Button *btn)
             // update the processor / GUI
             setChannel(i);
             // ...so we can let the processor know
+            //mlrVSTEditor->switchChannels(i, sampleStripID);
             mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamCurrentChannel, &i, sampleStripID);
         }
     }
@@ -188,6 +189,9 @@ void SampleStripControl::setChannel(const int &newChannel)
 // This is particuarly usful if the number of channels changes
 void SampleStripControl::buildUI()
 {
+
+    
+
     int newXposition = 0;
 
     // This is the track number
@@ -249,6 +253,7 @@ void SampleStripControl::buildUI()
     stripVolumeSldr.setBounds(newXposition, 0, 60, controlbarSize);
     stripVolumeSldr.setRange(0.0, 2.0, 0.01);
     stripVolumeSldr.setTextBoxIsEditable(false);
+    stripVolumeSldr.setLookAndFeel(&menuLF);
 
     newXposition += 60;
 
@@ -266,7 +271,8 @@ void SampleStripControl::buildUI()
     selPlayMode.addItem("LOOP CHNK", SampleStrip::LOOP_CHUNK);
     selPlayMode.addItem("PLAY TO END", SampleStrip::PLAY_TO_END);
     selPlayMode.setBounds(newXposition, 0, 86, controlbarSize);
-    
+    selPlayMode.setLookAndFeel(&menuLF);
+
     newXposition += 86;
 
     addAndMakeVisible(&isLatchedBtn);
@@ -288,6 +294,7 @@ void SampleStripControl::buildUI()
     playbackSpeedSldr.setColour(Slider::textBoxTextColourId, Colours::white);
     playbackSpeedSldr.setBounds(newXposition, 0, 80, controlbarSize);
     playbackSpeedSldr.setRange(0.0, 4.0, 0.001);
+    playbackSpeedSldr.setLookAndFeel(&menuLF);
 
     newXposition += 80;
 
@@ -314,7 +321,7 @@ void SampleStripControl::buildUI()
 
     addAndMakeVisible(&selNumChunks);
     selNumChunks.setBounds(newXposition, 0, 32, controlbarSize);
-
+    selNumChunks.setLookAndFeel(&menuLF);
 }
 
 
@@ -400,6 +407,24 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
         else
             selectionPointToChange = &visualSelectionStart;
         dragStart = e.x;
+    }
+    // double click to select whole waveform
+    else if (e.mods == ModifierKeys::leftButtonModifier && e.getNumberOfClicks() == 2)
+    {
+        // select whole sample by default
+        visualSelectionStart = 0;
+        visualSelectionEnd = componentWidth;
+        visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
+        visualChunkSize = (visualSelectionLength / (float) numChunks);
+
+        // update the selection
+        float start = 0.0f, end = 1.0f;
+        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalStart, &start, sampleStripID);
+        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &end, sampleStripID);
+
+        mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);
+
+        repaint();
     }
 }
 

@@ -46,18 +46,41 @@ void ChannelProcessor::setCurrentSampleStrip(SampleStrip* newSampleStrip)
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamAudioSample));
 }
 
-void ChannelProcessor::startSamplePlaying(const int &startBlock, const int &blockSize)
+void ChannelProcessor::startSamplePlaying(const int &newStartPosition)
 {
-    sampleStartPosition = startBlock * blockSize;
-    sampleCurrentPosition = (double) sampleStartPosition;
+    // this gets the latest start and end points for the sample
+    refreshPlaybackParameters();
+
+    sampleCurrentPosition = (float) newStartPosition;
     isPlaying = true;
+
+    float playbackPercentage = getCurrentPlaybackPercentage();
+    currentSampleStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &isPlaying);
+    currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
 }
 
-void ChannelProcessor::stopSamplePlaying()
+// If no argument given start at playbackStartPosition
+void ChannelProcessor::startSamplePlaying()
+{
+    // this gets the latest start and end points for the sample
+    refreshPlaybackParameters();
+
+    sampleCurrentPosition = (float) playbackStartPosition;
+    isPlaying = true;
+
+    float playbackPercentage = getCurrentPlaybackPercentage();
+    currentSampleStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &isPlaying);
+    currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
+}
+
+
+// Return the point at which it stopped
+double ChannelProcessor::stopSamplePlaying()
 {
     bool stopPlay = false;
     currentSampleStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &stopPlay);
     isPlaying = false;
+    return sampleCurrentPosition;
 }
 
 
@@ -88,6 +111,11 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
     effectiveMonomeRow = m.getChannel() - 1;
     if (m.isNoteOn()) monomeCol = m.getNoteNumber();
 
+    DBG(m.getNoteNumber());
+    DBG(m.getChannel());
+    String s = m.isNoteOn() ? "1" : "0";
+    DBG(s);
+
     /* Load the new sample strip (this contains information
        about which sample to play etc). */
     setCurrentSampleStrip(parent->getSampleStrip(effectiveMonomeRow));
@@ -109,23 +137,9 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
 
         if (m.isNoteOn())
         {
-
-
             // We can save some effort by ignore cases where this is no sample!
             if (currentSample != 0)
-            {
-
-                // this gets the latest start and end points for the sample
-                refreshPlaybackParameters();
-
-                sampleCurrentPosition = (float) playbackStartPosition;
-                isPlaying = true;
-
-                float playbackPercentage = getCurrentPlaybackPercentage();
-                currentSampleStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &isPlaying);
-                currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
-            }
-
+                startSamplePlaying();
         }
     }
 }
@@ -195,13 +209,12 @@ void ChannelProcessor::renderNextBlock(AudioSampleBuffer& outputBuffer,
 void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
 {
 
-
     if (currentSample != 0 && isPlaying)
     {
+        // TODO this should be above the if statement above, but crashes
         // this gets the latest start and end points for the sample
         refreshPlaybackParameters();
 
-        // TODO: can we remove a level of abstraction from here?
         const float* const inL = currentSample->getAudioData()->getSampleData(0, 0);
         const float* const inR = currentSample->getNumChannels() > 1
                                ? currentSample->getAudioData()->getSampleData(1, 0) : nullptr;
@@ -218,7 +231,7 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
             const double invAlpha = 1.0f - alpha;
 
 
-            // TODO should l/r be double
+            // double up if mono
             float l = (float)(inL [pos] * invAlpha + inL [pos + 1] * alpha);
             float r = (inR != nullptr) ? (float)(inR [pos] * invAlpha + inR [pos + 1] * alpha) : l;
 
@@ -295,36 +308,45 @@ void ChannelProcessor::refreshPlaybackParameters()
     currentSample = static_cast<const AudioSample*>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamAudioSample));
 
-    // Load sample strip details
-    chunkSize = *static_cast<const int*>
-        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamChunkSize));
-    sampleStartPosition = *static_cast<const int*>
-        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleStart));
-    sampleEndPosition = *static_cast<const int*>
-        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleEnd));
-    // Then use the column to find which point to start at
-    playbackStartPosition = sampleStartPosition + monomeCol * chunkSize;
+    if (currentSample)
+    {
+        // Load sample strip details
+        chunkSize = *static_cast<const int*>
+            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamChunkSize));
+        sampleStartPosition = *static_cast<const int*>
+            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleStart));
+        sampleEndPosition = *static_cast<const int*>
+            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleEnd));
+        // Then use the column to find which point to start at
+        playbackStartPosition = sampleStartPosition + monomeCol * chunkSize;
 
-    selectionLength = sampleEndPosition - sampleStartPosition;
+        selectionLength = sampleEndPosition - sampleStartPosition;
 
-    // If we reselect this keeps the currently playing point in sync
-    // Also if the new sample is shorted
-    if ((sampleStartPosition > sampleCurrentPosition) || (sampleCurrentPosition > sampleEndPosition))
-        sampleCurrentPosition = (double) playbackStartPosition;
+        // If we reselect this keeps the currently playing point in sync
+        // Also if the new sample is shorted
+        if ((sampleStartPosition > sampleCurrentPosition) || (sampleCurrentPosition > sampleEndPosition))
+            sampleCurrentPosition = (double) playbackStartPosition;
 
 
-    stripGain = *static_cast<const float *>
-        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamStripVolume));
+        stripGain = *static_cast<const float *>
+            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamStripVolume));
 
-    isPlaying = *static_cast<const bool *>
-        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsPlaying));
+        isPlaying = *static_cast<const bool *>
+            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsPlaying));
 
-    isReversed = *static_cast<const bool *>
-        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsReversed));
+        isReversed = *static_cast<const bool *>
+            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsReversed));
 
-    playSpeed = *static_cast<const double *>
-        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlaySpeed));
+        playSpeed = *static_cast<const double *>
+            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlaySpeed));
 
-    playMode = *static_cast<const int *>
-        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlayMode));
+        playMode = *static_cast<const int *>
+            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlayMode));
+
+        DBG(chunkSize);
+    }
+    else
+    {
+        stopSamplePlaying();
+    }
 }

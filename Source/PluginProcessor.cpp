@@ -39,7 +39,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     osc::OutboundPacketStream p(buffer, 1536);
     UdpTransmitSocket socket(IpEndpointName("localhost", 8080));
     p.Clear();
-    p << osc::BeginMessage("/mlrvst/grid/led/set") << 1 << 1 << 0 << osc::EndMessage;
+    p << osc::BeginMessage("/mlrvst/led") << 1 << 1 << 0 << osc::EndMessage;
     socket.Send(p.Data(), p.Size());
     DBG("finished OSC tests");
     // END TEST
