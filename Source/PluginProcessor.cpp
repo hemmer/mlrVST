@@ -339,7 +339,7 @@ void mlrVSTAudioProcessor::getStateInformation(MemoryBlock& destData)
     // This method stores parameters in the memory block
 
     // Create an outer XML element..
-    XmlElement xml("Global Settings");
+    XmlElement xml("GLOBALSETTINGS");
 
     // add some attributes to it..
 
@@ -368,7 +368,7 @@ void mlrVSTAudioProcessor::setStateInformation(const void* data, int sizeInBytes
     if (xmlState != 0)
     {
         // make sure that it's actually our type of XML object..
-        if (xmlState->hasTagName("Global Settings"))
+        if (xmlState->hasTagName("GLOBALSETTINGS"))
         {
             // ok, now pull out our parameters...
             masterGain  = (float) xmlState->getDoubleAttribute("master gain", masterGain);

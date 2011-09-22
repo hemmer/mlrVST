@@ -87,6 +87,7 @@ private:
     Label infoLabel, helloLabel, bpmLabel;
     Slider masterGainSlider;
 	DrawableButton debugButton;
+    TextButton loadFilesBtn;
     ComboBox selNumChannels;
 	ListBox fileList;
 

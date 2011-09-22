@@ -22,6 +22,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	  numChannels(newNumChannels),
       numStrips(7), fontSize(7.4f),
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
+      loadFilesBtn("load files", "LOAD FILES"),
       slidersArray(),
       myLookAndFeel()
 {
@@ -43,6 +44,12 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	debugButton.addListener(this);
 	debugButton.setBackgroundColours(Colours::blue, Colours::black);
 	debugButton.setBounds(50, 300, 50, 25);
+
+    addAndMakeVisible(&loadFilesBtn);
+	loadFilesBtn.addListener(this);
+    loadFilesBtn.setColour(TextButton::buttonColourId, Colours::black);
+	loadFilesBtn.setBounds(50, 350, 70, 25);
+
     // another test label
 	addAndMakeVisible(&helloLabel);
 	helloLabel.setBounds(50, 150, 100, 100);
@@ -207,10 +214,30 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
 
 void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 {
-    // Manually load a file
-	if(btn == &debugButton)
+
+    if(btn == &debugButton)
     {
         getProcessor()->savePreset("test");
+    }
+
+    // USEFUL FOR TESTING
+	if(btn == &loadFilesBtn)
+    {
+        //getProcessor()->savePreset("test");
+
+        
+		FileChooser myChooser ("Please choose a file:", File::getSpecialLocation(File::userDesktopDirectory), "*.wav");
+        if(myChooser.browseForMultipleFilesToOpen())
+        {	
+            Array<File> newFiles = myChooser.getResults();
+            for (int i = 0; i < newFiles.size(); ++i)
+            {
+                File newFile = newFiles[i];
+                loadSampleFromFile(newFile);
+            }
+
+		}
+
 	}
 }
 
