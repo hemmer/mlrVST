@@ -69,32 +69,7 @@ public:
 
 protected:
 
-    void ProcessMessage(const osc::ReceivedMessage& m, const IpEndpointName& /*remoteEndpoint*/)
-    {
-
-        try
-        {
-            // argument stream, and argument iterator, used in different
-            // examples below.
-            osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
-            osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-
-
-            if (strcmp(m.AddressPattern(), "/mlrvst/press") == 0)
-            {
-                // example #1:
-                osc::int32 a1, a2, a3;
-                args >> a1 >> a2 >> a3 >> osc::EndMessage;
-                sendMessage(a1, a2, a3);
-                DBG("press" << a1 << a2 << a3);
-            }
-
-        }
-        catch (osc::Exception& e)
-        {
-            DBG("error while parsing message: " << m.AddressPattern() << ": " << e.what() << "\n");
-        }
-    }
+    void ProcessMessage(const osc::ReceivedMessage& m, const IpEndpointName& /*remoteEndpoint*/);
 
 };
 

@@ -16,10 +16,9 @@
 ChannelProcessor::ChannelProcessor(const int &channelIDNo,
                                    const Colour &col,
                                    mlrVSTAudioProcessor *owner,
-                                   SampleStrip *initialSampleStrip,
                                    const int &totalSampleStrips) :
     parent(owner), numSampleStrips(totalSampleStrips),
-    currentSampleStrip(initialSampleStrip),
+    currentSampleStrip(0),
     channelIDNumber(channelIDNo),
     channelGain(0.8f), stripGain(0.0f),
     currentSample(0), playSpeed(1.0), currentBPM(120.0f),
@@ -28,7 +27,7 @@ ChannelProcessor::ChannelProcessor(const int &channelIDNo,
     isPlaying(false),
     channelColour(col),
     isReversed(false), playMode(-1), chunkSize(-1), playbackStartPosition(-1),
-    effectiveMonomeRow(-1), monomeCol(-1)
+    effectiveMonomeRow(-1), monomeCol(-5)
 {
 
 }
@@ -41,23 +40,25 @@ ChannelProcessor::~ChannelProcessor()
 void ChannelProcessor::setCurrentSampleStrip(SampleStrip* newSampleStrip)
 {
     currentSampleStrip = newSampleStrip;
-    //currentSample = currentSampleStrip->getCurrentSample();
     currentSample = static_cast<const AudioSample*>
         (currentSampleStrip->getSampleStripParam(SampleStrip::ParamAudioSample));
+
 }
 
-void ChannelProcessor::startSamplePlaying(const int &newStartPosition)
-{
-    // this gets the latest start and end points for the sample
-    refreshPlaybackParameters();
-
-    sampleCurrentPosition = (float) newStartPosition;
-    isPlaying = true;
-
-    float playbackPercentage = getCurrentPlaybackPercentage();
-    currentSampleStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &isPlaying);
-    currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
-}
+/* Switching Channels during playback doens't work for now but it will eventually use this */
+//void ChannelProcessor::startSamplePlaying(const int &newStartPosition, SampleStrip * const newSampleStrip)
+//{
+//    currentSampleStrip = newSampleStrip;
+//    // this gets the latest start and end points for the sample
+//    refreshPlaybackParameters();
+//
+//    sampleCurrentPosition = (float) newStartPosition;
+//    isPlaying = true;
+//
+//    float playbackPercentage = getCurrentPlaybackPercentage();
+//    currentSampleStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &isPlaying);
+//    currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
+//}
 
 // If no argument given start at playbackStartPosition
 void ChannelProcessor::startSamplePlaying()
@@ -74,11 +75,17 @@ void ChannelProcessor::startSamplePlaying()
 }
 
 
-// Return the point at which it stopped
+// Returns the point at which the sample stopped
 double ChannelProcessor::stopSamplePlaying()
 {
     bool stopPlay = false;
-    currentSampleStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &stopPlay);
+
+    // It's possible that other sources have stopped the sample already
+    if (currentSampleStrip)
+        currentSampleStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &stopPlay);
+
+    currentSampleStrip = 0;
+    currentSample = 0;
     isPlaying = false;
     return sampleCurrentPosition;
 }
@@ -99,43 +106,38 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
        either a button lift or the arrive of a new sample
        from a different strip.              
     */
-    if (m.getNoteNumber() == monomeCol && m.isNoteOff())
+    if (m.getNoteNumber() == monomeCol && m.isNoteOff() && currentSampleStrip)
     {
-        stopSamplePlaying();
+        bool isStripLatched = *static_cast<const bool*>
+            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsLatched));
+        
+        if (!isStripLatched)
+            stopSamplePlaying();
     }
 
-    /* NOTE: The -1 is here because the first monome row
-       is reserved for mappings, making the second row
-       effectively the first.
-    */
-    effectiveMonomeRow = m.getChannel() - 1;
-    if (m.isNoteOn()) monomeCol = m.getNoteNumber();
-
-    DBG(m.getNoteNumber());
-    DBG(m.getChannel());
-    String s = m.isNoteOn() ? "1" : "0";
-    DBG(s);
-
-    /* Load the new sample strip (this contains information
-       about which sample to play etc). */
-    setCurrentSampleStrip(parent->getSampleStrip(effectiveMonomeRow));
-    
-    playMode = *static_cast<const int*>
-               (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlayMode));
-
-    DBG("Current play mode: " << playMode);
-
-    /* We are only interested in columns that are
-       within the allowed number of chunks.
-    */
-    int numChunks = *static_cast<const int*>
-                    (currentSampleStrip->getSampleStripParam(SampleStrip::ParamNumChunks));
-    if (monomeCol < numChunks)
+    if (m.isNoteOn())
     {
+        /* NOTE: The -1 is here because the first monome row
+        is reserved for mappings, making the second row
+        effectively the first.
+        */
+        effectiveMonomeRow = m.getChannel() - 1;
+        monomeCol = m.getNoteNumber();
 
-        DBG("message received. note " + String(m.getNoteNumber()) + ", channel " + String(m.getChannel()));
+        /* Load the new sample strip (this contains information
+        about which sample to play etc). */
+        setCurrentSampleStrip(parent->getSampleStrip(effectiveMonomeRow));
 
-        if (m.isNoteOn())
+        playMode = *static_cast<const int*>
+            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlayMode));
+
+        /* We are only interested in columns that are
+        within the allowed number of chunks.
+        */
+        int numChunks = *static_cast<const int*>
+            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamNumChunks));
+
+        if (monomeCol < numChunks)
         {
             // We can save some effort by ignore cases where this is no sample!
             if (currentSample != 0)
@@ -184,6 +186,7 @@ void ChannelProcessor::renderNextBlock(AudioSampleBuffer& outputBuffer,
                 (messageSelChannel == channelIDNumber))
                 useEvent = true;
         }
+
         // if there was an event, process up until that position
         // otherwise process until the end
         const int numThisTime = useEvent ? midiEventPos - startSample
@@ -208,16 +211,14 @@ void ChannelProcessor::renderNextBlock(AudioSampleBuffer& outputBuffer,
 
 void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
 {
+    // see if any parameters have changed    
+    refreshPlaybackParameters();
 
     if (currentSample != 0 && isPlaying)
     {
-        // TODO this should be above the if statement above, but crashes
-        // this gets the latest start and end points for the sample
-        refreshPlaybackParameters();
-
         const float* const inL = currentSample->getAudioData()->getSampleData(0, 0);
         const float* const inR = currentSample->getNumChannels() > 1
-                               ? currentSample->getAudioData()->getSampleData(1, 0) : nullptr;
+            ? currentSample->getAudioData()->getSampleData(1, 0) : nullptr;
 
         float* outL = outputBuffer.getSampleData(0, startSample);
         float* outR = outputBuffer.getNumChannels() > 1 ? outputBuffer.getSampleData (1, startSample) : nullptr;
@@ -296,57 +297,55 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
                 }
             }
         }
-
-        float playbackPercentage = getCurrentPlaybackPercentage();
-        currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
     }
 }
 
 
 void ChannelProcessor::refreshPlaybackParameters()
 {
-    currentSample = static_cast<const AudioSample*>
-        (currentSampleStrip->getSampleStripParam(SampleStrip::ParamAudioSample));
-
-    if (currentSample)
+    if (currentSampleStrip)
     {
-        // Load sample strip details
-        chunkSize = *static_cast<const int*>
-            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamChunkSize));
-        sampleStartPosition = *static_cast<const int*>
-            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleStart));
-        sampleEndPosition = *static_cast<const int*>
-            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleEnd));
-        // Then use the column to find which point to start at
-        playbackStartPosition = sampleStartPosition + monomeCol * chunkSize;
+        currentSample = static_cast<const AudioSample*>
+            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamAudioSample));
 
-        selectionLength = sampleEndPosition - sampleStartPosition;
-
-        // If we reselect this keeps the currently playing point in sync
-        // Also if the new sample is shorted
-        if ((sampleStartPosition > sampleCurrentPosition) || (sampleCurrentPosition > sampleEndPosition))
-            sampleCurrentPosition = (double) playbackStartPosition;
+        float playbackPercentage = getCurrentPlaybackPercentage();
+        currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
 
 
-        stripGain = *static_cast<const float *>
-            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamStripVolume));
+        if (currentSample)
+        {
+            // Load sample strip details
+            chunkSize = *static_cast<const int*>
+                (currentSampleStrip->getSampleStripParam(SampleStrip::ParamChunkSize));
+            sampleStartPosition = *static_cast<const int*>
+                (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleStart));
+            sampleEndPosition = *static_cast<const int*>
+                (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleEnd));
+            // Then use the column to find which point to start at
+            playbackStartPosition = sampleStartPosition + monomeCol * chunkSize;
 
-        isPlaying = *static_cast<const bool *>
-            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsPlaying));
+            selectionLength = sampleEndPosition - sampleStartPosition;
 
-        isReversed = *static_cast<const bool *>
-            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsReversed));
+            // If we reselect this keeps the currently playing point in sync
+            // Also if the new sample is shorted
+            if ((sampleStartPosition > sampleCurrentPosition) || (sampleCurrentPosition > sampleEndPosition))
+                sampleCurrentPosition = (double) playbackStartPosition;
 
-        playSpeed = *static_cast<const double *>
-            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlaySpeed));
 
-        playMode = *static_cast<const int *>
-            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlayMode));
+            stripGain = *static_cast<const float *>
+                (currentSampleStrip->getSampleStripParam(SampleStrip::ParamStripVolume));
 
-        DBG(chunkSize);
-    }
-    else
-    {
-        stopSamplePlaying();
+            isPlaying = *static_cast<const bool *>
+                (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsPlaying));
+
+            isReversed = *static_cast<const bool *>
+                (currentSampleStrip->getSampleStripParam(SampleStrip::ParamIsReversed));
+
+            playSpeed = *static_cast<const double *>
+                (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlaySpeed));
+
+            playMode = *static_cast<const int *>
+                (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlayMode));
+        }
     }
 }

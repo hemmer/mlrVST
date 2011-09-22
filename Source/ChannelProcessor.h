@@ -32,7 +32,6 @@ public:
     ChannelProcessor(const int &channelIDNo,
                      const Colour &col,
                      mlrVSTAudioProcessor *owner,
-                     SampleStrip *initialSampleStrip,
                      const int &totalSampleStrips);
 
     // Deconstructor
@@ -83,7 +82,7 @@ public:
         block is which segment is being played from
         blockSize is the size of each block in samples
     */
-    void startSamplePlaying(const int &newStartPos);
+    //void startSamplePlaying(const int &newStartPos, SampleStrip * const newSampleStrip);
     void startSamplePlaying();
     double stopSamplePlaying();
 

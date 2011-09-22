@@ -112,7 +112,7 @@ void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
     for (int c = 0; c < numChannels; c++)
     {   
         Colour channelColour((float) (0.1f * c), 0.5f, 0.5f, 1.0f);
-        channelProcessorArray.add(new ChannelProcessor(c, channelColour, this, sampleStripArray.getFirst(), numSampleStrips));
+        channelProcessorArray.add(new ChannelProcessor(c, channelColour, this, numSampleStrips));
     }
 
     // reset the gains to the default
@@ -457,7 +457,7 @@ void mlrVSTAudioProcessor::timerCallback()
 
 void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &monomeRow, const int &state)
 {
-    DBG(state);
+
     if (monomeRow == 0)
     {
         // TODO control mappings for top row 
@@ -483,8 +483,7 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
 
             // The +1 here is because midi channels start at 1 not 0!
             if (state) monomeState.noteOn(effectiveMonomeRow + 1, monomeCol, 1.0f);
-            // only bother with note off if we aren't on latched mode
-            else if (!isLatched) monomeState.noteOff(effectiveMonomeRow + 1, monomeCol);
+            else monomeState.noteOff(effectiveMonomeRow + 1, monomeCol);
         }
     }
 
@@ -606,23 +605,27 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
     DBG(xml.createDocument(" "));
 }
 
+// Not yet possible to switch channels while playing
 void mlrVSTAudioProcessor::switchChannels(const int &newChan, const int &stripID)
 {
-    // NOT WORKING YET
-    //int currentChannel = *static_cast<const int*>
-    //    (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamCurrentChannel));
+    int currentChannel = *static_cast<const int*>
+        (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamCurrentChannel));
 
-    //bool isPlaying = *static_cast<const bool*>
-    //    (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamIsPlaying));
+    bool isPlaying = *static_cast<const bool*>
+        (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamIsPlaying));
 
-    //// Stop the current channel and store where it stopped
+    // Stop the current channel if playing
+    if (isPlaying)
+        channelProcessorArray[currentChannel]->stopSamplePlaying();
+
+    // Let the strip now about the new channel
+    sampleStripArray[stripID]->setSampleStripParam(SampleStrip::ParamCurrentChannel, &newChan);
+
     //double currentPosition = channelProcessorArray[currentChannel]->stopSamplePlaying();
-
-    //sampleStripArray[stripID]->setSampleStripParam(SampleStrip::ParamCurrentChannel, &newChan);
-
     //if (isPlaying)
     //{
     //    // restart the new channel
-    //    channelProcessorArray[newChan]->startSamplePlaying(currentPosition);
+    //    channelProcessorArray[newChan]->startSamplePlaying(currentPosition, sampleStripArray[stripID]);
     //}
+    
 }

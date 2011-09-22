@@ -114,8 +114,8 @@ void SampleStripControl::buttonClicked(Button *btn)
             // update the processor / GUI
             setChannel(i);
             // ...so we can let the processor know
-            //mlrVSTEditor->switchChannels(i, sampleStripID);
-            mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamCurrentChannel, &i, sampleStripID);
+            mlrVSTEditor->switchChannels(i, sampleStripID);
+            //mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamCurrentChannel, &i, sampleStripID);
         }
     }
 
