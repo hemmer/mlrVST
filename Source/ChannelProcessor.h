@@ -136,7 +136,7 @@ private:
     double playSpeed;
 
     // which parts of the sample can we play
-    int sampleStartPosition, sampleEndPosition, selectionLength;
+    int sampleStartPosition, sampleEndPosition;
     // where playback actually starts from
     int playbackStartPosition;
     // where we are in the sample at the moment

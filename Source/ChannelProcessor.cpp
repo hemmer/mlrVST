@@ -22,7 +22,7 @@ ChannelProcessor::ChannelProcessor(const int &channelIDNo,
     channelIDNumber(channelIDNo),
     channelGain(0.8f), stripGain(0.0f),
     currentSample(0), playSpeed(1.0), currentBPM(120.0f),
-    sampleStartPosition(0), sampleEndPosition(0), selectionLength(0),
+    sampleStartPosition(0), sampleEndPosition(0),
     sampleCurrentPosition(0.0),
     isPlaying(false),
     channelColour(col),
@@ -324,7 +324,9 @@ void ChannelProcessor::refreshPlaybackParameters()
             // Then use the column to find which point to start at
             playbackStartPosition = sampleStartPosition + monomeCol * chunkSize;
 
-            selectionLength = sampleEndPosition - sampleStartPosition;
+            // if chunksize increases this can happen
+            if (playbackStartPosition > sampleEndPosition)
+                playbackStartPosition = sampleStartPosition;
 
             // If we reselect this keeps the currently playing point in sync
             // Also if the new sample is shorted
