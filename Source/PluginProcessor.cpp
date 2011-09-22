@@ -14,6 +14,9 @@ It contains the basic startup code for a Juce application.
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+#include "osc/OscOutboundPacketStream.h"
+#include "ip/IpEndpointName.h"
+
 #include "OSCHandler.h"
 
 //==============================================================================
@@ -23,13 +26,23 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     sampleStripArray(), numSampleStrips(7),
     channelGains(), defaultChannelGain(0.8f),
     samplePool(),               // sample pool is initially empty
-    oscMsgHandler(this)
+    oscMsgListener(this)
 {
     
     DBG("starting OSC thread");
     
-    // start listening for messages
-    oscMsgHandler.startThread();
+    oscMsgListener.startThread();
+
+    // TEST: oscpack sending data
+    DBG("starting OSC tests");
+    char buffer[1536];
+    osc::OutboundPacketStream p(buffer, 1536);
+    UdpTransmitSocket socket(IpEndpointName("localhost", 8080));
+    p.Clear();
+    p << osc::BeginMessage("/mlrvst/led") << 1 << 1 << 0 << osc::EndMessage;
+    socket.Send(p.Data(), p.Size());
+    DBG("finished OSC tests");
+    // END TEST
 
     //File test("C:\\Users\\Hemmer\\Desktop\\funky.wav");
     //samplePool.add(new AudioSample(test));
@@ -43,18 +56,12 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     // add our channel processors
     buildChannelProcessorArray(numChannels);
 
-    //savePreset("testaods");
 
     lastPosInfo.resetToDefault();
-
-    startTimer(200);
 }
 
 mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
 {
-    // be polite!
-    oscMsgHandler.clearGrid();
-
     samplePool.clear(true);
     sampleStripArray.clear(true);
 
@@ -291,7 +298,6 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
             lastPosInfo.resetToDefault();
         }
 
-
         const int numSamples = buffer.getNumSamples();
         int channel, dp = 0;
 
@@ -336,22 +342,14 @@ AudioProcessorEditor* mlrVSTAudioProcessor::createEditor()
 //==============================================================================
 void mlrVSTAudioProcessor::getStateInformation(MemoryBlock& destData)
 {
-    // This method stores parameters in the memory block
+    // You should use this method to store your parameters in the memory block.
+    // Here's an example of how you can use XML to make it easy and more robust:
 
     // Create an outer XML element..
-    XmlElement xml("Global Settings");
+    XmlElement xml("MYPLUGINSETTINGS");
 
     // add some attributes to it..
-
     xml.setAttribute("master gain", masterGain);
-    for (int c = 0; c < channelGains.size(); c++)
-    {
-        String name("channel gain ");
-        name += c;
-        xml.setAttribute(name, channelGains[c]);
-    }
-     
-    xml.setAttribute("current preset", "none");
 
     // then use this helper function to stuff it into the binary blob and return it..
     copyXmlToBinary(xml, destData);
@@ -368,16 +366,10 @@ void mlrVSTAudioProcessor::setStateInformation(const void* data, int sizeInBytes
     if (xmlState != 0)
     {
         // make sure that it's actually our type of XML object..
-        if (xmlState->hasTagName("Global Settings"))
+        if (xmlState->hasTagName("MYPLUGINSETTINGS"))
         {
             // ok, now pull out our parameters...
             masterGain  = (float) xmlState->getDoubleAttribute("master gain", masterGain);
-            for (int c = 0; c < channelGains.size(); c++)
-            {
-                String name("channel gain ");
-                name += c;
-                channelGains.set(c, (float) xmlState->getDoubleAttribute(name, channelGains[c]));
-            }
         }
     }
 }
@@ -428,67 +420,7 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 }
 
 
-//////////////////////
-// OSC Stuff        //
-//////////////////////
 
-void mlrVSTAudioProcessor::timerCallback()
-{
-
-    // TODO: this is a HORRIBLE way to do this, and needs fixing
-    oscMsgHandler.clearGrid();
-
-    for (int row = 0; row < sampleStripArray.size(); ++row)
-    {
-        float percentage = *static_cast<const float*>
-            (getSampleStripParameter(SampleStrip::ParamPlaybackPercentage, row));
-        int numChunks = *static_cast<const int*>
-            (getSampleStripParameter(SampleStrip::ParamNumChunks, row));
-
-        bool isPlaying = *static_cast<const bool*>
-            (getSampleStripParameter(SampleStrip::ParamIsPlaying, row));
-
-        if (isPlaying)
-            oscMsgHandler.setLED((int)(percentage * numChunks), row + 1, 1);
-    }
-
-    
-}
-
-void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &monomeRow, const int &state)
-{
-    DBG(state);
-    if (monomeRow == 0)
-    {
-        // TODO control mappings for top row 
-    } 
-    else if (monomeRow <= numSampleStrips && monomeRow >= 0)
-    {
-
-        /* Only pass on messages that are from the allowed range of columns.
-           NOTE: MIDI messages may still be passed from other sources that
-           are outside this range so the channelProcessor must be aware of 
-           numChunks too to filter these. The -1 is because we are treating
-           the second row as the first "effective" row.
-        */
-        int effectiveMonomeRow = monomeRow - 1;
-
-        int numChunks = *static_cast<const int*>
-                        (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamNumChunks));
-
-        if (monomeCol < numChunks)
-        {
-            bool isLatched = *static_cast<const bool*>
-                (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamIsLatched));
-
-            // The +1 here is because midi channels start at 1 not 0!
-            if (state) monomeState.noteOn(effectiveMonomeRow + 1, monomeCol, 1.0f);
-            // only bother with note off if we aren't on latched mode
-            else if (!isLatched) monomeState.noteOff(effectiveMonomeRow + 1, monomeCol);
-        }
-    }
-
-}
 
 
 ///////////////////////
@@ -533,12 +465,15 @@ void mlrVSTAudioProcessor::modPlaySpeed(const double &factor, const int &stripID
     sampleStripArray[stripID]->modPlaySpeed(factor);
 }
 
+
+
 AudioSample * mlrVSTAudioProcessor::getAudioSample(const int &samplePoolIndex)
 {
     if (samplePoolIndex >= 0 && samplePoolIndex < samplePool.size())
         return samplePool[samplePoolIndex];
     else return 0;
 }
+
 SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index) 
 {
     jassert( index < sampleStripArray.size() );
@@ -546,83 +481,37 @@ SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index)
     return tempStrip;
 }
 
-void mlrVSTAudioProcessor::savePreset(const String &presetName)
+void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &monomeRow, const int &state)
 {
-    // Create an outer XML element..
-    XmlElement xml("PRESET");
-
-    xml.setAttribute("name", presetName);
-
-    // Store settings of each strip
-    for (int strip = 0; strip < sampleStripArray.size(); ++strip)
+    
+    if (monomeRow == 0)
     {
-        XmlElement *stripXml = new XmlElement("STRIP");
-        stripXml->setAttribute("id", strip);
+        // TODO control mappings for top row 
+    } 
+    else if (monomeRow <= numSampleStrips && monomeRow >= 0)
+    {
 
-        // write all parameters to XML
-        for (int param = 0; param < SampleStrip::NumGUIParams; ++param)
+        /* Only pass on messages that are from the allowed range of columns.
+           NOTE: MIDI messages may still be passed from other sources that
+           are outside this range so the channelProcessor must be aware of 
+           numChunks too to filter these. The -1 is because we are treating
+           the second row as the first "effective" row.
+        */
+        int effectiveMonomeRow = monomeRow - 1;
+
+        int numChunks = *static_cast<const int*>
+                        (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamNumChunks));
+
+        if (monomeCol < numChunks)
         {
-            int paramType = sampleStripArray[strip]->getParameterType(param);
-            String paramName = sampleStripArray[strip]->getParameterName(param);
+            bool isLatched = *static_cast<const bool*>
+                (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamIsLatched));
 
-            const void *p = sampleStripArray[strip]->getSampleStripParam(param);
-
-            switch (paramType)
-            {
-            case SampleStrip::TypeBool :
-                stripXml->setAttribute(paramName, (int)(*static_cast<const bool*>(p)));
-                break;
-
-            case SampleStrip::TypeInt :
-                stripXml->setAttribute(paramName, *static_cast<const int*>(p));
-                break;
-
-            case SampleStrip::TypeDouble :
-                stripXml->setAttribute(paramName, *static_cast<const double*>(p));
-                break;
-
-            case SampleStrip::TypeFloat :
-                stripXml->setAttribute(paramName, (double)(*static_cast<const float*>(p)));
-                break;
-
-            case SampleStrip::TypeAudioSample :
-                {
-                    const AudioSample * sample = static_cast<const AudioSample*>(p);
-                    if (sample)
-                    {
-                        String samplePath = sample->getSampleFile().getFullPathName();
-                        stripXml->setAttribute(paramName, samplePath);
-                    }
-                    break;
-                }
-            default : jassertfalse;
-            }
+            // The +1 here is because midi channels start at 1 not 0!
+            if (state) monomeState.noteOn(effectiveMonomeRow + 1, monomeCol, 1.0f);
+            // only bother with note off if we aren't on latched mode
+            else if (!isLatched) monomeState.noteOff(effectiveMonomeRow + 1, monomeCol);
         }
-
-        xml.addChildElement(stripXml);
     }
-     
-    //File testFile("C:\\Users\\Hemmer\Desktop\\test.xml");
-    DBG(xml.createDocument(" "));
-}
 
-void mlrVSTAudioProcessor::switchChannels(const int &newChan, const int &stripID)
-{
-    // NOT WORKING YET
-    //int currentChannel = *static_cast<const int*>
-    //    (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamCurrentChannel));
-
-    //bool isPlaying = *static_cast<const bool*>
-    //    (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamIsPlaying));
-
-    //// Stop the current channel and store where it stopped
-    //double currentPosition = channelProcessorArray[currentChannel]->stopSamplePlaying();
-
-    //sampleStripArray[stripID]->setSampleStripParam(SampleStrip::ParamCurrentChannel, &newChan);
-
-    //if (isPlaying)
-    //{
-    //    // restart the new channel
-    //    channelProcessorArray[newChan]->startSamplePlaying(currentPosition);
-    //}
 }
