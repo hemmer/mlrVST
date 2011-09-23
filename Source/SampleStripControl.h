@@ -52,6 +52,11 @@ public:
     bool isInterestedInFileDrag(const StringArray&) { return true; }
     void filesDropped(const StringArray& files, int x, int y);
 
+    /* Picks a new sample from the sample pool,
+       selects it all and finds the new playSpeed.
+    */
+    void selectNewSample(const int &fileChoice);
+
     // Update the strips if the number of channels changes
     void buildUI();
     void updateChannelColours(const int &newChannel);

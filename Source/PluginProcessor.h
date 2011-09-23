@@ -103,7 +103,7 @@ public:
     Array<float> channelGains;
 
     // adds a sample to the sample pool
-    bool addNewSample(File &sampleFile);
+    int addNewSample(File &sampleFile);
     AudioSample * getAudioSample(const int &samplePoolIndex);
     int getSamplePoolSize() { return samplePool.size(); }
 
@@ -152,20 +152,22 @@ public:
     void savePreset(const String &presetName);
 
 private:
-    //==============================================================================
-    // this is kept up to date with the midi messages that arrive, and the UI component
-    // registers with it so it can represent the incoming messages
+
+    /* OSC messages from the monome are converted to MIDI messages
+       and stored in monomeState to be mixed in with the main MIDI
+       buffer.
+    */
     MidiKeyboardState monomeState;
 
-    // store array of samplePool objects
+    // Store collection of AudioSamples in memory
     OwnedArray<AudioSample> samplePool;
 
     double currentBPM;
 
-    // eventually this will be an array for all the channels
+    // Current / max number of channels
+    const int maxChannels;
     int numChannels;
-    // the maximum number of allowed channels
-    static const int maxChannels = 8;
+
     // These are the seperate audio channels
     OwnedArray<ChannelProcessor> channelProcessorArray; 
     const float defaultChannelGain;
@@ -175,6 +177,7 @@ private:
     OwnedArray<SampleStrip> sampleStripArray;
     int numSampleStrips;
 
+    // Send and receive OSC messages through this
     OSCHandler oscMsgHandler;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTAudioProcessor);

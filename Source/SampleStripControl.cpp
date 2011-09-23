@@ -369,26 +369,7 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
                 // -1 to correct for "none" option
                 fileChoice -= 2;
 
-                // and let the audio processor update the sample strip
-                const AudioSample * newSample = mlrVSTEditor->getAudioSample(fileChoice);
-                mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamAudioSample, newSample, sampleStripID);
-
-
-                // select whole sample by default
-                visualSelectionStart = 0;
-                visualSelectionEnd = componentWidth;
-                visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
-                visualChunkSize = (visualSelectionLength / (float) numChunks);
-
-                // update the selection
-                float start = 0.0f, end = 1.0f;
-                mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalStart, &start, sampleStripID);
-                mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &end, sampleStripID);
-
-                // and try to find the best playback speed (i.e. closest to 1).
-                mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);
-
-                repaint();
+                selectNewSample(fileChoice);
             }
         }
 
@@ -606,27 +587,47 @@ void SampleStripControl::paint(Graphics& g)
 
 void SampleStripControl::filesDropped(const StringArray& files, int /*x*/, int /*y*/)
 {
+    // assume that all files fail (pessimistic I know)
+    int fileIndex = -1;
+
     // try to add each of the loaded files to the sample pool
     for (int i = 0; i < files.size(); ++i)
     {
         File currentSampleFile(files[i]);
         DBG("Dragged file: " << files[i]);
 
-        mlrVSTEditor->loadSampleFromFile(currentSampleFile);
-
-        // try to load the sample
-        //if (pluginUI->loadSampleFromFile(currentSampleFile))
-        //{
-            // MAJORTODO: this fails when exising files loaded
-            //updateThumbnail(currentSampleFile);
-            //int samplePoolID = pluginUI->getSamplePoolSize();
-            //pluginUI->updateSampleStripSample(samplePoolID - 1, sampleStripID);
-        //}
+        // if a file is sucessfully loaded, update the file index
+        fileIndex = mlrVSTEditor->loadSampleFromFile(currentSampleFile);
     }
 
-    // set latest sample in the pool as the current sample
-    // DESIGN: is this correct behaviour?
-    //if(pluginUI->getLatestSample() != 0) setAudioSample(pluginUI->getLatestSample());
+    // If we have a legitimate file
+    if (fileIndex >= 0)
+    {
+        selectNewSample(fileIndex);
+    }
+}
+
+void SampleStripControl::selectNewSample(const int &fileChoice)
+{
+    // and let the audio processor update the sample strip
+    const AudioSample * newSample = mlrVSTEditor->getAudioSample(fileChoice);
+    mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamAudioSample, newSample, sampleStripID);
+
+    // select whole sample by default
+    visualSelectionStart = 0;
+    visualSelectionEnd = componentWidth;
+    visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
+    visualChunkSize = (visualSelectionLength / (float) numChunks);
+
+    // update the selection
+    float start = 0.0f, end = 1.0f;
+    mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalStart, &start, sampleStripID);
+    mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &end, sampleStripID);
+
+    // and try to find the best playback speed (i.e. closest to 1).
+    mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);
+
+    repaint();
 }
 
 void SampleStripControl::recallParam(const int &paramID, const void *newValue, const bool &doRepaint)
@@ -666,6 +667,8 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
         {
             isReversed = *static_cast<const bool*>(newValue);
             isReversedBtn.setToggleState(isReversed, false);
+            String btnText = (isReversed) ? "REV" : "NORM";
+            isReversedBtn.setButtonText(btnText);
             break;
         }
 

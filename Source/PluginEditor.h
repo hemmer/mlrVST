@@ -57,8 +57,11 @@ public:
     String getSampleName(const int &index) { return getProcessor()->getSampleName(index); }
     // AudioSample* getSample(const int &index) { return getProcessor()->getSample(index); }
     // AudioSample* getLatestSample() { return getProcessor()->getLatestSample(); }
-    // this returns false if the file failed to load, true otherwise
-    bool loadSampleFromFile(File &sampleFile) { return getProcessor()->addNewSample(sampleFile); }
+
+    /* This returns the index of a file if sucessfully loaded or exists
+       already and returns -1 if the loading failed.
+    */
+    int loadSampleFromFile(File &sampleFile) { return getProcessor()->addNewSample(sampleFile); }
     
     // Pass SampleStripControl messages back to the plugin processor
     File getSampleSourceFile(const int &index) const { return getProcessor()->getSample(index)->getSampleFile(); }

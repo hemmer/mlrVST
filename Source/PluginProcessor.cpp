@@ -18,8 +18,8 @@ It contains the basic startup code for a Juce application.
 
 //==============================================================================
 mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
-    currentBPM(120.0),
-    channelProcessorArray(), numChannels(8),
+    currentBPM(120.0), channelProcessorArray(),
+    maxChannels(8), numChannels(maxChannels),
     sampleStripArray(), numSampleStrips(7),
     channelGains(), defaultChannelGain(0.8f),
     samplePool(),               // sample pool is initially empty
@@ -61,35 +61,39 @@ mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
     DBG("Processor destructor finished.");
 }
 
-// returns true if the sample was sucessfully loaded (or pre-existing)
-bool mlrVSTAudioProcessor::addNewSample(File &sampleFile)
+// returns the index of a file if sucessfully loaded (or pre-existing)
+// returns -1 if the loading failed
+int mlrVSTAudioProcessor::addNewSample(File &sampleFile)
 {
-    // avoid duplicates
-    bool duplicateFound = false;
+
+    // if the sample already exists, return its (existing) index
     for(int i = 0; i < samplePool.size(); ++i)
     {
-        if (samplePool[i]->getSampleFile() == sampleFile) duplicateFound = true;
-    }
-
-    if (!duplicateFound)
-    {
-        try{
-            samplePool.add(new AudioSample(sampleFile));
-            DBG("Sample Loaded: " + samplePool.getLast()->getSampleName());
-            return true;
-        }
-        catch(String errString)
+        if (samplePool[i]->getSampleFile() == sampleFile)
         {
-            DBG(errString);
-            return false;
+            DBG("Sample already loaded!");
+            return i;
         }
+    }
 
+    // load to load the Sample
+    try{
+        samplePool.add(new AudioSample(sampleFile));
+        DBG("Sample Loaded: " + samplePool.getLast()->getSampleName());
+
+        // if it is sucessful, it will be the last sample in the pool
+        int newSampleIndex = samplePool.size() - 1;
+        return newSampleIndex;
     }
-    else
+    catch(String errString)
     {
-        DBG("Sample already loaded!");
-        return true;
+        DBG(errString);
+        // return a fail code
+        return -1;
     }
+
+
+
 }
 
 
