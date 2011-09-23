@@ -23,7 +23,8 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     sampleStripArray(), numSampleStrips(7),
     channelGains(), defaultChannelGain(0.8f),
     samplePool(),               // sample pool is initially empty
-    oscMsgHandler(this)
+    oscMsgHandler(this),
+    setList("SETLIST")
 {
     
     DBG("starting OSC thread");
@@ -549,12 +550,44 @@ SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index)
     return tempStrip;
 }
 
+
+
+// Not yet possible to switch channels while playing
+void mlrVSTAudioProcessor::switchChannels(const int &newChan, const int &stripID)
+{
+    int currentChannel = *static_cast<const int*>
+        (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamCurrentChannel));
+
+    bool isPlaying = *static_cast<const bool*>
+        (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamIsPlaying));
+
+    // Stop the current channel if playing
+    if (isPlaying)
+        channelProcessorArray[currentChannel]->stopSamplePlaying();
+
+    // Let the strip now about the new channel
+    sampleStripArray[stripID]->setSampleStripParam(SampleStrip::ParamCurrentChannel, &newChan);
+
+    //double currentPosition = channelProcessorArray[currentChannel]->stopSamplePlaying();
+    //if (isPlaying)
+    //{
+    //    // restart the new channel
+    //    channelProcessorArray[newChan]->startSamplePlaying(currentPosition, sampleStripArray[stripID]);
+    //}
+    
+}
+
+
+/////////////////////
+// Preset Handling //
+/////////////////////
+
 void mlrVSTAudioProcessor::savePreset(const String &presetName)
 {
     // Create an outer XML element..
-    XmlElement xml("PRESET");
+    XmlElement newPreset("PRESET");
 
-    xml.setAttribute("name", presetName);
+    newPreset.setAttribute("name", presetName);
 
     // Store settings of each strip
     for (int strip = 0; strip < sampleStripArray.size(); ++strip)
@@ -602,34 +635,35 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
             }
         }
 
-        xml.addChildElement(stripXml);
+        newPreset.addChildElement(stripXml);
     }
      
     //File testFile("C:\\Users\\Hemmer\Desktop\\test.xml");
-    DBG(xml.createDocument(" "));
-}
-
-// Not yet possible to switch channels while playing
-void mlrVSTAudioProcessor::switchChannels(const int &newChan, const int &stripID)
-{
-    int currentChannel = *static_cast<const int*>
-        (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamCurrentChannel));
-
-    bool isPlaying = *static_cast<const bool*>
-        (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamIsPlaying));
-
-    // Stop the current channel if playing
-    if (isPlaying)
-        channelProcessorArray[currentChannel]->stopSamplePlaying();
-
-    // Let the strip now about the new channel
-    sampleStripArray[stripID]->setSampleStripParam(SampleStrip::ParamCurrentChannel, &newChan);
-
-    //double currentPosition = channelProcessorArray[currentChannel]->stopSamplePlaying();
-    //if (isPlaying)
-    //{
-    //    // restart the new channel
-    //    channelProcessorArray[newChan]->startSamplePlaying(currentPosition, sampleStripArray[stripID]);
-    //}
     
+
+    
+    XmlElement* p = setList.getFirstChildElement();
+
+    // See if a preset of this name exists in the set list
+    bool duplicateFound = false;
+    while (p != nullptr)
+    {
+        String pName = p->getStringAttribute("name");
+
+        // If it does, replace it
+        if (pName == presetName)
+        {
+            setList.replaceChildElement(p, new XmlElement(newPreset));
+            duplicateFound = true;
+            break;
+        }
+        else
+            p = p->getNextElement();
+    }
+
+    // Otherwise, add the new preset
+    if (!duplicateFound)
+        setList.addChildElement(new XmlElement(newPreset));
+
+    DBG(setList.createDocument(String::empty));
 }

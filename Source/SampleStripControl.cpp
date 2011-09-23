@@ -478,7 +478,6 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
         if (newValue < 0) newValue = 0;
         else if (newValue > componentWidth) newValue = componentWidth;
 
-        // TODO: This will crash if control is pressing during drag
         *selectionPointToChange = newValue;
     }
 
@@ -759,7 +758,7 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
         }
 
     default :
-        jassert(false);
+        jassertfalse;
         DBG("Param not found");
     }
 

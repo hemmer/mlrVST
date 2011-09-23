@@ -98,7 +98,7 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
 
         // TODO when ParamSampleStart is changes, make sure we change fractional too!
     default :
-        jassert(false);     // we should NOT be here!
+        jassertfalse;     // we should NOT be here!
     }
 }
 
@@ -159,7 +159,7 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
 
     default:
         DBG("Param not found!");
-        jassert(false);
+        jassertfalse;
         p = 0;      // this should never happen!
     }
 

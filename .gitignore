@@ -6,4 +6,5 @@ Builds/VisualStudio2010/Debug/
 Builds/VisualStudio2010/Release/
 Builds/VisualStudio2010/ipch/
 
-
+Docs/*
+!Docs/mlrVSTDocs.tex

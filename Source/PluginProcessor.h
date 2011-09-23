@@ -180,6 +180,9 @@ private:
     // Send and receive OSC messages through this
     OSCHandler oscMsgHandler;
 
+    // PRESET HANDLING
+    XmlElement setList;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTAudioProcessor);
 };
 

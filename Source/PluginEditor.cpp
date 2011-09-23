@@ -13,10 +13,11 @@
 //==============================================================================
 mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter, const int &newNumChannels)
     : AudioProcessorEditor (ownerFilter),
-      infoLabel(), helloLabel("", "Hello"), 
-      bpmLabel("bpm"),
+      infoLabel(), bpmLabel("bpm"),
       masterGainSlider("master gain"),
       selNumChannels("select number of channels"),
+      presetSelComboBox("preset select"),
+      addPresetBtn("save preset", "Save Preset"),
 	  sampleStripControlArray(),
       waveformControlHeight(95), waveformControlWidth(700),
 	  numChannels(newNumChannels),
@@ -45,18 +46,25 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	debugButton.setBackgroundColours(Colours::blue, Colours::black);
 	debugButton.setBounds(50, 300, 50, 25);
 
+    // preset panel
+    addAndMakeVisible(&presetSelComboBox);
+    presetSelComboBox.addListener(this);
+    presetSelComboBox.setBounds(50, 250, 250, 40);
+    presetSelComboBox.setEditableText(true);
+
+    addAndMakeVisible(&addPresetBtn);
+    addPresetBtn.addListener(this);
+    addPresetBtn.setBounds(130, 350, 70, 25);
+    addPresetBtn.setColour(TextButton::buttonColourId, Colours::black);
+
     addAndMakeVisible(&loadFilesBtn);
 	loadFilesBtn.addListener(this);
     loadFilesBtn.setColour(TextButton::buttonColourId, Colours::black);
 	loadFilesBtn.setBounds(50, 350, 70, 25);
 
-    // another test label
-	addAndMakeVisible(&helloLabel);
-	helloLabel.setBounds(50, 150, 100, 100);
-	helloLabel.setColour(Label::backgroundColourId, Colours::bisque);
-
     // Add SampleStripControls, loading settings from the corresponding SampleStrip
-    for(int i = 0; i < numStrips; ++i){
+    for(int i = 0; i < numStrips; ++i)
+    {
 
         int stripX = getWidth() - waveformControlWidth - PAD_AMOUNT;
         int stripY = PAD_AMOUNT + i * (waveformControlHeight + PAD_AMOUNT);
@@ -64,13 +72,13 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
         sampleStripControlArray[i]->setBounds(stripX, stripY, waveformControlWidth, waveformControlHeight);
         addAndMakeVisible( sampleStripControlArray[i] );
 
-        // do this as a loop
+        // Programmatically load parameters
         for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
         {
             const void *newValue = getProcessor()->getSampleStripParameter(p, i);
             sampleStripControlArray[i]->recallParam(p, newValue, true);
         }
-        DBG("params loaded for #" << i);
+        DBG("params loaded for strip #" << i);
 	}
 
     masterGainSlider.addListener(this);
@@ -215,16 +223,41 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
 void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 {
 
-    if(btn == &debugButton)
+    if(btn == &addPresetBtn)
     {
-        getProcessor()->savePreset("test");
+
+    #if JUCE_MODAL_LOOPS_PERMITTED
+
+        AlertWindow w("Save Preset",
+                      "Please enter a name for this preset",
+                      AlertWindow::NoIcon);
+
+        w.setColour(AlertWindow::textColourId, Colours::black);
+        w.setColour(AlertWindow::outlineColourId, Colours::black);
+
+        w.addTextEditor("text", "preset name", "preset name:");
+
+        w.addButton("ok", 1, KeyPress (KeyPress::returnKey, 0, 0));
+        w.addButton("cancel", 0, KeyPress (KeyPress::escapeKey, 0, 0));
+
+
+
+        if (w.runModalLoop() != 0) // is they picked 'ok'
+        {
+            // this is the text they entered..
+            String newPresetName(w.getTextEditorContents("text"));
+
+            getProcessor()->savePreset(newPresetName);
+        }
+
+        
+    #endif
+
     }
 
     // USEFUL FOR TESTING
 	if(btn == &loadFilesBtn)
     {
-        //getProcessor()->savePreset("test");
-
         
 		FileChooser myChooser ("Please choose a file:", File::getSpecialLocation(File::userDesktopDirectory), "*.wav");
         if(myChooser.browseForMultipleFilesToOpen())

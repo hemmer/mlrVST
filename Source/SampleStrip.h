@@ -87,7 +87,7 @@ public:
         case ParamPlaybackPercentage : return "playback_percentage";
         case ParamSampleStart : return "sample_start";
         case ParamSampleEnd : return "sample_end";
-        default : jassert(false); return "parameter_not_found";
+        default : jassertfalse; return "parameter_not_found";
         }
     }
 
@@ -111,7 +111,7 @@ public:
         case ParamPlaybackPercentage : return TypeFloat;
         case ParamSampleStart : return TypeInt;
         case ParamSampleEnd : return TypeInt;
-        default : jassert(false); return -1;
+        default : jassertfalse; return -1;
         }
     }
     // these are for getting / setting the int parameters

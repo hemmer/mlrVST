@@ -87,11 +87,11 @@ public:
     Colour getChannelColour(const int &chan) const { return getProcessor()->getChannelProcessor(chan)->getChannelColour(); }
 
 private:
-    Label infoLabel, helloLabel, bpmLabel;
+    Label infoLabel, bpmLabel;
     Slider masterGainSlider;
 	DrawableButton debugButton;
-    TextButton loadFilesBtn;
-    ComboBox selNumChannels;
+    TextButton loadFilesBtn, addPresetBtn;
+    ComboBox selNumChannels, presetSelComboBox;
 	ListBox fileList;
 
     float fontSize;
