@@ -128,9 +128,6 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
         about which sample to play etc). */
         setCurrentSampleStrip(parent->getSampleStrip(effectiveMonomeRow));
 
-        playMode = *static_cast<const int*>
-            (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlayMode));
-
         /* We are only interested in columns that are
         within the allowed number of chunks.
         */
@@ -216,6 +213,7 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
 
     if (currentSample != 0 && isPlaying)
     {
+
         const float* const inL = currentSample->getAudioData()->getSampleData(0, 0);
         const float* const inR = currentSample->getNumChannels() > 1
             ? currentSample->getAudioData()->getSampleData(1, 0) : nullptr;
@@ -281,20 +279,24 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
                 // go back in time...
                 sampleCurrentPosition -= playSpeed;
 
-                if (sampleCurrentPosition < playbackStartPosition)
+                switch (playMode)
                 {
-                    switch (playMode)
-                    {
-                    case SampleStrip::LOOP_CHUNK :
-                        sampleCurrentPosition = (float)(playbackStartPosition + chunkSize); break;
+                case SampleStrip::LOOP_CHUNK :
+                    if (sampleCurrentPosition < playbackStartPosition)
+                        sampleCurrentPosition = (float)(playbackStartPosition + chunkSize);
+                    break;    
 
-                    case SampleStrip::PLAY_TO_END :
-                        stopSamplePlaying(); break;
+                case SampleStrip::PLAY_TO_END :
+                    if (sampleCurrentPosition < sampleStartPosition)
+                        stopSamplePlaying();
+                    break;
 
-                    case SampleStrip::LOOP :
-                        sampleCurrentPosition = (float) sampleEndPosition; break;
-                    }
+                case SampleStrip::LOOP :
+                    if (sampleCurrentPosition < sampleStartPosition)
+                        sampleCurrentPosition = (float) sampleEndPosition;
+                    break;
                 }
+
             }
         }
     }
