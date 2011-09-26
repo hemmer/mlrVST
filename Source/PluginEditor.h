@@ -17,6 +17,7 @@
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "PluginProcessor.h"
 #include "SampleStripControl.h"
+#include "PresetPanel.h"
 #include "mlrVSTLookAndFeel.h"
 
 
@@ -86,15 +87,24 @@ public:
     void switchChannels(const int &newChan, const int &stripID) const { getProcessor()->switchChannels(newChan, stripID); }
     Colour getChannelColour(const int &chan) const { return getProcessor()->getChannelProcessor(chan)->getChannelColour(); }
 
+    XmlElement getPresetList() const { return getProcessor()->getPresetList(); }
+    XmlElement getSetlist() const { return getProcessor()->getSetlist(); }
+    void setSetlist(const XmlElement &newSetlist) { getProcessor()->setSetlist(newSetlist); }
+
 private:
     Label infoLabel, bpmLabel;
     Slider masterGainSlider;
 	DrawableButton debugButton;
     TextButton loadFilesBtn, addPresetBtn;
-    ComboBox selNumChannels, presetSelComboBox;
+    ToggleButton toggleSetlistBtn;
+    ComboBox selNumChannels;
 	ListBox fileList;
 
     float fontSize;
+
+    Rectangle<int> presetPanelBounds;
+    PresetPanel presetPanel;
+
 
 	AudioFormatManager formatManager;
 

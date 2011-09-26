@@ -34,6 +34,7 @@
 		FDB2EADB6866550CDEEEB0B6 = { isa = PBXBuildFile; fileRef = A28E3E34EF0B83113A98EC5A; };
 		5AF66C048A4815F5A8ECDDCD = { isa = PBXBuildFile; fileRef = B50846B34831C2C28007BE7D; };
 		209FB8C7F7BE85A70E5D98D7 = { isa = PBXBuildFile; fileRef = 2C001306D198F8B21ABA7375; };
+		78C5C5083747BFB8760A0E26 = { isa = PBXBuildFile; fileRef = 07B1785203CF423EA94D8647; };
 		FCBE5E362D27F4526E87D77F = { isa = PBXBuildFile; fileRef = D9AF16D6483120CC8A1261BC; };
 		3DFA294CC79D06F066723396 = { isa = PBXBuildFile; fileRef = 94A977DEE6BE2081CA0213FE; };
 		7C5B1DFA35A2EA8DFB2A40C9 = { isa = PBXBuildFile; fileRef = 00E2C89A148A2491288DF242; };
@@ -123,6 +124,8 @@
 		CF304FBE4BC66783833C4B59 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PluginProcessor.h; path = ../../Source/PluginProcessor.h; sourceTree = "SOURCE_ROOT"; };
 		2C001306D198F8B21ABA7375 = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = PluginEditor.cpp; path = ../../Source/PluginEditor.cpp; sourceTree = "SOURCE_ROOT"; };
 		662507104D05B579BB68F391 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PluginEditor.h; path = ../../Source/PluginEditor.h; sourceTree = "SOURCE_ROOT"; };
+		07B1785203CF423EA94D8647 = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = PresetPanel.cpp; path = ../../Source/PresetPanel.cpp; sourceTree = "SOURCE_ROOT"; };
+		7A14134A5205FA3C932AC4CB = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PresetPanel.h; path = ../../Source/PresetPanel.h; sourceTree = "SOURCE_ROOT"; };
 		D9AF16D6483120CC8A1261BC = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mlrVSTLookAndFeel.cpp; path = ../../Source/mlrVSTLookAndFeel.cpp; sourceTree = "SOURCE_ROOT"; };
 		BDAA39A5DD9458C2514FAA7C = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = mlrVSTLookAndFeel.h; path = ../../Source/mlrVSTLookAndFeel.h; sourceTree = "SOURCE_ROOT"; };
 		94A977DEE6BE2081CA0213FE = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "juce_VST_Wrapper.cpp"; path = "../../../../../src/audio/plugin_client/VST/juce_VST_Wrapper.cpp"; sourceTree = "SOURCE_ROOT"; };
@@ -240,6 +243,8 @@
 				CF304FBE4BC66783833C4B59,
 				2C001306D198F8B21ABA7375,
 				662507104D05B579BB68F391,
+				07B1785203CF423EA94D8647,
+				7A14134A5205FA3C932AC4CB,
 				D9AF16D6483120CC8A1261BC,
 				BDAA39A5DD9458C2514FAA7C ); name = mlrVST; sourceTree = "<group>"; };
 		B7F037957C49AE7943C354C9 = { isa = PBXGroup; children = (
@@ -431,6 +436,7 @@
 				FDB2EADB6866550CDEEEB0B6,
 				5AF66C048A4815F5A8ECDDCD,
 				209FB8C7F7BE85A70E5D98D7,
+				78C5C5083747BFB8760A0E26,
 				FCBE5E362D27F4526E87D77F,
 				3DFA294CC79D06F066723396,
 				7C5B1DFA35A2EA8DFB2A40C9,

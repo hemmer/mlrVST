@@ -24,7 +24,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     channelGains(), defaultChannelGain(0.8f),
     samplePool(),               // sample pool is initially empty
     oscMsgHandler(this),
-    setList("SETLIST")
+    presetList("PRESETLIST"), setlist("SETLIST")
 {
     
     DBG("starting OSC thread");
@@ -44,7 +44,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     // add our channel processors
     buildChannelProcessorArray(numChannels);
 
-    //savePreset("testaods");
+    setlist.createNewChildElement("PRESET_NONE");
 
     lastPosInfo.resetToDefault();
 
@@ -642,7 +642,7 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
     
 
     
-    XmlElement* p = setList.getFirstChildElement();
+    XmlElement* p = presetList.getFirstChildElement();
 
     // See if a preset of this name exists in the set list
     bool duplicateFound = false;
@@ -653,7 +653,7 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
         // If it does, replace it
         if (pName == presetName)
         {
-            setList.replaceChildElement(p, new XmlElement(newPreset));
+            presetList.replaceChildElement(p, new XmlElement(newPreset));
             duplicateFound = true;
             break;
         }
@@ -663,7 +663,7 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
 
     // Otherwise, add the new preset
     if (!duplicateFound)
-        setList.addChildElement(new XmlElement(newPreset));
+        presetList.addChildElement(new XmlElement(newPreset));
 
-    DBG(setList.createDocument(String::empty));
+    DBG(presetList.createDocument(String::empty));
 }

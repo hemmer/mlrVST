@@ -99,6 +99,8 @@
           file="Source/PluginEditor.cpp"/>
     <FILE id="Iif5nfHL" name="PluginEditor.h" compile="0" resource="0"
           file="Source/PluginEditor.h"/>
+    <FILE id="kmxFbK" name="PresetPanel.cpp" compile="1" resource="0" file="Source/PresetPanel.cpp"/>
+    <FILE id="qh5EK9" name="PresetPanel.h" compile="0" resource="0" file="Source/PresetPanel.h"/>
     <FILE id="SDq6w" name="mlrVSTLookAndFeel.cpp" compile="1" resource="0"
           file="Source/mlrVSTLookAndFeel.cpp"/>
     <FILE id="YJ20Gh" name="mlrVSTLookAndFeel.h" compile="0" resource="0"

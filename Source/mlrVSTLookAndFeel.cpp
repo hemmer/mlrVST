@@ -32,7 +32,7 @@ mlrVSTLookAndFeel::mlrVSTLookAndFeel() :
     silkFontSizeSmall(7.4f),
     silkFontSizeBig(11.8f)
 {
-    setColour (TextButton::buttonColourId,          Colour (0xffbbbbff));
+    setColour (TextButton::buttonColourId,          Colours::black);
     setColour (ListBox::outlineColourId,            findColour (ComboBox::outlineColourId));
     setColour (ScrollBar::thumbColourId,            Colour (0xffbbbbdd));
     setColour (ScrollBar::backgroundColourId,       Colours::transparentBlack);

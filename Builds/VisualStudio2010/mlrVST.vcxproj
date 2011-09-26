@@ -136,6 +136,7 @@
     <ClCompile Include="..\..\Source\SampleStripControl.cpp"/>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
     <ClCompile Include="..\..\Source\PluginEditor.cpp"/>
+    <ClCompile Include="..\..\Source\PresetPanel.cpp"/>
     <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp"/>
     <ClCompile Include="..\..\..\..\..\..\..\..\SDKs\juce\src\audio\plugin_client\VST\juce_VST_Wrapper.cpp"/>
     <ClCompile Include="..\..\JuceLibraryCode\BinaryData.cpp"/>
@@ -165,6 +166,7 @@
     <ClInclude Include="..\..\Source\SampleStripControl.h"/>
     <ClInclude Include="..\..\Source\PluginProcessor.h"/>
     <ClInclude Include="..\..\Source\PluginEditor.h"/>
+    <ClInclude Include="..\..\Source\PresetPanel.h"/>
     <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\AppConfig.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\BinaryData.h"/>

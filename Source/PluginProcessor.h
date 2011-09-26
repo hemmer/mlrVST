@@ -150,6 +150,13 @@ public:
 
     // Preset stuff
     void savePreset(const String &presetName);
+    XmlElement getPresetList() const { return presetList; }
+    
+    XmlElement getSetlist() const { return setlist; }
+    void setSetlist(const XmlElement &newSetlist) {
+        setlist = newSetlist;
+        DBG(setlist.createDocument(String::empty));
+    }
 
 private:
 
@@ -180,8 +187,13 @@ private:
     // Send and receive OSC messages through this
     OSCHandler oscMsgHandler;
 
-    // PRESET HANDLING
-    XmlElement setList;
+    /////////////////////
+    // PRESET HANDLING //
+    /////////////////////
+    // this is a unique list of possible presets (used internally)
+    XmlElement presetList;      
+    // this is an ordered list of consisting of a selection from presetList
+    XmlElement setlist;         
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTAudioProcessor);
 };

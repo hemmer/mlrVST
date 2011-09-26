@@ -91,6 +91,9 @@
     <ClCompile Include="..\..\Source\PluginEditor.cpp">
       <Filter>mlrVST</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\PresetPanel.cpp">
+      <Filter>mlrVST</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp">
       <Filter>mlrVST</Filter>
     </ClCompile>
@@ -172,6 +175,9 @@
       <Filter>mlrVST</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PluginEditor.h">
+      <Filter>mlrVST</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\PresetPanel.h">
       <Filter>mlrVST</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h">

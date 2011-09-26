@@ -321,8 +321,6 @@ void SampleStripControl::buildUI()
     selNumChunks.setLookAndFeel(&menuLF);
 }
 
-
-
 void SampleStripControl::mouseDown(const MouseEvent &e)
 {
     // Save modifers of the initial press
