@@ -278,7 +278,9 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
         // ask the host for the current time so we can display it...
         AudioPlayHead::CurrentPositionInfo newTime;
 
-        if (getPlayHead() != 0 && getPlayHead()->getCurrentPosition(newTime))
+        if (useExternalTempo &&
+            getPlayHead() != 0 &&
+            getPlayHead()->getCurrentPosition(newTime))
         {
             // Successfully got the current time from the host..
             lastPosInfo = newTime;
@@ -666,4 +668,49 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
         presetList.addChildElement(new XmlElement(newPreset));
 
     DBG(presetList.createDocument(String::empty));
+}
+
+/////////////////////
+// Global Settings //
+/////////////////////
+void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID, const void *newValue)
+{
+    switch (settingID)
+    {
+    case sUseExternalTempo :
+        useExternalTempo = *static_cast<const bool*>(newValue); break;
+    case sNumChannels :
+        numChannels = *static_cast<const int*>(newValue); break;
+    case sCurrentBPM :
+        {
+            currentBPM = *static_cast<const double*>(newValue);
+            for (int s = 0; s < sampleStripArray.size(); ++s)
+                calcPlaySpeedForNewBPM(s);
+            break;
+        }
+    default :
+        jassertfalse;
+    }
+}
+
+const void* mlrVSTAudioProcessor::getGlobalSetting(const int &settingID) const
+{
+    switch (settingID)
+    {
+    case sUseExternalTempo : return &useExternalTempo;
+    case sNumChannels : return &numChannels;
+    case sCurrentBPM : return &currentBPM;
+    default : jassertfalse;
+    }
+}
+
+String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID) const
+{
+    switch (settingID)
+    {
+    case sUseExternalTempo : return "use_external_tempo";
+    case sNumChannels : return "num_channels";
+    case sCurrentBPM : return "current_bpm";
+    default : jassertfalse; return "name_not_found";
+    }
 }

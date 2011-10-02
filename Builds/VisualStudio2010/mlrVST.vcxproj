@@ -122,6 +122,16 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\AudioSample.cpp"/>
+    <ClCompile Include="..\..\Source\ChannelProcessor.cpp"/>
+    <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
+    <ClCompile Include="..\..\Source\PresetPanel.cpp"/>
+    <ClCompile Include="..\..\Source\SettingsPanel.cpp"/>
+    <ClCompile Include="..\..\Source\SampleStripControl.cpp"/>
+    <ClCompile Include="..\..\Source\PluginEditor.cpp"/>
+    <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp"/>
+    <ClCompile Include="..\..\Source\SampleStrip.cpp"/>
+    <ClCompile Include="..\..\Source\OSCHandler.cpp"/>
     <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp"/>
     <ClCompile Include="..\..\oscpack\ip\win32\NetworkingUtils.cpp"/>
     <ClCompile Include="..\..\oscpack\ip\win32\UdpSocket.cpp"/>
@@ -129,15 +139,6 @@
     <ClCompile Include="..\..\oscpack\osc\OscPrintReceivedElements.cpp"/>
     <ClCompile Include="..\..\oscpack\osc\OscReceivedElements.cpp"/>
     <ClCompile Include="..\..\oscpack\osc\OscTypes.cpp"/>
-    <ClCompile Include="..\..\Source\SampleStrip.cpp"/>
-    <ClCompile Include="..\..\Source\AudioSample.cpp"/>
-    <ClCompile Include="..\..\Source\ChannelProcessor.cpp"/>
-    <ClCompile Include="..\..\Source\OSCHandler.cpp"/>
-    <ClCompile Include="..\..\Source\SampleStripControl.cpp"/>
-    <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
-    <ClCompile Include="..\..\Source\PluginEditor.cpp"/>
-    <ClCompile Include="..\..\Source\PresetPanel.cpp"/>
-    <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp"/>
     <ClCompile Include="..\..\..\..\..\..\..\..\SDKs\juce\src\audio\plugin_client\VST\juce_VST_Wrapper.cpp"/>
     <ClCompile Include="..\..\JuceLibraryCode\BinaryData.cpp"/>
     <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode1.cpp"/>
@@ -146,6 +147,16 @@
     <ClCompile Include="..\..\JuceLibraryCode\JuceLibraryCode4.cpp"/>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\AudioSample.h"/>
+    <ClInclude Include="..\..\Source\ChannelProcessor.h"/>
+    <ClInclude Include="..\..\Source\PluginProcessor.h"/>
+    <ClInclude Include="..\..\Source\PresetPanel.h"/>
+    <ClInclude Include="..\..\Source\SettingsPanel.h"/>
+    <ClInclude Include="..\..\Source\SampleStripControl.h"/>
+    <ClInclude Include="..\..\Source\PluginEditor.h"/>
+    <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h"/>
+    <ClInclude Include="..\..\Source\SampleStrip.h"/>
+    <ClInclude Include="..\..\Source\OSCHandler.h"/>
     <ClInclude Include="..\..\oscpack\ip\IpEndpointName.h"/>
     <ClInclude Include="..\..\oscpack\ip\NetworkingUtils.h"/>
     <ClInclude Include="..\..\oscpack\ip\PacketListener.h"/>
@@ -159,15 +170,6 @@
     <ClInclude Include="..\..\oscpack\osc\OscPrintReceivedElements.h"/>
     <ClInclude Include="..\..\oscpack\osc\OscReceivedElements.h"/>
     <ClInclude Include="..\..\oscpack\osc\OscTypes.h"/>
-    <ClInclude Include="..\..\Source\SampleStrip.h"/>
-    <ClInclude Include="..\..\Source\AudioSample.h"/>
-    <ClInclude Include="..\..\Source\ChannelProcessor.h"/>
-    <ClInclude Include="..\..\Source\OSCHandler.h"/>
-    <ClInclude Include="..\..\Source\SampleStripControl.h"/>
-    <ClInclude Include="..\..\Source\PluginProcessor.h"/>
-    <ClInclude Include="..\..\Source\PluginEditor.h"/>
-    <ClInclude Include="..\..\Source\PresetPanel.h"/>
-    <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\AppConfig.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\BinaryData.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\JuceHeader.h"/>

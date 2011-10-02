@@ -13,31 +13,46 @@
 //==============================================================================
 mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter, const int &newNumChannels)
     : AudioProcessorEditor (ownerFilter),
-      infoLabel(), bpmLabel("bpm"),
+      infoLabel(),
       masterGainSlider("master gain"),
+      bpmSlider("bpm slider"), bpmLabel("BPM"),
       selNumChannels("select number of channels"),
       addPresetBtn("save preset", "Save Preset"),
       toggleSetlistBtn("Show Setlist"),
+      toggleSettingsBtn("Settings"),
       presetPanelBounds(314, PAD_AMOUNT, 350, 725),
+      settingsPanelBounds(314, PAD_AMOUNT, 350, 725),
       presetPanel(presetPanelBounds, this),
+      settingsPanel(settingsPanelBounds, this),
 	  sampleStripControlArray(),
       waveformControlHeight(95), waveformControlWidth(700),
-	  numChannels(newNumChannels),
+	  numChannels(newNumChannels), useExternalTempo(true),
       numStrips(7), fontSize(7.4f),
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
       loadFilesBtn("load files", "LOAD FILES"),
       slidersArray(),
       myLookAndFeel()
 {
-    
+    // This tells the GUI to use a custom "theme"
+    LookAndFeel::setDefaultLookAndFeel(&myLookAndFeel);
+
     DBG("GUI loaded");
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
+    addAndMakeVisible(&bpmSlider);
+    bpmSlider.setBounds(PAD_AMOUNT, PAD_AMOUNT, 200, 30);
+    bpmSlider.setColour(Slider::backgroundColourId, Colours::black.withAlpha(0.3f));
+    bpmSlider.setSliderStyle(Slider::LinearBar);
+    bpmSlider.setRange(20.0, 300.0, 0.01);
+    bpmSlider.setTextBoxIsEditable(true);
+    bpmSlider.setEnabled(false);
+    bpmSlider.setValue(120.0);
+    bpmSlider.addListener(this);
+
     addAndMakeVisible(&bpmLabel);
-    bpmLabel.setBounds(PAD_AMOUNT, PAD_AMOUNT, 200, 50);
-    bpmLabel.setColour(Label::backgroundColourId, Colours::white);
-    bpmLabel.setJustificationType(Justification::centredRight);
-    bpmLabel.setFont(4*fontSize);
+    bpmLabel.setBounds(500, 50, 50, 30);
+    bpmLabel.setFont(2*fontSize);
+    bpmLabel.setColour(Label::textColourId, Colours::black);
 
     // add a label that will display the current timecode and status..
     addAndMakeVisible(&infoLabel);
@@ -107,13 +122,17 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     presetPanel.setBounds(presetPanelBounds);
 
 
+    // Settings associated stuff
+    addAndMakeVisible(&toggleSettingsBtn);
+    toggleSettingsBtn.addListener(this);
+    toggleSettingsBtn.setBounds(210, 200, 75, 25);
+    toggleSettingsBtn.setColour(TextButton::buttonColourId, Colours::black);
+
+    addChildComponent(&settingsPanel);
+    settingsPanel.setBounds(settingsPanelBounds);
 
 
     formatManager.registerBasicFormats();
-    
-    // TODO: Make custom look and feel
-    LookAndFeel::setDefaultLookAndFeel(&myLookAndFeel);
-	
     startTimer(50);
 }
 
@@ -174,13 +193,11 @@ void mlrVSTAudioProcessorEditor::timerCallback()
 {
     mlrVSTAudioProcessor* ourProcessor = getProcessor();
 
-    AudioPlayHead::CurrentPositionInfo newPos(ourProcessor->lastPosInfo);
-
-    if (lastDisplayedPosition != newPos)
+    if (useExternalTempo)
     {
-        String bpmLabelText(newPos.bpm);
-        bpmLabelText += " bpm";//(newPos.timeSigNumerator + " / " + newPos.timeSigDenominator);
-        bpmLabel.setText(bpmLabelText, false);
+        AudioPlayHead::CurrentPositionInfo newPos(ourProcessor->lastPosInfo);
+
+        if (lastDisplayedPosition != newPos) bpmSlider.setValue(newPos.bpm);
     }
 
     // TODO: use mlrVSTAudioProcessor::getParameter
@@ -214,6 +231,11 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
         getProcessor()->setParameterNotifyingHost(mlrVSTAudioProcessor::masterGainParam,
                                                    (float) masterGainSlider.getValue());
     }
+    else if (slider == &bpmSlider)
+    {
+        double newBPM = bpmSlider.getValue();
+        getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM, &newBPM);
+    }
 
     // check the channel volume notifications
     for(int i = 0; i < slidersArray.size(); ++i)
@@ -245,7 +267,23 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
         toggleSetlistBtn.setButtonText(setlistBtnText);
         presetPanel.setVisible(!currentlyVisible);
 
+        // Force existing panels to close
+        settingsPanel.setVisible(false);
+        toggleSettingsBtn.setToggleState(false, false);
     }
+
+    else if(btn == &toggleSettingsBtn)
+    {
+        // Toggle the settings panel
+        bool currentlyVisible = settingsPanel.isVisible();
+        settingsPanel.setVisible(!currentlyVisible);
+
+        // Force existing panels to close
+        presetPanel.setVisible(false);
+        toggleSetlistBtn.setButtonText("Show Setlist");
+        toggleSetlistBtn.setToggleState(false, false);
+    }
+
     else if(btn == &addPresetBtn)
     {
 
@@ -374,4 +412,29 @@ void mlrVSTAudioProcessorEditor::displayPositionInfo (const AudioPlayHead::Curre
         displayText << "  (playing)";
 
     infoLabel.setText(displayText, false);
+}
+
+
+// Setting handling stuff
+void mlrVSTAudioProcessorEditor::updateGlobalSetting(const int &parameterID, const void *newValue)
+{
+    /* First let the processor store the setting (as 
+       mlrVSTAudioProcessorEditor will lose these on 
+       closing.
+    */
+    getProcessor()->updateGlobalSetting(parameterID, newValue); 
+
+    // a few settings are of interest to the GUI
+    switch (parameterID) 
+    {
+    case mlrVSTAudioProcessor::sUseExternalTempo :
+        useExternalTempo = *static_cast<const bool*>(newValue);
+        bpmSlider.setEnabled(!useExternalTempo);
+        break;
+    }
+}
+
+const void* mlrVSTAudioProcessorEditor::getGlobalSetting(const int &parameterID, const void *newValue) const
+{ 
+    return getProcessor()->getGlobalSetting(parameterID);
 }

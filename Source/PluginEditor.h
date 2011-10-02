@@ -18,6 +18,7 @@
 #include "PluginProcessor.h"
 #include "SampleStripControl.h"
 #include "PresetPanel.h"
+#include "SettingsPanel.h"
 #include "mlrVSTLookAndFeel.h"
 
 
@@ -91,12 +92,15 @@ public:
     XmlElement getSetlist() const { return getProcessor()->getSetlist(); }
     void setSetlist(const XmlElement &newSetlist) { getProcessor()->setSetlist(newSetlist); }
 
+    void updateGlobalSetting(const int &parameterID, const void *newValue);
+    const void* getGlobalSetting(const int &parameterID, const void *newValue) const;
+
 private:
     Label infoLabel, bpmLabel;
-    Slider masterGainSlider;
+    Slider masterGainSlider, bpmSlider;
 	DrawableButton debugButton;
     TextButton loadFilesBtn, addPresetBtn;
-    ToggleButton toggleSetlistBtn;
+    ToggleButton toggleSetlistBtn, toggleSettingsBtn;
     ComboBox selNumChannels;
 	ListBox fileList;
 
@@ -105,6 +109,8 @@ private:
     Rectangle<int> presetPanelBounds;
     PresetPanel presetPanel;
 
+    Rectangle<int> settingsPanelBounds;
+    SettingsPanel settingsPanel;
 
 	AudioFormatManager formatManager;
 
@@ -114,10 +120,16 @@ private:
     const int numStrips;
     const int waveformControlHeight, waveformControlWidth;
 
+    //////////////
+    // Settings //
+    //////////////
+
     // This is the number of seperate channels. In 
     // pratical terms, this is just the number of 
     // samples that can be played at once.
 	int numChannels;
+    bool useExternalTempo;
+
 
     OwnedArray<Slider> slidersArray;
     void buildSliders();

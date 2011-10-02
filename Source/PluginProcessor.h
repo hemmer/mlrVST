@@ -17,12 +17,9 @@
 #include "ChannelProcessor.h"
 #include "AudioSample.h"
 #include "SampleStrip.h"
-
 #include "OSCHandler.h"
 
 //==============================================================================
-/**
-*/
 class mlrVSTAudioProcessor : public AudioProcessor, public Timer
 {
 public:
@@ -98,6 +95,14 @@ public:
         totalNumParams
     };
 
+    // These settings are independent of preset
+    enum GlobalSettings
+    {
+        sUseExternalTempo,
+        sNumChannels,
+        sCurrentBPM,
+    };
+
     float masterGain;
     // individual channel volumes
     Array<float> channelGains;
@@ -147,6 +152,10 @@ public:
         return sampleStripArray[stripID]->getSampleStripParam(parameterID);   
     }
 
+    // Global Settings stuff
+    void updateGlobalSetting(const int &settingID, const void *newVal);
+    const void* getGlobalSetting(const int &settingID) const;
+    String getGlobalSettingName(const int &settingID) const;
 
     // Preset stuff
     void savePreset(const String &presetName);
@@ -169,11 +178,9 @@ private:
     // Store collection of AudioSamples in memory
     OwnedArray<AudioSample> samplePool;
 
-    double currentBPM;
 
-    // Current / max number of channels
+    // Max number of channels
     const int maxChannels;
-    int numChannels;
 
     // These are the seperate audio channels
     OwnedArray<ChannelProcessor> channelProcessorArray; 
@@ -187,6 +194,7 @@ private:
     // Send and receive OSC messages through this
     OSCHandler oscMsgHandler;
 
+
     /////////////////////
     // PRESET HANDLING //
     /////////////////////
@@ -194,6 +202,14 @@ private:
     XmlElement presetList;      
     // this is an ordered list of consisting of a selection from presetList
     XmlElement setlist;         
+
+
+    /////////////////////
+    // GLOBAL SETTINGS //
+    /////////////////////
+    bool useExternalTempo;
+    int numChannels;
+    double currentBPM;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTAudioProcessor);
 };

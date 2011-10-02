@@ -5,6 +5,18 @@
     <Filter Include="mlrVST">
       <UniqueIdentifier>{6155B00E-5CD3-D100-3C52-4A58C1AE9E57}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mlrVST\audio">
+      <UniqueIdentifier>{F28CF03E-304C-599F-B8C5-9C95740036C9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mlrVST\gui">
+      <UniqueIdentifier>{C61B0762-8645-E544-AB1D-5772C3986C81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mlrVST\gui\panels">
+      <UniqueIdentifier>{F6C6FC24-7667-21E4-F567-4A679D77333F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mlrVST\other">
+      <UniqueIdentifier>{610140FC-736A-EF77-7023-503169E14790}</UniqueIdentifier>
+    </Filter>
     <Filter Include="mlrVST\Resources">
       <UniqueIdentifier>{80445BD3-F2EC-47BC-75A6-07D67B03B154}</UniqueIdentifier>
     </Filter>
@@ -28,6 +40,36 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\AudioSample.cpp">
+      <Filter>mlrVST\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ChannelProcessor.cpp">
+      <Filter>mlrVST\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\PluginProcessor.cpp">
+      <Filter>mlrVST\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\PresetPanel.cpp">
+      <Filter>mlrVST\gui\panels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\SettingsPanel.cpp">
+      <Filter>mlrVST\gui\panels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\SampleStripControl.cpp">
+      <Filter>mlrVST\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\PluginEditor.cpp">
+      <Filter>mlrVST\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp">
+      <Filter>mlrVST\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\SampleStrip.cpp">
+      <Filter>mlrVST\other</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\OSCHandler.cpp">
+      <Filter>mlrVST\other</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Resources\locked.png">
       <Filter>mlrVST\Resources</Filter>
     </ClCompile>
@@ -70,33 +112,6 @@
     <ClCompile Include="..\..\oscpack\TODO">
       <Filter>mlrVST\oscpack</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\SampleStrip.cpp">
-      <Filter>mlrVST</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\AudioSample.cpp">
-      <Filter>mlrVST</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\ChannelProcessor.cpp">
-      <Filter>mlrVST</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\OSCHandler.cpp">
-      <Filter>mlrVST</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\SampleStripControl.cpp">
-      <Filter>mlrVST</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\PluginProcessor.cpp">
-      <Filter>mlrVST</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\PluginEditor.cpp">
-      <Filter>mlrVST</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\PresetPanel.cpp">
-      <Filter>mlrVST</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp">
-      <Filter>mlrVST</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\..\..\SDKs\juce\src\audio\plugin_client\VST\juce_VST_Wrapper.cpp">
       <Filter>Juce VST Wrapper</Filter>
     </ClCompile>
@@ -117,6 +132,36 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\AudioSample.h">
+      <Filter>mlrVST\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\ChannelProcessor.h">
+      <Filter>mlrVST\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\PluginProcessor.h">
+      <Filter>mlrVST\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\PresetPanel.h">
+      <Filter>mlrVST\gui\panels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\SettingsPanel.h">
+      <Filter>mlrVST\gui\panels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\SampleStripControl.h">
+      <Filter>mlrVST\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\PluginEditor.h">
+      <Filter>mlrVST\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h">
+      <Filter>mlrVST\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\SampleStrip.h">
+      <Filter>mlrVST\other</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\OSCHandler.h">
+      <Filter>mlrVST\other</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\oscpack\ip\IpEndpointName.h">
       <Filter>mlrVST\oscpack\ip</Filter>
     </ClInclude>
@@ -155,33 +200,6 @@
     </ClInclude>
     <ClInclude Include="..\..\oscpack\osc\OscTypes.h">
       <Filter>mlrVST\oscpack\osc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\SampleStrip.h">
-      <Filter>mlrVST</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\AudioSample.h">
-      <Filter>mlrVST</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\ChannelProcessor.h">
-      <Filter>mlrVST</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\OSCHandler.h">
-      <Filter>mlrVST</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\SampleStripControl.h">
-      <Filter>mlrVST</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\PluginProcessor.h">
-      <Filter>mlrVST</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\PluginEditor.h">
-      <Filter>mlrVST</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\PresetPanel.h">
-      <Filter>mlrVST</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h">
-      <Filter>mlrVST</Filter>
     </ClInclude>
     <ClInclude Include="..\..\JuceLibraryCode\AppConfig.h">
       <Filter>Juce Library Code</Filter>

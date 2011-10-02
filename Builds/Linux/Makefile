@@ -43,6 +43,16 @@ ifeq ($(CONFIG),Release)
 endif
 
 OBJECTS := \
+  $(OBJDIR)/AudioSample_c5634f81.o \
+  $(OBJDIR)/ChannelProcessor_6fdb09d8.o \
+  $(OBJDIR)/PluginProcessor_a059e380.o \
+  $(OBJDIR)/PresetPanel_1f2c0a46.o \
+  $(OBJDIR)/SettingsPanel_89b72282.o \
+  $(OBJDIR)/SampleStripControl_45995bf8.o \
+  $(OBJDIR)/PluginEditor_94d4fb09.o \
+  $(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o \
+  $(OBJDIR)/SampleStrip_9922baef.o \
+  $(OBJDIR)/OSCHandler_bb1eaf54.o \
   $(OBJDIR)/IpEndpointName_d4cc3aed.o \
   $(OBJDIR)/NetworkingUtils_571a8d2d.o \
   $(OBJDIR)/UdpSocket_34dc4264.o \
@@ -50,15 +60,6 @@ OBJECTS := \
   $(OBJDIR)/OscPrintReceivedElements_db1e1922.o \
   $(OBJDIR)/OscReceivedElements_b8801585.o \
   $(OBJDIR)/OscTypes_b02e2cd6.o \
-  $(OBJDIR)/SampleStrip_9922baef.o \
-  $(OBJDIR)/AudioSample_c5634f81.o \
-  $(OBJDIR)/ChannelProcessor_6fdb09d8.o \
-  $(OBJDIR)/OSCHandler_bb1eaf54.o \
-  $(OBJDIR)/SampleStripControl_45995bf8.o \
-  $(OBJDIR)/PluginProcessor_a059e380.o \
-  $(OBJDIR)/PluginEditor_94d4fb09.o \
-  $(OBJDIR)/PresetPanel_1f2c0a46.o \
-  $(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o \
   $(OBJDIR)/juce_VST_Wrapper_812bffb1.o \
   $(OBJDIR)/BinaryData_ce4232d4.o \
   $(OBJDIR)/JuceLibraryCode1_682c927f.o \
@@ -80,6 +81,56 @@ clean:
 	-@rm -f $(OUTDIR)/$(TARGET)
 	-@rm -rf $(OBJDIR)/*
 	-@rm -rf $(OBJDIR)
+
+$(OBJDIR)/AudioSample_c5634f81.o: ../../Source/AudioSample.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling AudioSample.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/ChannelProcessor_6fdb09d8.o: ../../Source/ChannelProcessor.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling ChannelProcessor.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/PluginProcessor_a059e380.o: ../../Source/PluginProcessor.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling PluginProcessor.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/PresetPanel_1f2c0a46.o: ../../Source/PresetPanel.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling PresetPanel.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/SettingsPanel_89b72282.o: ../../Source/SettingsPanel.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling SettingsPanel.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/SampleStripControl_45995bf8.o: ../../Source/SampleStripControl.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling SampleStripControl.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/PluginEditor_94d4fb09.o: ../../Source/PluginEditor.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling PluginEditor.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o: ../../Source/mlrVSTLookAndFeel.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling mlrVSTLookAndFeel.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/SampleStrip_9922baef.o: ../../Source/SampleStrip.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling SampleStrip.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/OSCHandler_bb1eaf54.o: ../../Source/OSCHandler.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling OSCHandler.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/IpEndpointName_d4cc3aed.o: ../../oscpack/ip/IpEndpointName.cpp
 	-@mkdir -p $(OBJDIR)
@@ -114,51 +165,6 @@ $(OBJDIR)/OscReceivedElements_b8801585.o: ../../oscpack/osc/OscReceivedElements.
 $(OBJDIR)/OscTypes_b02e2cd6.o: ../../oscpack/osc/OscTypes.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling OscTypes.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/SampleStrip_9922baef.o: ../../Source/SampleStrip.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling SampleStrip.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/AudioSample_c5634f81.o: ../../Source/AudioSample.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling AudioSample.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/ChannelProcessor_6fdb09d8.o: ../../Source/ChannelProcessor.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling ChannelProcessor.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/OSCHandler_bb1eaf54.o: ../../Source/OSCHandler.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling OSCHandler.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/SampleStripControl_45995bf8.o: ../../Source/SampleStripControl.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling SampleStripControl.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/PluginProcessor_a059e380.o: ../../Source/PluginProcessor.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling PluginProcessor.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/PluginEditor_94d4fb09.o: ../../Source/PluginEditor.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling PluginEditor.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/PresetPanel_1f2c0a46.o: ../../Source/PresetPanel.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling PresetPanel.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o: ../../Source/mlrVSTLookAndFeel.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling mlrVSTLookAndFeel.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_VST_Wrapper_812bffb1.o: ../../../../../src/audio/plugin_client/VST/juce_VST_Wrapper.cpp
