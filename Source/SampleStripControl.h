@@ -35,6 +35,7 @@ public:
                        const int &height,
                        const int &width,
                        const int &newNumChannels,
+                       SampleStrip * const dataStrip,
                        mlrVSTAudioProcessorEditor * const owner);
     ~SampleStripControl();
 
@@ -78,6 +79,8 @@ private:
     mlrVSTAudioProcessorEditor * const mlrVSTEditor;
     // which strip we are representing
     const int sampleStripID;
+    // Pointer to data structure for samplestrip
+    SampleStrip * const dataStrip;
 
     // GUI components
     Label trackNumberLbl, filenameLbl, chanLbl, volLbl, modeLbl, playSpeedLbl;

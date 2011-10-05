@@ -27,7 +27,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	  sampleStripControlArray(),
       waveformControlHeight(95), waveformControlWidth(700),
 	  numChannels(newNumChannels), useExternalTempo(true),
-      numStrips(7), fontSize(7.4f),
+      fontSize(7.4f),
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
       loadFilesBtn("load files", "LOAD FILES"),
       slidersArray(),
@@ -64,34 +64,13 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	debugButton.addListener(this);
 	debugButton.setBackgroundColours(Colours::blue, Colours::black);
 	debugButton.setBounds(50, 300, 50, 25);
-
-
     
-
-
     addAndMakeVisible(&loadFilesBtn);
 	loadFilesBtn.addListener(this);
     loadFilesBtn.setColour(TextButton::buttonColourId, Colours::black);
 	loadFilesBtn.setBounds(50, 350, 70, 25);
 
-    // Add SampleStripControls, loading settings from the corresponding SampleStrip
-    for(int i = 0; i < numStrips; ++i)
-    {
-
-        int stripX = getWidth() - waveformControlWidth - PAD_AMOUNT;
-        int stripY = PAD_AMOUNT + i * (waveformControlHeight + PAD_AMOUNT);
-        sampleStripControlArray.add(new SampleStripControl(i, waveformControlWidth, waveformControlHeight, numChannels, this));
-        sampleStripControlArray[i]->setBounds(stripX, stripY, waveformControlWidth, waveformControlHeight);
-        addAndMakeVisible( sampleStripControlArray[i] );
-
-        // Programmatically load parameters
-        for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
-        {
-            const void *newValue = getProcessor()->getSampleStripParameter(p, i);
-            sampleStripControlArray[i]->recallParam(p, newValue, true);
-        }
-        DBG("params loaded for strip #" << i);
-	}
+    buildSampleStripControls();
 
     masterGainSlider.addListener(this);
     buildSliders();
@@ -143,6 +122,36 @@ mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
     DBG("GUI destructor finished.");
 }
 
+void mlrVSTAudioProcessorEditor::buildSampleStripControls()
+{
+    // make sure we start from scratch
+    sampleStripControlArray.clear(true);
+
+    int numStrips = getProcessor()->getNumSampleStrips();
+
+    // Add SampleStripControls, loading settings from the corresponding SampleStrip
+    for(int i = 0; i < numStrips; ++i)
+    {
+        // this is passed to the SampleStripControl to allow data to be stored
+        SampleStrip * currentStrip = getProcessor()->getSampleStrip(i);
+
+        sampleStripControlArray.add(new SampleStripControl(i, waveformControlWidth, 
+            waveformControlHeight, numChannels, currentStrip, this));
+        
+        int stripX = getWidth() - waveformControlWidth - PAD_AMOUNT;
+        int stripY = PAD_AMOUNT + i * (waveformControlHeight + PAD_AMOUNT);
+        sampleStripControlArray[i]->setBounds(stripX, stripY, waveformControlWidth, waveformControlHeight);
+        addAndMakeVisible( sampleStripControlArray[i] );
+
+        // Programmatically load parameters
+        for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
+        {
+            const void *newValue = getProcessor()->getSampleStripParameter(p, i);
+            sampleStripControlArray[i]->recallParam(p, newValue, true);
+        }
+        DBG("params loaded for strip #" << i);
+    }
+}
 
 void mlrVSTAudioProcessorEditor::buildSliders()
 {
@@ -208,16 +217,16 @@ void mlrVSTAudioProcessorEditor::timerCallback()
     for(int i = 0; i < slidersArray.size(); ++i)
         slidersArray[i]->setValue( ourProcessor->channelGains[i] );
     
-    // Update sample strip parameters
-    // TODO maybe change callback?
-    for (int strip = 0; strip < sampleStripControlArray.size(); ++strip)
-    {
-        for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
-        {
-            const void *newValue = getProcessor()->getSampleStripParameter(p, strip);
-            sampleStripControlArray[strip]->recallParam(p, newValue, false);
-        }
-    }
+    //// Update sample strip parameters
+    //// TODO maybe change callback?
+    //for (int strip = 0; strip < sampleStripControlArray.size(); ++strip)
+    //{
+    //    for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
+    //    {
+    //        const void *newValue = getProcessor()->getSampleStripParameter(p, strip);
+    //        sampleStripControlArray[strip]->recallParam(p, newValue, false);
+    //    }
+    //}
 }
 
 // This is our Slider::Listener callback, when the user drags a slider.

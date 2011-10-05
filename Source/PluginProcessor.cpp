@@ -462,6 +462,12 @@ void mlrVSTAudioProcessor::timerCallback()
     
 }
 
+void mlrVSTAudioProcessor::changeListenerCallback(ChangeBroadcaster *)
+{
+    // TODO: use this to avoid needlessly updating the GUI
+    DBG("sample strip changed");
+}
+
 void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &monomeRow, const int &state)
 {
 
@@ -511,7 +517,8 @@ void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
     
     for (int i = 0; i < numSampleStrips; ++i)
     {
-        sampleStripArray.add(new SampleStrip());    
+        sampleStripArray.add(new SampleStrip());
+        sampleStripArray.getLast()->addChangeListener(this);
     }
 
     DBG("SampleStrip array built");
@@ -550,6 +557,10 @@ SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index)
     jassert( index < sampleStripArray.size() );
     SampleStrip *tempStrip = sampleStripArray[index];
     return tempStrip;
+}
+int mlrVSTAudioProcessor::getNumSampleStrips()
+{
+    return sampleStripArray.size();
 }
 
 

@@ -100,6 +100,8 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
     default :
         jassertfalse;     // we should NOT be here!
     }
+
+    sendChangeMessage();
 }
 
 const void* SampleStrip::getSampleStripParam(const int &parameterID) const

@@ -20,7 +20,9 @@
 #include "OSCHandler.h"
 
 //==============================================================================
-class mlrVSTAudioProcessor : public AudioProcessor, public Timer
+class mlrVSTAudioProcessor : public AudioProcessor,
+                             public Timer,
+                             public ChangeListener
 {
 public:
     //==============================================================================
@@ -76,6 +78,7 @@ public:
     AudioPlayHead::CurrentPositionInfo lastPosInfo;
 
     void timerCallback();
+    void changeListenerCallback(ChangeBroadcaster *source);
 
     //==============================================================================
     // Note we may not need all these parameters, but if the host is to allow them,
@@ -141,6 +144,7 @@ public:
     void buildSampleStripArray(const int &numSampleStrips);
 
     SampleStrip* getSampleStrip(const int &index);
+    int getNumSampleStrips();
 
     void setSampleStripParameter(const int &parameterID, const void *newValue, const int &stripID)
     {

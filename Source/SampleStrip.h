@@ -14,8 +14,10 @@
 #define __SAMPLESTRIP_H_ACB589A6__
 
 #include "AudioSample.h"
+#include "../JuceLibraryCode/JuceHeader.h"
+#include "../JuceLibraryCode/JucePluginCharacteristics.h"
 
-class SampleStrip
+class SampleStrip : public ChangeBroadcaster
 {
 public:
     SampleStrip();

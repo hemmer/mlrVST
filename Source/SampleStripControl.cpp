@@ -19,6 +19,7 @@ SampleStripControl::SampleStripControl(const int &id,
                                        const int &width,
                                        const int &height,
                                        const int &newNumChannels,
+                                       SampleStrip * const dataStripLink,
                                        mlrVSTAudioProcessorEditor * const owner) :
     componentHeight(height), componentWidth(width), sampleStripID(id),
     backgroundColour(Colours::black), controlbarSize(16), fontSize(7.4f),
@@ -41,7 +42,8 @@ SampleStripControl::SampleStripControl(const int &id,
     stripVolumeSldr("strip volume"),
     selectionPointToChange(0),
     mouseDownMods(),
-    mlrVSTEditor(owner), menuLF()
+    mlrVSTEditor(owner), dataStrip(dataStripLink),
+    menuLF()
 {
     // load binary data for lock icon
     lockImg.setImage(ImageCache::getFromMemory(BinaryData::locked_png, BinaryData::locked_pngSize));
@@ -53,6 +55,7 @@ SampleStripControl::SampleStripControl(const int &id,
 
     formatManager.registerBasicFormats();
     thumbnail.addChangeListener(this);
+    dataStrip->addChangeListener(this);
 
     // listen for user input
     selPlayMode.addListener(this);
@@ -69,6 +72,7 @@ SampleStripControl::SampleStripControl(const int &id,
 SampleStripControl::~SampleStripControl()
 {
     thumbnail.removeChangeListener(this);
+    dataStrip->removeChangeListener(this);
     channelButtonArray.clear(true);
 }
 
@@ -79,10 +83,22 @@ void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
         selNumChunks.addItem(String(i), i);
 }
 
-void SampleStripControl::changeListenerCallback(ChangeBroadcaster*)
+void SampleStripControl::changeListenerCallback(ChangeBroadcaster * sender)
 {
-    // this method is called by the thumbnail when it has changed, so we should repaint it..
-    repaint();
+    if (sender == &thumbnail)
+    {
+        // thumbnail when it has changed, so we should repaint it..
+        repaint();
+    }
+    else if (sender == dataStrip)
+    {
+        DBG("strip " << sampleStripID << " changed");
+        for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
+        {
+            const void *newValue = dataStrip->getSampleStripParam(p);
+            recallParam(p, newValue, false);
+        }
+    }
 }
 
 void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
@@ -92,16 +108,14 @@ void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
     {
         numChunks = selNumChunks.getSelectedId();
         visualChunkSize = (visualSelectionLength / (float) numChunks);
-        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamNumChunks,
-                                             &numChunks,
-                                             sampleStripID);
+        dataStrip->setSampleStripParam(SampleStrip::ParamNumChunks,
+                                       &numChunks);
         repaint();
     }
     else if (comboBoxThatHasChanged == &selPlayMode)
     {
         int newPlayMode = selPlayMode.getSelectedId();
-        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamPlayMode,
-                                             &newPlayMode, sampleStripID);
+        dataStrip->setSampleStripParam(SampleStrip::ParamPlayMode, &newPlayMode);
     }
 
 }
@@ -123,12 +137,12 @@ void SampleStripControl::buttonClicked(Button *btn)
     if (btn == &isLatchedBtn)
     {
         isLatched = !isLatched;
-        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamIsLatched, &isLatched, sampleStripID);
+        dataStrip->setSampleStripParam(SampleStrip::ParamIsLatched, &isLatched);
     }
     else if (btn == &isReversedBtn)
     {
         isReversed = !isReversed;
-        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamIsReversed, &isReversed, sampleStripID);
+        dataStrip->setSampleStripParam(SampleStrip::ParamIsReversed, &isReversed);
         String newButtonText = (isReversed) ? "REV" : "NORM";
         isReversedBtn.setButtonText(newButtonText);
     }
@@ -143,8 +157,8 @@ void SampleStripControl::buttonClicked(Button *btn)
     else if (btn == &speedLockBtn)
     {
         bool newIsSpeedLocked = !isSpeedLocked;
-        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamIsPlaySpeedLocked,
-                                              &newIsSpeedLocked, sampleStripID);
+        dataStrip->setSampleStripParam(SampleStrip::ParamIsPlaySpeedLocked,
+                                       &newIsSpeedLocked);
     }
 
 }
@@ -155,12 +169,12 @@ void SampleStripControl::sliderValueChanged(Slider *sldr)
     {
         float newStripVol = (float)(stripVolumeSldr.getValue());
         thumbnailScaleFactor = newStripVol;
-        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamStripVolume, &newStripVol, sampleStripID);
+        dataStrip->setSampleStripParam(SampleStrip::ParamStripVolume, &newStripVol);
     }
     else if(sldr == &playbackSpeedSldr)
     {
         double newPlaySpeed = playbackSpeedSldr.getValue();
-        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamPlaySpeed, &newPlaySpeed, sampleStripID);
+        dataStrip->setSampleStripParam(SampleStrip::ParamPlaySpeed, &newPlaySpeed);
     }
 }
 
@@ -227,7 +241,7 @@ void SampleStripControl::buildUI()
         channelButtonArray.getLast()->setBackgroundColours(chanColour, chanColour);
     }
 
-    int previousChannel = *static_cast<const int*>(mlrVSTEditor->getSampleStripParameter(SampleStrip::ParamCurrentChannel, sampleStripID));
+    int previousChannel = *static_cast<const int*>(dataStrip->getSampleStripParam(SampleStrip::ParamCurrentChannel));
     if (previousChannel >= numChannels){
         DBG("Current channel outside range: resetting to channel 0.");
         updateChannelColours(0);
@@ -355,10 +369,10 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
             if (fileChoice == 1)
             {
                 const AudioSample *newSample = 0;
-                mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamAudioSample, newSample, sampleStripID);
+                dataStrip->setSampleStripParam(SampleStrip::ParamAudioSample, newSample);
 
                 bool isPlaying = false;
-                mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamIsPlaying, &isPlaying, sampleStripID);
+                dataStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &isPlaying);
             }
             // If a menu option has been chosen that is a file
             else if (fileChoice != 0)
@@ -406,8 +420,8 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
 
         // update the selection
         float start = 0.0f, end = 1.0f;
-        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalStart, &start, sampleStripID);
-        mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &end, sampleStripID);
+        dataStrip->setSampleStripParam(SampleStrip::ParamFractionalStart, &start);
+        dataStrip->setSampleStripParam(SampleStrip::ParamFractionalEnd, &end);
 
         mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);
 
@@ -513,8 +527,8 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
     // try to send the new selection to the SampleStrips
     float fractionalStart = visualSelectionStart / (float) componentWidth;
     float fractionalEnd = visualSelectionEnd / (float) componentWidth;
-    mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalStart, &fractionalStart, sampleStripID);
-    mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &fractionalEnd, sampleStripID);
+    dataStrip->setSampleStripParam(SampleStrip::ParamFractionalStart, &fractionalStart);
+    dataStrip->setSampleStripParam(SampleStrip::ParamFractionalEnd, &fractionalEnd);
 
     if (mouseDownMods != ModifierKeys::middleButtonModifier)
         mlrVSTEditor->updatePlaySpeedForNewSelection(sampleStripID);
@@ -608,7 +622,7 @@ void SampleStripControl::selectNewSample(const int &fileChoice)
 {
     // and let the audio processor update the sample strip
     const AudioSample * newSample = mlrVSTEditor->getAudioSample(fileChoice);
-    mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamAudioSample, newSample, sampleStripID);
+    dataStrip->setSampleStripParam(SampleStrip::ParamAudioSample, newSample);
 
     // select whole sample by default
     visualSelectionStart = 0;
@@ -618,8 +632,8 @@ void SampleStripControl::selectNewSample(const int &fileChoice)
 
     // update the selection
     float start = 0.0f, end = 1.0f;
-    mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalStart, &start, sampleStripID);
-    mlrVSTEditor->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &end, sampleStripID);
+    dataStrip->setSampleStripParam(SampleStrip::ParamFractionalStart, &start);
+    dataStrip->setSampleStripParam(SampleStrip::ParamFractionalEnd, &end);
 
     // and try to find the best playback speed (i.e. closest to 1).
     mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);

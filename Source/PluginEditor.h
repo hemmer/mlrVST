@@ -68,18 +68,6 @@ public:
     // Pass SampleStripControl messages back to the plugin processor
     File getSampleSourceFile(const int &index) const { return getProcessor()->getSample(index)->getSampleFile(); }
 
-
-
-    // Forwards get / set requests for SampleStrips to the processor
-    void setSampleStripParameter(const int &parameterID, const void *newValue, const int &stripID)
-    {
-        getProcessor()->setSampleStripParameter(parameterID, newValue, stripID);
-    }
-    const void * getSampleStripParameter(const int &parameterID, const int &stripID)
-    {
-        return getProcessor()->getSampleStripParameter(parameterID, stripID);
-    }
-
     void calcInitialPlaySpeed(const int &stripID) const { getProcessor()->calcInitialPlaySpeed(stripID); }
     void updatePlaySpeedForNewSelection(const int &stripID) { getProcessor()->calcPlaySpeedForSelectionChange(stripID); }
     void modPlaySpeed(const double &factor, const int &stripID) { getProcessor()->modPlaySpeed(factor, stripID); }
@@ -117,7 +105,7 @@ private:
 	// Store the waveform controls/strips in array. 
     // For a standard monome64 this is 7
     OwnedArray<SampleStripControl> sampleStripControlArray;
-    const int numStrips;
+    void buildSampleStripControls();
     const int waveformControlHeight, waveformControlWidth;
 
     //////////////
