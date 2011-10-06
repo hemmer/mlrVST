@@ -217,16 +217,6 @@ void mlrVSTAudioProcessorEditor::timerCallback()
     for(int i = 0; i < slidersArray.size(); ++i)
         slidersArray[i]->setValue( ourProcessor->channelGains[i] );
     
-    //// Update sample strip parameters
-    //// TODO maybe change callback?
-    //for (int strip = 0; strip < sampleStripControlArray.size(); ++strip)
-    //{
-    //    for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
-    //    {
-    //        const void *newValue = getProcessor()->getSampleStripParameter(p, strip);
-    //        sampleStripControlArray[strip]->recallParam(p, newValue, false);
-    //    }
-    //}
 }
 
 // This is our Slider::Listener callback, when the user drags a slider.

@@ -24,9 +24,10 @@ SampleStrip::SampleStrip() :
 
 }
 
-void SampleStrip::setSampleStripParam(const int &parameterID, const void *newValue)
+void SampleStrip::setSampleStripParam(const int &parameterID,
+                                      const void *newValue,
+                                      const bool &sendChangeMsg)
 {
-    //DBG("param \"" << getParameterName(parameterID) << "\" updated");
 
     switch (parameterID)
     {
@@ -101,7 +102,8 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
         jassertfalse;     // we should NOT be here!
     }
 
-    sendChangeMessage();
+    // notify listeners of changes if requested
+    if (sendChangeMsg) sendChangeMessage();
 }
 
 const void* SampleStrip::getSampleStripParam(const int &parameterID) const

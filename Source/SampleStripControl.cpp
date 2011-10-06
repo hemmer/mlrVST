@@ -90,6 +90,10 @@ void SampleStripControl::changeListenerCallback(ChangeBroadcaster * sender)
         // thumbnail when it has changed, so we should repaint it..
         repaint();
     }
+
+    /* TODO: this gets called A LOT during playback (as playback percentage
+       is considered a parameter). Maybe seperate that out from the param setup?
+    */
     else if (sender == dataStrip)
     {
         DBG("strip " << sampleStripID << " changed");
@@ -98,6 +102,9 @@ void SampleStripControl::changeListenerCallback(ChangeBroadcaster * sender)
             const void *newValue = dataStrip->getSampleStripParam(p);
             recallParam(p, newValue, false);
         }
+
+        // repaint once all params are checked
+        repaint();  
     }
 }
 

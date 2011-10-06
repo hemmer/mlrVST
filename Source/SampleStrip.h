@@ -117,7 +117,9 @@ public:
         }
     }
     // these are for getting / setting the int parameters
-    void setSampleStripParam(const int &parameterID, const void *newValue);
+    void setSampleStripParam(const int &parameterID,
+                             const void *newValue,
+                             const bool &sendChangeMsg = true);
     const void* getSampleStripParam(const int &parameterID) const;
 
     void updatePlaySpeedForBPMChange(const double &newBPM);

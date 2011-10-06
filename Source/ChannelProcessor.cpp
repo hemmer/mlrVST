@@ -310,6 +310,10 @@ void ChannelProcessor::refreshPlaybackParameters()
         currentSample = static_cast<const AudioSample*>
             (currentSampleStrip->getSampleStripParam(SampleStrip::ParamAudioSample));
 
+        /* NOTE: we don't really want to be sending a change message here
+           because this will get called a lot during playback. A timer 
+           would be better (on the TODO list).
+        */
         float playbackPercentage = getCurrentPlaybackPercentage();
         currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
 

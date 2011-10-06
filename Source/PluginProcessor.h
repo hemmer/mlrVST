@@ -21,8 +21,7 @@
 
 //==============================================================================
 class mlrVSTAudioProcessor : public AudioProcessor,
-                             public Timer,
-                             public ChangeListener
+                             public Timer
 {
 public:
     //==============================================================================
@@ -78,7 +77,6 @@ public:
     AudioPlayHead::CurrentPositionInfo lastPosInfo;
 
     void timerCallback();
-    void changeListenerCallback(ChangeBroadcaster *source);
 
     //==============================================================================
     // Note we may not need all these parameters, but if the host is to allow them,
