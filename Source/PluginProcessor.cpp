@@ -596,7 +596,7 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
 
     newPreset.setAttribute("name", presetName);
 
-    // Store settings of each strip
+    // Store the SampleStrip specific settings
     for (int strip = 0; strip < sampleStripArray.size(); ++strip)
     {
         XmlElement *stripXml = new XmlElement("STRIP");
@@ -644,15 +644,12 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
 
         newPreset.addChildElement(stripXml);
     }
-     
-    //File testFile("C:\\Users\\Hemmer\Desktop\\test.xml");
     
-
-    
-    XmlElement* p = presetList.getFirstChildElement();
 
     // See if a preset of this name exists in the set list
+    XmlElement* p = presetList.getFirstChildElement();
     bool duplicateFound = false;
+
     while (p != nullptr)
     {
         String pName = p->getStringAttribute("name");
@@ -673,6 +670,40 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
         presetList.addChildElement(new XmlElement(newPreset));
 
     DBG(presetList.createDocument(String::empty));
+}
+
+void mlrVSTAudioProcessor::switchPreset(const int &id)
+{
+    // get the preset at the specified index in the setlist
+    XmlElement* preset = setlist.getChildElement(id);
+
+    // this *should* exist!
+    if (preset)
+    {
+        if (preset->getTagName() == "PRESET_NONE")
+        {
+            // we have a blank preset
+            DBG("blank preset loaded");
+        }
+        else
+        {
+            // check we know the name
+            DBG("preset \"" << preset->getStringAttribute("name") << "\" loaded.");
+
+            // TODO: first load the global parameters
+
+
+            // then process each strip
+            XmlElement* strip = preset->getFirstChildElement();
+            while(strip != nullptr)
+            {
+
+                // load the next strip
+                strip = strip->getNextElement();
+            }
+        }
+    }
+    else jassertfalse;
 }
 
 /////////////////////

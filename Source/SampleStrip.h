@@ -126,7 +126,7 @@ public:
     void updatePlaySpeedForSelectionChange();
     void findInitialPlaySpeed(const double &BPM, const float &hostSampleRate);
 
-    void modPlaySpeed(const double &factor) { playSpeed *= factor; }
+    void modPlaySpeed(const double &factor);
 private:
 
     // These are just so the GUI can show where in the sample we are

@@ -32,7 +32,9 @@ mlrVSTLookAndFeel::mlrVSTLookAndFeel() :
     silkFontSizeSmall(7.4f),
     silkFontSizeBig(11.8f)
 {
-    setColour (TextButton::buttonColourId,          Colours::black);
+    setColour (TextButton::buttonColourId,          Colours::white);
+    setColour (TextButton::textColourOnId,          Colours::white);
+    setColour (TextButton::textColourOffId,         Colours::black);
     setColour (ListBox::outlineColourId,            findColour (ComboBox::outlineColourId));
     setColour (ScrollBar::thumbColourId,            Colour (0xffbbbbdd));
     setColour (ScrollBar::backgroundColourId,       Colours::transparentBlack);
@@ -64,9 +66,9 @@ void mlrVSTLookAndFeel::drawButtonBackground (Graphics& g, Button& button,
                                               bool isButtonDown)
 {
     if (isButtonDown)
-        g.setColour(backgroundColour);
+        g.setColour(Colours::black);
     else
-        g.setColour(Colours::white);
+        g.setColour(backgroundColour);
 
     g.fillRect(0, 0, button.getWidth(), button.getHeight());
 
@@ -80,9 +82,9 @@ void mlrVSTLookAndFeel::drawButtonText (Graphics& g, TextButton& button,
     g.setFont(silkFontSizeSmall);
 
     if (isButtonDown)
-        g.setColour(Colours::white);
+        g.setColour(button.findColour(TextButton::textColourOnId));
     else
-        g.setColour(button.findColour(TextButton::buttonColourId));
+        g.setColour(button.findColour(TextButton::textColourOffId));
 
     g.drawFittedText (button.getButtonText(), 4, 4,
         button.getWidth() - 2, button.getHeight() - 8,

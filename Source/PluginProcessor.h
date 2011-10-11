@@ -161,6 +161,7 @@ public:
 
     // Preset stuff
     void savePreset(const String &presetName);
+    void switchPreset(const int &id);
     XmlElement getPresetList() const { return presetList; }
     
     XmlElement getSetlist() const { return setlist; }

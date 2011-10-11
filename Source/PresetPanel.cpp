@@ -9,8 +9,9 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
     mlrVSTEditor(owner),
     panelLabel("preset panel label", "Setlist Manager"),
     fontSize(7.4f), panelBounds(bounds),
-    setListLength(0), ROW_HEIGHT(20), ROW_WIDTH(280), PAD_AMOUNT(10),
-    setListSlotArray(), deleteBtnArray(),
+    selectedPreset(0),
+    setListLength(0), ROW_HEIGHT(20), ROW_WIDTH(250), PAD_AMOUNT(10),
+    setListSlotArray(), deleteBtnArray(), selectBtnArray(),
     addNewRowBtn("Add new")
 {
     addAndMakeVisible(&panelLabel);
@@ -35,12 +36,17 @@ void PresetPanel::buttonClicked(Button *btn)
 {
 
     if (btn == &addNewRowBtn) addRow();
-
+    else
+    {
     for (int b = 0; b < setListSlotArray.size(); ++b)
     {
         if (deleteBtnArray[b] == btn)
         {
             deleteRow(b);
+        }
+        else if (selectBtnArray[b] == btn)
+        {
+            mlrVSTEditor->setCurrentPreset(b);
         }
         else if (setListSlotArray[b] == btn)
         {
@@ -67,7 +73,7 @@ void PresetPanel::buttonClicked(Button *btn)
 
 
             int presetChoice = presetSelectMenu.showMenu(PopupMenu::Options().withTargetComponent(setListSlotArray[b]));
-            
+
             // If "none" is selected, insert a blank preset
             if (presetChoice == 1)
             {
@@ -89,6 +95,7 @@ void PresetPanel::buttonClicked(Button *btn)
             mlrVSTEditor->setSetlist(currentSetlist);
         }
 
+    }
     }
 }
 
@@ -127,6 +134,7 @@ void PresetPanel::arrangeButtons()
     // TODO: rebuilding each time is maybe a little inefficient
     setListSlotArray.clear(true);
     deleteBtnArray.clear(true);
+    selectBtnArray.clear(true);
 
     XmlElement* child = currentSetlist.getFirstChildElement();
     int index = 0;
@@ -135,16 +143,26 @@ void PresetPanel::arrangeButtons()
         String presetName = child->getStringAttribute("name");
         String buttonLblText = "#" + String(index) + ": " + presetName;
 
+        // these buttons are clicked to select which preset is in the slot
         setListSlotArray.add(new ToggleButton(buttonLblText));
         addAndMakeVisible(setListSlotArray.getLast());
         setListSlotArray.getLast()->addListener(this);
         setListSlotArray.getLast()->setBounds(PAD_AMOUNT,
             50 + index * (ROW_HEIGHT + PAD_AMOUNT), ROW_WIDTH, ROW_HEIGHT);
 
+        // load the selected item in the preset list
+        selectBtnArray.add(new TextButton("SEL"));
+        addAndMakeVisible(selectBtnArray.getLast());
+        selectBtnArray.getLast()->addListener(this);
+        selectBtnArray.getLast()->setBounds(ROW_WIDTH,
+            50 + index * (ROW_HEIGHT + PAD_AMOUNT), 25, ROW_HEIGHT);
+        selectBtnArray.getLast()->setColour(TextButton::textColourOnId, Colours::grey);
+
+        // deletes the current item from the preset list
         deleteBtnArray.add(new TextButton("DEL"));
         addAndMakeVisible(deleteBtnArray.getLast());
         deleteBtnArray.getLast()->addListener(this);
-        deleteBtnArray.getLast()->setBounds(ROW_WIDTH + 2*PAD_AMOUNT,
+        deleteBtnArray.getLast()->setBounds(ROW_WIDTH + 3*PAD_AMOUNT,
             50 + index * (ROW_HEIGHT + PAD_AMOUNT), 25, ROW_HEIGHT);
 
         // iterate away

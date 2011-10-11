@@ -67,7 +67,6 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     
     addAndMakeVisible(&loadFilesBtn);
 	loadFilesBtn.addListener(this);
-    loadFilesBtn.setColour(TextButton::buttonColourId, Colours::black);
 	loadFilesBtn.setBounds(50, 350, 70, 25);
 
     buildSampleStripControls();
@@ -90,12 +89,10 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     addAndMakeVisible(&addPresetBtn);
     addPresetBtn.addListener(this);
     addPresetBtn.setBounds(130, 350, 70, 25);
-    addPresetBtn.setColour(TextButton::buttonColourId, Colours::black);
 
     addAndMakeVisible(&toggleSetlistBtn);
     toggleSetlistBtn.addListener(this);
     toggleSetlistBtn.setBounds(210, 350, 75, 25);
-    toggleSetlistBtn.setColour(TextButton::buttonColourId, Colours::black);
 
     addChildComponent(&presetPanel);
     presetPanel.setBounds(presetPanelBounds);
@@ -109,7 +106,6 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
     addChildComponent(&settingsPanel);
     settingsPanel.setBounds(settingsPanelBounds);
-
 
     formatManager.registerBasicFormats();
     startTimer(50);

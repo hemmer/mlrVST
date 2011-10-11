@@ -79,7 +79,7 @@ public:
     XmlElement getPresetList() const { return getProcessor()->getPresetList(); }
     XmlElement getSetlist() const { return getProcessor()->getSetlist(); }
     void setSetlist(const XmlElement &newSetlist) { getProcessor()->setSetlist(newSetlist); }
-
+    void setCurrentPreset(const int &id) { getProcessor()->switchPreset(id); }
     void updateGlobalSetting(const int &parameterID, const void *newValue);
     const void* getGlobalSetting(const int &parameterID, const void *newValue) const;
 

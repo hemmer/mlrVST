@@ -45,11 +45,13 @@ private:
 
     OwnedArray<ToggleButton> setListSlotArray;
     OwnedArray<TextButton> deleteBtnArray;
-    TextButton addNewRowBtn;
+    OwnedArray<TextButton> selectBtnArray;
 
+    TextButton addNewRowBtn;
     PopupMenu choosePresetMenu;
 
     int setListLength;
+    int selectedPreset;
     const int ROW_HEIGHT, ROW_WIDTH, PAD_AMOUNT;
 
     const float fontSize;

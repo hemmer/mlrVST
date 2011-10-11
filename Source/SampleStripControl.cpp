@@ -138,6 +138,8 @@ void SampleStripControl::buttonClicked(Button *btn)
             updateChannelColours(i);
             // ...so we can let the processor know
             mlrVSTEditor->switchChannels(i, sampleStripID);
+            // no need to check the rest of the buttons
+            return;
         }
     }
 
@@ -203,8 +205,13 @@ void SampleStripControl::updateChannelColours(const int &newChannel)
     isLatchedBtn.setColour(ToggleButton::textColourId, backgroundColour);
     isReversedBtn.setColour(ToggleButton::textColourId, backgroundColour);
 
-    times2.setColour(TextButton::buttonColourId, backgroundColour);
-    div2.setColour(TextButton::buttonColourId, backgroundColour);
+    // TODO: background colour of TextButton not controlled when mousedown
+    times2.setColour(TextButton::textColourOffId, backgroundColour);
+    times2.setColour(TextButton::buttonOnColourId, backgroundColour);
+
+    div2.setColour(TextButton::textColourOffId, backgroundColour);
+    div2.setColour(TextButton::buttonOnColourId, backgroundColour);
+
     speedLockBtn.setBackgroundColours(backgroundColour, backgroundColour);
 }
 

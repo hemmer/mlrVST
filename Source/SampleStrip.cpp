@@ -222,3 +222,11 @@ void SampleStrip::findInitialPlaySpeed(const double &newBPM, const float &hostSa
         playSpeed = newPlaySpeed;
     }
 }
+
+void SampleStrip::modPlaySpeed(const double &factor)
+{
+    playSpeed *= factor;
+
+    // let listeners know!
+    sendChangeMessage();
+}
