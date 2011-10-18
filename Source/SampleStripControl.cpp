@@ -121,7 +121,8 @@ void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
     }
     else if (comboBoxThatHasChanged == &selPlayMode)
     {
-        int newPlayMode = selPlayMode.getSelectedId();
+        // -1 is because ComboBox reserves 0 for when menu is closed without choosing
+        int newPlayMode = selPlayMode.getSelectedId() - 1;
         dataStrip->setSampleStripParam(SampleStrip::ParamPlayMode, &newPlayMode);
     }
 
@@ -292,9 +293,10 @@ void SampleStripControl::buildUI()
 
     addAndMakeVisible(&selPlayMode);
     selPlayMode.clear();
-    selPlayMode.addItem("LOOP", SampleStrip::LOOP);
-    selPlayMode.addItem("LOOP CHNK", SampleStrip::LOOP_CHUNK);
-    selPlayMode.addItem("PLAY TO END", SampleStrip::PLAY_TO_END);
+    for (int i = 0; i < SampleStrip::NUM_PLAY_MODES; ++i)
+    {
+        selPlayMode.addItem(dataStrip->getPlayModeName(i), i+1);
+    }
     selPlayMode.setBounds(newXposition, 0, 86, controlbarSize);
     selPlayMode.setLookAndFeel(&menuLF);
 
@@ -677,7 +679,7 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
     case SampleStrip::ParamPlayMode :
         {
             int newPlayMode = *static_cast<const int*>(newValue);
-            selPlayMode.setSelectedId(newPlayMode);
+            selPlayMode.setSelectedId(newPlayMode + 1);
             break;
         }
 

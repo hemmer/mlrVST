@@ -249,7 +249,7 @@ const String mlrVSTAudioProcessor::getParameterText(int index)
 }
 
 //==============================================================================
-void mlrVSTAudioProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*/)
+void mlrVSTAudioProcessor::prepareToPlay(double /*sampleRate*/, int /*samplesPerBlock*/)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
@@ -300,7 +300,6 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
 
         const int numSamples = buffer.getNumSamples();
-        int channel, dp = 0;
 
         /* this adds the OSC messages from the monome which have been converted
         to midi messages (where MIDI channel is row, note number is column) */
@@ -317,7 +316,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
         }
 
         // Go through the outgoing data, and apply our master gain to it...
-        for (channel = 0; channel < getNumInputChannels(); ++channel)
+        for (int channel = 0; channel < getNumInputChannels(); ++channel)
             buffer.applyGain(channel, 0, buffer.getNumSamples(), masterGain);
 
 
@@ -468,7 +467,13 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
 
     if (monomeRow == 0)
     {
-        // TODO control mappings for top row 
+        // TODO proper control mappings for top row
+
+        // stops channels 1-N playing
+        if (monomeCol < numChannels)
+        {
+            channelProcessorArray[monomeCol]->stopSamplePlaying();
+        }
     } 
     else if (monomeRow <= numSampleStrips && monomeRow >= 0)
     {
@@ -486,9 +491,6 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
 
         if (monomeCol < numChunks)
         {
-            bool isLatched = *static_cast<const bool*>
-                (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamIsLatched));
-
             // The +1 here is because midi channels start at 1 not 0!
             if (state) monomeState.noteOn(effectiveMonomeRow + 1, monomeCol, 1.0f);
             else monomeState.noteOff(effectiveMonomeRow + 1, monomeCol);

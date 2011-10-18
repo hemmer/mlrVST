@@ -429,7 +429,7 @@ void mlrVSTAudioProcessorEditor::updateGlobalSetting(const int &parameterID, con
     }
 }
 
-const void* mlrVSTAudioProcessorEditor::getGlobalSetting(const int &parameterID, const void *newValue) const
+const void* mlrVSTAudioProcessorEditor::getGlobalSetting(const int &parameterID) const
 { 
     return getProcessor()->getGlobalSetting(parameterID);
 }

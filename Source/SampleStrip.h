@@ -64,10 +64,24 @@ public:
 
     enum PlayMode
     { 
-        LOOP = 1,               // starts the sample looping
+        LOOP,                   // starts the sample looping
         LOOP_CHUNK,             // loops the chunk associated with a button
-        PLAY_TO_END             // plays from current point until the end then stops
+        PLAY_CHUNK_ONCE,        // plays the current chunk to the end
+        PLAY_TO_END,            // plays from current point until the end then stops
+        NUM_PLAY_MODES
     };
+
+    String getPlayModeName(const int &parameterID) const
+    {
+        switch(parameterID)
+        {
+        case LOOP : return "loop";
+        case LOOP_CHUNK : return "loop chunk";
+        case PLAY_CHUNK_ONCE : return "play chunk";
+        case PLAY_TO_END : return "play to end";
+        default : jassertfalse; return "error!";
+        }
+    }
 
     String getParameterName(const int &parameterID) const
     {

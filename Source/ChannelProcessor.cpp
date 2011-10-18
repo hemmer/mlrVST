@@ -23,10 +23,11 @@ ChannelProcessor::ChannelProcessor(const int &channelIDNo,
     channelGain(0.8f), stripGain(0.0f),
     currentSample(0), playSpeed(1.0), currentBPM(120.0f),
     sampleStartPosition(0), sampleEndPosition(0),
+    playbackStartPosition(-1), playbackEndPosition(-1),
     sampleCurrentPosition(0.0),
     isPlaying(false),
     channelColour(col),
-    isReversed(false), playMode(-1), chunkSize(-1), playbackStartPosition(-1),
+    isReversed(false), playMode(-1), chunkSize(-1), 
     effectiveMonomeRow(-1), monomeCol(-5)
 {
 
@@ -121,7 +122,13 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
         is reserved for mappings, making the second row
         effectively the first.
         */
-        effectiveMonomeRow = m.getChannel() - 1;
+        int newEffectiveMonomeRow = m.getChannel() - 1;
+
+        // if we are changing strip, stop the old one first!
+        if (newEffectiveMonomeRow != effectiveMonomeRow && currentSampleStrip)
+            stopSamplePlaying();
+
+        effectiveMonomeRow = newEffectiveMonomeRow;
         monomeCol = m.getNoteNumber();
 
         /* Load the new sample strip (this contains information
@@ -229,6 +236,7 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
             const double alpha = (double) (sampleCurrentPosition - pos);
             const double invAlpha = 1.0f - alpha;
 
+            //DBG(sampleCurrentPosition);
 
             // double up if mono
             float l = (float)(inL [pos] * invAlpha + inL [pos + 1] * alpha);
@@ -258,20 +266,30 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
                 switch (playMode)
                 {
                 case SampleStrip::LOOP_CHUNK :
-                    if (sampleCurrentPosition > (playbackStartPosition + chunkSize))
-                    {
-                        sampleCurrentPosition = (float) playbackStartPosition; break;
-                    }
-                case SampleStrip::PLAY_TO_END :
-                    if (sampleCurrentPosition > sampleEndPosition)
-                    {
-                        stopSamplePlaying(); break;
-                    }
+                    if (sampleCurrentPosition > playbackEndPosition)
+                        sampleCurrentPosition = (float) playbackStartPosition;
+
+                    break;
+
+                case SampleStrip::PLAY_CHUNK_ONCE :
+                    if (sampleCurrentPosition > playbackEndPosition)
+                        stopSamplePlaying();
+
+                    break;
+
                 case SampleStrip::LOOP :
-                    if (sampleCurrentPosition > sampleEndPosition)
-                    {
-                        sampleCurrentPosition = (float) sampleStartPosition; break;
-                    }
+                    if (sampleCurrentPosition > playbackEndPosition)
+                        sampleCurrentPosition = (float) sampleStartPosition;
+                    
+                    break;
+
+                case SampleStrip::PLAY_TO_END :
+                    if (sampleCurrentPosition > playbackEndPosition)
+                        stopSamplePlaying();
+                    
+                    break;
+                    
+                default : jassertfalse;
                 }
             }
             else
@@ -282,21 +300,29 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
                 switch (playMode)
                 {
                 case SampleStrip::LOOP_CHUNK :
-                    if (sampleCurrentPosition < playbackStartPosition)
-                        sampleCurrentPosition = (float)(playbackStartPosition + chunkSize);
+                    if (sampleCurrentPosition < playbackEndPosition)
+                        sampleCurrentPosition = (float)(playbackStartPosition);
                     break;    
 
-                case SampleStrip::PLAY_TO_END :
-                    if (sampleCurrentPosition < sampleStartPosition)
+                case SampleStrip::PLAY_CHUNK_ONCE :
+                    if (sampleCurrentPosition < playbackEndPosition)
                         stopSamplePlaying();
-                    break;
+                    break;  
 
                 case SampleStrip::LOOP :
-                    if (sampleCurrentPosition < sampleStartPosition)
+                    if (sampleCurrentPosition < playbackEndPosition)
                         sampleCurrentPosition = (float) sampleEndPosition;
                     break;
-                }
 
+                case SampleStrip::PLAY_TO_END :
+                    if (sampleCurrentPosition < playbackEndPosition)
+                        stopSamplePlaying();
+                    
+                    break;
+
+                default : jassertfalse;
+
+                }
             }
         }
     }
@@ -320,26 +346,6 @@ void ChannelProcessor::refreshPlaybackParameters()
 
         if (currentSample)
         {
-            // Load sample strip details
-            chunkSize = *static_cast<const int*>
-                (currentSampleStrip->getSampleStripParam(SampleStrip::ParamChunkSize));
-            sampleStartPosition = *static_cast<const int*>
-                (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleStart));
-            sampleEndPosition = *static_cast<const int*>
-                (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleEnd));
-            // Then use the column to find which point to start at
-            playbackStartPosition = sampleStartPosition + monomeCol * chunkSize;
-
-            // if chunksize increases this can happen
-            if (playbackStartPosition > sampleEndPosition)
-                playbackStartPosition = sampleStartPosition;
-
-            // If we reselect this keeps the currently playing point in sync
-            // Also if the new sample is shorted
-            if ((sampleStartPosition > sampleCurrentPosition) || (sampleCurrentPosition > sampleEndPosition))
-                sampleCurrentPosition = (double) playbackStartPosition;
-
-
             stripGain = *static_cast<const float *>
                 (currentSampleStrip->getSampleStripParam(SampleStrip::ParamStripVolume));
 
@@ -354,6 +360,71 @@ void ChannelProcessor::refreshPlaybackParameters()
 
             playMode = *static_cast<const int *>
                 (currentSampleStrip->getSampleStripParam(SampleStrip::ParamPlayMode));
+
+            // Load sample strip details
+            chunkSize = *static_cast<const int*>
+                (currentSampleStrip->getSampleStripParam(SampleStrip::ParamChunkSize));
+            sampleStartPosition = *static_cast<const int*>
+                (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleStart));
+            sampleEndPosition = *static_cast<const int*>
+                (currentSampleStrip->getSampleStripParam(SampleStrip::ParamSampleEnd));
+
+            if (!isReversed)
+            {
+                // set start / end positions
+                switch (playMode)
+                {
+                case SampleStrip::LOOP_CHUNK :
+                case SampleStrip::PLAY_CHUNK_ONCE :
+                    playbackStartPosition = sampleStartPosition + monomeCol * chunkSize;
+                    playbackEndPosition = sampleStartPosition + (monomeCol + 1) * chunkSize;
+                    jassert(playbackEndPosition <= sampleEndPosition);
+                    break;
+
+                case SampleStrip::LOOP :
+                case SampleStrip::PLAY_TO_END :
+                    playbackStartPosition = sampleStartPosition + monomeCol * chunkSize;
+                    playbackEndPosition = sampleEndPosition;
+                    break;
+
+                // all playmodes should be accounted for
+                default : jassertfalse;
+                }
+            }
+            else
+            {
+                // set start / end positions
+                switch (playMode)
+                {
+                case SampleStrip::LOOP_CHUNK :
+                case SampleStrip::PLAY_CHUNK_ONCE :
+                    playbackStartPosition = sampleStartPosition + (monomeCol + 1) * chunkSize;
+                    playbackEndPosition = sampleStartPosition + monomeCol * chunkSize;
+                    jassert(playbackStartPosition <= sampleEndPosition);
+                    break;
+
+                case SampleStrip::LOOP :
+                case SampleStrip::PLAY_TO_END :
+                    playbackStartPosition = sampleStartPosition + (monomeCol + 1) * chunkSize;
+                    playbackEndPosition = sampleStartPosition;
+                    break;
+
+                // all playmodes should be accounted for
+                default : jassertfalse;
+                }
+            }
+
+            // if chunksize increases this can happen
+            if (playbackStartPosition > sampleEndPosition)
+            {
+                playbackStartPosition = sampleStartPosition;
+            }
+
+            // If we reselect this keeps the currently playing point in sync
+            // Also if the new sample is shorted
+            if ((sampleStartPosition > sampleCurrentPosition) || (sampleCurrentPosition > sampleEndPosition))
+                sampleCurrentPosition = (double) playbackStartPosition;
+ 
         }
     }
 }

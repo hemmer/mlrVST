@@ -17,7 +17,7 @@ SampleStrip::SampleStrip() :
     numChunks(8), chunkSize(0),
     currentChannel(0),
     isPlaying(false), playbackPercentage(0.0),
-    currentPlayMode(LOOP_CHUNK), isReversed(false), isLatched(false),
+    currentPlayMode(LOOP), isReversed(false), isLatched(true),
     stripVolume(1.0f), playSpeed(1.0), isPlaySpeedLocked(false),
     previousBPM(120.0), previousSelectionLength(0)
 {

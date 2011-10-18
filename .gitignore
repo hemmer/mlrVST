@@ -8,3 +8,5 @@ Builds/VisualStudio2010/ipch/
 
 Docs/*
 !Docs/mlrVSTDocs.tex
+
+OldBuilds/

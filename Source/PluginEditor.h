@@ -81,7 +81,7 @@ public:
     void setSetlist(const XmlElement &newSetlist) { getProcessor()->setSetlist(newSetlist); }
     void setCurrentPreset(const int &id) { getProcessor()->switchPreset(id); }
     void updateGlobalSetting(const int &parameterID, const void *newValue);
-    const void* getGlobalSetting(const int &parameterID, const void *newValue) const;
+    const void* getGlobalSetting(const int &parameterID) const;
 
 private:
     Label infoLabel, bpmLabel;
