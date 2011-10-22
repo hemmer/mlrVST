@@ -103,7 +103,11 @@ void SampleStrip::setSampleStripParam(const int &parameterID,
     }
 
     // notify listeners of changes if requested
-    if (sendChangeMsg) sendChangeMessage();
+    if (sendChangeMsg)
+    {
+        // DBG("param " << getParameterName(parameterID));
+        sendChangeMessage();
+    }
 }
 
 const void* SampleStrip::getSampleStripParam(const int &parameterID) const

@@ -11,7 +11,7 @@
 #include "PluginProcessor.h"
 #include "OSCHandler.h"
 
-void OSCHandler::sendMessage(const int &monomeCol, const int &monomeRow, const int &state)
+void OSCHandler::buttonPressCallback(const int &monomeCol, const int &monomeRow, const bool &state)
 {
     parent->processOSCKeyPress(monomeCol, monomeRow, state);
 }
@@ -20,6 +20,13 @@ void OSCHandler::setLED(const int &row, const int &col, const int &val)
 {
     p.Clear();
     p << osc::BeginMessage("/mlrvst/led") << row << col << val << osc::EndMessage;
+    transmitSocket.Send(p.Data(), p.Size());
+}
+
+void OSCHandler::setRow(const int &row, const int &val)
+{
+    p.Clear();
+    p << osc::BeginMessage("/mlrvst/led_row") << row << 0 << val << osc::EndMessage;
     transmitSocket.Send(p.Data(), p.Size());
 }
 
@@ -40,10 +47,10 @@ void OSCHandler::ProcessMessage(const osc::ReceivedMessage& m, const IpEndpointN
         if (strcmp(m.AddressPattern(), "/mlrvst/press") == 0)
         {
             // example #1:
-            osc::int32 a1, a2, a3;
-            args >> a1 >> a2 >> a3 >> osc::EndMessage;
-            sendMessage(a1, a2, a3);
-            DBG("/mlrvst/press " << a1 << " " << a2 << " " << a3);
+            osc::int32 row, col, state;
+            args >> row >> col >> state >> osc::EndMessage;
+            buttonPressCallback(row, col, state == 1);
+            DBG("/mlrvst/press " << row << " " << col << " " << state);
         }
 
     }

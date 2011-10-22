@@ -53,19 +53,28 @@ AudioSample::AudioSample(const File &sampleSource) :
     // make sure we have a sucessful load
     if(audioReader != 0)
     {
-        sampleLength = (int) audioReader->lengthInSamples;
+        sampleLength = (int) (audioReader->lengthInSamples);
+
+        // Can this even happen!? Better to be safe than sorry.
+        if (sampleLength < 1) throw ("Zero length sample: " + sampleName);
+
         numChannels = audioReader->numChannels;
 
         data = new AudioSampleBuffer(jmin(2, (int) audioReader->numChannels), sampleLength);
         sampleSampleRate = audioReader->sampleRate;
         data->readFromAudioReader(audioReader, 0, sampleLength, 0, true, true);
 
+        // Certain files would have a nasty click on the first/last sample,
+        // so we zero that, just in case. UPDATE: this is still an issue!
+        data->applyGain(0, 1, 0.0f);
+        data->applyGain(sampleLength - 1, 1, 0.0f);
+
         sampleFile = sampleSource;
     }
     else
     {
         // If we still aren't pointing to a legitimate sample,
-        // fail the constructor.
+        // fail the constructor (by throwing an exception).
         throw ("Invalid file loaded: " + sampleName);
     }
 }

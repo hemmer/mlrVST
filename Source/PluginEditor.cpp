@@ -39,15 +39,27 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     DBG("GUI loaded");
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
+    useExternalTempo = *static_cast<const bool*>(getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
+
     addAndMakeVisible(&bpmSlider);
     bpmSlider.setBounds(PAD_AMOUNT, PAD_AMOUNT, 200, 30);
     bpmSlider.setColour(Slider::backgroundColourId, Colours::black.withAlpha(0.3f));
     bpmSlider.setSliderStyle(Slider::LinearBar);
     bpmSlider.setRange(20.0, 300.0, 0.01);
     bpmSlider.setTextBoxIsEditable(true);
-    bpmSlider.setEnabled(false);
-    bpmSlider.setValue(120.0);
     bpmSlider.addListener(this);
+    
+    if (useExternalTempo)
+    {
+        bpmSlider.setEnabled(false);
+    }
+    else 
+    {
+        double newBPM = *static_cast<const double*>(getGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM));
+        bpmSlider.setValue(newBPM);
+    }
+
+    
 
     addAndMakeVisible(&bpmLabel);
     bpmLabel.setBounds(500, 50, 50, 30);

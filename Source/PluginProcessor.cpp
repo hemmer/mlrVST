@@ -24,7 +24,8 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     channelGains(), defaultChannelGain(0.8f),
     samplePool(),               // sample pool is initially empty
     oscMsgHandler(this),
-    presetList("PRESETLIST"), setlist("SETLIST")
+    presetList("PRESETLIST"), setlist("SETLIST"),
+    playbackLEDPosition(), buttonStatus()
 {
     
     DBG("starting OSC thread");
@@ -49,11 +50,15 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     lastPosInfo.resetToDefault();
 
     startTimer(200);
+
+    // setup 2D arrays for tracking button presses
+    // or LED status
+    setMonomeStatusGrids(8, 8);
 }
 
 mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
 {
-    // be polite!
+    // be polite and turn off any remaining LEDs!
     oscMsgHandler.clearGrid();
 
     samplePool.clear(true);
@@ -97,6 +102,28 @@ int mlrVSTAudioProcessor::addNewSample(File &sampleFile)
 
 }
 
+void mlrVSTAudioProcessor::setMonomeStatusGrids(const int &width, const int &height)
+{
+    // ignore the top row (reserved for other things)
+    int effectiveHeight = height - 1;
+
+    // reset arrays
+    playbackLEDPosition.clear();
+    buttonStatus.clear();
+
+    for (int i = 0; i < effectiveHeight; ++i)
+    {
+        playbackLEDPosition.add(-1);
+
+        buttonStatus.add(new HeapBlock<bool>(width));
+        Array<bool> temp;
+        for (int j = 0; j < width; ++j)
+        {
+            buttonStatus[i]->getData()[j] = false;
+        }
+
+    }
+}
 
 void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
 {
@@ -441,30 +468,53 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 void mlrVSTAudioProcessor::timerCallback()
 {
 
-    // TODO: this is a HORRIBLE way to do this, and needs fixing
-    oscMsgHandler.clearGrid();
-
+    // TODO: this is still a pretty bad way to do this
+    // and will be updated to use led/row once I have it
+    // working with the new OSC spec
+    
     for (int row = 0; row < sampleStripArray.size(); ++row)
     {
-        float percentage = *static_cast<const float*>
-            (getSampleStripParameter(SampleStrip::ParamPlaybackPercentage, row));
-        int numChunks = *static_cast<const int*>
-            (getSampleStripParameter(SampleStrip::ParamNumChunks, row));
 
         bool isPlaying = *static_cast<const bool*>
             (getSampleStripParameter(SampleStrip::ParamIsPlaying, row));
-
+ 
         if (isPlaying)
-            oscMsgHandler.setLED((int)(percentage * numChunks), row + 1, 1);
+        {
+            float percentage = *static_cast<const float*>
+                (getSampleStripParameter(SampleStrip::ParamPlaybackPercentage, row));
+            int numChunks = *static_cast<const int*>
+                (getSampleStripParameter(SampleStrip::ParamNumChunks, row));
+
+            // this is basically the x-coord of the LED to turn on
+            int fractionalPosition = (int)(percentage * numChunks);
+
+            // if the LED has changed then...
+            if (playbackLEDPosition[row] != fractionalPosition)
+            {
+                // ...move the LED along to the new position
+                oscMsgHandler.setLED(fractionalPosition, row + 1, 1);
+                oscMsgHandler.setLED(playbackLEDPosition[row], row + 1, 0);
+                // and store the new playback point
+                playbackLEDPosition.set(row, fractionalPosition);
+            }
+        }
+        else
+        {
+            // if we're not playing, make sure the row is blank
+            oscMsgHandler.setRow(row + 1, 9);
+
+            // sanity check more than anything
+            playbackLEDPosition.set(row, -1);
+        }
     }
 
     
 }
 
 
-void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &monomeRow, const int &state)
+void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &monomeRow, const bool &state)
 {
-
+    
     if (monomeRow == 0)
     {
         // TODO proper control mappings for top row
@@ -482,9 +532,12 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
            NOTE: MIDI messages may still be passed from other sources that
            are outside this range so the channelProcessor must be aware of 
            numChunks too to filter these. The -1 is because we are treating
-           the second row as the first "effective" row.
+           the second row as the first "effective" row. Yes this is confusing.
         */
         int effectiveMonomeRow = monomeRow - 1;
+
+        // update the button status matrix
+        buttonStatus[effectiveMonomeRow]->getData()[monomeCol] = state;
 
         int numChunks = *static_cast<const int*>
                         (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamNumChunks));

@@ -31,7 +31,14 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     addAndMakeVisible(&useExternalTempoBtn);
     useExternalTempoBtn.setBounds(PAD_AMOUNT, 50, 150, 20);
     useExternalTempoBtn.addListener(this);
-    useExternalTempoBtn.setToggleState(true, false);
+
+    // load current values of settings from PluginProcessor
+    bool useExternalTempo = *static_cast<const bool*>
+        (mlrVSTEditor->getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
+
+    useExternalTempoBtn.setToggleState(useExternalTempo, false);
+    String tempoBtnText = (useExternalTempo) ? "Using External Tempo" : "Using Internal Tempo";
+    useExternalTempoBtn.setButtonText(tempoBtnText);
 }
 
 void SettingsPanel::paint(Graphics &g)

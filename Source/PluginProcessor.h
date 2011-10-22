@@ -135,7 +135,7 @@ public:
     void modPlaySpeed(const double &factor, const int &stripID);
     void switchChannels(const int &newChan, const int &stripID);
 
-    void processOSCKeyPress(const int &monomeCol, const int &monomeRow, const int &state);
+    void processOSCKeyPress(const int &monomeCol, const int &monomeRow, const bool &state);
 
     // set up the channels (can be used to change number of channels
     void buildChannelProcessorArray(const int &newNumChannels);
@@ -213,6 +213,21 @@ private:
     bool useExternalTempo;
     int numChannels;
     double currentBPM;
+
+    ///////////////////////////
+    // BUTTON / LED TRACKING //
+    ///////////////////////////
+
+    /* Store which LED column is currently being used
+       for displaying playback position.
+    */
+    Array<int> playbackLEDPosition;
+
+    // Boolean grid which stores the status of button presses
+    // Array<Array<bool> > buttonStatus;
+    OwnedArray<HeapBlock<bool> > buttonStatus;
+
+    void setMonomeStatusGrids(const int &width, const int &height);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTAudioProcessor);
 };

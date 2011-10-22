@@ -144,8 +144,7 @@ void ChannelProcessor::handleMidiEvent (const MidiMessage& m)
         if (monomeCol < numChunks)
         {
             // We can save some effort by ignore cases where this is no sample!
-            if (currentSample != 0)
-                startSamplePlaying();
+            if (currentSample != 0) startSamplePlaying();
         }
     }
 }
@@ -336,16 +335,15 @@ void ChannelProcessor::refreshPlaybackParameters()
         currentSample = static_cast<const AudioSample*>
             (currentSampleStrip->getSampleStripParam(SampleStrip::ParamAudioSample));
 
-        /* NOTE: we don't really want to be sending a change message here
-           because this will get called a lot during playback. A timer 
-           would be better (on the TODO list).
-        */
-        float playbackPercentage = getCurrentPlaybackPercentage();
-        currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
-
-
         if (currentSample)
         {
+            /* NOTE: we don't really want to be sending a change message here
+            because this will get called a lot during playback. A timer 
+            would be better (on the TODO list).
+            */
+            float playbackPercentage = getCurrentPlaybackPercentage();
+            currentSampleStrip->setSampleStripParam(SampleStrip::ParamPlaybackPercentage, &playbackPercentage);
+
             stripGain = *static_cast<const float *>
                 (currentSampleStrip->getSampleStripParam(SampleStrip::ParamStripVolume));
 

@@ -62,9 +62,9 @@ public:
         s.Run();
     }
 
-    void sendMessage(const int &a1, const int &a2, const int &a3);
-
+    void buttonPressCallback(const int &monomeCol, const int &monomeRow, const bool &state);
     void setLED(const int &row, const int &col, const int &val);
+    void setRow(const int &row, const int &val);
     void clearGrid();
 
 protected:
