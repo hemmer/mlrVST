@@ -96,7 +96,7 @@ void SampleStripControl::changeListenerCallback(ChangeBroadcaster * sender)
     */
     else if (sender == dataStrip)
     {
-        DBG("strip " << sampleStripID << " changed");
+        // DBG("strip " << sampleStripID << " changed");
         for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
         {
             const void *newValue = dataStrip->getSampleStripParam(p);

@@ -224,8 +224,9 @@ private:
     Array<int> playbackLEDPosition;
 
     // Boolean grid which stores the status of button presses
-    // Array<Array<bool> > buttonStatus;
-    OwnedArray<HeapBlock<bool> > buttonStatus;
+    // where the indices correspond to the row, and col:
+    // i.e. buttonStatus[row]->getUnchecked[col] or similar
+    OwnedArray<Array<bool> > buttonStatus;
 
     void setMonomeStatusGrids(const int &width, const int &height);
 

@@ -237,6 +237,7 @@ void ChannelProcessor::renderNextSection(AudioSampleBuffer& outputBuffer, int st
 
             //DBG(sampleCurrentPosition);
 
+            // TODO: this may be the source of the "pop" sound at the end of the sample
             // double up if mono
             float l = (float)(inL [pos] * invAlpha + inL [pos + 1] * alpha);
             float r = (inR != nullptr) ? (float)(inR [pos] * invAlpha + inR [pos + 1] * alpha) : l;

@@ -47,7 +47,8 @@ public:
         ParamChunkSize = NumGUIParams,
         ParamSampleStart,       // these return the key sample points
         ParamSampleEnd,         // (taking selection into account)
-
+        ParamStartChunk,
+        ParamEndChunk,
         TotalNumParams
     };
 
@@ -103,6 +104,8 @@ public:
         case ParamPlaybackPercentage : return "playback_percentage";
         case ParamSampleStart : return "sample_start";
         case ParamSampleEnd : return "sample_end";
+        case ParamStartChunk : return "sample_chunk_start";
+        case ParamEndChunk : return "sample_chunk_end";
         default : jassertfalse; return "parameter_not_found";
         }
     }
@@ -127,6 +130,8 @@ public:
         case ParamPlaybackPercentage : return TypeFloat;
         case ParamSampleStart : return TypeInt;
         case ParamSampleEnd : return TypeInt;
+        case ParamStartChunk : return TypeInt;
+        case ParamEndChunk : return TypeInt;
         default : jassertfalse; return -1;
         }
     }
@@ -156,7 +161,8 @@ private:
     float fractionalSampleStart, fractionalSampleEnd;
     // start / end / length of the selection (in samples)
     int selectionStart, selectionEnd, selectionLength;
-
+    // which chunk to start / end with
+    int startChunk, endChunk;
     // How many blocks the sample is split up into...
     int numChunks;
     // ...and what size are they (in samples).

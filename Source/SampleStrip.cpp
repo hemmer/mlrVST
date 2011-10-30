@@ -76,6 +76,12 @@ void SampleStrip::setSampleStripParam(const int &parameterID,
         chunkSize = (int) (selectionLength / (float) numChunks);
         break;
 
+    case ParamStartChunk :
+        startChunk = *static_cast<const int*>(newValue); break;
+
+    case ParamEndChunk :
+        endChunk = *static_cast<const int*>(newValue); break;
+
     case ParamAudioSample :
         currentSample = static_cast<const AudioSample*>(newValue);
         // update associated params if there is a sample
@@ -164,6 +170,12 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
 
     case ParamAudioSample :
         p = currentSample; break;
+
+    case ParamStartChunk :
+        p = &startChunk; break;
+
+    case ParamEndChunk :
+        p = &endChunk; break;
 
     default:
         DBG("Param not found!");

@@ -13,8 +13,8 @@ It contains the basic startup code for a Juce application.
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-
 #include "OSCHandler.h"
+#include <cmath>
 
 //==============================================================================
 mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
@@ -114,14 +114,13 @@ void mlrVSTAudioProcessor::setMonomeStatusGrids(const int &width, const int &hei
     for (int i = 0; i < effectiveHeight; ++i)
     {
         playbackLEDPosition.add(-1);
-
-        buttonStatus.add(new HeapBlock<bool>(width));
         Array<bool> temp;
         for (int j = 0; j < width; ++j)
         {
-            buttonStatus[i]->getData()[j] = false;
+            temp.add(false);
         }
-
+        
+        buttonStatus.add(new Array<bool>(temp));
     }
 }
 
@@ -536,17 +535,69 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
         */
         int effectiveMonomeRow = monomeRow - 1;
 
-        // update the button status matrix
-        buttonStatus[effectiveMonomeRow]->getData()[monomeCol] = state;
+
+        /* Button presses are tracked in a boolean array for each row to allow 
+           for special combos for stopping clips etc. For this we need to know
+           which button in the row is furthest left.
+        */
+        int leftmostButton = -1;
+        for (int i = 0; i < buttonStatus[effectiveMonomeRow]->size(); ++i)
+        {
+            if (buttonStatus[effectiveMonomeRow]->getUnchecked(i))
+            {
+                leftmostButton = i;
+                break;
+            }
+        }
 
         int numChunks = *static_cast<const int*>
-                        (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamNumChunks));
+            (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamNumChunks));
 
         if (monomeCol < numChunks)
         {
-            // The +1 here is because midi channels start at 1 not 0!
-            if (state) monomeState.noteOn(effectiveMonomeRow + 1, monomeCol, 1.0f);
-            else monomeState.noteOff(effectiveMonomeRow + 1, monomeCol);
+
+            // Check if there is a button being held to the right of the 
+            // current button and if so, stop that strip.
+            if (monomeCol < leftmostButton && state)
+            {
+                int channel = *static_cast<const int*>
+                    (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamCurrentChannel));
+
+                DBG("channel " << channel << " stopped by combo.");
+                channelProcessorArray[channel]->stopSamplePlaying();
+            }
+            // Check if there is a button being held to the left of the 
+            // current button and if so, loop the strip between those points.
+            else if ((monomeCol > leftmostButton) && (leftmostButton >= 0) && state)
+            {
+                // TODO: this!
+                DBG(leftmostButton << " left most btn");
+
+                setSampleStripParameter(SampleStrip::ParamStartChunk, &leftmostButton, effectiveMonomeRow);
+                setSampleStripParameter(SampleStrip::ParamStartChunk, &monomeCol, effectiveMonomeRow);
+
+                // The +1 here is because midi channels start at 1 not 0!
+                if (state) monomeState.noteOn(effectiveMonomeRow + 1, monomeCol, 1.0f);
+                else monomeState.noteOff(effectiveMonomeRow + 1, monomeCol);
+
+            }
+            // else just play normally
+            else
+            {
+                int loopStart = 0;
+                int loopEnd = numChunks - 1;    // select all chunks
+
+                setSampleStripParameter(SampleStrip::ParamStartChunk, &loopStart, effectiveMonomeRow);
+                setSampleStripParameter(SampleStrip::ParamStartChunk, &loopEnd, effectiveMonomeRow);
+
+                // The +1 here is because midi channels start at 1 not 0!
+                if (state) monomeState.noteOn(effectiveMonomeRow + 1, monomeCol, 1.0f);
+                else monomeState.noteOff(effectiveMonomeRow + 1, monomeCol);
+
+            }
+
+            // update the button tracking
+            buttonStatus[effectiveMonomeRow]->set(monomeCol, state);
         }
     }
 
