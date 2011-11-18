@@ -66,6 +66,13 @@ public:
         buildUI();  // reflect changes
     }
 
+    void updatePlaybackStatus()
+    {
+        playbackPercentage = *static_cast<const float*>(dataStrip->getSampleStripParam(SampleStrip::pPlaybackPercentage));
+        isPlaying = *static_cast<const bool*>(dataStrip->getSampleStripParam(SampleStrip::pIsPlaying));
+        repaint();
+    }
+
     // These recall settings when the 
     void recallParam(const int &paramID, const void *newValue, const bool &doRepaint);
 
@@ -101,7 +108,6 @@ private:
 
 
     menuLookandFeel menuLF;
-
 
     int numChannels;        // total number of channels available
 

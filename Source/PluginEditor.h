@@ -74,7 +74,7 @@ public:
     AudioSample * getAudioSample(const int &poolIndex) const { return getProcessor()->getAudioSample(poolIndex); }
 
     void switchChannels(const int &newChan, const int &stripID) const { getProcessor()->switchChannels(newChan, stripID); }
-    Colour getChannelColour(const int &chan) const { return getProcessor()->getChannelProcessor(chan)->getChannelColour(); }
+    Colour getChannelColour(const int &chan) const { return getProcessor()->getChannelColour(chan); }
 
     XmlElement getPresetList() const { return getProcessor()->getPresetList(); }
     XmlElement getSetlist() const { return getProcessor()->getSetlist(); }

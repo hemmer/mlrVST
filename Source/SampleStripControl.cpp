@@ -96,7 +96,6 @@ void SampleStripControl::changeListenerCallback(ChangeBroadcaster * sender)
     */
     else if (sender == dataStrip)
     {
-        // DBG("strip " << sampleStripID << " changed");
         for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
         {
             const void *newValue = dataStrip->getSampleStripParam(p);
@@ -115,7 +114,11 @@ void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
     {
         numChunks = selNumChunks.getSelectedId();
         visualChunkSize = (visualSelectionLength / (float) numChunks);
-        dataStrip->setSampleStripParam(SampleStrip::ParamNumChunks,
+
+        // It's actually quite complicated/risky to change this on the fly,
+        // so just stop the sample first instead!
+        dataStrip->stopSamplePlaying();
+        dataStrip->setSampleStripParam(SampleStrip::pNumChunks,
                                        &numChunks);
         repaint();
     }
@@ -123,7 +126,7 @@ void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
     {
         // -1 is because ComboBox reserves 0 for when menu is closed without choosing
         int newPlayMode = selPlayMode.getSelectedId() - 1;
-        dataStrip->setSampleStripParam(SampleStrip::ParamPlayMode, &newPlayMode);
+        dataStrip->setSampleStripParam(SampleStrip::pPlayMode, &newPlayMode);
     }
 
 }
@@ -147,12 +150,12 @@ void SampleStripControl::buttonClicked(Button *btn)
     if (btn == &isLatchedBtn)
     {
         isLatched = !isLatched;
-        dataStrip->setSampleStripParam(SampleStrip::ParamIsLatched, &isLatched);
+        dataStrip->setSampleStripParam(SampleStrip::pIsLatched, &isLatched);
     }
     else if (btn == &isReversedBtn)
     {
         isReversed = !isReversed;
-        dataStrip->setSampleStripParam(SampleStrip::ParamIsReversed, &isReversed);
+        dataStrip->setSampleStripParam(SampleStrip::pIsReversed, &isReversed);
         String newButtonText = (isReversed) ? "REV" : "NORM";
         isReversedBtn.setButtonText(newButtonText);
     }
@@ -167,7 +170,7 @@ void SampleStripControl::buttonClicked(Button *btn)
     else if (btn == &speedLockBtn)
     {
         bool newIsSpeedLocked = !isSpeedLocked;
-        dataStrip->setSampleStripParam(SampleStrip::ParamIsPlaySpeedLocked,
+        dataStrip->setSampleStripParam(SampleStrip::pIsPlaySpeedLocked,
                                        &newIsSpeedLocked);
     }
 
@@ -179,12 +182,12 @@ void SampleStripControl::sliderValueChanged(Slider *sldr)
     {
         float newStripVol = (float)(stripVolumeSldr.getValue());
         thumbnailScaleFactor = newStripVol;
-        dataStrip->setSampleStripParam(SampleStrip::ParamStripVolume, &newStripVol);
+        dataStrip->setSampleStripParam(SampleStrip::pStripVolume, &newStripVol);
     }
     else if(sldr == &playbackSpeedSldr)
     {
         double newPlaySpeed = playbackSpeedSldr.getValue();
-        dataStrip->setSampleStripParam(SampleStrip::ParamPlaySpeed, &newPlaySpeed);
+        dataStrip->setSampleStripParam(SampleStrip::pPlaySpeed, &newPlaySpeed);
     }
 }
 
@@ -256,7 +259,7 @@ void SampleStripControl::buildUI()
         channelButtonArray.getLast()->setBackgroundColours(chanColour, chanColour);
     }
 
-    int previousChannel = *static_cast<const int*>(dataStrip->getSampleStripParam(SampleStrip::ParamCurrentChannel));
+    int previousChannel = *static_cast<const int*>(dataStrip->getSampleStripParam(SampleStrip::pCurrentChannel));
     if (previousChannel >= numChannels){
         DBG("Current channel outside range: resetting to channel 0.");
         updateChannelColours(0);
@@ -385,10 +388,10 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
             if (fileChoice == 1)
             {
                 const AudioSample *newSample = 0;
-                dataStrip->setSampleStripParam(SampleStrip::ParamAudioSample, newSample);
+                dataStrip->setSampleStripParam(SampleStrip::pAudioSample, newSample);
 
                 bool isPlaying = false;
-                dataStrip->setSampleStripParam(SampleStrip::ParamIsPlaying, &isPlaying);
+                dataStrip->setSampleStripParam(SampleStrip::pIsPlaying, &isPlaying);
             }
             // If a menu option has been chosen that is a file
             else if (fileChoice != 0)
@@ -436,8 +439,8 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
 
         // update the selection
         float start = 0.0f, end = 1.0f;
-        dataStrip->setSampleStripParam(SampleStrip::ParamFractionalStart, &start);
-        dataStrip->setSampleStripParam(SampleStrip::ParamFractionalEnd, &end);
+        dataStrip->setSampleStripParam(SampleStrip::pFractionalStart, &start);
+        dataStrip->setSampleStripParam(SampleStrip::pFractionalEnd, &end);
 
         mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);
 
@@ -456,8 +459,8 @@ void SampleStripControl::mouseUp(const MouseEvent &e)
         //{
         //    float fractionalStart = visualSelectionStart / (float) componentWidth;
         //    float fractionalEnd = visualSelectionEnd / (float) componentWidth;
-        //    pluginUI->setSampleStripParameter(SampleStrip::ParamFractionalStart, &fractionalStart, sampleStripID);
-        //    pluginUI->setSampleStripParameter(SampleStrip::ParamFractionalEnd, &fractionalEnd, sampleStripID);
+        //    pluginUI->setSampleStripParameter(SampleStrip::pFractionalStart, &fractionalStart, sampleStripID);
+        //    pluginUI->setSampleStripParameter(SampleStrip::pFractionalEnd, &fractionalEnd, sampleStripID);
         //}
 
         //// redraw to reflect new selection
@@ -543,8 +546,8 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
     // try to send the new selection to the SampleStrips
     float fractionalStart = visualSelectionStart / (float) componentWidth;
     float fractionalEnd = visualSelectionEnd / (float) componentWidth;
-    dataStrip->setSampleStripParam(SampleStrip::ParamFractionalStart, &fractionalStart);
-    dataStrip->setSampleStripParam(SampleStrip::ParamFractionalEnd, &fractionalEnd);
+    dataStrip->setSampleStripParam(SampleStrip::pFractionalStart, &fractionalStart);
+    dataStrip->setSampleStripParam(SampleStrip::pFractionalEnd, &fractionalEnd);
 
     if (mouseDownMods != ModifierKeys::middleButtonModifier)
         mlrVSTEditor->updatePlaySpeedForNewSelection(sampleStripID);
@@ -638,7 +641,7 @@ void SampleStripControl::selectNewSample(const int &fileChoice)
 {
     // and let the audio processor update the sample strip
     const AudioSample * newSample = mlrVSTEditor->getAudioSample(fileChoice);
-    dataStrip->setSampleStripParam(SampleStrip::ParamAudioSample, newSample);
+    dataStrip->setSampleStripParam(SampleStrip::pAudioSample, newSample);
 
     // select whole sample by default
     visualSelectionStart = 0;
@@ -648,8 +651,8 @@ void SampleStripControl::selectNewSample(const int &fileChoice)
 
     // update the selection
     float start = 0.0f, end = 1.0f;
-    dataStrip->setSampleStripParam(SampleStrip::ParamFractionalStart, &start);
-    dataStrip->setSampleStripParam(SampleStrip::ParamFractionalEnd, &end);
+    dataStrip->setSampleStripParam(SampleStrip::pFractionalStart, &start);
+    dataStrip->setSampleStripParam(SampleStrip::pFractionalEnd, &end);
 
     // and try to find the best playback speed (i.e. closest to 1).
     mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);
@@ -661,14 +664,14 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
 {
     switch (paramID)
     {
-    case SampleStrip::ParamCurrentChannel :
+    case SampleStrip::pCurrentChannel :
         {
-            int newCurrentChannel = *static_cast<const int*>(newValue);
+            const int newCurrentChannel = *static_cast<const int*>(newValue);
             updateChannelColours(newCurrentChannel);
             break;
         }
 
-    case SampleStrip::ParamNumChunks :
+    case SampleStrip::pNumChunks :
         {
             const int newNumChunks = *static_cast<const int*>(newValue);
             selNumChunks.setSelectedId(newNumChunks);
@@ -676,21 +679,21 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
             break;
         }
 
-    case SampleStrip::ParamPlayMode :
+    case SampleStrip::pPlayMode :
         {
-            int newPlayMode = *static_cast<const int*>(newValue);
+            const int newPlayMode = *static_cast<const int*>(newValue);
             selPlayMode.setSelectedId(newPlayMode + 1);
             break;
         }
 
-    case SampleStrip::ParamIsLatched :
+    case SampleStrip::pIsLatched :
         {
             isLatched = *static_cast<const bool*>(newValue);
             isLatchedBtn.setToggleState(isLatched, false);
             break;
         }
 
-    case SampleStrip::ParamIsReversed :
+    case SampleStrip::pIsReversed :
         {
             isReversed = *static_cast<const bool*>(newValue);
             isReversedBtn.setToggleState(isReversed, false);
@@ -699,16 +702,16 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
             break;
         }
 
-    case SampleStrip::ParamIsPlaying :
+    case SampleStrip::pIsPlaying :
         isPlaying = *static_cast<const bool*>(newValue);
         break;
 
-    case SampleStrip::ParamPlaybackPercentage :
+    case SampleStrip::pPlaybackPercentage :
         playbackPercentage = *static_cast<const float*>(newValue);
         break;
 
 
-    case SampleStrip::ParamFractionalStart :
+    case SampleStrip::pFractionalStart :
         {
             float fractionalStart = *static_cast<const float*>(newValue);
             visualSelectionStart = (int)(fractionalStart * componentWidth);
@@ -717,7 +720,7 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
             break;
         }
 
-    case SampleStrip::ParamFractionalEnd :
+    case SampleStrip::pFractionalEnd :
         {
             float fractionalEnd = *static_cast<const float*>(newValue);
             visualSelectionEnd = (int)(fractionalEnd * componentWidth);
@@ -726,21 +729,21 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
             break;
         }
 
-    case SampleStrip::ParamStripVolume :
+    case SampleStrip::pStripVolume :
         {
             float newStripVolume = *static_cast<const float*>(newValue);
             stripVolumeSldr.setValue(newStripVolume, true);
             break;
         }
 
-    case SampleStrip::ParamPlaySpeed :
+    case SampleStrip::pPlaySpeed :
         {
             double newPlaySpeed = *static_cast<const double*>(newValue);
             playbackSpeedSldr.setValue(newPlaySpeed, false);
             break;
         }
 
-    case SampleStrip::ParamIsPlaySpeedLocked :
+    case SampleStrip::pIsPlaySpeedLocked :
         {
             bool newIsSpeedLocked = *static_cast<const bool*>(newValue);
             if (newIsSpeedLocked != isSpeedLocked)
@@ -760,7 +763,7 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
             break;
         }
 
-    case SampleStrip::ParamAudioSample :
+    case SampleStrip::pAudioSample :
         {
             const AudioSample *newSample = static_cast<const AudioSample*>(newValue);
 

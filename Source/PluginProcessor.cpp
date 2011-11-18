@@ -18,7 +18,7 @@ It contains the basic startup code for a Juce application.
 
 //==============================================================================
 mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
-    currentBPM(120.0), channelProcessorArray(),
+    currentBPM(120.0), channelColours(),
     maxChannels(8), numChannels(maxChannels),
     sampleStripArray(), numSampleStrips(7),
     channelGains(), defaultChannelGain(0.8f),
@@ -42,8 +42,8 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
 
     // create our SampleStrip objects 
     buildSampleStripArray(numSampleStrips);
-    // add our channel processors
-    buildChannelProcessorArray(numChannels);
+    // add our channels
+    buildChannelArray(numChannels);
 
     setlist.createNewChildElement("PRESET_NONE");
 
@@ -124,39 +124,40 @@ void mlrVSTAudioProcessor::setMonomeStatusGrids(const int &width, const int &hei
     }
 }
 
-void mlrVSTAudioProcessor::buildChannelProcessorArray(const int &newNumChannels)
+void mlrVSTAudioProcessor::buildChannelArray(const int &newNumChannels)
 {
     // update the number of channels
     numChannels = newNumChannels;
 
-    // make sure all channels stop playing
-    for (int c = 0; c < channelProcessorArray.size(); c++)
-        channelProcessorArray[c]->stopSamplePlaying();
+    // make sure all strips stop playing, and reset their channels
+    int initialChannel = 0;
+    for (int s = 0; s < sampleStripArray.size(); s++)
+    {
+        sampleStripArray[s]->stopSamplePlaying();
+        sampleStripArray[s]->setSampleStripParam(SampleStrip::pCurrentChannel, &initialChannel);
+    }
+
     // clear MIDI queue
     monomeState.reset();
     // make sure we're not doing any audio processing while (re)building it
     suspendProcessing(true);
 
-    
+
     // reset the list of channels
-    channelProcessorArray.clear();
+    channelColours.clear();
     for (int c = 0; c < numChannels; c++)
     {   
-        Colour channelColour((float) (0.1f * c), 0.5f, 0.5f, 1.0f);
-        channelProcessorArray.add(new ChannelProcessor(c, channelColour, this, numSampleStrips));
+        //Colour channelColour((float) (0.1f * c), 0.5f, 0.5f, 1.0f);
+        Colour channelColour(c / (float) (numChannels), 0.5f, 0.5f, 1.0f);
+        channelColours.add(channelColour);
     }
 
+    
     // reset the gains to the default
     channelGains.clear();
     for (int c = 0; c < maxChannels; c++)
         channelGains.add(defaultChannelGain);
 
-    // and make sure each strip is reset to the first channel
-    for(int strip = 0; strip < sampleStripArray.size(); ++strip)
-    {
-        int initialChannel = 0;
-        sampleStripArray[strip]->setSampleStripParam(SampleStrip::ParamCurrentChannel, &initialChannel);
-    }
 
     DBG("Channel processor array built");
 
@@ -178,25 +179,8 @@ float mlrVSTAudioProcessor::getParameter(int index)
     // UI-related, or anything at all that may block in any way!
     switch (index)
     {
-        case masterGainParam:
+        case pMasterGainParam:
             return masterGain;
-        case channel0GainParam:
-            return channelGains[0];
-        case channel1GainParam:
-            return channelGains[1];
-        case channel2GainParam:
-            return channelGains[2];
-        case channel3GainParam:
-            return channelGains[3];
-        case channel4GainParam:
-            return channelGains[4];
-        case channel5GainParam:
-            return channelGains[5];
-        case channel6GainParam:
-            return channelGains[6];
-        case channel7GainParam:
-            return channelGains[7];
-
         default:            return 0.0f;
     }
 }
@@ -208,34 +192,10 @@ void mlrVSTAudioProcessor::setParameter(int index, float newValue)
     // UI-related, or anything at all that may block in any way!
     switch (index)
     {
-        case masterGainParam:       masterGain = newValue;  break;
-
-            // TODO: there might be a neater way to do this!
-        case channel0GainParam:
-            channelGains.set(0, newValue);    break;
-
-        case channel1GainParam:
-            channelGains.set(1, newValue);    break;
-
-        case channel2GainParam:
-            channelGains.set(2, newValue);    break;
-
-        case channel3GainParam:
-            channelGains.set(3, newValue);    break;
-
-        case channel4GainParam:
-            channelGains.set(4, newValue);    break;
-
-        case channel5GainParam:
-            channelGains.set(5, newValue);    break;
-
-        case channel6GainParam:
-            channelGains.set(6, newValue);    break;
-
-        case channel7GainParam:
-            channelGains.set(7, newValue);    break;
-
-        default:                    break;
+        case pMasterGainParam :
+            masterGain = newValue;
+            break;
+        default: break;
     }
 }
 
@@ -243,26 +203,7 @@ const String mlrVSTAudioProcessor::getParameterName(int index)
 {
     switch (index)
     {
-        case masterGainParam:       return "master gain";
-
-        case delayParam:            return "delay";
-
-        case channel0GainParam:     return "channel 0 gain";
-
-        case channel1GainParam:     return "channel 1 gain";
-
-        case channel2GainParam:     return "channel 2 gain";
-
-        case channel3GainParam:     return "channel 3 gain";
-
-        case channel4GainParam:     return "channel 4 gain";
-
-        case channel5GainParam:     return "channel 5 gain";
-
-        case channel6GainParam:     return "channel 6 gain";
-
-        case channel7GainParam:     return "channel 7 gain";
-
+        case pMasterGainParam: return "master gain";
         default:            break;
     }
 
@@ -332,13 +273,33 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
         monomeState.processNextMidiBuffer(midiMessages, 0, numSamples, true);
 
 
+
+        /* TODO: this actually isn't a very nice way to do this, eventually
+           SampleStrips should do the processing then just add it to the
+           relevant channel. This would make a whole load of things easier!
+        */
         // for each channel, add its contributions
         // Remember to set the correct sample
-        for (int c = 0; c < channelProcessorArray.size(); c++)
+        //for (int c = 0; c < channelProcessorArray.size(); c++)
+        //{
+        //    channelProcessorArray[c]->setBPM(currentBPM);
+        //    channelProcessorArray[c]->getCurrentPlaybackPercentage();
+        //    channelProcessorArray[c]->renderNextBlock(buffer, midiMessages, 0, numSamples);
+        //}
+        AudioSampleBuffer stripContrib(2, numSamples);
+        int stripChannel;
+        for (int s = 0; s < sampleStripArray.size(); s++)
         {
-            channelProcessorArray[c]->setBPM(currentBPM);
-            channelProcessorArray[c]->getCurrentPlaybackPercentage();
-            channelProcessorArray[c]->renderNextBlock(buffer, midiMessages, 0, numSamples);
+            sampleStripArray[s]->setBPM(currentBPM);
+            // TODO: might be better to return an entire buffer object then apply gain
+            stripContrib.clear();
+            sampleStripArray[s]->renderNextBlock(stripContrib, midiMessages, 0, numSamples);
+
+            // get the associated channel so we can apply gain
+            stripChannel = *static_cast<const int *>(sampleStripArray[s]->getSampleStripParam(SampleStrip::pCurrentChannel));
+            
+            buffer.addFrom(0, 0, stripContrib, 0, 0, numSamples, channelGains[stripChannel]);
+            buffer.addFrom(1, 0, stripContrib, 1, 0, numSamples, channelGains[stripChannel]);
         }
 
         // Go through the outgoing data, and apply our master gain to it...
@@ -467,22 +428,22 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 void mlrVSTAudioProcessor::timerCallback()
 {
 
-    // TODO: this is still a pretty bad way to do this
+    // TODO: this is still a pretty horrendous way to do this
     // and will be updated to use led/row once I have it
-    // working with the new OSC spec
+    // working with the new OSC spec!
     
     for (int row = 0; row < sampleStripArray.size(); ++row)
     {
 
         bool isPlaying = *static_cast<const bool*>
-            (getSampleStripParameter(SampleStrip::ParamIsPlaying, row));
+            (getSampleStripParameter(SampleStrip::pIsPlaying, row));
  
         if (isPlaying)
         {
             float percentage = *static_cast<const float*>
-                (getSampleStripParameter(SampleStrip::ParamPlaybackPercentage, row));
+                (getSampleStripParameter(SampleStrip::pPlaybackPercentage, row));
             int numChunks = *static_cast<const int*>
-                (getSampleStripParameter(SampleStrip::ParamNumChunks, row));
+                (getSampleStripParameter(SampleStrip::pNumChunks, row));
 
             // this is basically the x-coord of the LED to turn on
             int fractionalPosition = (int)(percentage * numChunks);
@@ -521,7 +482,12 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
         // stops channels 1-N playing
         if (monomeCol < numChannels)
         {
-            channelProcessorArray[monomeCol]->stopSamplePlaying();
+            for (int s = 0; s < sampleStripArray.size(); ++s)
+            {
+                const int chan = *static_cast<const int*>(sampleStripArray[s]->getSampleStripParam(SampleStrip::pCurrentChannel));
+                if (chan == monomeCol)
+                    sampleStripArray[s]->stopSamplePlaying();
+            }
         }
     } 
     else if (monomeRow <= numSampleStrips && monomeRow >= 0)
@@ -533,7 +499,7 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
            numChunks too to filter these. The -1 is because we are treating
            the second row as the first "effective" row. Yes this is confusing.
         */
-        int effectiveMonomeRow = monomeRow - 1;
+        const int effectiveMonomeRow = monomeRow - 1;
 
 
         /* Button presses are tracked in a boolean array for each row to allow 
@@ -550,8 +516,8 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
             }
         }
 
-        int numChunks = *static_cast<const int*>
-            (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamNumChunks));
+        const int numChunks = *static_cast<const int*>
+            (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::pNumChunks));
 
         if (monomeCol < numChunks)
         {
@@ -560,11 +526,15 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
             // current button and if so, stop that strip.
             if (monomeCol < leftmostButton && state)
             {
-                int channel = *static_cast<const int*>
-                    (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::ParamCurrentChannel));
+                sampleStripArray[effectiveMonomeRow]->stopSamplePlaying();
 
-                DBG("channel " << channel << " stopped by combo.");
-                channelProcessorArray[channel]->stopSamplePlaying();
+                /* JUST A BIT OF FUN!
+                bool isReversed = *static_cast<const bool*>
+                    (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::pIsReversed));
+                isReversed = !isReversed;
+                sampleStripArray[effectiveMonomeRow]->setSampleStripParam(SampleStrip::pIsReversed, &isReversed);
+                */
+                DBG("strip " << effectiveMonomeRow << " stopped by combo.");
             }
             // Check if there is a button being held to the left of the 
             // current button and if so, loop the strip between those points.
@@ -573,25 +543,28 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
                 // TODO: this!
                 DBG(leftmostButton << " left most btn");
 
-                setSampleStripParameter(SampleStrip::ParamStartChunk, &leftmostButton, effectiveMonomeRow);
-                setSampleStripParameter(SampleStrip::ParamStartChunk, &monomeCol, effectiveMonomeRow);
+                setSampleStripParameter(SampleStrip::pStartChunk, &leftmostButton, effectiveMonomeRow);
+                setSampleStripParameter(SampleStrip::pEndChunk, &monomeCol, effectiveMonomeRow);
 
                 // The +1 here is because midi channels start at 1 not 0!
-                if (state) monomeState.noteOn(effectiveMonomeRow + 1, monomeCol, 1.0f);
-                else monomeState.noteOff(effectiveMonomeRow + 1, monomeCol);
+                //if (state) monomeState.noteOn(effectiveMonomeRow + 1, monomeCol, 1.0f);
+                //else monomeState.noteOff(effectiveMonomeRow + 1, monomeCol);
 
             }
             // else just play normally
             else
             {
-                int loopStart = 0;
-                int loopEnd = numChunks - 1;    // select all chunks
-
-                setSampleStripParameter(SampleStrip::ParamStartChunk, &loopStart, effectiveMonomeRow);
-                setSampleStripParameter(SampleStrip::ParamStartChunk, &loopEnd, effectiveMonomeRow);
 
                 // The +1 here is because midi channels start at 1 not 0!
-                if (state) monomeState.noteOn(effectiveMonomeRow + 1, monomeCol, 1.0f);
+                if (state)
+                {
+                    int loopStart = 0;
+                    int loopEnd = numChunks;    // select all chunks
+
+                    setSampleStripParameter(SampleStrip::pStartChunk, &loopStart, effectiveMonomeRow);
+                    setSampleStripParameter(SampleStrip::pEndChunk, &loopEnd, effectiveMonomeRow);
+                    monomeState.noteOn(effectiveMonomeRow + 1, monomeCol, 1.0f);
+                }
                 else monomeState.noteOff(effectiveMonomeRow + 1, monomeCol);
 
             }
@@ -618,7 +591,7 @@ void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
     
     for (int i = 0; i < numSampleStrips; ++i)
     {
-        sampleStripArray.add(new SampleStrip());
+        sampleStripArray.add(new SampleStrip(i, numSampleStrips, this));
     }
 
     DBG("SampleStrip array built");
@@ -665,29 +638,10 @@ int mlrVSTAudioProcessor::getNumSampleStrips()
 
 
 
-// Not yet possible to switch channels while playing
 void mlrVSTAudioProcessor::switchChannels(const int &newChan, const int &stripID)
 {
-    int currentChannel = *static_cast<const int*>
-        (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamCurrentChannel));
-
-    bool isPlaying = *static_cast<const bool*>
-        (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::ParamIsPlaying));
-
-    // Stop the current channel if playing
-    if (isPlaying)
-        channelProcessorArray[currentChannel]->stopSamplePlaying();
-
     // Let the strip now about the new channel
-    sampleStripArray[stripID]->setSampleStripParam(SampleStrip::ParamCurrentChannel, &newChan);
-
-    //double currentPosition = channelProcessorArray[currentChannel]->stopSamplePlaying();
-    //if (isPlaying)
-    //{
-    //    // restart the new channel
-    //    channelProcessorArray[newChan]->startSamplePlaying(currentPosition, sampleStripArray[stripID]);
-    //}
-    
+    sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pCurrentChannel, &newChan);
 }
 
 

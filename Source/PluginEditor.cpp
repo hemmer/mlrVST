@@ -120,7 +120,9 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     settingsPanel.setBounds(settingsPanelBounds);
 
     formatManager.registerBasicFormats();
-    startTimer(50);
+
+    // start timer to update play positions, slider values etc.
+    startTimer(30);
 }
 
 mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
@@ -173,7 +175,7 @@ void mlrVSTAudioProcessorEditor::buildSliders()
     addAndMakeVisible(&masterGainSlider);
     masterGainSlider.setSliderStyle(Slider::LinearVertical);
     masterGainSlider.setRange(0.0, 1.0, 0.01);
-    masterGainSlider.setValue(0.6);
+    masterGainSlider.setValue(0.0, false);
     masterGainSlider.setBounds(PAD_AMOUNT, 540, sliderWidth, 190);
     masterGainSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
 
@@ -185,15 +187,14 @@ void mlrVSTAudioProcessorEditor::buildSliders()
         slidersArray[i]->addListener(this);
         slidersArray[i]->setRange(0.0, 1.0, 0.01);
         slidersArray[i]->setBounds(PAD_AMOUNT + (i + 1) * sliderWidth, 540, sliderWidth, 190);
-        slidersArray[i]->setValue(getProcessor()->getChannelProcessor(i)->getChannelGain());
+        slidersArray[i]->setValue(getProcessor()->getChannelGain(i));
 
-        Colour sliderColour = getProcessor()->getChannelProcessor(i)->getChannelColour();
+        Colour sliderColour = getProcessor()->getChannelColour(i);
         slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
         slidersArray[i]->setColour(Slider::backgroundColourId, sliderColour);
     }
 
 }
-
 
 //==============================================================================
 void mlrVSTAudioProcessorEditor::paint (Graphics& g)
@@ -217,17 +218,17 @@ void mlrVSTAudioProcessorEditor::timerCallback()
         if (lastDisplayedPosition != newPos) bpmSlider.setValue(newPos.bpm);
     }
 
-    // TODO: use mlrVSTAudioProcessor::getParameter
-    // instead of accessing member variables directly?
-    masterGainSlider.setValue(ourProcessor->masterGain, false);
+    // see if the host has changed the master gain
+    masterGainSlider.setValue(ourProcessor->getParameter(mlrVSTAudioProcessor::pMasterGainParam));
 
-    // check the if the channel volumes have changed
-    for(int i = 0; i < slidersArray.size(); ++i)
-        slidersArray[i]->setValue( ourProcessor->channelGains[i] );
-    
+    // update the playback position     
+    for(int i = 0; i < sampleStripControlArray.size(); ++i)
+    {
+        sampleStripControlArray[i]->updatePlaybackStatus();
+    }
 }
 
-// This is our Slider::Listener callback, when the user drags a slider.
+// This is the callback for when the user drags a slider.
 void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
 {
     if (slider == &masterGainSlider)
@@ -235,7 +236,7 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
         // It's vital to use setParameterNotifyingHost to change any parameters that are automatable
         // by the host, rather than just modifying them directly, otherwise the host won't know
         // that they've changed.
-        getProcessor()->setParameterNotifyingHost(mlrVSTAudioProcessor::masterGainParam,
+        getProcessor()->setParameterNotifyingHost(mlrVSTAudioProcessor::pMasterGainParam,
                                                    (float) masterGainSlider.getValue());
     }
     else if (slider == &bpmSlider)
@@ -254,11 +255,7 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
 
             // let host know about the new value
             // channel0GainParam is the first channel id, so +i to access the rest
-            getProcessor()->setParameterNotifyingHost(mlrVSTAudioProcessor::channel0GainParam + i,
-                                                      newChannelGainValue);
-            // and update the appropriate channel
-            getProcessor()->getChannelProcessor(i)->setChannelGain(newChannelGainValue);
-            // NEEEEED to update channel processor HERE
+            getProcessor()->setChannelGain(i, newChannelGainValue);
         }
     }
    
@@ -351,7 +348,7 @@ void mlrVSTAudioProcessorEditor::comboBoxChanged (ComboBox* comboBoxThatHasChang
         DBG("Number of channels changed to: " + String(numChannels));
         
         // Let the audio processor change the number of processing channels
-        getProcessor()->buildChannelProcessorArray(numChannels);
+        getProcessor()->buildChannelArray(numChannels);
 
         // we need to rebuild the sliders array
 	    buildSliders();

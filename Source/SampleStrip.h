@@ -17,42 +17,47 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 
+// forward declaration
+class mlrVSTAudioProcessor;
+
 class SampleStrip : public ChangeBroadcaster
 {
 public:
-    SampleStrip();
+    SampleStrip(const int &newID,
+                const int &newNumSampleStrips,
+                mlrVSTAudioProcessor *owner);
     ~SampleStrip()
     {
+        parent.release();
     }
 
     enum SampleStripParameter
     {
         FirstParam,                     // This is so we can loop over GUI params
-        ParamIsPlaying = FirstParam,
-        ParamCurrentChannel,        
-        ParamNumChunks,
-        ParamPlayMode,
-        ParamIsLatched,
-        ParamIsReversed,
-        ParamStripVolume,
-        ParamPlaySpeed,
-        ParamIsPlaySpeedLocked,
-        ParamPlaybackPercentage,
-        ParamFractionalStart,
-        ParamFractionalEnd,
-        ParamAudioSample,
+        pIsPlaying = FirstParam,
+        pCurrentChannel,        
+        pNumChunks,
+        pPlayMode,
+        pIsLatched,
+        pIsReversed,
+        pStripVolume,
+        pPlaySpeed,
+        pIsPlaySpeedLocked,
+        pPlaybackPercentage,
+        pFractionalStart,
+        pFractionalEnd,
+        pAudioSample,
         NumGUIParams,
         // The above are the only params needed by the GUI
          
-        ParamChunkSize = NumGUIParams,
-        ParamSampleStart,       // these return the key sample points
-        ParamSampleEnd,         // (taking selection into account)
-        ParamStartChunk,
-        ParamEndChunk,
+        pChunkSize = NumGUIParams,
+        pSampleStart,       // these return the key sample points
+        pSampleEnd,         // (taking selection into account)
+        pStartChunk,
+        pEndChunk,
         TotalNumParams
     };
 
-    
     enum SampleStripParameterType
     {
         TypeInt,
@@ -66,7 +71,6 @@ public:
     enum PlayMode
     { 
         LOOP,                   // starts the sample looping
-        LOOP_CHUNK,             // loops the chunk associated with a button
         PLAY_CHUNK_ONCE,        // plays the current chunk to the end
         PLAY_TO_END,            // plays from current point until the end then stops
         NUM_PLAY_MODES
@@ -77,7 +81,6 @@ public:
         switch(parameterID)
         {
         case LOOP : return "loop";
-        case LOOP_CHUNK : return "loop chunk";
         case PLAY_CHUNK_ONCE : return "play chunk";
         case PLAY_TO_END : return "play to end";
         default : jassertfalse; return "error!";
@@ -88,24 +91,24 @@ public:
     {
         switch(parameterID)
         {
-        case ParamCurrentChannel : return "current_channel";
-        case ParamNumChunks : return "num_chunks";
-        case ParamPlayMode : return "playmode";
-        case ParamIsLatched : return "is_latched";
-        case ParamIsReversed : return "is_reversed";
-        case ParamStripVolume : return "strip_volume";
-        case ParamPlaySpeed : return "play_speed";
-        case ParamIsPlaySpeedLocked : return "is_play_speed_locked";
-        case ParamIsPlaying : return "is_playing";
-        case ParamChunkSize : return "chunk_size";
-        case ParamFractionalStart : return "fractional_start";
-        case ParamFractionalEnd : return "fractional_end";
-        case ParamAudioSample : return "audio_sample";
-        case ParamPlaybackPercentage : return "playback_percentage";
-        case ParamSampleStart : return "sample_start";
-        case ParamSampleEnd : return "sample_end";
-        case ParamStartChunk : return "sample_chunk_start";
-        case ParamEndChunk : return "sample_chunk_end";
+        case pCurrentChannel : return "current_channel";
+        case pNumChunks : return "num_chunks";
+        case pPlayMode : return "playmode";
+        case pIsLatched : return "is_latched";
+        case pIsReversed : return "is_reversed";
+        case pStripVolume : return "strip_volume";
+        case pPlaySpeed : return "play_speed";
+        case pIsPlaySpeedLocked : return "is_play_speed_locked";
+        case pIsPlaying : return "is_playing";
+        case pChunkSize : return "chunk_size";
+        case pFractionalStart : return "fractional_start";
+        case pFractionalEnd : return "fractional_end";
+        case pAudioSample : return "audio_sample";
+        case pPlaybackPercentage : return "playback_percentage";
+        case pSampleStart : return "sample_start";
+        case pSampleEnd : return "sample_end";
+        case pStartChunk : return "sample_chunk_start";
+        case pEndChunk : return "sample_chunk_end";
         default : jassertfalse; return "parameter_not_found";
         }
     }
@@ -114,24 +117,24 @@ public:
     {
         switch(parameterID)
         {
-        case ParamCurrentChannel : return TypeInt;
-        case ParamNumChunks : return TypeInt;
-        case ParamPlayMode : return TypeInt;
-        case ParamIsLatched : return TypeBool;
-        case ParamIsReversed : return TypeBool;
-        case ParamStripVolume : return TypeFloat;
-        case ParamPlaySpeed : return TypeDouble;
-        case ParamIsPlaySpeedLocked : return TypeBool;
-        case ParamIsPlaying : return TypeBool;
-        case ParamChunkSize : return TypeInt;
-        case ParamFractionalStart : return TypeFloat;
-        case ParamFractionalEnd : return TypeFloat;
-        case ParamAudioSample : return TypeAudioSample;
-        case ParamPlaybackPercentage : return TypeFloat;
-        case ParamSampleStart : return TypeInt;
-        case ParamSampleEnd : return TypeInt;
-        case ParamStartChunk : return TypeInt;
-        case ParamEndChunk : return TypeInt;
+        case pCurrentChannel : return TypeInt;
+        case pNumChunks : return TypeInt;
+        case pPlayMode : return TypeInt;
+        case pIsLatched : return TypeBool;
+        case pIsReversed : return TypeBool;
+        case pStripVolume : return TypeFloat;
+        case pPlaySpeed : return TypeDouble;
+        case pIsPlaySpeedLocked : return TypeBool;
+        case pIsPlaying : return TypeBool;
+        case pChunkSize : return TypeInt;
+        case pFractionalStart : return TypeFloat;
+        case pFractionalEnd : return TypeFloat;
+        case pAudioSample : return TypeAudioSample;
+        case pPlaybackPercentage : return TypeFloat;
+        case pSampleStart : return TypeInt;
+        case pSampleEnd : return TypeInt;
+        case pStartChunk : return TypeInt;
+        case pEndChunk : return TypeInt;
         default : jassertfalse; return -1;
         }
     }
@@ -141,12 +144,32 @@ public:
                              const bool &sendChangeMsg = true);
     const void* getSampleStripParam(const int &parameterID) const;
 
+
     void updatePlaySpeedForBPMChange(const double &newBPM);
+    void setBPM(const double &newBPM) { previousBPM = newBPM; }
     void updatePlaySpeedForSelectionChange();
     void findInitialPlaySpeed(const double &BPM, const float &hostSampleRate);
-
     void modPlaySpeed(const double &factor);
+    void updateCurrentPlaybackPercentage();
+
+    void handleMidiEvent(const MidiMessage& m);
+    void renderNextBlock(AudioSampleBuffer& outputBuffer,
+                         const MidiBuffer& midiData,
+                         int startSample, int numSamples);
+    void renderNextSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamples);
+
+
+    void startSamplePlaying(const int &chunk);
+    double stopSamplePlaying();
+    
+
 private:
+    const int sampleStripID;
+    const int numSampleStrips;
+
+    ScopedPointer<mlrVSTAudioProcessor> parent;
+
+    void updatePlayParams();
 
     // These are just so the GUI can show where in the sample we are
     bool isPlaying;
@@ -159,10 +182,18 @@ private:
 
     // start / end points (fractional, i.e. 0.5 is half way through)
     float fractionalSampleStart, fractionalSampleEnd;
+
     // start / end / length of the selection (in samples)
     int selectionStart, selectionEnd, selectionLength;
-    // which chunk to start / end with
-    int startChunk, endChunk;
+    // loop modes might only play a select part of that selection
+    int playbackStartPosition, playbackEndPosition;
+
+
+    // which chunk to start / end the loop with
+    int loopStartChunk, loopEndChunk;
+    // which button started playback
+    int initialColumn;
+
     // How many blocks the sample is split up into...
     int numChunks;
     // ...and what size are they (in samples).
@@ -179,6 +210,15 @@ private:
 
     double previousBPM;
     int previousSelectionLength;
+
+     // where we are in the sample at the moment
+    double sampleCurrentPosition;
+
+
+    //==============================================================================
+    /** This is used to control access to the rendering
+        callback and the note trigger methods. */
+    CriticalSection lock;
 };
 
 

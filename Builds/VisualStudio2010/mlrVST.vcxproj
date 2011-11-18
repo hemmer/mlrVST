@@ -123,14 +123,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\AudioSample.cpp"/>
-    <ClCompile Include="..\..\Source\ChannelProcessor.cpp"/>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
+    <ClCompile Include="..\..\Source\SampleStrip.cpp"/>
     <ClCompile Include="..\..\Source\PresetPanel.cpp"/>
     <ClCompile Include="..\..\Source\SettingsPanel.cpp"/>
     <ClCompile Include="..\..\Source\SampleStripControl.cpp"/>
     <ClCompile Include="..\..\Source\PluginEditor.cpp"/>
     <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp"/>
-    <ClCompile Include="..\..\Source\SampleStrip.cpp"/>
     <ClCompile Include="..\..\Source\OSCHandler.cpp"/>
     <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp"/>
     <ClCompile Include="..\..\oscpack\ip\win32\NetworkingUtils.cpp"/>
@@ -148,14 +147,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\AudioSample.h"/>
-    <ClInclude Include="..\..\Source\ChannelProcessor.h"/>
     <ClInclude Include="..\..\Source\PluginProcessor.h"/>
+    <ClInclude Include="..\..\Source\SampleStrip.h"/>
     <ClInclude Include="..\..\Source\PresetPanel.h"/>
     <ClInclude Include="..\..\Source\SettingsPanel.h"/>
     <ClInclude Include="..\..\Source\SampleStripControl.h"/>
     <ClInclude Include="..\..\Source\PluginEditor.h"/>
     <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h"/>
-    <ClInclude Include="..\..\Source\SampleStrip.h"/>
     <ClInclude Include="..\..\Source\OSCHandler.h"/>
     <ClInclude Include="..\..\oscpack\ip\IpEndpointName.h"/>
     <ClInclude Include="..\..\oscpack\ip\NetworkingUtils.h"/>

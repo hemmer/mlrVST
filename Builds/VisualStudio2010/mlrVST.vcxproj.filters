@@ -43,10 +43,10 @@
     <ClCompile Include="..\..\Source\AudioSample.cpp">
       <Filter>mlrVST\audio</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\ChannelProcessor.cpp">
+    <ClCompile Include="..\..\Source\PluginProcessor.cpp">
       <Filter>mlrVST\audio</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\PluginProcessor.cpp">
+    <ClCompile Include="..\..\Source\SampleStrip.cpp">
       <Filter>mlrVST\audio</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\PresetPanel.cpp">
@@ -63,9 +63,6 @@
     </ClCompile>
     <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp">
       <Filter>mlrVST\gui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\SampleStrip.cpp">
-      <Filter>mlrVST\other</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\OSCHandler.cpp">
       <Filter>mlrVST\other</Filter>
@@ -135,10 +132,10 @@
     <ClInclude Include="..\..\Source\AudioSample.h">
       <Filter>mlrVST\audio</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\ChannelProcessor.h">
+    <ClInclude Include="..\..\Source\PluginProcessor.h">
       <Filter>mlrVST\audio</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\PluginProcessor.h">
+    <ClInclude Include="..\..\Source\SampleStrip.h">
       <Filter>mlrVST\audio</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PresetPanel.h">
@@ -155,9 +152,6 @@
     </ClInclude>
     <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h">
       <Filter>mlrVST\gui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\SampleStrip.h">
-      <Filter>mlrVST\other</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\OSCHandler.h">
       <Filter>mlrVST\other</Filter>

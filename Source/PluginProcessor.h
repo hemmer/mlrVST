@@ -14,7 +14,6 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
-#include "ChannelProcessor.h"
 #include "AudioSample.h"
 #include "SampleStrip.h"
 #include "OSCHandler.h"
@@ -62,11 +61,6 @@ public:
     const String getProgramName (int /*index*/)                         { return String::empty; }
     void changeProgramName (int /*index*/, const String& /*newName*/)   { }
 
-    ChannelProcessor* getChannelProcessor(const int &index)
-    {
-        return channelProcessorArray[index];
-    }
-
     //==============================================================================
     void getStateInformation (MemoryBlock& destData);
     void setStateInformation (const void* data, int sizeInBytes);
@@ -83,16 +77,7 @@ public:
     // to be automatable, we need to allow for the possibility.
     enum Parameters
     {
-        masterGainParam = 0,
-        delayParam,
-        channel0GainParam,
-        channel1GainParam,
-        channel2GainParam,
-        channel3GainParam,
-        channel4GainParam,
-        channel5GainParam,
-        channel6GainParam,
-        channel7GainParam,
+        pMasterGainParam = 0,
         totalNumParams
     };
 
@@ -104,9 +89,8 @@ public:
         sCurrentBPM,
     };
 
-    float masterGain;
-    // individual channel volumes
-    Array<float> channelGains;
+
+
 
     // adds a sample to the sample pool
     int addNewSample(File &sampleFile);
@@ -138,26 +122,44 @@ public:
     void processOSCKeyPress(const int &monomeCol, const int &monomeRow, const bool &state);
 
     // set up the channels (can be used to change number of channels
-    void buildChannelProcessorArray(const int &newNumChannels);
+    void buildChannelArray(const int &newNumChannels);
     void buildSampleStripArray(const int &numSampleStrips);
 
     SampleStrip* getSampleStrip(const int &index);
     int getNumSampleStrips();
 
+    float getChannelGain(const int &chan)
+    { 
+        jassert(chan < channelGains.size());
+        return channelGains[chan];
+    }
+    void setChannelGain(const int &chan, const float &newGain)
+    { 
+        jassert(chan < channelGains.size());
+        channelGains.set(chan, newGain);
+    }
+    Colour getChannelColour(const int &chan)
+    { 
+        jassert(chan < channelColours.size());
+        return channelColours[chan];
+    }
+
+
     void setSampleStripParameter(const int &parameterID, const void *newValue, const int &stripID)
     {
         sampleStripArray[stripID]->setSampleStripParam(parameterID, newValue);
     }
-
     const void* getSampleStripParameter(const int &parameterID, const int &stripID)
     {
         return sampleStripArray[stripID]->getSampleStripParam(parameterID);   
     }
 
+
     // Global Settings stuff
     void updateGlobalSetting(const int &settingID, const void *newVal);
     const void* getGlobalSetting(const int &settingID) const;
     String getGlobalSettingName(const int &settingID) const;
+
 
     // Preset stuff
     void savePreset(const String &presetName);
@@ -185,10 +187,15 @@ private:
     // Max number of channels
     const int maxChannels;
 
+    float masterGain;
     // These are the seperate audio channels
-    OwnedArray<ChannelProcessor> channelProcessorArray; 
     const float defaultChannelGain;
-        
+    // individual channel volumes
+    Array<float> channelGains;
+
+
+    Array<Colour> channelColours;
+
     /* These track the seperate SampleStrips (related
        to the GUI component SampleStripControl). */
     OwnedArray<SampleStrip> sampleStripArray;

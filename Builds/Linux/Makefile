@@ -44,14 +44,13 @@ endif
 
 OBJECTS := \
   $(OBJDIR)/AudioSample_c5634f81.o \
-  $(OBJDIR)/ChannelProcessor_6fdb09d8.o \
   $(OBJDIR)/PluginProcessor_a059e380.o \
+  $(OBJDIR)/SampleStrip_9922baef.o \
   $(OBJDIR)/PresetPanel_1f2c0a46.o \
   $(OBJDIR)/SettingsPanel_89b72282.o \
   $(OBJDIR)/SampleStripControl_45995bf8.o \
   $(OBJDIR)/PluginEditor_94d4fb09.o \
   $(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o \
-  $(OBJDIR)/SampleStrip_9922baef.o \
   $(OBJDIR)/OSCHandler_bb1eaf54.o \
   $(OBJDIR)/IpEndpointName_d4cc3aed.o \
   $(OBJDIR)/NetworkingUtils_571a8d2d.o \
@@ -87,14 +86,14 @@ $(OBJDIR)/AudioSample_c5634f81.o: ../../Source/AudioSample.cpp
 	@echo "Compiling AudioSample.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/ChannelProcessor_6fdb09d8.o: ../../Source/ChannelProcessor.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling ChannelProcessor.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
 $(OBJDIR)/PluginProcessor_a059e380.o: ../../Source/PluginProcessor.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling PluginProcessor.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/SampleStrip_9922baef.o: ../../Source/SampleStrip.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling SampleStrip.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/PresetPanel_1f2c0a46.o: ../../Source/PresetPanel.cpp
@@ -120,11 +119,6 @@ $(OBJDIR)/PluginEditor_94d4fb09.o: ../../Source/PluginEditor.cpp
 $(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o: ../../Source/mlrVSTLookAndFeel.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling mlrVSTLookAndFeel.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/SampleStrip_9922baef.o: ../../Source/SampleStrip.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling SampleStrip.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/OSCHandler_bb1eaf54.o: ../../Source/OSCHandler.cpp
