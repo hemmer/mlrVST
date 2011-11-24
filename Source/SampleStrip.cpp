@@ -23,7 +23,9 @@ SampleStrip::SampleStrip(const int &newID,
     currentChannel(0),
     isPlaying(false), playbackPercentage(0.0),
     currentPlayMode(LOOP), isReversed(false), isLatched(true),
-    stripVolume(1.0f), playSpeed(1.0), isPlaySpeedLocked(false),
+    stripVolume(1.0f), volumeIncreasing(false), volumeDecreasing(false),
+    playSpeed(1.0), playSpeedIncreasing(false), playSpeedDecreasing(false),
+    isPlaySpeedLocked(false),
     previousBPM(120.0), previousSelectionLength(0)
 {
 
@@ -117,7 +119,20 @@ void SampleStrip::setSampleStripParam(const int &parameterID,
         }
         break;
 
-        // TODO when pSampleStart is changes, make sure we change fractional too!
+    case pIsVolInc :
+        volumeIncreasing = *static_cast<const bool*>(newValue); break;
+
+    case pIsVolDec :
+        volumeDecreasing = *static_cast<const bool*>(newValue); break;
+
+    case pIsPlaySpeedInc :
+        playSpeedIncreasing = *static_cast<const bool*>(newValue); break;
+
+    case pIsPlaySpeedDec :
+        playSpeedDecreasing = *static_cast<const bool*>(newValue); break;
+
+
+    // TODO when pSampleStart is changes, make sure we change fractional too!
     default :
         jassertfalse;     // we should NOT be here!
     }
@@ -191,6 +206,15 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
     case pEndChunk :
         p = &loopEndChunk; break;
 
+    case pIsVolInc : 
+        p = &volumeIncreasing; break;
+    case pIsVolDec : 
+        p = &volumeDecreasing; break;
+    case pIsPlaySpeedInc : 
+        p = &playSpeedIncreasing; break;
+    case pIsPlaySpeedDec : 
+        p = &playSpeedDecreasing; break;
+
     default:
         DBG("Param not found!");
         jassertfalse;
@@ -198,6 +222,36 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
     }
 
     return p;
+}
+
+void SampleStrip::toggleSampleStripParam(const int &parameterID, const bool &sendChangeMsg)
+{
+    switch (parameterID)
+    {
+    case pIsPlaying :
+        isPlaying = !isPlaying; break;
+    case pIsLatched :
+        isLatched = !isLatched; break;
+    case pIsReversed : 
+        isReversed = !isReversed; break;
+
+    case pIsPlaySpeedInc :
+        playSpeedIncreasing = !playSpeedIncreasing; break;
+    case pIsPlaySpeedDec :
+        playSpeedDecreasing = !playSpeedDecreasing; break;
+    case pIsVolInc :
+        volumeIncreasing = !volumeIncreasing; break;
+    case pIsVolDec :
+        volumeDecreasing = !volumeDecreasing; break;
+
+    default :
+        jassertfalse;
+    }
+
+    // notify listeners of changes if requested
+    if (sendChangeMsg)
+        sendChangeMessage();
+    
 }
 
 void SampleStrip::updatePlaySpeedForBPMChange(const double &newBPM)

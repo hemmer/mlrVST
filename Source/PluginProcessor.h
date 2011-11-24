@@ -149,6 +149,10 @@ public:
     {
         sampleStripArray[stripID]->setSampleStripParam(parameterID, newValue);
     }
+    void toggleSampleStripParameter(const int &parameterID, const int &stripID)
+    {
+        sampleStripArray[stripID]->toggleSampleStripParam(parameterID);
+    }
     const void* getSampleStripParameter(const int &parameterID, const int &stripID)
     {
         return sampleStripArray[stripID]->getSampleStripParam(parameterID);   
@@ -172,6 +176,11 @@ public:
         DBG(setlist.createDocument(String::empty));
     }
 
+    // Recording / resampling stuff
+    void startRecording(const int &preCount,
+                        const int &numBars);
+    void startResampling(const int &preCount,
+                        const int &numBars);
 private:
 
     /* OSC messages from the monome are converted to MIDI messages
@@ -192,8 +201,6 @@ private:
     const float defaultChannelGain;
     // individual channel volumes
     Array<float> channelGains;
-
-
     Array<Colour> channelColours;
 
     /* These track the seperate SampleStrips (related
@@ -204,6 +211,19 @@ private:
     // Send and receive OSC messages through this
     OSCHandler oscMsgHandler;
 
+
+    AudioSampleBuffer stripContrib;
+
+    // TODO: make this an array
+    AudioSampleBuffer resampleBuffer;
+    int resamplePosition, resampleLength;
+    bool isResampling;
+
+    AudioSampleBuffer recordBuffer;
+    int recordPosition, recordLength;
+    bool isRecording;
+
+    static const bool  monitorInputs = true;
 
     /////////////////////
     // PRESET HANDLING //
@@ -234,6 +254,10 @@ private:
     // where the indices correspond to the row, and col:
     // i.e. buttonStatus[row]->getUnchecked[col] or similar
     OwnedArray<Array<bool> > buttonStatus;
+
+    // This is true when top left button is held down, 
+    // so strips can be used to stop, reverse sample etc.
+    bool stripModifier;
 
     void setMonomeStatusGrids(const int &width, const int &height);
 

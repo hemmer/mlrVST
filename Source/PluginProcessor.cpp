@@ -24,6 +24,10 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     channelGains(), defaultChannelGain(0.8f),
     samplePool(),               // sample pool is initially empty
     oscMsgHandler(this),
+    stripModifier(false),
+    stripContrib(2, 0),
+    resampleBuffer(2, 0), isResampling(false),
+    recordBuffer(2, 0), isRecording(false),
     presetList("PRESETLIST"), setlist("SETLIST"),
     playbackLEDPosition(), buttonStatus()
 {
@@ -49,7 +53,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
 
     lastPosInfo.resetToDefault();
 
-    startTimer(200);
+    startTimer(100);
 
     // setup 2D arrays for tracking button presses
     // or LED status
@@ -216,13 +220,17 @@ const String mlrVSTAudioProcessor::getParameterText(int index)
 }
 
 //==============================================================================
-void mlrVSTAudioProcessor::prepareToPlay(double /*sampleRate*/, int /*samplesPerBlock*/)
+void mlrVSTAudioProcessor::prepareToPlay(double /*sampleRate*/, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     // TODO: does ChannelProcessor need this?
     //synth.setCurrentPlaybackSampleRate (sampleRate);
     monomeState.reset();
+
+    // this is not a completely accurate size as the block size may change with 
+    // time, but at least we can allocate roughly the right size:
+    stripContrib.setSize(2, samplesPerBlock, false, true, false);
 }
 
 void mlrVSTAudioProcessor::releaseResources()
@@ -274,6 +282,33 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
 
 
+
+        if (isRecording)
+        {
+            if (numSamples + recordPosition < recordLength)
+            {
+                recordBuffer.addFrom(0, recordPosition, buffer, 0, 0, numSamples);
+                recordBuffer.addFrom(1, recordPosition, buffer, 1, 0, numSamples);
+                recordPosition += numSamples;
+            }
+            else
+            {
+                const int samplesToEnd = recordLength - recordPosition;
+                recordBuffer.addFrom(0, recordPosition, buffer, 0, 0, samplesToEnd);
+                recordBuffer.addFrom(1, recordPosition, buffer, 1, 0, samplesToEnd);
+                isRecording = false;
+
+                DBG("recording stopped");
+                samplePool.add(new AudioSample(recordBuffer, getSampleRate()));
+            }
+        }
+
+        if (!monitorInputs)
+        {
+            buffer.clear();
+        }
+
+
         /* TODO: this actually isn't a very nice way to do this, eventually
            SampleStrips should do the processing then just add it to the
            relevant channel. This would make a whole load of things easier!
@@ -286,7 +321,11 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
         //    channelProcessorArray[c]->getCurrentPlaybackPercentage();
         //    channelProcessorArray[c]->renderNextBlock(buffer, midiMessages, 0, numSamples);
         //}
-        AudioSampleBuffer stripContrib(2, numSamples);
+
+        // make sure the buffer for SampleStrip contributions is
+        // *exactly* the right size and avoid reallocating if possible
+        stripContrib.setSize(2, numSamples, false, false, true);
+
         int stripChannel;
         for (int s = 0; s < sampleStripArray.size(); s++)
         {
@@ -313,6 +352,26 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
         for (int i = getNumInputChannels(); i < getNumOutputChannels(); ++i)
             buffer.clear(i, 0, buffer.getNumSamples());
 
+        if (isResampling)
+        {
+            if (numSamples + resamplePosition < resampleLength)
+            {
+                resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, numSamples);
+                resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, numSamples);
+                resamplePosition += numSamples;
+            }
+            else
+            {
+                const int samplesToEnd = resampleLength - resamplePosition;
+                resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, samplesToEnd);
+                resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, samplesToEnd);
+                isResampling = false;
+                DBG("resampling stopped");
+                samplePool.add(new AudioSample(resampleBuffer, getSampleRate()));
+            }
+        }
+
+        
     }
     else
     {
@@ -428,16 +487,96 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 void mlrVSTAudioProcessor::timerCallback()
 {
 
-    // TODO: this is still a pretty horrendous way to do this
-    // and will be updated to use led/row once I have it
-    // working with the new OSC spec!
+
     
     for (int row = 0; row < sampleStripArray.size(); ++row)
     {
+        
+        const bool isVolInc = *static_cast<const bool*>
+            (getSampleStripParameter(SampleStrip::pIsVolInc, row));
+        const bool isVolDec = *static_cast<const bool*>
+            (getSampleStripParameter(SampleStrip::pIsVolDec, row));
 
-        bool isPlaying = *static_cast<const bool*>
+        if (isVolInc)
+        {
+            float stripVol = *static_cast<const float*>
+                (getSampleStripParameter(SampleStrip::pStripVolume, row));
+
+            stripVol += 0.05f;
+
+            // stop increasing once we reach a max value
+            if (stripVol > 2.0)
+            {
+                stripVol = 2.0;
+                toggleSampleStripParameter(SampleStrip::pIsVolInc, row);
+            }
+
+            setSampleStripParameter(SampleStrip::pStripVolume, &stripVol, row);
+
+            // finally if the modifier button is lifted, stop increasing
+            if (!stripModifier) toggleSampleStripParameter(SampleStrip::pIsVolInc, row);
+        }
+        else if (isVolDec)
+        {
+            float stripVol = *static_cast<const float*>
+                (getSampleStripParameter(SampleStrip::pStripVolume, row));
+            stripVol -= 0.05f;
+
+            // stop increasing once we reach a max value
+            if (stripVol < 0.0)
+            {
+                stripVol = 0.0;
+                toggleSampleStripParameter(SampleStrip::pIsVolDec, row);
+            }
+
+            setSampleStripParameter(SampleStrip::pStripVolume, &stripVol, row);
+
+            // finally if the modifier button is lifted, stop increasing
+            if (!stripModifier) toggleSampleStripParameter(SampleStrip::pIsVolDec, row);
+        }
+
+
+        const bool isSpeedInc = *static_cast<const bool*>
+            (getSampleStripParameter(SampleStrip::pIsPlaySpeedInc, row));
+        const bool isSpeedDec = *static_cast<const bool*>
+            (getSampleStripParameter(SampleStrip::pIsPlaySpeedDec, row));
+
+
+        if (isSpeedInc)
+        {
+            double stripPlaySpeed = *static_cast<const double*>
+                (getSampleStripParameter(SampleStrip::pPlaySpeed, row));
+            stripPlaySpeed += 0.01;
+            setSampleStripParameter(SampleStrip::pPlaySpeed, &stripPlaySpeed, row);
+
+            // finally if the modifier button is lifted, stop increasing
+            if (!stripModifier) toggleSampleStripParameter(SampleStrip::pIsPlaySpeedInc, row);
+        }
+        else if (isSpeedDec)
+        {
+            double stripPlaySpeed = *static_cast<const double*>
+                (getSampleStripParameter(SampleStrip::pPlaySpeed, row));
+            stripPlaySpeed -= 0.01;
+
+            if (stripPlaySpeed < 0.0)
+            {
+                stripPlaySpeed = 0.0;
+                toggleSampleStripParameter(SampleStrip::pIsPlaySpeedDec, row);
+            }
+
+            setSampleStripParameter(SampleStrip::pPlaySpeed, &stripPlaySpeed, row);
+
+            // finally if the modifier button is lifted, stop increasing
+            if (!stripModifier) toggleSampleStripParameter(SampleStrip::pIsPlaySpeedDec, row);
+        }
+
+        
+        // TODO: this is still a pretty horrendous way to do this
+        // and will be updated to use led/row once I have it
+        // working with the new OSC spec!
+        const bool isPlaying = *static_cast<const bool*>
             (getSampleStripParameter(SampleStrip::pIsPlaying, row));
- 
+
         if (isPlaying)
         {
             float percentage = *static_cast<const float*>
@@ -461,7 +600,7 @@ void mlrVSTAudioProcessor::timerCallback()
         else
         {
             // if we're not playing, make sure the row is blank
-            oscMsgHandler.setRow(row + 1, 9);
+            oscMsgHandler.setRow(row + 1, 0);
 
             // sanity check more than anything
             playbackLEDPosition.set(row, -1);
@@ -471,14 +610,30 @@ void mlrVSTAudioProcessor::timerCallback()
     
 }
 
-
 void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &monomeRow, const bool &state)
 {
     
+    /* The -1 is because we are treating the second row on the device as 
+       the first "effective" row, the top row being reserved for other 
+       functions. Yes this is confusing.
+    */
+    const int effectiveMonomeRow = monomeRow - 1;
+
+
+
+    /* When the top left button is held, each strip turns into a
+       set of control buttons. See below for the mapping.
+    */
+    if (monomeRow == 0 && monomeCol == 0)
+    {
+        stripModifier = state;
+    }
+
+
     if (monomeRow == 0)
     {
+        /*
         // TODO proper control mappings for top row
-
         // stops channels 1-N playing
         if (monomeCol < numChannels)
         {
@@ -489,17 +644,60 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
                     sampleStripArray[s]->stopSamplePlaying();
             }
         }
-    } 
-    else if (monomeRow <= numSampleStrips && monomeRow >= 0)
+        */
+    }
+    else if (stripModifier && monomeRow <= numSampleStrips && monomeRow > 0)
+    {
+        switch (monomeCol)
+        {
+        case 0 :
+            if (state)
+                sampleStripArray[effectiveMonomeRow]->stopSamplePlaying();
+            break;
+
+        case 1:
+            if (state)
+                sampleStripArray[effectiveMonomeRow]->toggleSampleStripParam(SampleStrip::pIsReversed);
+            break;
+
+        case 2:
+            {
+                const bool isVolDec = state;
+                sampleStripArray[effectiveMonomeRow]->setSampleStripParam(SampleStrip::pIsVolDec, &isVolDec, false);
+                break;
+            }
+
+        case 3:
+            {
+                const bool isVolInc = state;
+                sampleStripArray[effectiveMonomeRow]->setSampleStripParam(SampleStrip::pIsVolInc, &isVolInc, false);
+                break;
+            }
+
+        case 4:
+            {
+                const bool isSpeedDec = state;
+                sampleStripArray[effectiveMonomeRow]->setSampleStripParam(SampleStrip::pIsPlaySpeedDec, &isSpeedDec, false);
+                break;
+            }
+
+        case 5:
+            {
+                const bool isSpeedInc = state;
+                sampleStripArray[effectiveMonomeRow]->setSampleStripParam(SampleStrip::pIsPlaySpeedInc, &isSpeedInc, false);
+                break;
+            }
+
+
+        }
+    }
+    else if (monomeRow <= numSampleStrips && monomeRow > 0)
     {
 
         /* Only pass on messages that are from the allowed range of columns.
            NOTE: MIDI messages may still be passed from other sources that
            are outside this range so the channelProcessor must be aware of 
-           numChunks too to filter these. The -1 is because we are treating
-           the second row as the first "effective" row. Yes this is confusing.
-        */
-        const int effectiveMonomeRow = monomeRow - 1;
+           numChunks too to filter these. 
 
 
         /* Button presses are tracked in a boolean array for each row to allow 
@@ -599,8 +797,6 @@ void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
     // resume processing
     suspendProcessing(false);
 }
-
-
 void mlrVSTAudioProcessor::calcInitialPlaySpeed(const int &stripID)
 {
     // TODO insert proper host speed here
@@ -635,8 +831,6 @@ int mlrVSTAudioProcessor::getNumSampleStrips()
 {
     return sampleStripArray.size();
 }
-
-
 
 void mlrVSTAudioProcessor::switchChannels(const int &newChan, const int &stripID)
 {
@@ -809,4 +1003,31 @@ String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID) const
     case sCurrentBPM : return "current_bpm";
     default : jassertfalse; return "name_not_found";
     }
+}
+
+
+////////////////////////////
+// RECORDING / RESAMPLING //
+////////////////////////////
+
+void mlrVSTAudioProcessor::startResampling(const int &preCount, const int &numBars)
+{
+    resampleLength = (int) (getSampleRate() * (60.0 * numBars / currentBPM));
+    resampleBuffer.setSize(2, resampleLength, false, true);
+    resampleBuffer.clear();
+    resamplePosition = 0;
+    isResampling = true;
+
+    DBG("resampling started");
+}
+
+void mlrVSTAudioProcessor::startRecording(const int &preCount, const int &numBars)
+{
+    recordLength = (int) (getSampleRate() * (60.0 * numBars / currentBPM));
+    recordBuffer.setSize(2, recordLength, false, true);
+    recordBuffer.clear();
+    recordPosition = 0;
+    isRecording = true;
+
+    DBG("recording started");
 }

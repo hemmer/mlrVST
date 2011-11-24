@@ -68,9 +68,16 @@ public:
 
     void updatePlaybackStatus()
     {
-        playbackPercentage = *static_cast<const float*>(dataStrip->getSampleStripParam(SampleStrip::pPlaybackPercentage));
+        // no need to update if nothing is happening
+        if (isPlaying)
+        {
+            playbackPercentage = *static_cast<const float*>(dataStrip->getSampleStripParam(SampleStrip::pPlaybackPercentage));
+            repaint();
+        }
+
+        
         isPlaying = *static_cast<const bool*>(dataStrip->getSampleStripParam(SampleStrip::pIsPlaying));
-        repaint();
+
     }
 
     // These recall settings when the 

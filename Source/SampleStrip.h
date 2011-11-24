@@ -55,6 +55,10 @@ public:
         pSampleEnd,         // (taking selection into account)
         pStartChunk,
         pEndChunk,
+        pIsVolInc,
+        pIsVolDec, 
+        pIsPlaySpeedInc,
+        pIsPlaySpeedDec,
         TotalNumParams
     };
 
@@ -143,7 +147,7 @@ public:
                              const void *newValue,
                              const bool &sendChangeMsg = true);
     const void* getSampleStripParam(const int &parameterID) const;
-
+    void toggleSampleStripParam(const int &parameterID, const bool &sendChangeMsg = true);
 
     void updatePlaySpeedForBPMChange(const double &newBPM);
     void setBPM(const double &newBPM) { previousBPM = newBPM; }
@@ -204,9 +208,15 @@ private:
     // Playback options
     int currentPlayMode;
     bool isReversed, isLatched;
+
+    // Each strip has it's individual volume control
     float stripVolume;
+    // these are used to (in/de)crement the strip volume using key combos
+    bool volumeIncreasing, volumeDecreasing;
+
     double playSpeed;
     bool isPlaySpeedLocked;
+    bool playSpeedIncreasing, playSpeedDecreasing;
 
     double previousBPM;
     int previousSelectionLength;

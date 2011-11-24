@@ -23,7 +23,7 @@ SampleStripControl::SampleStripControl(const int &id,
                                        mlrVSTAudioProcessorEditor * const owner) :
     componentHeight(height), componentWidth(width), sampleStripID(id),
     backgroundColour(Colours::black), controlbarSize(16), fontSize(7.4f),
-    waveformPaintBounds(0, controlbarSize, componentWidth, componentHeight - controlbarSize),
+    waveformPaintBounds(0, controlbarSize, componentWidth, (componentHeight - controlbarSize)),
     thumbnailCache(5), thumbnail(512, formatManager, thumbnailCache),
     thumbnailLength(0.0), thumbnailScaleFactor(1.0),
     trackNumberLbl("track number", String(sampleStripID)),
@@ -387,11 +387,11 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
             // If "none is selected"
             if (fileChoice == 1)
             {
+                dataStrip->stopSamplePlaying();
+
                 const AudioSample *newSample = 0;
                 dataStrip->setSampleStripParam(SampleStrip::pAudioSample, newSample);
 
-                bool isPlaying = false;
-                dataStrip->setSampleStripParam(SampleStrip::pIsPlaying, &isPlaying);
             }
             // If a menu option has been chosen that is a file
             else if (fileChoice != 0)
@@ -673,9 +673,9 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
 
     case SampleStrip::pNumChunks :
         {
-            const int newNumChunks = *static_cast<const int*>(newValue);
-            selNumChunks.setSelectedId(newNumChunks);
-            visualChunkSize = (float)(visualSelectionLength / (float) newNumChunks);
+            numChunks = *static_cast<const int*>(newValue);
+            selNumChunks.setSelectedId(numChunks, true);
+            visualChunkSize = (float)(visualSelectionLength / (float) numChunks);
             break;
         }
 
@@ -774,12 +774,21 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
                 // If the new sample exists
                 if (currentSample)
                 {
-                    thumbnail.setSource(new FileInputSource(currentSample->getSampleFile()));
+                    const int numThumbnailChannels = currentSample->getNumChannels();
+                    const double sampleRate = currentSample->getSampleRate();
+                    const int numSamples = currentSample->getSampleLength();
+
+                    thumbnail.reset(numThumbnailChannels, sampleRate, numSamples);
+                    thumbnail.addBlock(0, *(currentSample->getAudioData()), 0, numSamples);
+
+                    //thumbnail.setSource(new FileInputSource(currentSample->getSampleFile()));
                     thumbnailLength = thumbnail.getTotalLength();
                     filenameLbl.setText(currentSample->getSampleName(), false);
                 }
                 else
                 {
+                    thumbnail.clear();
+                    //numThumbnailChannels = -1;
                     filenameLbl.setText("No file", false);
                     playbackSpeedSldr.setValue(1.0, true);
                 }

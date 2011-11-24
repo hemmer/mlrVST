@@ -30,6 +30,8 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       fontSize(7.4f),
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
       loadFilesBtn("load files", "LOAD FILES"),
+      resampleBtn("rsmpl", "RSMPL"),
+      recordBtn("rcrd", "RCRD"),
       slidersArray(),
       myLookAndFeel()
 {
@@ -81,6 +83,14 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	loadFilesBtn.addListener(this);
 	loadFilesBtn.setBounds(50, 350, 70, 25);
 
+    addAndMakeVisible(&resampleBtn);
+	resampleBtn.addListener(this);
+	resampleBtn.setBounds(50, 450, 70, 25);
+
+    addAndMakeVisible(&recordBtn);
+	recordBtn.addListener(this);
+	recordBtn.setBounds(130, 450, 70, 25);
+
     buildSampleStripControls();
 
     masterGainSlider.addListener(this);
@@ -122,7 +132,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     formatManager.registerBasicFormats();
 
     // start timer to update play positions, slider values etc.
-    startTimer(30);
+    startTimer(50);
 }
 
 mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
@@ -320,8 +330,18 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 
     }
 
+    else if(btn == &resampleBtn)
+    {
+        getProcessor()->startResampling(0, 4);
+    }
+
+    else if(btn == &recordBtn)
+    {
+        getProcessor()->startRecording(0, 4);
+    }
+
     // USEFUL FOR TESTING
-	if(btn == &loadFilesBtn)
+	else if(btn == &loadFilesBtn)
     {
         
 		FileChooser myChooser ("Please choose a file:", File::getSpecialLocation(File::userDesktopDirectory), "*.wav");

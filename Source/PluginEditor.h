@@ -87,7 +87,7 @@ private:
     Label infoLabel, bpmLabel;
     Slider masterGainSlider, bpmSlider;
 	DrawableButton debugButton;
-    TextButton loadFilesBtn, addPresetBtn;
+    TextButton loadFilesBtn, addPresetBtn, resampleBtn, recordBtn;
     ToggleButton toggleSetlistBtn, toggleSettingsBtn;
     ComboBox selNumChannels;
 	ListBox fileList;

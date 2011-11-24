@@ -11,44 +11,16 @@
 #include "AudioSample.h"
 
 AudioSample::AudioSample(const File &sampleSource) :
-    sampleFile(),
-    data(0),
-    sampleSampleRate(0.0),
-    sampleLength(0),
-    numChannels(0),
-    sampleName(String::empty), fileType(String::empty)
+    sampleFile(sampleSource),
+    data(0), sampleSampleRate(0.0),
+    sampleLength(0), numChannels(0),
+    sampleName(sampleSource.getFileName()),
+    fileType(sampleSource.getFileExtension())
 {
-
-    sampleName = sampleSource.getFileName();
-    fileType = sampleSource.getFileExtension();
+    formatManager.registerBasicFormats();
 
     ScopedPointer<AudioFormatReader> audioReader;
-
-    if(fileType == ".wav")
-    {
-        WavAudioFormat wavFormat;
-        audioReader = wavFormat.createReaderFor(new FileInputStream(sampleSource), true);
-
-        // if the above failed, try loading with aiff filereader instead
-        if(audioReader == 0)
-        {
-            AiffAudioFormat aiffFormat;
-            audioReader = aiffFormat.createReaderFor(new FileInputStream(sampleSource), true);
-        }
-    }
-    else if (fileType == ".aiff" || fileType == ".aif" || fileType == ".aifc")
-    {
-        AiffAudioFormat aiffFormat;
-        audioReader = aiffFormat.createReaderFor(new FileInputStream(sampleSource), true);
-
-        // if the above failed, try loading with wav filereader instead
-        if(audioReader == 0)
-        {
-            WavAudioFormat wavFormat;
-            audioReader = wavFormat.createReaderFor(new FileInputStream(sampleSource), true);
-        }
-    }
-
+    audioReader = formatManager.createReaderFor(new FileInputStream(sampleSource));
 
     // make sure we have a sucessful load
     if(audioReader != 0)
@@ -68,8 +40,6 @@ AudioSample::AudioSample(const File &sampleSource) :
         // so we zero that, just in case. UPDATE: this is still an issue!
         data->applyGain(0, 1, 0.0f);
         data->applyGain(sampleLength - 1, 1, 0.0f);
-
-        sampleFile = sampleSource;
     }
     else
     {
@@ -77,6 +47,27 @@ AudioSample::AudioSample(const File &sampleSource) :
         // fail the constructor (by throwing an exception).
         throw ("Invalid file loaded: " + sampleName);
     }
+}
+
+
+AudioSample::AudioSample(const AudioSampleBuffer &bufferSampleSource,
+                         const double &sampleRate) :
+    sampleFile(),
+    data(new AudioSampleBuffer(bufferSampleSource)),
+    sampleSampleRate(sampleRate),
+    sampleLength(0),
+    numChannels(0),
+    sampleName("resample"), fileType(String::empty)
+{
+    numChannels = bufferSampleSource.getNumChannels();
+    sampleLength = bufferSampleSource.getNumSamples();
+
+
+    //float * test = data->getSampleData(0, 0);
+    //for (int i = 0; i < sampleLength; ++i)
+    //{
+    //    DBG(*(++test));
+    //}
 }
 
 bool AudioSample::operator== (const AudioSample &s1) const

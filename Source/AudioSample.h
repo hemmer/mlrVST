@@ -18,7 +18,8 @@
 class AudioSample 
 {
 public:
-    AudioSample(const File &sampleSource);
+    AudioSample(const File &fileSampleSource);
+    AudioSample(const AudioSampleBuffer &bufferSampleSource, const double &sampleRate);
 
     AudioSampleBuffer* getAudioData() const { return data; }
 
@@ -33,11 +34,10 @@ public:
     bool operator== (const AudioSample &s1) const;
 private:
     
-    // this stores the File object so
-    // we can retrieve metadata (path,
-    // comments etc)
-    File sampleFile;        // TODO: should this be const?
-
+    // this stores the File object so we can retrieve 
+    // metadata (path, comments etc)
+    const File sampleFile;
+    AudioFormatManager formatManager;
     String sampleName, fileType;
     
     // information about the current sample

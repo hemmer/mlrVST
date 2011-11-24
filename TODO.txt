@@ -2,11 +2,13 @@ mlrVST TODO
 
 HIGH PRIORTIY
 
-- changing channel while playing leads to crash
+- resampling
 - preset system
 - (advanced) options panel
 	- could include envelopes for sample playback
 - handle different sample rates
+- save AudioThumbnail data so quicker GUI reopen
+- resampling
 - exception handling (if file is deleted while playing)
 - add SplashScreen
 - Allow MIDI clips too
