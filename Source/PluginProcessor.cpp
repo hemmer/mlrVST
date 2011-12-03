@@ -88,7 +88,8 @@ int mlrVSTAudioProcessor::addNewSample(File &sampleFile)
 
     // load to load the Sample
     try{
-        samplePool.add(new AudioSample(sampleFile));
+        // TODO: add actual length here
+        samplePool.add(new AudioSample(sampleFile, 700));
         DBG("Sample Loaded: " + samplePool.getLast()->getSampleName());
 
         // if it is sucessful, it will be the last sample in the pool
@@ -299,7 +300,8 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
                 isRecording = false;
 
                 DBG("recording stopped");
-                samplePool.add(new AudioSample(recordBuffer, getSampleRate()));
+                // TODO: pass actual strip size here!
+                samplePool.add(new AudioSample(recordBuffer, getSampleRate(), 700));
             }
         }
 
@@ -354,20 +356,29 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
         if (isResampling)
         {
-            if (numSamples + resamplePosition < resampleLength)
+            if (resamplePrecountLength > 0)
             {
-                resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, numSamples);
-                resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, numSamples);
-                resamplePosition += numSamples;
+                resamplePrecountLength -= numSamples;
             }
-            else
+            // TODO: this sample count could be more accurate!
+            else 
             {
-                const int samplesToEnd = resampleLength - resamplePosition;
-                resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, samplesToEnd);
-                resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, samplesToEnd);
-                isResampling = false;
-                DBG("resampling stopped");
-                samplePool.add(new AudioSample(resampleBuffer, getSampleRate()));
+                if (numSamples + resamplePosition < resampleLength)
+                {
+                    resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, numSamples);
+                    resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, numSamples);
+                    resamplePosition += numSamples;
+                }
+                else
+                {
+                    const int samplesToEnd = resampleLength - resamplePosition;
+                    resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, samplesToEnd);
+                    resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, samplesToEnd);
+                    isResampling = false;
+                    DBG("resampling stopped");
+                    // TODO: pass actual strip size here!
+                    samplePool.add(new AudioSample(resampleBuffer, getSampleRate(), 700));
+                }
             }
         }
 
@@ -1013,6 +1024,8 @@ String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID) const
 void mlrVSTAudioProcessor::startResampling(const int &preCount, const int &numBars)
 {
     resampleLength = (int) (getSampleRate() * (60.0 * numBars / currentBPM));
+    resamplePrecountLength = (int) (getSampleRate() * (60.0 * preCount / currentBPM));
+
     resampleBuffer.setSize(2, resampleLength, false, true);
     resampleBuffer.clear();
     resamplePosition = 0;

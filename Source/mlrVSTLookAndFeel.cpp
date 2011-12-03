@@ -165,6 +165,7 @@ void mlrVSTLookAndFeel::drawLabel(Graphics& g, Label& label)
         Justification::centredLeft, 1,
         label.getMinimumHorizontalScale());
 
+
     g.setColour (label.findColour (Label::outlineColourId).withMultipliedAlpha (alpha));
     g.drawRect (0, 0, label.getWidth(), label.getHeight());
 

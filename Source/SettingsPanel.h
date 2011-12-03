@@ -13,7 +13,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
-
+#include "mlrVSTLookAndFeel.h"
 
 /* Forward declaration to set up pointer arrangement 
    to allow settings panel access to the UI */
@@ -22,7 +22,8 @@ class mlrVSTAudioProcessorEditor;
 
 class SettingsPanel : 
     public Component,
-    public ButtonListener
+    public ButtonListener,
+    public ComboBoxListener
 {
 
 public:
@@ -31,6 +32,7 @@ public:
                 mlrVSTAudioProcessorEditor * const owner);
 
     void buttonClicked(Button *btn);
+    void comboBoxChanged(ComboBox *box);
     void paint(Graphics& g);
 
 private:
@@ -41,11 +43,15 @@ private:
     Label panelLabel;
 
     ToggleButton useExternalTempoBtn;
+    Label setNumChannelsLbl;
+    ComboBox selNumChannels;
 
     const int PAD_AMOUNT;
 
     const float fontSize;
     const Rectangle<int> &panelBounds;
+
+    menuLookandFeel menuLF;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SettingsPanel);
 };

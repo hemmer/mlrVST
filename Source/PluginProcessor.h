@@ -217,6 +217,7 @@ private:
     // TODO: make this an array
     AudioSampleBuffer resampleBuffer;
     int resamplePosition, resampleLength;
+    int resamplePrecountLength;
     bool isResampling;
 
     AudioSampleBuffer recordBuffer;

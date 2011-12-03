@@ -10,13 +10,13 @@
 #include "PluginEditor.h"
 
 
+
 //==============================================================================
 mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter, const int &newNumChannels)
     : AudioProcessorEditor (ownerFilter),
       infoLabel(),
       masterGainSlider("master gain"),
-      bpmSlider("bpm slider"), bpmLabel("BPM"),
-      selNumChannels("select number of channels"),
+      bpmSlider("bpm slider"), bpmLabel("BPM", "BPM"),
       addPresetBtn("save preset", "Save Preset"),
       toggleSetlistBtn("Show Setlist"),
       toggleSettingsBtn("Settings"),
@@ -30,10 +30,12 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       fontSize(7.4f),
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
       loadFilesBtn("load files", "LOAD FILES"),
-      resampleBtn("rsmpl", "RSMPL"),
-      recordBtn("rcrd", "RCRD"),
+      resampleBtn("RESAMPLE"), resamplePrecountSldr("resample precount"),
+      resampleLengthSldr("resample length"), recordLengthLbl("length", "length"),
+      recordBtn("RECORD"), recordPrecountSldr("record precount"),
+      recordLengthSldr("record length"), precountLbl("precount", "precount"),
       slidersArray(),
-      myLookAndFeel()
+      myLookAndFeel(), menuLF()
 {
     // This tells the GUI to use a custom "theme"
     LookAndFeel::setDefaultLookAndFeel(&myLookAndFeel);
@@ -64,14 +66,16 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     
 
     addAndMakeVisible(&bpmLabel);
-    bpmLabel.setBounds(500, 50, 50, 30);
+    bpmLabel.setBounds(250, 10, 50, 30);
     bpmLabel.setFont(2*fontSize);
     bpmLabel.setColour(Label::textColourId, Colours::black);
+    //bpmLabel.setLookAndFeel(&menuLF);
 
     // add a label that will display the current timecode and status..
     addAndMakeVisible(&infoLabel);
     infoLabel.setColour(Label::textColourId, Colours::black);
-	infoLabel.setBounds(10, getHeight() - 25, 400, 25);
+	infoLabel.setBounds(10, 200, 400, 25);
+    infoLabel.setLookAndFeel(&menuLF);
 
     // useful UI debugging components
     addAndMakeVisible(&debugButton);
@@ -83,27 +87,61 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	loadFilesBtn.addListener(this);
 	loadFilesBtn.setBounds(50, 350, 70, 25);
 
+
+
     addAndMakeVisible(&resampleBtn);
 	resampleBtn.addListener(this);
 	resampleBtn.setBounds(50, 450, 70, 25);
+    
+    addAndMakeVisible(&precountLbl);
+    precountLbl.setBounds(130, 430, 50, 20);
+    precountLbl.setFont(fontSize);
+
+    addAndMakeVisible(&resamplePrecountSldr);
+    resamplePrecountSldr.setBounds(130, 450, 50, 25);
+    resamplePrecountSldr.setRange(0.0, 8.0, 1.0);
+    resamplePrecountSldr.setLookAndFeel(&menuLF);
+    resamplePrecountSldr.setSliderStyle(Slider::LinearBar);
+    resamplePrecountSldr.addListener(this);
+
+    
+    addAndMakeVisible(&recordLengthLbl);
+    recordLengthLbl.setBounds(200, 430, 50, 20);
+    recordLengthLbl.setFont(fontSize);
+
+    addAndMakeVisible(&resampleLengthSldr);
+    resampleLengthSldr.setBounds(200, 450, 50, 25);
+    resampleLengthSldr.setRange(1.0, 32.0, 1.0);
+    resampleLengthSldr.setLookAndFeel(&menuLF);
+    resampleLengthSldr.setSliderStyle(Slider::LinearBar);
+    resampleLengthSldr.addListener(this);
+
+
 
     addAndMakeVisible(&recordBtn);
 	recordBtn.addListener(this);
-	recordBtn.setBounds(130, 450, 70, 25);
+	recordBtn.setBounds(50, 480, 70, 25);
+
+    addAndMakeVisible(&recordPrecountSldr);
+    recordPrecountSldr.setBounds(130, 480, 50, 25);
+    recordPrecountSldr.setRange(0.0, 8.0, 1.0);
+    recordPrecountSldr.setLookAndFeel(&menuLF);
+    recordPrecountSldr.setSliderStyle(Slider::LinearBar);
+    recordPrecountSldr.addListener(this);
+
+    addAndMakeVisible(&recordLengthSldr);
+    recordLengthSldr.setBounds(200, 480, 50, 25);
+    recordLengthSldr.setRange(1.0, 32.0, 1.0);
+    recordLengthSldr.setLookAndFeel(&menuLF);
+    recordLengthSldr.setSliderStyle(Slider::LinearBar);
+    recordLengthSldr.addListener(this);
+
 
     buildSampleStripControls();
 
     masterGainSlider.addListener(this);
     buildSliders();
 
-    // combobox to select the number of channels
-    addAndMakeVisible(&selNumChannels);
-    for(int i = 1; i <= 8; ++i) selNumChannels.addItem(String(i), i);
-    selNumChannels.addListener(this);
-    selNumChannels.setBounds(50, 400, 100, 30);
-    // NOTE: false flag forces the number of channels to be (re)built,
-    // this is where the individual channel volume controls get added
-    selNumChannels.setSelectedId(numChannels, true);
 
 
 
@@ -235,6 +273,7 @@ void mlrVSTAudioProcessorEditor::timerCallback()
     for(int i = 0; i < sampleStripControlArray.size(); ++i)
     {
         sampleStripControlArray[i]->updatePlaybackStatus();
+        sampleStripControlArray[i]->updateParamsIfChanged();
     }
 }
 
@@ -255,17 +294,38 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
         getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM, &newBPM);
     }
 
-    // check the channel volume notifications
-    for(int i = 0; i < slidersArray.size(); ++i)
+    else if (slider == &resampleLengthSldr)
     {
-        if (slider == slidersArray[i])
-        {
-            jassert(i < 8);     // we should not have more than 8 channels
-            float newChannelGainValue = (float) slidersArray[i]->getValue();
+        resampleLength = (int) resampleLengthSldr.getValue();
+    }
+    else if (slider == &resamplePrecountSldr)
+    {
+        resamplePrecount = (int) resamplePrecountSldr.getValue();
+    }
+    else if (slider == &recordLengthSldr)
+    {
+        recordLength = (int) recordLengthSldr.getValue();
+    }
+    else if (slider == &recordPrecountSldr)
+    {
+        recordPrecount = (int) recordPrecountSldr.getValue();
+    }
 
-            // let host know about the new value
-            // channel0GainParam is the first channel id, so +i to access the rest
-            getProcessor()->setChannelGain(i, newChannelGainValue);
+
+    else
+    {
+        // check the channel volume notifications
+        for(int i = 0; i < slidersArray.size(); ++i)
+        {
+            if (slider == slidersArray[i])
+            {
+                jassert(i < 8);     // we should not have more than 8 channels
+                float newChannelGainValue = (float) slidersArray[i]->getValue();
+
+                // let host know about the new value
+                // channel0GainParam is the first channel id, so +i to access the rest
+                getProcessor()->setChannelGain(i, newChannelGainValue);
+            }
         }
     }
    
@@ -332,12 +392,12 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 
     else if(btn == &resampleBtn)
     {
-        getProcessor()->startResampling(0, 4);
+        getProcessor()->startResampling(resamplePrecount, resampleLength);
     }
 
     else if(btn == &recordBtn)
     {
-        getProcessor()->startRecording(0, 4);
+        getProcessor()->startRecording(recordPrecount, recordLength);
     }
 
     // USEFUL FOR TESTING
@@ -357,26 +417,6 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 		}
 
 	}
-}
-
-// Combo box handling
-void mlrVSTAudioProcessorEditor::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
-{
-    if (comboBoxThatHasChanged == &selNumChannels)
-    {
-        numChannels = comboBoxThatHasChanged->getSelectedId();
-        DBG("Number of channels changed to: " + String(numChannels));
-        
-        // Let the audio processor change the number of processing channels
-        getProcessor()->buildChannelArray(numChannels);
-
-        // we need to rebuild the sliders array
-	    buildSliders();
-
-        // let the SampleStrips add the right number of buttons
-        for(int i = 0; i < sampleStripControlArray.size(); ++i)
-            sampleStripControlArray[i]->setNumChannels(numChannels);
-    }
 }
 
 static const String timeToTimecodeString (const double seconds)
@@ -455,6 +495,15 @@ void mlrVSTAudioProcessorEditor::updateGlobalSetting(const int &parameterID, con
         useExternalTempo = *static_cast<const bool*>(newValue);
         bpmSlider.setEnabled(!useExternalTempo);
         break;
+
+    case mlrVSTAudioProcessor::sNumChannels :
+        {
+            numChannels = *static_cast<const int*>(newValue);
+            buildSliders();
+            // let the SampleStrips add the right number of buttons
+            for(int i = 0; i < sampleStripControlArray.size(); ++i)
+                sampleStripControlArray[i]->setNumChannels(numChannels);
+        }
     }
 }
 

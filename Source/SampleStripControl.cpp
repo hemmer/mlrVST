@@ -24,8 +24,7 @@ SampleStripControl::SampleStripControl(const int &id,
     componentHeight(height), componentWidth(width), sampleStripID(id),
     backgroundColour(Colours::black), controlbarSize(16), fontSize(7.4f),
     waveformPaintBounds(0, controlbarSize, componentWidth, (componentHeight - controlbarSize)),
-    thumbnailCache(5), thumbnail(512, formatManager, thumbnailCache),
-    thumbnailLength(0.0), thumbnailScaleFactor(1.0),
+    thumbnailScaleFactor(1.0),
     trackNumberLbl("track number", String(sampleStripID)),
     filenameLbl("filename", "No File"),
     chanLbl("channel label", "CHAN"), volLbl("volume label", "VOL"),
@@ -53,8 +52,7 @@ SampleStripControl::SampleStripControl(const int &id,
     buildUI();
     buildNumBlocksList(8);
 
-    formatManager.registerBasicFormats();
-    thumbnail.addChangeListener(this);
+    
     dataStrip->addChangeListener(this);
 
     // listen for user input
@@ -71,7 +69,6 @@ SampleStripControl::SampleStripControl(const int &id,
 
 SampleStripControl::~SampleStripControl()
 {
-    thumbnail.removeChangeListener(this);
     dataStrip->removeChangeListener(this);
     channelButtonArray.clear(true);
 }
@@ -85,25 +82,14 @@ void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
 
 void SampleStripControl::changeListenerCallback(ChangeBroadcaster * sender)
 {
-    if (sender == &thumbnail)
-    {
-        // thumbnail when it has changed, so we should repaint it..
-        repaint();
-    }
-
     /* TODO: this gets called A LOT during playback (as playback percentage
        is considered a parameter). Maybe seperate that out from the param setup?
     */
-    else if (sender == dataStrip)
+    if (sender == dataStrip)
     {
-        for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
-        {
-            const void *newValue = dataStrip->getSampleStripParam(p);
-            recallParam(p, newValue, false);
-        }
+        stripChanged = true;
 
-        // repaint once all params are checked
-        repaint();  
+ 
     }
 }
 
@@ -204,7 +190,6 @@ void SampleStripControl::updateChannelColours(const int &newChannel)
 
     playbackSpeedSldr.setColour(Slider::thumbColourId, backgroundColour);
     playbackSpeedSldr.setColour(Slider::backgroundColourId, backgroundColour.darker());
-    repaint();
 
     isLatchedBtn.setColour(ToggleButton::textColourId, backgroundColour);
     isReversedBtn.setColour(ToggleButton::textColourId, backgroundColour);
@@ -217,6 +202,8 @@ void SampleStripControl::updateChannelColours(const int &newChannel)
     div2.setColour(TextButton::buttonOnColourId, backgroundColour);
 
     speedLockBtn.setBackgroundColours(backgroundColour, backgroundColour);
+
+    repaint();
 }
 
 // This is particuarly usful if the number of channels changes
@@ -281,7 +268,7 @@ void SampleStripControl::buildUI()
     stripVolumeSldr.setColour(Slider::textBoxTextColourId, Colours::white);
     stripVolumeSldr.setBounds(newXposition, 0, 60, controlbarSize);
     stripVolumeSldr.setRange(0.0, 2.0, 0.01);
-    stripVolumeSldr.setTextBoxIsEditable(false);
+    stripVolumeSldr.setTextBoxIsEditable(true);
     stripVolumeSldr.setLookAndFeel(&menuLF);
 
     newXposition += 60;
@@ -324,7 +311,9 @@ void SampleStripControl::buildUI()
     playbackSpeedSldr.setColour(Slider::textBoxTextColourId, Colours::white);
     playbackSpeedSldr.setBounds(newXposition, 0, 80, controlbarSize);
     playbackSpeedSldr.setRange(0.0, 4.0, 0.001);
+    playbackSpeedSldr.setTextBoxIsEditable(true);
     playbackSpeedSldr.setLookAndFeel(&menuLF);
+    
 
     newXposition += 80;
 
@@ -444,7 +433,8 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
 
         mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);
 
-        repaint();
+        // repaint when we next get a timed update
+        stripChanged = true;
     }
 }
 
@@ -552,8 +542,8 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
     if (mouseDownMods != ModifierKeys::middleButtonModifier)
         mlrVSTEditor->updatePlaySpeedForNewSelection(sampleStripID);
 
-    // redraw to reflect new selection
-    repaint();
+    // repaint when we next get a timed update
+    stripChanged = true;
 }
 
 void SampleStripControl::paint(Graphics& g)
@@ -564,15 +554,13 @@ void SampleStripControl::paint(Graphics& g)
 
     // Draw the current sample waveform in white
     g.setColour(Colours::white);
-    if(currentSample && thumbnailLength > 0)
+
+    if(currentSample)
     {
-        thumbnail.drawChannels(g, waveformPaintBounds, 0, thumbnailLength, (float) thumbnailScaleFactor);
+        currentSample->drawChannels(g, waveformPaintBounds,
+                                    (float) thumbnailScaleFactor);
     }
-    else
-    {
-        g.setFont(2 * fontSize);
-        g.drawFittedText("(No audio file selected)", 0, controlbarSize, componentWidth, componentHeight - controlbarSize, Justification::centred, 2);
-    }
+
 
     // Indicate where we are in playback
     if (isPlaying)
@@ -657,7 +645,8 @@ void SampleStripControl::selectNewSample(const int &fileChoice)
     // and try to find the best playback speed (i.e. closest to 1).
     mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);
 
-    repaint();
+    // repaint when we next get a timed update
+    stripChanged = true;
 }
 
 void SampleStripControl::recallParam(const int &paramID, const void *newValue, const bool &doRepaint)
@@ -773,22 +762,9 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
                 currentSample = newSample;
                 // If the new sample exists
                 if (currentSample)
-                {
-                    const int numThumbnailChannels = currentSample->getNumChannels();
-                    const double sampleRate = currentSample->getSampleRate();
-                    const int numSamples = currentSample->getSampleLength();
-
-                    thumbnail.reset(numThumbnailChannels, sampleRate, numSamples);
-                    thumbnail.addBlock(0, *(currentSample->getAudioData()), 0, numSamples);
-
-                    //thumbnail.setSource(new FileInputSource(currentSample->getSampleFile()));
-                    thumbnailLength = thumbnail.getTotalLength();
                     filenameLbl.setText(currentSample->getSampleName(), false);
-                }
                 else
                 {
-                    thumbnail.clear();
-                    //numThumbnailChannels = -1;
                     filenameLbl.setText("No file", false);
                     playbackSpeedSldr.setValue(1.0, true);
                 }

@@ -30,7 +30,6 @@ class WaveformControl;
 class mlrVSTAudioProcessorEditor  : public AudioProcessorEditor,
                                     public SliderListener,
 									public ButtonListener,
-                                    public ComboBoxListener,
                                     public Timer, 
                                     public FileDragAndDropTarget
 {
@@ -89,8 +88,17 @@ private:
 	DrawableButton debugButton;
     TextButton loadFilesBtn, addPresetBtn, resampleBtn, recordBtn;
     ToggleButton toggleSetlistBtn, toggleSettingsBtn;
-    ComboBox selNumChannels;
 	ListBox fileList;
+
+
+    Label precountLbl, recordLengthLbl;
+
+    Slider recordLengthSldr, recordPrecountSldr;
+    int recordPrecount, recordLength;
+
+    Slider resampleLengthSldr, resamplePrecountSldr;
+    int resamplePrecount, resampleLength;
+
 
     float fontSize;
 
@@ -133,6 +141,7 @@ private:
     void displayPositionInfo (const AudioPlayHead::CurrentPositionInfo& pos);
 
     mlrVSTLookAndFeel myLookAndFeel;
+    menuLookandFeel menuLF;
 
     JUCE_LEAK_DETECTOR(mlrVSTAudioProcessorEditor);  
 };

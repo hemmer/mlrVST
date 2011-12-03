@@ -18,8 +18,11 @@
 class AudioSample 
 {
 public:
-    AudioSample(const File &fileSampleSource);
-    AudioSample(const AudioSampleBuffer &bufferSampleSource, const double &sampleRate);
+    AudioSample(const File &fileSampleSource,
+                const int &thumbnailLength);
+    AudioSample(const AudioSampleBuffer &bufferSampleSource,
+                const double &sampleRate,
+                const int &thumbnailLength);
 
     AudioSampleBuffer* getAudioData() const { return data; }
 
@@ -29,6 +32,16 @@ public:
     String getSampleName() const { return sampleName; }
     File getSampleFile() const { return sampleFile; }
     double getSampleRate() const { return sampleSampleRate; }
+
+    // painting stuff
+    void drawChannels (Graphics& g,
+                       const Rectangle<int>& area,
+                       float verticalZoomFactor) const;
+    void drawChannel (Graphics& g,
+                      const Rectangle<int>& area,
+                      const int &channel,
+                      float verticalZoomFactor) const;
+
 
     // override comparison operator == 
     bool operator== (const AudioSample &s1) const;
@@ -44,6 +57,10 @@ private:
     int sampleLength, numChannels;
     double sampleSampleRate;
     ScopedPointer <AudioSampleBuffer> data;
+
+    // Thumbnail stuff
+    OwnedArray< Array<float> > thumbnailData;
+    void generateThumbnail(const int &thumbnailLength);
 
     // DEBUG:
     JUCE_LEAK_DETECTOR(AudioSample);

@@ -75,12 +75,26 @@ public:
             repaint();
         }
 
-        
         isPlaying = *static_cast<const bool*>(dataStrip->getSampleStripParam(SampleStrip::pIsPlaying));
-
     }
 
-    // These recall settings when the 
+    void updateParamsIfChanged()
+    {        
+        if (stripChanged)
+        {
+            for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
+            {
+                const void *newValue = dataStrip->getSampleStripParam(p);
+                recallParam(p, newValue, false);
+            }
+
+            // repaint once all params are checked
+            repaint(); 
+            stripChanged = false;
+        }
+    }
+
+    // These recall settings and update the GUI appropriately
     void recallParam(const int &paramID, const void *newValue, const bool &doRepaint);
 
 
@@ -95,6 +109,7 @@ private:
     const int sampleStripID;
     // Pointer to data structure for samplestrip
     SampleStrip * const dataStrip;
+    bool stripChanged;
 
     // GUI components
     Label trackNumberLbl, filenameLbl, chanLbl, volLbl, modeLbl, playSpeedLbl;
@@ -144,11 +159,7 @@ private:
     ModifierKeys mouseDownMods;
 
     // stuff for drawing waveforms
-    // TODO: should this be associated with the AudioSample?
-    AudioFormatManager formatManager;
-    AudioThumbnailCache thumbnailCache;
-    AudioThumbnail thumbnail;
-    double thumbnailLength, thumbnailScaleFactor;
+    double thumbnailScaleFactor;
     const AudioSample *currentSample;
 
     // main strip background colour
