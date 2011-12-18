@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="0nRd9LLGO" name="mlrVST" projectType="audioplug" version="1.0.0"
-              juceLinkage="amalg_multi" buildVST="1" buildRTAS="0" buildAU="1"
+              juceLinkage="amalg_multi" buildVST="1" buildRTAS="0" buildAU="0"
               pluginName="mlrVST" pluginDesc="VST port of monome app mlr" pluginManufacturer="Ewan Hemingway"
               pluginManufacturerCode="HemR" pluginCode="vstX" pluginChannelConfigs="{1, 1}, {2, 2}"
               pluginIsSynth="0" pluginWantsMidiIn="1" pluginProducesMidiOut="1"
@@ -10,20 +10,20 @@
               pluginRTASCategory="" bundleIdentifier="uk.co.ewanhemingway.mlrvst"
               jucerVersion="3.0.0">
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" vstFolder="~/SDKs/vstsdk2.4" rtasFolder="~/SDKs/PT_80_SDK"
-               juceFolder="../../.." objCExtraSuffix="JuceDemo"/>
+    <XCODE_MAC targetFolder="Builds/MacOSX" vstFolder="../vstsdk2.4" rtasFolder="~/SDKs/PT_80_SDK"
+               juceFolder="../JUCE" objCExtraSuffix="mlrVST"/>
     <LINUX_MAKE targetFolder="Builds/Linux" vstFolder="~/SDKs/vstsdk2.4" juceFolder="../../.."
                 extraCompilerFlags="-DOSC_HOST_LITTLE_ENDIAN"/>
     <VS2010 targetFolder="Builds/VisualStudio2010" libraryType="1" juceFolder="c:\SDKs\juce"
-            vstFolder="c:\SDKs\vstsdk2.4"/>
+            vstFolder="c:\SDKs\vstsdk2.4" extraDefs=""/>
   </EXPORTFORMATS>
   <CONFIGURATIONS>
     <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="mlrVST"
                    osxSDK="default" osxCompatibility="default" osxArchitecture="default"
-                   headerPath="..\..\oscpack"/>
+                   headerPath="../../oscpack/"/>
     <CONFIGURATION name="Release" isDebug="0" optimisation="2" targetName="mlrVST"
                    osxSDK="default" osxCompatibility="default" osxArchitecture="default"
-                   headerPath="..\..\oscpack"/>
+                   headerPath="../../oscpack/"/>
   </CONFIGURATIONS>
   <MAINGROUP id="dYAMo6Ykd" name="mlrVST">
     <GROUP id="HJba6d" name="audio">
@@ -83,6 +83,11 @@
           <FILE id="aAehsf" name="NetworkingUtils.cpp" compile="1" resource="0"
                 file="oscpack/ip/win32/NetworkingUtils.cpp"/>
           <FILE id="WijCnK" name="UdpSocket.cpp" compile="1" resource="0" file="oscpack/ip/win32/UdpSocket.cpp"/>
+        </GROUP>
+        <GROUP id="X60omD" name="posix">
+          <FILE id="Mq4kMH" name="NetworkingUtils.cpp" compile="0" resource="0"
+                file="oscpack/ip/posix/NetworkingUtils.cpp"/>
+          <FILE id="tv5VA2" name="UdpSocket.cpp" compile="0" resource="0" file="oscpack/ip/posix/UdpSocket.cpp"/>
         </GROUP>
       </GROUP>
       <FILE id="KLn1T" name="LICENSE" compile="0" resource="0" file="oscpack/LICENSE"/>

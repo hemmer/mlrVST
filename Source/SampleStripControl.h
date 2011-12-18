@@ -56,7 +56,7 @@ public:
     /* Picks a new sample from the sample pool,
        selects it all and finds the new playSpeed.
     */
-    void selectNewSample(const int &fileChoice);
+    void selectNewSample(const int &fileChoice, const int &poolID);
 
     // Update the strips if the number of channels changes
     void buildUI();

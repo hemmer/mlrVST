@@ -16,7 +16,8 @@ AudioSample::AudioSample(const File &sampleSource,
     data(0), sampleSampleRate(0.0),
     sampleLength(0), numChannels(0),
     sampleName(sampleSource.getFileName()),
-    fileType(sampleSource.getFileExtension())
+    fileType(sampleSource.getFileExtension()),
+    thumbnailFinished(false)
 {
     formatManager.registerBasicFormats();
 
@@ -61,7 +62,8 @@ AudioSample::AudioSample(const AudioSampleBuffer &bufferSampleSource,
     data(new AudioSampleBuffer(bufferSampleSource)),
     sampleSampleRate(sampleRate),
     sampleLength(0), numChannels(0),
-    sampleName("resample"), fileType(String::empty)
+    sampleName("resample"), fileType(String::empty),
+    thumbnailFinished(false)
 {
     numChannels = bufferSampleSource.getNumChannels();
     sampleLength = bufferSampleSource.getNumSamples();
@@ -72,16 +74,47 @@ AudioSample::AudioSample(const AudioSampleBuffer &bufferSampleSource,
     generateThumbnail(thumbnailLength);
 }
 
+// empty AudioSample used for resampling etc
+AudioSample::AudioSample(const double &sampleRate,
+                         const int &initialSamplelength, 
+                         const int &thumbnailLength,
+                         const String &name) :
+    sampleFile(),
+    data(new AudioSampleBuffer(2, initialSamplelength)),
+    sampleSampleRate(sampleRate),
+    sampleLength(initialSamplelength), numChannels(2),
+    sampleName(name), fileType(String::empty),
+    thumbnailFinished(false)
+{
+    // this shouldn't happen
+    jassert(sampleLength > 0);
+    data->clear();
+
+    generateThumbnail(thumbnailLength);
+}
+
+
+
 
 void AudioSample::generateThumbnail(const int &thumbnailLength)
 {
-    float * samplePointer = data->getSampleData(0, 0);
+    // these may have changed so check!
+    numChannels = data->getNumChannels();
+    sampleLength = data->getNumSamples();
+    // make sure we start from scratch
+    thumbnailData.clear(true);
+
+    // we don't want to be painting during this period
+    thumbnailFinished = false;
+
     float maxVal = 0.0f, minVal = 0.0f;
     int samplesPerPixel = sampleLength / thumbnailLength;
     Array<float> tempArray;
 
     for (int c = 0; c < numChannels; ++c)
     {
+        float * samplePointer = data->getSampleData(c);
+
         tempArray.clear();
 
         for (int i = 0; i < sampleLength; ++i)
@@ -97,7 +130,7 @@ void AudioSample::generateThumbnail(const int &thumbnailLength)
                 tempArray.add(maxVal);
                 tempArray.add(minVal);
 
-                DBG(maxVal << " " << minVal);
+                //DBG(maxVal << " " << minVal);
                 minVal = maxVal = 0.0f;
             }
 
@@ -108,19 +141,24 @@ void AudioSample::generateThumbnail(const int &thumbnailLength)
         thumbnailData.add(new Array<float>(tempArray));
     }
 
+    thumbnailFinished = true;
+
     DBG("Thumbnail generated for sample: " << sampleName);
 }
 
 void AudioSample::drawChannels(Graphics& g, const Rectangle<int>& area,
                                float verticalZoomFactor) const
 {
-    for (int i = 0; i < numChannels; ++i)
+    if (thumbnailFinished)
     {
-        const int y1 = roundToInt ((i * area.getHeight()) / numChannels);
-        const int y2 = roundToInt (((i + 1) * area.getHeight()) / numChannels);
+        for (int i = 0; i < numChannels; ++i)
+        {
+            const int y1 = roundToInt ((i * area.getHeight()) / numChannels);
+            const int y2 = roundToInt (((i + 1) * area.getHeight()) / numChannels);
 
-        drawChannel (g, Rectangle<int> (area.getX(), area.getY() + y1, area.getWidth(), y2 - y1),
-                     i, verticalZoomFactor);
+            drawChannel (g, Rectangle<int> (area.getX(), area.getY() + y1, area.getWidth(), y2 - y1),
+                i, verticalZoomFactor);
+        }
     }
 }
 
@@ -133,21 +171,24 @@ void AudioSample::drawChannel(Graphics& g, const Rectangle<int>& area,
     const float midY = (topY + bottomY) * 0.5f;
     const float vscale = verticalZoomFactor * (bottomY - topY) * 0.7f;
 
-    float *waveform = thumbnailData[channel]->getRawDataPointer();
-
-    // check we have a valid pointer!
-    if (waveform)
+    if (thumbnailData[channel])
     {
-        float waveTop, waveBottom;
+        float *waveform = thumbnailData[channel]->getRawDataPointer();
 
-        for (int i = 0; i < thumbnailData[channel]->size() / 2; ++i)
+        // check we have a valid pointer!
+        if (waveform)
         {
-            // max and min fill alternating entries in the thumbnailData structure
-            // additional factors of 0.5 are so zero samples are drawn as flat line
-            waveTop = midY - *(waveform++) * vscale - 0.5f;
-            waveBottom = midY - *(waveform++) * vscale + 0.5f;
+            float waveTop, waveBottom;
 
-            g.drawVerticalLine (i, jmax(waveTop, topY), jmin(waveBottom, bottomY));
+            for (int i = 0; i < thumbnailData[channel]->size() / 2; ++i)
+            {
+                // max and min fill alternating entries in the thumbnailData structure
+                // additional factors of 0.5 are so zero samples are drawn as flat line
+                waveTop = midY - *(waveform++) * vscale - 0.5f;
+                waveBottom = midY - *(waveform++) * vscale + 0.5f;
+
+                g.drawVerticalLine (i, jmax(waveTop, topY), jmin(waveBottom, bottomY));
+            }
         }
     }
 }

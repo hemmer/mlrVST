@@ -423,6 +423,17 @@ void mlrVSTLookAndFeel::drawLinearSlider (Graphics& g,
         g.setColour (slider.findColour (Slider::textBoxTextColourId).withMultipliedAlpha (0.5f));
         g.drawRect (x, y, (int) sliderPos - x, h);
     }
+
+    else if (style == Slider::LinearVertical)
+    {
+        h += 2*y;       // TODO: this seems ridiculous, but I couldn't see how I was supposed to do it otherwise!!
+        g.setColour (slider.findColour (Slider::thumbColourId));
+        g.fillRect (x, h - (int)(slider.getValue() * h), w, (int)(slider.getValue() * h));
+
+        g.setColour (slider.findColour (Slider::thumbColourId).brighter());
+        g.drawRect (x, h - (int)(slider.getValue() * h), w, (int)(slider.getValue() * h));
+    }
+
     else
     {
         g.setColour (slider.findColour (Slider::trackColourId)

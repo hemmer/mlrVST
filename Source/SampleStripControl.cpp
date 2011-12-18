@@ -316,28 +316,23 @@ void SampleStripControl::buildUI()
     
 
     newXposition += 80;
-
     addAndMakeVisible(&speedLockBtn);
     speedLockBtn.setImages(&unlockImg);
     speedLockBtn.setBounds(newXposition, 0, 16, 16);
 
     newXposition += 16;
-
     addAndMakeVisible(&isReversedBtn);
     isReversedBtn.setBounds(newXposition, 0, 35, controlbarSize);
 
     newXposition += 35;
-
-    addAndMakeVisible(&times2);
-    times2.setBounds(newXposition, 0, 20, controlbarSize);
-
-    newXposition += 20;
-
     addAndMakeVisible(&div2);
     div2.setBounds(newXposition, 0, 20, controlbarSize);
 
     newXposition += 20;
+    addAndMakeVisible(&times2);
+    times2.setBounds(newXposition, 0, 20, controlbarSize);
 
+    newXposition += 20;
     addAndMakeVisible(&selNumChunks);
     selNumChunks.setBounds(newXposition, 0, 32, controlbarSize);
     selNumChunks.setLookAndFeel(&menuLF);
@@ -351,47 +346,95 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
     if (e.mods == ModifierKeys::rightButtonModifier && e.y > controlbarSize)
     {
 
-        int currentSamplePoolSize = mlrVSTEditor->getSamplePoolSize();
+        int currentSamplePoolSize = mlrVSTEditor->getSamplePoolSize(mlrVSTAudioProcessor::pSamplePool);
+        int currentResamplePoolSize = mlrVSTEditor->getSamplePoolSize(mlrVSTAudioProcessor::pResamplePool);
+        int currentRecordPoolSize = mlrVSTEditor->getSamplePoolSize(mlrVSTAudioProcessor::pRecordPool);
 
-        // only show the menu if we have samples in the pool
-        if (currentSamplePoolSize != 0)
+        // TODO: can this be cached and only repopulated when the sample pool changes?
+        // TODO: middle click to delete sample under cursor in menu?
+        PopupMenu p = PopupMenu();
+        PopupMenu resamplePoolMenu = PopupMenu();
+        PopupMenu recordPoolMenu = PopupMenu();
+
+        int menuCounter = 1;        // tracks how many items in the menu
+        p.addItem(menuCounter, "None");
+        
+
+        for (int m = 0; m < currentResamplePoolSize; ++m)
         {
-            // TODO: can this be cached and only repopulated when the sample pool changes?
-            // TODO: middle click to delete sample under cursor in menu?
-            PopupMenu p = PopupMenu();
-            
-            p.addItem(1, "None");
-            // for each sample, add it to the list
-            for (int i = 0; i < currentSamplePoolSize; ++i)
-            {
-                // +1 because 0 is result for no item clicked
-                // +1 because "none" is also an option
-                String iFileName = mlrVSTEditor->getSampleName(i);
-                p.addItem(i + 2, iFileName);
-            }
-
-            // show the menu and store choice
-            int fileChoice = p.showMenu(PopupMenu::Options().withTargetComponent(&chanLbl));
-
-            // If "none is selected"
-            if (fileChoice == 1)
-            {
-                dataStrip->stopSamplePlaying();
-
-                const AudioSample *newSample = 0;
-                dataStrip->setSampleStripParam(SampleStrip::pAudioSample, newSample);
-
-            }
-            // If a menu option has been chosen that is a file
-            else if (fileChoice != 0)
-            {
-                // -1 to correct for +1 in for loop above
-                // -1 to correct for "none" option
-                fileChoice -= 2;
-
-                selectNewSample(fileChoice);
-            }
+            ++menuCounter;
+            resamplePoolMenu.addItem(menuCounter, "resample " + String(m));
         }
+        
+        for (int m = 0; m < currentRecordPoolSize; ++m)
+        {
+            ++menuCounter;
+            recordPoolMenu.addItem(menuCounter, "record " + String(m));
+        }
+
+        
+        p.addSubMenu("resample", resamplePoolMenu);
+        p.addSubMenu("record", recordPoolMenu);
+
+
+        // for each sample, add it to the list
+        for (int i = 0; i < currentSamplePoolSize; ++i)
+        {
+            // +1 because 0 is result for no item clicked
+            // +1 because "none" is also an option
+            String iFileName = mlrVSTEditor->getSampleName(i, mlrVSTAudioProcessor::pSamplePool);
+
+            ++menuCounter;
+            p.addItem(menuCounter, iFileName);
+        }
+
+        // show the menu and store choice
+        int fileChoice = p.showMenu(PopupMenu::Options().withTargetComponent(&chanLbl));
+
+
+        // If "none is selected"
+        if (fileChoice == 1)
+        {
+            dataStrip->stopSamplePlaying();
+
+            const AudioSample *newSample = 0;
+            dataStrip->setSampleStripParam(SampleStrip::pAudioSample, newSample);
+
+        }
+        // If a menu option has been chosen that is a file
+        else if (fileChoice != 0)
+        {
+            // -1 as everyitem is offset by 1
+            // -1 to correct for "none" option
+            fileChoice -= 2;
+
+            // something is selected from the resample menu
+            if (fileChoice < currentResamplePoolSize && fileChoice >= 0)
+            {
+                DBG("resample option: "<< fileChoice);
+                selectNewSample(fileChoice, mlrVSTAudioProcessor::pResamplePool);
+                return;
+            }
+            else fileChoice -= currentResamplePoolSize;
+
+            // something is selected from the record menu
+            if (fileChoice < currentRecordPoolSize && fileChoice >= 0)
+            {
+                DBG("record option: "<< fileChoice);
+                selectNewSample(fileChoice, mlrVSTAudioProcessor::pRecordPool);
+                return;
+            }
+            else fileChoice -= currentRecordPoolSize;
+
+            // an audio sample has been selected
+            if(fileChoice < currentSamplePoolSize && fileChoice >= 0)
+            {
+                DBG("sample option: " << fileChoice);
+                selectNewSample(fileChoice, mlrVSTAudioProcessor::pSamplePool);
+            }
+            
+        }
+
 
     }
 
@@ -553,7 +596,7 @@ void SampleStripControl::paint(Graphics& g)
     g.fillRect(waveformPaintBounds);
 
     // Draw the current sample waveform in white
-    g.setColour(Colours::white);
+    g.setColour(Colours::white.withAlpha(0.75f));
 
     if(currentSample)
     {
@@ -621,14 +664,14 @@ void SampleStripControl::filesDropped(const StringArray& files, int /*x*/, int /
     // If we have a legitimate file
     if (fileIndex >= 0)
     {
-        selectNewSample(fileIndex);
+        selectNewSample(fileIndex, mlrVSTAudioProcessor::pSamplePool);
     }
 }
 
-void SampleStripControl::selectNewSample(const int &fileChoice)
+void SampleStripControl::selectNewSample(const int &fileChoice, const int &poolID)
 {
     // and let the audio processor update the sample strip
-    const AudioSample * newSample = mlrVSTEditor->getAudioSample(fileChoice);
+    const AudioSample * newSample = mlrVSTEditor->getAudioSample(fileChoice, poolID);
     dataStrip->setSampleStripParam(SampleStrip::pAudioSample, newSample);
 
     // select whole sample by default

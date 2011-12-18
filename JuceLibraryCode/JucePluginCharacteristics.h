@@ -12,7 +12,7 @@
 #define __PLUGINCHARACTERISTICS_0NRD9LLGO__
 
 #define JucePlugin_Build_VST    1  // (If you change this value, you'll also need to re-export the projects using the Jucer)
-#define JucePlugin_Build_AU     1  // (If you change this value, you'll also need to re-export the projects using the Jucer)
+#define JucePlugin_Build_AU     0  // (If you change this value, you'll also need to re-export the projects using the Jucer)
 #define JucePlugin_Build_RTAS   0  // (If you change this value, you'll also need to re-export the projects using the Jucer)
 
 #define JucePlugin_Name                 "mlrVST"

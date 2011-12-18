@@ -32,16 +32,19 @@ private:
     osc::OutboundPacketStream p;
     UdpTransmitSocket transmitSocket;
 
+    String OSCPrefix, buttonPressMask, ledStr, ledRowStr, ledClearStr;
+
 public:
 
     // Constructor
-    OSCHandler(mlrVSTAudioProcessor * const owner) :
-        Thread("OscListener Thread"),
+    OSCHandler(const String &prefix, mlrVSTAudioProcessor * const owner) :
+        Thread("OscListener Thread"), OSCPrefix(prefix),
         incomingPort(8000), parent(owner),
         s(IpEndpointName("localhost", incomingPort), this),
         transmitSocket(IpEndpointName("localhost", 8080)), p(buffer, 1536)
     {
-        
+        // setup the mask
+        setPrefix(prefix);
     }
 
 
@@ -66,6 +69,17 @@ public:
     void setLED(const int &row, const int &col, const int &val);
     void setRow(const int &row, const int &val);
     void clearGrid();
+    void setPrefix(const String &prefix)
+    {
+        OSCPrefix = "/" + prefix + "/";
+        ledStr = OSCPrefix + "led";
+        ledRowStr = OSCPrefix + "led_row";
+        ledClearStr = OSCPrefix + "clear";
+        buttonPressMask = OSCPrefix + "press";
+
+        DBG("prefix now: " << OSCPrefix);
+
+    }
 
 protected:
 

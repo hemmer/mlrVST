@@ -87,21 +87,54 @@ public:
         sUseExternalTempo,
         sNumChannels,
         sCurrentBPM,
+        sOSCPrefix,
+        sMonitorInputs,
+        sResamplePrecount,
+        sResampleLength,
+        sResampleBank,
+        sRecordPrecount,
+        sRecordLength,
+        sRecordBank
     };
 
-
+    enum SamplePool
+    {
+        pSamplePool,
+        pResamplePool,
+        pRecordPool
+    };
 
 
     // adds a sample to the sample pool
     int addNewSample(File &sampleFile);
-    AudioSample * getAudioSample(const int &samplePoolIndex);
-    int getSamplePoolSize() { return samplePool.size(); }
+    AudioSample * getAudioSample(const int &samplePoolIndex, const int &poolID);
+    int getSamplePoolSize(const int &index)
+    {
+        switch (index)
+        {
+        case pSamplePool : return samplePool.size();
+        case pResamplePool : return 8;      // TODO: make this a variable
+        case pRecordPool : return 8;
+        default : jassertfalse; return -1;
+        }
+
+    }
+    
 
     // TODO: bounds checking?
-    String getSampleName(const int &index)
+    String getSampleName(const int &index, const int &poolID)
     {
-        jassert(index < samplePool.size());
-        return samplePool[index]->getSampleName();
+        switch (poolID)
+        {
+        case pSamplePool: 
+            jassert(index < samplePool.size());
+            return samplePool[index]->getSampleName();
+        case pResamplePool :
+            jassert(index < resamplePool.size());
+            return resamplePool[index]->getSampleName();
+        default : 
+            jassertfalse; return "error: pool not found";
+        }
     }
 
     // Returns a pointer to the sample in the sample pool at the specified index
@@ -177,10 +210,8 @@ public:
     }
 
     // Recording / resampling stuff
-    void startRecording(const int &preCount,
-                        const int &numBars);
-    void startResampling(const int &preCount,
-                        const int &numBars);
+    void startRecording();
+    void startResampling();
 private:
 
     /* OSC messages from the monome are converted to MIDI messages
@@ -190,7 +221,9 @@ private:
     MidiKeyboardState monomeState;
 
     // Store collection of AudioSamples in memory
-    OwnedArray<AudioSample> samplePool;
+    OwnedArray<AudioSample> samplePool;         // for sample files (.wavs etc)
+    OwnedArray<AudioSample> resamplePool;       // for recorded internal sounds
+    OwnedArray<AudioSample> recordPool;         // for external recordings
 
 
     // Max number of channels
@@ -209,22 +242,29 @@ private:
     int numSampleStrips;
 
     // Send and receive OSC messages through this
+    String OSCPrefix;
     OSCHandler oscMsgHandler;
+    
 
 
     AudioSampleBuffer stripContrib;
 
     // TODO: make this an array
     AudioSampleBuffer resampleBuffer;
-    int resamplePosition, resampleLength;
-    int resamplePrecountLength;
+    int resampleLength, resamplePrecountLength;     // length in bars
+    int resampleLengthInSamples;                    // length in samples
+    int resamplePosition, resamplePrecountPosition; // track resampling progress
+    int resampleBank;                               // which slot to use
     bool isResampling;
 
     AudioSampleBuffer recordBuffer;
-    int recordPosition, recordLength;
+    int recordPosition, recordPrecountPosition;
+    int recordLengthInSamples;
+    int recordLength, recordPrecountLength;
+    int recordBank;
     bool isRecording;
 
-    static const bool  monitorInputs = true;
+    bool monitorInputs;
 
     /////////////////////
     // PRESET HANDLING //

@@ -10,7 +10,7 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
     panelLabel("preset panel label", "Setlist Manager"),
     fontSize(7.4f), panelBounds(bounds),
     selectedPreset(0),
-    setListLength(0), ROW_HEIGHT(20), ROW_WIDTH(250), PAD_AMOUNT(10),
+    setListLength(0), ROW_HEIGHT(20), ROW_WIDTH(250),
     setListSlotArray(), deleteBtnArray(), selectBtnArray(),
     addNewRowBtn("Add new")
 {
@@ -29,7 +29,7 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
 
 void PresetPanel::paint(Graphics &g)
 {
-    g.fillAll(Colours::black.withAlpha(0.4f));
+    g.fillAll(Colours::grey.withAlpha(0.9f));
 }
 
 void PresetPanel::buttonClicked(Button *btn)
@@ -79,7 +79,7 @@ void PresetPanel::buttonClicked(Button *btn)
             {
                 String presetChoiceName = "#" + String(b) + ": None";
                 setListSlotArray[b]->setButtonText(presetChoiceName);
-                currentSetlist.replaceChildElement(presetToChange, new XmlElement("PRESET_NONE"));
+                currentSetlist.replaceChildElement(presetToChange, new XmlElement("PRESETNONE"));
             }
             // otherwise insert the choosen preset
             else if (presetChoice > 1)
@@ -104,7 +104,7 @@ void PresetPanel::addRow()
     XmlElement currentSetlist = mlrVSTEditor->getSetlist();
     
     // add a new blank preset
-    currentSetlist.createNewChildElement("PRESET_NONE");
+    currentSetlist.createNewChildElement("PRESETNONE");
     // let the processor know about the change
     mlrVSTEditor->setSetlist(currentSetlist);
 

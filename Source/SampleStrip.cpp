@@ -102,13 +102,7 @@ void SampleStrip::setSampleStripParam(const int &parameterID,
         // update associated params if there is a sample
         if (currentSample)
         {
-            totalSampleLength = currentSample->getSampleLength();
-            selectionStart = (int)(fractionalSampleStart * totalSampleLength);
-            selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
-            selectionLength = (selectionEnd - selectionStart);
-            chunkSize = (int) (selectionLength / (float) numChunks);
-            sampleSampleRate = currentSample->getSampleRate();
-            updatePlayParams();
+            updateForNewSample();
         }
         else
         {
@@ -296,14 +290,14 @@ void SampleStrip::findInitialPlaySpeed(const double &newBPM, const float &hostSa
         double newPlaySpeed = playSpeed;
         if (playSpeed > 1.0)
         {
-            while ( abs(newPlaySpeed / 2 - 1.0) < abs(newPlaySpeed - 1.0) )
+            while ( fabs(newPlaySpeed / 2.0 - 1.0) < fabs(newPlaySpeed - 1.0) )
             {
-                newPlaySpeed /= 2.0;
+                newPlaySpeed *= 0.5;
             }
         }
         else
         {
-            while ( abs(newPlaySpeed * 2 - 1.0) < abs(newPlaySpeed - 1.0) )
+            while ( fabs(newPlaySpeed * 2.0 - 1.0) < fabs(newPlaySpeed - 1.0) )
             {
                 newPlaySpeed *= 2.0;
             }
@@ -433,6 +427,7 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
     if (currentSample != 0 && isPlaying)
     {
         updatePlayParams();
+        //DBG("playing " << totalSampleLength << " " << currentSample->getAudioData()->getNumSamples());
 
         const float* const inL = currentSample->getAudioData()->getSampleData(0, 0);
         const float* const inR = currentSample->getNumChannels() > 1
@@ -572,6 +567,16 @@ double SampleStrip::stopSamplePlaying()
 void SampleStrip::updatePlayParams()
 {
 
+    // if the resample / record buffers change length
+    if (currentSample)
+    {
+        if (currentSample->getSampleLength() != totalSampleLength)
+        {
+            updateForNewSample();
+            return;     // updatePlayParams is called in updateForNewSample anyway
+        }
+    }
+
     if (!isReversed)
     {
         playbackStartPosition = selectionStart + loopStartChunk * chunkSize;
@@ -595,6 +600,17 @@ void SampleStrip::updatePlayParams()
 
     }
 
+}
+
+void SampleStrip::updateForNewSample()
+{
+    totalSampleLength = currentSample->getSampleLength();
+    selectionStart = (int)(fractionalSampleStart * totalSampleLength);
+    selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
+    selectionLength = (selectionEnd - selectionStart);
+    chunkSize = (int) (selectionLength / (float) numChunks);
+    sampleSampleRate = currentSample->getSampleRate();
+    updatePlayParams();
 }
 
 void SampleStrip::updateCurrentPlaybackPercentage()

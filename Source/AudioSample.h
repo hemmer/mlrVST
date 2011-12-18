@@ -23,6 +23,10 @@ public:
     AudioSample(const AudioSampleBuffer &bufferSampleSource,
                 const double &sampleRate,
                 const int &thumbnailLength);
+    AudioSample(const double &sampleRate,
+                const int &length,
+                const int &thumbnailLength,
+                const String &name);
 
     AudioSampleBuffer* getAudioData() const { return data; }
 
@@ -42,6 +46,8 @@ public:
                       const int &channel,
                       float verticalZoomFactor) const;
 
+    // allows the thumbnail to be refreshed externally
+    void generateThumbnail(const int &thumbnailLength);
 
     // override comparison operator == 
     bool operator== (const AudioSample &s1) const;
@@ -57,10 +63,12 @@ private:
     int sampleLength, numChannels;
     double sampleSampleRate;
     ScopedPointer <AudioSampleBuffer> data;
+    //AudioSampleBuffer *data;
 
     // Thumbnail stuff
     OwnedArray< Array<float> > thumbnailData;
-    void generateThumbnail(const int &thumbnailLength);
+    
+    bool thumbnailFinished;
 
     // DEBUG:
     JUCE_LEAK_DETECTOR(AudioSample);

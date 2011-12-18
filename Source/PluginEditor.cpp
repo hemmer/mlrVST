@@ -12,8 +12,11 @@
 
 
 //==============================================================================
-mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter, const int &newNumChannels)
+mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter,
+                                                        const int &newNumChannels, 
+                                                        const int &newNumStrips)
     : AudioProcessorEditor (ownerFilter),
+      myLookAndFeel(), menuLF(),
       infoLabel(),
       masterGainSlider("master gain"),
       bpmSlider("bpm slider"), bpmLabel("BPM", "BPM"),
@@ -24,29 +27,32 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       settingsPanelBounds(314, PAD_AMOUNT, 350, 725),
       presetPanel(presetPanelBounds, this),
       settingsPanel(settingsPanelBounds, this),
-	  sampleStripControlArray(),
-      waveformControlHeight(95), waveformControlWidth(700),
+      sampleStripControlArray(), numStrips(newNumStrips),
+      waveformControlHeight( (GUI_HEIGHT - numStrips * PAD_AMOUNT) / numStrips),
+      waveformControlWidth(700),
 	  numChannels(newNumChannels), useExternalTempo(true),
       fontSize(7.4f),
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
       loadFilesBtn("load files", "LOAD FILES"),
-      resampleBtn("RESAMPLE"), resamplePrecountSldr("resample precount"),
-      resampleLengthSldr("resample length"), recordLengthLbl("length", "length"),
-      recordBtn("RECORD"), recordPrecountSldr("record precount"),
-      recordLengthSldr("record length"), precountLbl("precount", "precount"),
-      slidersArray(),
-      myLookAndFeel(), menuLF()
+
+      precountLbl("precount", "precount"), recordLengthLbl("length", "length"), bankLbl("bank", "bank"),
+      resampleBtn("RESAMPLE"), resamplePrecountSldr(), resampleBankSldr(), resampleLengthSldr(),
+      recordBtn("RECORD"), recordPrecountSldr(), recordLengthSldr(), recordBankSldr(),
+      
+      slidersArray()
+
 {
-    // This tells the GUI to use a custom "theme"
-    LookAndFeel::setDefaultLookAndFeel(&myLookAndFeel);
+
 
     DBG("GUI loaded");
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
+    setWantsKeyboardFocus(true);
+
     useExternalTempo = *static_cast<const bool*>(getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
 
     addAndMakeVisible(&bpmSlider);
-    bpmSlider.setBounds(PAD_AMOUNT, PAD_AMOUNT, 200, 30);
+    bpmSlider.setBounds(PAD_AMOUNT, 400, 200, 30);
     bpmSlider.setColour(Slider::backgroundColourId, Colours::black.withAlpha(0.3f));
     bpmSlider.setSliderStyle(Slider::LinearBar);
     bpmSlider.setRange(20.0, 300.0, 0.01);
@@ -63,10 +69,8 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
         bpmSlider.setValue(newBPM);
     }
 
-    
-
     addAndMakeVisible(&bpmLabel);
-    bpmLabel.setBounds(250, 10, 50, 30);
+    bpmLabel.setBounds(250, 400, 50, 30);
     bpmLabel.setFont(2*fontSize);
     bpmLabel.setColour(Label::textColourId, Colours::black);
     //bpmLabel.setLookAndFeel(&menuLF);
@@ -88,54 +92,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	loadFilesBtn.setBounds(50, 350, 70, 25);
 
 
-
-    addAndMakeVisible(&resampleBtn);
-	resampleBtn.addListener(this);
-	resampleBtn.setBounds(50, 450, 70, 25);
-    
-    addAndMakeVisible(&precountLbl);
-    precountLbl.setBounds(130, 430, 50, 20);
-    precountLbl.setFont(fontSize);
-
-    addAndMakeVisible(&resamplePrecountSldr);
-    resamplePrecountSldr.setBounds(130, 450, 50, 25);
-    resamplePrecountSldr.setRange(0.0, 8.0, 1.0);
-    resamplePrecountSldr.setLookAndFeel(&menuLF);
-    resamplePrecountSldr.setSliderStyle(Slider::LinearBar);
-    resamplePrecountSldr.addListener(this);
-
-    
-    addAndMakeVisible(&recordLengthLbl);
-    recordLengthLbl.setBounds(200, 430, 50, 20);
-    recordLengthLbl.setFont(fontSize);
-
-    addAndMakeVisible(&resampleLengthSldr);
-    resampleLengthSldr.setBounds(200, 450, 50, 25);
-    resampleLengthSldr.setRange(1.0, 32.0, 1.0);
-    resampleLengthSldr.setLookAndFeel(&menuLF);
-    resampleLengthSldr.setSliderStyle(Slider::LinearBar);
-    resampleLengthSldr.addListener(this);
-
-
-
-    addAndMakeVisible(&recordBtn);
-	recordBtn.addListener(this);
-	recordBtn.setBounds(50, 480, 70, 25);
-
-    addAndMakeVisible(&recordPrecountSldr);
-    recordPrecountSldr.setBounds(130, 480, 50, 25);
-    recordPrecountSldr.setRange(0.0, 8.0, 1.0);
-    recordPrecountSldr.setLookAndFeel(&menuLF);
-    recordPrecountSldr.setSliderStyle(Slider::LinearBar);
-    recordPrecountSldr.addListener(this);
-
-    addAndMakeVisible(&recordLengthSldr);
-    recordLengthSldr.setBounds(200, 480, 50, 25);
-    recordLengthSldr.setRange(1.0, 32.0, 1.0);
-    recordLengthSldr.setLookAndFeel(&menuLF);
-    recordLengthSldr.setSliderStyle(Slider::LinearBar);
-    recordLengthSldr.addListener(this);
-
+    setUpRecordResampleUI();
 
     buildSampleStripControls();
 
@@ -161,7 +118,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     // Settings associated stuff
     addAndMakeVisible(&toggleSettingsBtn);
     toggleSettingsBtn.addListener(this);
-    toggleSettingsBtn.setBounds(210, 200, 75, 25);
+    toggleSettingsBtn.setBounds(210, 230, 75, 25);
     toggleSettingsBtn.setColour(TextButton::buttonColourId, Colours::black);
 
     addChildComponent(&settingsPanel);
@@ -171,6 +128,9 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
     // start timer to update play positions, slider values etc.
     startTimer(50);
+
+        // This tells the GUI to use a custom "theme"
+    LookAndFeel::setDefaultLookAndFeel(&myLookAndFeel);
 }
 
 mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
@@ -224,9 +184,13 @@ void mlrVSTAudioProcessorEditor::buildSliders()
     masterGainSlider.setSliderStyle(Slider::LinearVertical);
     masterGainSlider.setRange(0.0, 1.0, 0.01);
     masterGainSlider.setValue(0.0, false);
-    masterGainSlider.setBounds(PAD_AMOUNT, 540, sliderWidth, 190);
+    masterGainSlider.setBounds(PAD_AMOUNT, PAD_AMOUNT, sliderWidth, waveformControlHeight);
     masterGainSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
+    masterGainSlider.setColour(Slider::thumbColourId, Colours::darkgrey);
+    masterGainSlider.setColour(Slider::backgroundColourId, (Colours::darkgrey).darker());
+    masterGainSlider.setLookAndFeel(&menuLF);
 
+    // then individual channel volumes
     for(int i = 0; i < numChannels; ++i)
     {
         slidersArray.add(new Slider("channel " + String(i) + " vol"));
@@ -234,12 +198,14 @@ void mlrVSTAudioProcessorEditor::buildSliders()
         slidersArray[i]->setSliderStyle(Slider::LinearVertical);
         slidersArray[i]->addListener(this);
         slidersArray[i]->setRange(0.0, 1.0, 0.01);
-        slidersArray[i]->setBounds(PAD_AMOUNT + (i + 1) * sliderWidth, 540, sliderWidth, 190);
+        slidersArray[i]->setBounds(PAD_AMOUNT + (i + 1) * sliderWidth, PAD_AMOUNT, sliderWidth - 1, waveformControlHeight);
         slidersArray[i]->setValue(getProcessor()->getChannelGain(i));
 
         Colour sliderColour = getProcessor()->getChannelColour(i);
         slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
-        slidersArray[i]->setColour(Slider::backgroundColourId, sliderColour);
+        slidersArray[i]->setLookAndFeel(&menuLF);
+        slidersArray[i]->setColour(Slider::thumbColourId, sliderColour);
+        slidersArray[i]->setColour(Slider::backgroundColourId, sliderColour.darker());
     }
 
 }
@@ -296,19 +262,33 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
 
     else if (slider == &resampleLengthSldr)
     {
-        resampleLength = (int) resampleLengthSldr.getValue();
+        const int resampleLength = (int) resampleLengthSldr.getValue();
+        getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sResampleLength, &resampleLength);
     }
     else if (slider == &resamplePrecountSldr)
     {
-        resamplePrecount = (int) resamplePrecountSldr.getValue();
+        const int resamplePrecount = (int) resamplePrecountSldr.getValue();
+        getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sResamplePrecount, &resamplePrecount);
+    }
+    else if (slider == &resampleBankSldr)
+    {
+        const int resampleBank = (int) resampleBankSldr.getValue();
+        getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sResampleBank, &resampleBank);
     }
     else if (slider == &recordLengthSldr)
     {
-        recordLength = (int) recordLengthSldr.getValue();
+        const int recordLength = (int) recordLengthSldr.getValue();
+        getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sRecordLength, &recordLength);
     }
     else if (slider == &recordPrecountSldr)
     {
-        recordPrecount = (int) recordPrecountSldr.getValue();
+        const int recordPrecount = (int) recordPrecountSldr.getValue();
+        getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sRecordPrecount, &recordPrecount);
+    }
+    else if (slider == &recordBankSldr)
+    {
+        const int recordBank = (int) recordBankSldr.getValue();
+        getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sRecordBank, &recordBank);
     }
 
 
@@ -392,12 +372,12 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 
     else if(btn == &resampleBtn)
     {
-        getProcessor()->startResampling(resamplePrecount, resampleLength);
+        getProcessor()->startResampling();
     }
 
     else if(btn == &recordBtn)
     {
-        getProcessor()->startRecording(recordPrecount, recordLength);
+        getProcessor()->startRecording();
     }
 
     // USEFUL FOR TESTING
@@ -511,3 +491,84 @@ const void* mlrVSTAudioProcessorEditor::getGlobalSetting(const int &parameterID)
 { 
     return getProcessor()->getGlobalSetting(parameterID);
 }
+
+void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
+{
+    addAndMakeVisible(&resampleBtn);
+	resampleBtn.addListener(this);
+	resampleBtn.setBounds(PAD_AMOUNT, 450, 70, 25);
+    
+    addAndMakeVisible(&precountLbl);
+    precountLbl.setBounds(70 + 2*PAD_AMOUNT, 430, 50, 20);
+    precountLbl.setFont(fontSize);
+
+    addAndMakeVisible(&resamplePrecountSldr);
+    resamplePrecountSldr.setBounds(70 + 2*PAD_AMOUNT, 450, 50, 25);
+    resamplePrecountSldr.setRange(0.0, 8.0, 1.0);
+    resamplePrecountSldr.setLookAndFeel(&menuLF);
+    resamplePrecountSldr.setSliderStyle(Slider::LinearBar);
+    resamplePrecountSldr.addListener(this);
+    const int resamplePrecount = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sResamplePrecount));
+    resamplePrecountSldr.setValue(resamplePrecount);
+    
+    addAndMakeVisible(&recordLengthLbl);
+    recordLengthLbl.setBounds(120 + 3*PAD_AMOUNT, 430, 50, 20);
+    recordLengthLbl.setFont(fontSize);
+
+    addAndMakeVisible(&resampleLengthSldr);
+    resampleLengthSldr.setBounds(120 + 3*PAD_AMOUNT, 450, 50, 25);
+    resampleLengthSldr.setRange(1.0, 32.0, 1.0);
+    resampleLengthSldr.setLookAndFeel(&menuLF);
+    resampleLengthSldr.setSliderStyle(Slider::LinearBar);
+    resampleLengthSldr.addListener(this);
+    const int resampleLength = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sResampleLength));
+    resampleLengthSldr.setValue(resampleLength);
+
+    addAndMakeVisible(&bankLbl);
+    bankLbl.setBounds(170 + 4*PAD_AMOUNT, 430, 50, 20);
+    bankLbl.setFont(fontSize);
+
+    addAndMakeVisible(&resampleBankSldr);
+    resampleBankSldr.setBounds(170 + 4*PAD_AMOUNT, 450, 50, 25);
+    resampleBankSldr.setRange(0.0, 7.0, 1.0);
+    resampleBankSldr.setLookAndFeel(&menuLF);
+    resampleBankSldr.setSliderStyle(Slider::LinearBar);
+    resampleBankSldr.addListener(this);
+    const int resampleBank = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sResampleBank));
+    resampleBankSldr.setValue(resampleBank);
+
+
+
+    addAndMakeVisible(&recordBtn);
+	recordBtn.addListener(this);
+    recordBtn.setBounds(PAD_AMOUNT, 480, 70, 25);
+
+    addAndMakeVisible(&recordPrecountSldr);
+    recordPrecountSldr.setBounds(70 + 2*PAD_AMOUNT, 480, 50, 25);
+    recordPrecountSldr.setRange(0.0, 8.0, 1.0);
+    recordPrecountSldr.setLookAndFeel(&menuLF);
+    recordPrecountSldr.setSliderStyle(Slider::LinearBar);
+    recordPrecountSldr.addListener(this);
+    const int recordPrecount = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sRecordPrecount));
+    recordPrecountSldr.setValue(recordPrecount);
+
+    addAndMakeVisible(&recordLengthSldr);
+    recordLengthSldr.setBounds(120 + 3*PAD_AMOUNT, 480, 50, 25);
+    recordLengthSldr.setRange(1.0, 32.0, 1.0);
+    recordLengthSldr.setLookAndFeel(&menuLF);
+    recordLengthSldr.setSliderStyle(Slider::LinearBar);
+    recordLengthSldr.addListener(this);
+    const int recordLength = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sRecordLength));
+    recordLengthSldr.setValue(recordLength);
+
+    addAndMakeVisible(&recordBankSldr);
+    recordBankSldr.setBounds(170 + 4*PAD_AMOUNT, 480, 50, 25);
+    recordBankSldr.setRange(0.0, 7.0, 1.0);
+    recordBankSldr.setLookAndFeel(&menuLF);
+    recordBankSldr.setSliderStyle(Slider::LinearBar);
+    recordBankSldr.addListener(this);
+    const int recordBank = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sRecordBank));
+    resampleBankSldr.setValue(recordBank);
+
+}
+

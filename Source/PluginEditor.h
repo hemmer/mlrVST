@@ -21,6 +21,18 @@
 #include "SettingsPanel.h"
 #include "mlrVSTLookAndFeel.h"
 
+#ifndef PAD_AMOUNT
+#define PAD_AMOUNT 10
+#endif
+
+#ifndef GUI_WIDTH
+#define GUI_WIDTH 1024
+#endif
+
+#ifndef GUI_HEIGHT
+#define GUI_HEIGHT 650
+#endif
+
 
 class WaveformControl;
 
@@ -34,7 +46,9 @@ class mlrVSTAudioProcessorEditor  : public AudioProcessorEditor,
                                     public FileDragAndDropTarget
 {
 public:
-    mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter, const int &newNumChannels);
+    mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter,
+                                const int &newNumChannels,
+                                const int &newNumStrips);
     ~mlrVSTAudioProcessorEditor();
 
     //==============================================================================
@@ -54,8 +68,8 @@ public:
 
     /* These just forward the various requests for sample information
        to the AudioProcessor (which holds the sample pool). */
-    int getSamplePoolSize() { return getProcessor()->getSamplePoolSize(); }
-    String getSampleName(const int &index) { return getProcessor()->getSampleName(index); }
+    int getSamplePoolSize(const int &poolID) { return getProcessor()->getSamplePoolSize(poolID); }
+    String getSampleName(const int &index, const int &poolID) { return getProcessor()->getSampleName(index, poolID); }
     // AudioSample* getSample(const int &index) { return getProcessor()->getSample(index); }
     // AudioSample* getLatestSample() { return getProcessor()->getLatestSample(); }
 
@@ -70,7 +84,7 @@ public:
     void calcInitialPlaySpeed(const int &stripID) const { getProcessor()->calcInitialPlaySpeed(stripID); }
     void updatePlaySpeedForNewSelection(const int &stripID) { getProcessor()->calcPlaySpeedForSelectionChange(stripID); }
     void modPlaySpeed(const double &factor, const int &stripID) { getProcessor()->modPlaySpeed(factor, stripID); }
-    AudioSample * getAudioSample(const int &poolIndex) const { return getProcessor()->getAudioSample(poolIndex); }
+    AudioSample * getAudioSample(const int &poolIndex, const int &poolID) const { return getProcessor()->getAudioSample(poolIndex, poolID); }
 
     void switchChannels(const int &newChan, const int &stripID) const { getProcessor()->switchChannels(newChan, stripID); }
     Colour getChannelColour(const int &chan) const { return getProcessor()->getChannelColour(chan); }
@@ -83,6 +97,10 @@ public:
     const void* getGlobalSetting(const int &parameterID) const;
 
 private:
+
+    mlrVSTLookAndFeel myLookAndFeel;
+    menuLookandFeel menuLF;
+
     Label infoLabel, bpmLabel;
     Slider masterGainSlider, bpmSlider;
 	DrawableButton debugButton;
@@ -91,13 +109,12 @@ private:
 	ListBox fileList;
 
 
-    Label precountLbl, recordLengthLbl;
+    Label precountLbl, recordLengthLbl, bankLbl;
 
-    Slider recordLengthSldr, recordPrecountSldr;
-    int recordPrecount, recordLength;
 
-    Slider resampleLengthSldr, resamplePrecountSldr;
-    int resamplePrecount, resampleLength;
+    void setUpRecordResampleUI();
+    Slider recordLengthSldr, recordPrecountSldr, recordBankSldr;
+    Slider resampleLengthSldr, resamplePrecountSldr, resampleBankSldr;
 
 
     float fontSize;
@@ -113,6 +130,7 @@ private:
 	// Store the waveform controls/strips in array. 
     // For a standard monome64 this is 7
     OwnedArray<SampleStripControl> sampleStripControlArray;
+    const int numStrips;
     void buildSampleStripControls();
     const int waveformControlHeight, waveformControlWidth;
 
@@ -131,17 +149,12 @@ private:
     void buildSliders();
 
     // For simplicity, let's stick to a fixed size GUI
-    static const int GUI_HEIGHT = 750;
-    static const int GUI_WIDTH = 1024;
-    static const int PAD_AMOUNT = 10;
+
     AudioPlayHead::CurrentPositionInfo lastDisplayedPosition;
 
     mlrVSTAudioProcessor* getProcessor() const { return static_cast <mlrVSTAudioProcessor*> (getAudioProcessor()); }
 
     void displayPositionInfo (const AudioPlayHead::CurrentPositionInfo& pos);
-
-    mlrVSTLookAndFeel myLookAndFeel;
-    menuLookandFeel menuLF;
 
     JUCE_LEAK_DETECTOR(mlrVSTAudioProcessorEditor);  
 };

@@ -29,6 +29,9 @@
     <Filter Include="mlrVST\oscpack\ip\win32">
       <UniqueIdentifier>{6A5CC0F6-6C92-8940-E5B9-11B6C522E65D}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mlrVST\oscpack\ip\posix">
+      <UniqueIdentifier>{F29F5AF0-E9E3-BA97-0C7F-3E546CDA8971}</UniqueIdentifier>
+    </Filter>
     <Filter Include="mlrVST\oscpack\osc">
       <UniqueIdentifier>{03CC40EF-CDFC-73B8-994C-25ADB29C222E}</UniqueIdentifier>
     </Filter>
@@ -87,6 +90,12 @@
     </ClCompile>
     <ClCompile Include="..\..\oscpack\ip\win32\UdpSocket.cpp">
       <Filter>mlrVST\oscpack\ip\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\ip\posix\NetworkingUtils.cpp">
+      <Filter>mlrVST\oscpack\ip\posix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\oscpack\ip\posix\UdpSocket.cpp">
+      <Filter>mlrVST\oscpack\ip\posix</Filter>
     </ClCompile>
     <ClCompile Include="..\..\oscpack\LICENSE">
       <Filter>mlrVST\oscpack</Filter>

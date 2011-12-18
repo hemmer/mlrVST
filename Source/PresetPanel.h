@@ -52,7 +52,7 @@ private:
 
     int setListLength;
     int selectedPreset;
-    const int ROW_HEIGHT, ROW_WIDTH, PAD_AMOUNT;
+    const int ROW_HEIGHT, ROW_WIDTH;
 
     const float fontSize;
     const Rectangle<int> &panelBounds;

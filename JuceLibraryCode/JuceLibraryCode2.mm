@@ -17,5 +17,5 @@
 #elif defined (JUCER_LINUX_MAKE_7346DA2A)
  #include "../../../../amalgamation/juce_amalgamated2.cpp"
 #elif defined (JUCER_XCODE_MAC_F6D2F4CF)
- #include "../../../../amalgamation/juce_amalgamated2.cpp"
+ #include "../../JUCE/amalgamation/juce_amalgamated2.cpp"
 #endif

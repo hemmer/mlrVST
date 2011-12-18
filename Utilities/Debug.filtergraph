@@ -20,12 +20,14 @@
     <STATE>0.</STATE>
   </FILTER>
   <FILTER uid="4" x="0.340909091" y="0.470954357" uiLastX="67" uiLastY="31">
-    <PLUGIN name="mlrVST" format="VST" category="Effect" manufacturer="Raw Material Software"
+    <PLUGIN name="mlrVST" format="VST" category="Effect" manufacturer="Ewan Hemingway"
             version="V1.0.0" file="C:\Users\Hemmer\Documents\C++\JUCE\mlrVST\Builds\VisualStudio2010\Debug\mlrVST.dll"
-            uid="76737458" isInstrument="0" fileTime="1324ddcfc4a" numInputs="2"
+            uid="76737458" isInstrument="0" fileTime="1344d953e8b" numInputs="2"
             numOutputs="2"/>
-    <STATE>258.CMlaKA....fQBMDZ....AX2bzgE.A.......................................................................................................................................................................................hY0PxDBV....7zTVPwTUGkjSSUDUTkjSGMEH0k1UoQFcn0iHz.CLh.RcogTYocFZz0iHx.CLh.xYgkla8HBLtPiM4jSN4jSN4HBHjUFagkWOh.iKvDSN4jSN4jSN1HxK9.Py</STATE>
+    <STATE>459.CMlaKA....fQBMDZ....AX2bzgE.A.....................................................................................................................................................................................P.qX0PxDRHA...7bDSOITPLMUQTQURNczTfzTPSQUQR80QAkjS8HBLtfCLv.CLv.SLxHBHCgTPN4TQL80QAkjSvziHv3BNv.CLv.CLwHiHfLDRA4jSEwzWGETRNESOh.iK3.CLv.CLvDiLh.xPHEjSNUDSecTPI4jL8HBLtfCLv.CLv.SLxHBHCgTPN4TQL80QAkjSyziHv3BNv.CLv.CLwHiHfLDRA4jSEwzWGETRNQSOh.iK3.CLv.CLvDiLh.xPHEjSNUDSecTPI4TM8HBLtfCLv.CLv.SLxHBHCgTPN4TQL80QAkjS1ziHv3BNv.CLv.CLwHiHfLDRA4jSEwzWGETRNcSOh.iK3.CLv.CLvDiLh.xPUIkTE4DUeAkTEMUQT0iHt8lakIxK9.Py</STATE>
   </FILTER>
+  <CONNECTION srcFilter="1" srcChannel="0" dstFilter="4" dstChannel="0"/>
+  <CONNECTION srcFilter="1" srcChannel="1" dstFilter="4" dstChannel="1"/>
   <CONNECTION srcFilter="2" srcChannel="4096" dstFilter="4" dstChannel="4096"/>
   <CONNECTION srcFilter="4" srcChannel="0" dstFilter="3" dstChannel="0"/>
   <CONNECTION srcFilter="4" srcChannel="1" dstFilter="3" dstChannel="1"/>

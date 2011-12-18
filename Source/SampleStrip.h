@@ -174,6 +174,7 @@ private:
     ScopedPointer<mlrVSTAudioProcessor> parent;
 
     void updatePlayParams();
+    void updateForNewSample();
 
     // These are just so the GUI can show where in the sample we are
     bool isPlaying;

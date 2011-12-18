@@ -8,6 +8,8 @@ It contains the basic startup code for a Juce application.
 ==============================================================================
 */
 
+#define THUMBNAIL_LENGTH 700
+
 // use this to help track down memory leaks (SLOW)
 // #include <vld.h>
 
@@ -22,37 +24,42 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     maxChannels(8), numChannels(maxChannels),
     sampleStripArray(), numSampleStrips(7),
     channelGains(), defaultChannelGain(0.8f),
-    samplePool(),               // sample pool is initially empty
-    oscMsgHandler(this),
+    samplePool(), recordPool(), resamplePool(),     // sample pools are initially empty
+    OSCPrefix("mlrvst"), oscMsgHandler(OSCPrefix, this),
     stripModifier(false),
     stripContrib(2, 0),
-    resampleBuffer(2, 0), isResampling(false),
-    recordBuffer(2, 0), isRecording(false),
+    resampleBuffer(2, 0), isResampling(false), resamplePrecountLength(0),
+    resampleLength(8), resampleBank(0),
+    recordBuffer(2, 0), isRecording(false), recordPrecountLength(0),
+    recordLength(8), recordBank(0),
     presetList("PRESETLIST"), setlist("SETLIST"),
-    playbackLEDPosition(), buttonStatus()
+    playbackLEDPosition(), buttonStatus(), monitorInputs(false)
 {
-    
-    DBG("starting OSC thread");
-    
     // start listening for messages
     oscMsgHandler.startThread();
-
-    //File test("C:\\Users\\Hemmer\\Desktop\\funky.wav");
-    //samplePool.add(new AudioSample(test));
-    samplePool.clear();
+    DBG("OSC thread started");
 
     // Set up some default values..
-    masterGain = 1.0f;
+    masterGain = 0.8f;
 
     // create our SampleStrip objects 
     buildSampleStripArray(numSampleStrips);
     // add our channels
     buildChannelArray(numChannels);
 
-    setlist.createNewChildElement("PRESET_NONE");
+    for (int i = 0; i < 8; ++i)
+    {
+        // these should be empty to start with
+        // TODO: have actual sample rate
+        resamplePool.add(new AudioSample(44100.0, 44100, THUMBNAIL_LENGTH, "resample #" + String(i)));
+        recordPool.add(new AudioSample(44100.0, 44100, THUMBNAIL_LENGTH, "record #" + String(i)));
+    }
+
+    setlist.createNewChildElement("PRESETNONE");
 
     lastPosInfo.resetToDefault();
 
+    // timer for re-drawing LEDs
     startTimer(100);
 
     // setup 2D arrays for tracking button presses
@@ -286,7 +293,12 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
         if (isRecording)
         {
-            if (numSamples + recordPosition < recordLength)
+            if (recordPrecountPosition > 0)
+            {
+                recordPrecountPosition -= numSamples;
+            }
+
+            else if (numSamples + recordPosition < recordLengthInSamples)
             {
                 recordBuffer.addFrom(0, recordPosition, buffer, 0, 0, numSamples);
                 recordBuffer.addFrom(1, recordPosition, buffer, 1, 0, numSamples);
@@ -294,14 +306,24 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
             }
             else
             {
-                const int samplesToEnd = recordLength - recordPosition;
+                const int samplesToEnd = recordLengthInSamples - recordPosition;
                 recordBuffer.addFrom(0, recordPosition, buffer, 0, 0, samplesToEnd);
                 recordBuffer.addFrom(1, recordPosition, buffer, 1, 0, samplesToEnd);
                 isRecording = false;
 
-                DBG("recording stopped");
-                // TODO: pass actual strip size here!
-                samplePool.add(new AudioSample(recordBuffer, getSampleRate(), 700));
+                AudioSampleBuffer *recordSlotToReplace = recordPool[recordBank]->getAudioData();
+                recordSlotToReplace->setSize(2, recordLengthInSamples, false, false, false);
+                    
+                recordSlotToReplace->copyFrom(0, 0, recordBuffer, 0, 0, recordLengthInSamples);
+                recordSlotToReplace->copyFrom(1, 0, recordBuffer, 1, 0, recordLengthInSamples);
+
+                recordPool[recordBank]->generateThumbnail(THUMBNAIL_LENGTH);
+
+                DBG("record slot " << recordBank << " updated.");
+
+                // make sure all strips redraw to reflect new waveform
+                for (int s = 0; s < sampleStripArray.size(); ++s)
+                    sampleStripArray[s]->sendChangeMessage();
             }
         }
 
@@ -356,14 +378,14 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
         if (isResampling)
         {
-            if (resamplePrecountLength > 0)
+            if (resamplePrecountPosition > 0)
             {
-                resamplePrecountLength -= numSamples;
+                resamplePrecountPosition -= numSamples;
             }
             // TODO: this sample count could be more accurate!
             else 
             {
-                if (numSamples + resamplePosition < resampleLength)
+                if (numSamples + resamplePosition < resampleLengthInSamples)
                 {
                     resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, numSamples);
                     resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, numSamples);
@@ -371,14 +393,26 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
                 }
                 else
                 {
-                    const int samplesToEnd = resampleLength - resamplePosition;
+                    const int samplesToEnd = resampleLengthInSamples - resamplePosition;
                     resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, samplesToEnd);
                     resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, samplesToEnd);
                     isResampling = false;
-                    DBG("resampling stopped");
-                    // TODO: pass actual strip size here!
-                    samplePool.add(new AudioSample(resampleBuffer, getSampleRate(), 700));
-                }
+
+                    AudioSampleBuffer *resampleSlotToReplace = resamplePool[resampleBank]->getAudioData();
+                    resampleSlotToReplace->setSize(2, resampleLengthInSamples, false, false, false);
+                    DBG(resampleSlotToReplace->getNumSamples() << " " << resampleSlotToReplace->getNumChannels());
+
+                    resampleSlotToReplace->copyFrom(0, 0, resampleBuffer, 0, 0, resampleLengthInSamples);
+                    resampleSlotToReplace->copyFrom(1, 0, resampleBuffer, 1, 0, resampleLengthInSamples);
+
+                    resamplePool[resampleBank]->generateThumbnail(THUMBNAIL_LENGTH);
+
+                    DBG("resample slot " << resampleBank << " updated.");
+
+                    // make sure all strips redraw to reflect new waveform
+                    for (int s = 0; s < sampleStripArray.size(); ++s)
+                        sampleStripArray[s]->sendChangeMessage();
+                 }
             }
         }
 
@@ -393,7 +427,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 //==============================================================================
 AudioProcessorEditor* mlrVSTAudioProcessor::createEditor()
 {
-    return new mlrVSTAudioProcessorEditor(this, numChannels);
+    return new mlrVSTAudioProcessorEditor(this, numChannels, numSampleStrips);
 }
 
 //==============================================================================
@@ -406,15 +440,15 @@ void mlrVSTAudioProcessor::getStateInformation(MemoryBlock& destData)
 
     // add some attributes to it..
 
-    xml.setAttribute("master gain", masterGain);
+    xml.setAttribute("MASTER_GAIN", masterGain);
     for (int c = 0; c < channelGains.size(); c++)
     {
-        String name("channel gain ");
-        name += c;
+        String name("CHANNEL_GAIN");
+        name += String(c);
         xml.setAttribute(name, channelGains[c]);
     }
      
-    xml.setAttribute("current preset", "none");
+    xml.setAttribute("CURRENT_PRESET", "none");
 
     // then use this helper function to stuff it into the binary blob and return it..
     copyXmlToBinary(xml, destData);
@@ -434,11 +468,11 @@ void mlrVSTAudioProcessor::setStateInformation(const void* data, int sizeInBytes
         if (xmlState->hasTagName("GLOBALSETTINGS"))
         {
             // ok, now pull out our parameters...
-            masterGain  = (float) xmlState->getDoubleAttribute("master gain", masterGain);
+            masterGain  = (float) xmlState->getDoubleAttribute("MASTER_GAIN", masterGain);
             for (int c = 0; c < channelGains.size(); c++)
             {
-                String name("channel gain ");
-                name += c;
+                String name("CHANNEL_GAIN");
+                name += String(c);
                 channelGains.set(c, (float) xmlState->getDoubleAttribute(name, channelGains[c]));
             }
         }
@@ -662,8 +696,10 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
         switch (monomeCol)
         {
         case 0 :
+            // TODO: next actual sample rate here!
             if (state)
-                sampleStripArray[effectiveMonomeRow]->stopSamplePlaying();
+                sampleStripArray[effectiveMonomeRow]->findInitialPlaySpeed(currentBPM, 44100.0);
+                //sampleStripArray[effectiveMonomeRow]->stopSamplePlaying();
             break;
 
         case 1:
@@ -699,7 +735,19 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
                 break;
             }
 
+        case 6:
+            {
+                if (state)
+                    sampleStripArray[effectiveMonomeRow]->modPlaySpeed(0.5);
+                break;
+            }
 
+        case 7:
+            {
+                if (state)
+                    sampleStripArray[effectiveMonomeRow]->modPlaySpeed(2.0);
+                break;
+            }
         }
     }
     else if (monomeRow <= numSampleStrips && monomeRow > 0)
@@ -728,22 +776,19 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
         const int numChunks = *static_cast<const int*>
             (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::pNumChunks));
 
+        
+
         if (monomeCol < numChunks)
         {
+            const bool isLatched = *static_cast<const bool*>
+                (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::pIsLatched));
 
             // Check if there is a button being held to the right of the 
             // current button and if so, stop that strip.
-            if (monomeCol < leftmostButton && state)
+            if (state && isLatched && monomeCol < leftmostButton )
             {
                 sampleStripArray[effectiveMonomeRow]->stopSamplePlaying();
-
-                /* JUST A BIT OF FUN!
-                bool isReversed = *static_cast<const bool*>
-                    (sampleStripArray[effectiveMonomeRow]->getSampleStripParam(SampleStrip::pIsReversed));
-                isReversed = !isReversed;
-                sampleStripArray[effectiveMonomeRow]->setSampleStripParam(SampleStrip::pIsReversed, &isReversed);
-                */
-                DBG("strip " << effectiveMonomeRow << " stopped by combo.");
+                DBG("strip " << effectiveMonomeRow << " stopped by button combo.");
             }
             // Check if there is a button being held to the left of the 
             // current button and if so, loop the strip between those points.
@@ -826,11 +871,32 @@ void mlrVSTAudioProcessor::modPlaySpeed(const double &factor, const int &stripID
     sampleStripArray[stripID]->modPlaySpeed(factor);
 }
 
-AudioSample * mlrVSTAudioProcessor::getAudioSample(const int &samplePoolIndex)
+AudioSample * mlrVSTAudioProcessor::getAudioSample(const int &samplePoolIndex, const int &poolID)
 {
-    if (samplePoolIndex >= 0 && samplePoolIndex < samplePool.size())
-        return samplePool[samplePoolIndex];
-    else return 0;
+    switch (poolID)
+    {
+    case pSamplePool:
+        {
+            if (samplePoolIndex >= 0 && samplePoolIndex < samplePool.size())
+                return samplePool[samplePoolIndex];
+            else return 0;
+        }
+    case pResamplePool :
+        {
+            if (samplePoolIndex >= 0 && samplePoolIndex < resamplePool.size())
+                return resamplePool[samplePoolIndex];
+            else return 0;
+        }
+    case pRecordPool :
+        {
+            if (samplePoolIndex >= 0 && samplePoolIndex < recordPool.size())
+                return recordPool[samplePoolIndex];
+            else return 0;
+        }
+    default :
+        jassertfalse;
+        return 0;
+    }
 }
 SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index) 
 {
@@ -945,7 +1011,7 @@ void mlrVSTAudioProcessor::switchPreset(const int &id)
     // this *should* exist!
     if (preset)
     {
-        if (preset->getTagName() == "PRESET_NONE")
+        if (preset->getTagName() == "PRESETNONE")
         {
             // we have a blank preset
             DBG("blank preset loaded");
@@ -982,6 +1048,27 @@ void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID, const void 
         useExternalTempo = *static_cast<const bool*>(newValue); break;
     case sNumChannels :
         numChannels = *static_cast<const int*>(newValue); break;
+    case sOSCPrefix :
+        OSCPrefix = *static_cast<const String*>(newValue);
+        oscMsgHandler.setPrefix(OSCPrefix);
+        break;
+    case sMonitorInputs :
+        monitorInputs = *static_cast<const bool*>(newValue); break;
+
+    case sResampleLength :
+        resampleLength = *static_cast<const int*>(newValue); break;
+    case sResamplePrecount :
+        resamplePrecountLength = *static_cast<const int*>(newValue); break;
+    case sResampleBank :
+        resampleBank = *static_cast<const int*>(newValue); break;
+
+    case sRecordLength :
+        recordLength = *static_cast<const int*>(newValue); break;
+    case sRecordPrecount :
+        recordPrecountLength = *static_cast<const int*>(newValue); break;
+    case sRecordBank :
+        recordBank = *static_cast<const int*>(newValue); break;
+
     case sCurrentBPM :
         {
             currentBPM = *static_cast<const double*>(newValue);
@@ -1000,8 +1087,16 @@ const void* mlrVSTAudioProcessor::getGlobalSetting(const int &settingID) const
     {
     case sUseExternalTempo : return &useExternalTempo;
     case sNumChannels : return &numChannels;
+    case sOSCPrefix : return &OSCPrefix;
+    case sMonitorInputs : return &monitorInputs;
     case sCurrentBPM : return &currentBPM;
-    default : jassertfalse;
+    case sRecordLength : return &recordLength;
+    case sRecordPrecount : return &recordPrecountLength;
+    case sRecordBank : return &recordBank;
+    case sResampleLength : return &resampleLength;
+    case sResamplePrecount : return &resamplePrecountLength;
+    case sResampleBank : return &resampleBank;
+    default : jassertfalse; return 0;
     }
 }
 
@@ -1021,12 +1116,16 @@ String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID) const
 // RECORDING / RESAMPLING //
 ////////////////////////////
 
-void mlrVSTAudioProcessor::startResampling(const int &preCount, const int &numBars)
+void mlrVSTAudioProcessor::startResampling()
 {
-    resampleLength = (int) (getSampleRate() * (60.0 * numBars / currentBPM));
-    resamplePrecountLength = (int) (getSampleRate() * (60.0 * preCount / currentBPM));
+    resampleLengthInSamples = (int) (getSampleRate() * (60.0 * resampleLength / currentBPM));
+    resamplePrecountPosition = (int) (getSampleRate() * (60.0 * resamplePrecountLength / currentBPM));
 
-    resampleBuffer.setSize(2, resampleLength, false, true);
+    // TODO: try writing directly into the bank
+    //resamplePool[resampleBank]->
+    //resampleBuffer = resamplePool[resampleBank]->getAudioData();
+
+    resampleBuffer.setSize(2, resampleLengthInSamples, false, true);
     resampleBuffer.clear();
     resamplePosition = 0;
     isResampling = true;
@@ -1034,10 +1133,12 @@ void mlrVSTAudioProcessor::startResampling(const int &preCount, const int &numBa
     DBG("resampling started");
 }
 
-void mlrVSTAudioProcessor::startRecording(const int &preCount, const int &numBars)
+void mlrVSTAudioProcessor::startRecording()
 {
-    recordLength = (int) (getSampleRate() * (60.0 * numBars / currentBPM));
-    recordBuffer.setSize(2, recordLength, false, true);
+    recordLengthInSamples = (int) (getSampleRate() * (60.0 * recordLength / currentBPM));
+    recordPrecountPosition = (int) (getSampleRate() * (60.0 * recordPrecountLength / currentBPM));
+
+    recordBuffer.setSize(2, recordLengthInSamples, false, true);
     recordBuffer.clear();
     recordPosition = 0;
     isRecording = true;
