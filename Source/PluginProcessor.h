@@ -212,6 +212,36 @@ public:
     // Recording / resampling stuff
     void startRecording();
     void startResampling();
+
+    float getRecordingPrecountPercent()
+    {
+        if (recordPrecountPosition <= 0 || recordPrecountLengthInSamples <= 0)
+            return 0.0;
+        else
+            return (float) (recordPrecountPosition) / (float) (recordPrecountLengthInSamples);
+    }
+    float getRecordingPercent()
+    {
+        if (recordPosition >= recordLengthInSamples || recordLengthInSamples <= 0)
+            return 0.0;
+        else
+            return (float) (recordPosition) / (float) (recordLengthInSamples);
+    }
+
+    float getResamplingPrecountPercent()
+    {
+        if (resamplePrecountPosition <= 0 || resamplePrecountLengthInSamples <= 0)
+            return 0.0;
+        else
+            return (float) (resamplePrecountPosition) / (float) (resamplePrecountLengthInSamples);
+    }
+    float getResamplingPercent()
+    {
+        if (resamplePosition >= resampleLengthInSamples || resampleLengthInSamples <= 0)
+            return 0.0;
+        else
+            return (float) (resamplePosition) / (float) (resampleLengthInSamples);
+    }
 private:
 
     /* OSC messages from the monome are converted to MIDI messages
@@ -251,15 +281,15 @@ private:
 
     // TODO: make this an array
     AudioSampleBuffer resampleBuffer;
-    int resampleLength, resamplePrecountLength;     // length in bars
-    int resampleLengthInSamples;                    // length in samples
+    int resampleLength, resamplePrecountLength;                     // length in bars
+    int resampleLengthInSamples, resamplePrecountLengthInSamples;   // length in samples
     int resamplePosition, resamplePrecountPosition; // track resampling progress
     int resampleBank;                               // which slot to use
     bool isResampling;
 
     AudioSampleBuffer recordBuffer;
     int recordPosition, recordPrecountPosition;
-    int recordLengthInSamples;
+    int recordLengthInSamples, recordPrecountLengthInSamples;
     int recordLength, recordPrecountLength;
     int recordBank;
     bool isRecording;

@@ -37,6 +37,10 @@
       <FILE id="Ps8rCl" name="SampleStrip.h" compile="0" resource="0" file="Source/SampleStrip.h"/>
     </GROUP>
     <GROUP id="Slqw4M" name="gui">
+      <GROUP id="CZiuGD" name="buttons">
+        <FILE id="Chji8T" name="timedButton.cpp" compile="1" resource="0" file="Source/timedButton.cpp"/>
+        <FILE id="XisbQT" name="timedButton.h" compile="0" resource="0" file="Source/timedButton.h"/>
+      </GROUP>
       <GROUP id="v6Zpj0" name="panels">
         <FILE id="kmxFbK" name="PresetPanel.cpp" compile="1" resource="0" file="Source/PresetPanel.cpp"/>
         <FILE id="qh5EK9" name="PresetPanel.h" compile="0" resource="0" file="Source/PresetPanel.h"/>

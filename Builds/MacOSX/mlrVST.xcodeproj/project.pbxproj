@@ -21,6 +21,7 @@
 		50BB992879D853F89A96A73B = { isa = PBXBuildFile; fileRef = 6D1E208BAB0190FAA087E890; };
 		5AF66C048A4815F5A8ECDDCD = { isa = PBXBuildFile; fileRef = B50846B34831C2C28007BE7D; };
 		931B1CF382776BF5A1302413 = { isa = PBXBuildFile; fileRef = 1FB22F6A54D93FF70EEDC138; };
+		594A16C3B32313538E3E85A0 = { isa = PBXBuildFile; fileRef = 667D3E85F67932542A9B137E; };
 		78C5C5083747BFB8760A0E26 = { isa = PBXBuildFile; fileRef = 07B1785203CF423EA94D8647; };
 		026D6BBF5C4DAA3BFA4314D5 = { isa = PBXBuildFile; fileRef = 793DC9900836CAF01A8A930E; };
 		FDB2EADB6866550CDEEEB0B6 = { isa = PBXBuildFile; fileRef = A28E3E34EF0B83113A98EC5A; };
@@ -61,6 +62,8 @@
 		CF304FBE4BC66783833C4B59 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PluginProcessor.h; path = ../../Source/PluginProcessor.h; sourceTree = "SOURCE_ROOT"; };
 		1FB22F6A54D93FF70EEDC138 = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = SampleStrip.cpp; path = ../../Source/SampleStrip.cpp; sourceTree = "SOURCE_ROOT"; };
 		AD73A2387C576C1939CD503C = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SampleStrip.h; path = ../../Source/SampleStrip.h; sourceTree = "SOURCE_ROOT"; };
+		667D3E85F67932542A9B137E = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = timedButton.cpp; path = ../../Source/timedButton.cpp; sourceTree = "SOURCE_ROOT"; };
+		0D519B821B9CB886EC4892C1 = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = timedButton.h; path = ../../Source/timedButton.h; sourceTree = "SOURCE_ROOT"; };
 		07B1785203CF423EA94D8647 = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = PresetPanel.cpp; path = ../../Source/PresetPanel.cpp; sourceTree = "SOURCE_ROOT"; };
 		7A14134A5205FA3C932AC4CB = { isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PresetPanel.h; path = ../../Source/PresetPanel.h; sourceTree = "SOURCE_ROOT"; };
 		793DC9900836CAF01A8A930E = { isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = SettingsPanel.cpp; path = ../../Source/SettingsPanel.cpp; sourceTree = "SOURCE_ROOT"; };
@@ -120,12 +123,16 @@
 				CF304FBE4BC66783833C4B59,
 				1FB22F6A54D93FF70EEDC138,
 				AD73A2387C576C1939CD503C ); name = audio; sourceTree = "<group>"; };
+		88D1EB896A7079048905F438 = { isa = PBXGroup; children = (
+				667D3E85F67932542A9B137E,
+				0D519B821B9CB886EC4892C1 ); name = buttons; sourceTree = "<group>"; };
 		C171357724BF5D358D81DF3F = { isa = PBXGroup; children = (
 				07B1785203CF423EA94D8647,
 				7A14134A5205FA3C932AC4CB,
 				793DC9900836CAF01A8A930E,
 				446F8ABB3627870E9677DD4B ); name = panels; sourceTree = "<group>"; };
 		67D512F7515354D54B4C097B = { isa = PBXGroup; children = (
+				88D1EB896A7079048905F438,
 				C171357724BF5D358D81DF3F,
 				A28E3E34EF0B83113A98EC5A,
 				A4D7A71359C7B27550B3E3F1,
@@ -299,6 +306,7 @@
 				50BB992879D853F89A96A73B,
 				5AF66C048A4815F5A8ECDDCD,
 				931B1CF382776BF5A1302413,
+				594A16C3B32313538E3E85A0,
 				78C5C5083747BFB8760A0E26,
 				026D6BBF5C4DAA3BFA4314D5,
 				FDB2EADB6866550CDEEEB0B6,

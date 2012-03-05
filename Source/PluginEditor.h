@@ -19,6 +19,7 @@
 #include "SampleStripControl.h"
 #include "PresetPanel.h"
 #include "SettingsPanel.h"
+#include "timedButton.h"
 #include "mlrVSTLookAndFeel.h"
 
 #ifndef PAD_AMOUNT
@@ -98,16 +99,20 @@ public:
 
 private:
 
+    Typeface::Ptr typeSilk;
+    Font fontSilk;
+    float fontSize;
+
     mlrVSTLookAndFeel myLookAndFeel;
     menuLookandFeel menuLF;
 
     Label infoLabel, bpmLabel;
     Slider masterGainSlider, bpmSlider;
 	DrawableButton debugButton;
-    TextButton loadFilesBtn, addPresetBtn, resampleBtn, recordBtn;
+    TextButton loadFilesBtn, addPresetBtn;
+    TimedButton resampleBtn, recordBtn;
     ToggleButton toggleSetlistBtn, toggleSettingsBtn;
 	ListBox fileList;
-
 
     Label precountLbl, recordLengthLbl, bankLbl;
 
@@ -117,7 +122,6 @@ private:
     Slider resampleLengthSldr, resamplePrecountSldr, resampleBankSldr;
 
 
-    float fontSize;
 
     Rectangle<int> presetPanelBounds;
     PresetPanel presetPanel;

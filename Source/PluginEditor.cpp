@@ -17,6 +17,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
                                                         const int &newNumStrips)
     : AudioProcessorEditor (ownerFilter),
       myLookAndFeel(), menuLF(),
+
       infoLabel(),
       masterGainSlider("master gain"),
       bpmSlider("bpm slider"), bpmLabel("BPM", "BPM"),
@@ -36,12 +37,16 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       loadFilesBtn("load files", "LOAD FILES"),
 
       precountLbl("precount", "precount"), recordLengthLbl("length", "length"), bankLbl("bank", "bank"),
-      resampleBtn("RESAMPLE"), resamplePrecountSldr(), resampleBankSldr(), resampleLengthSldr(),
-      recordBtn("RECORD"), recordPrecountSldr(), recordLengthSldr(), recordBankSldr(),
-      
+      resamplePrecountSldr(), resampleBankSldr(), resampleLengthSldr(),
+      recordPrecountSldr(), recordLengthSldr(), recordBankSldr(),
+      recordBtn("RECORD", Colours::black, Colours::white),
+      resampleBtn("RESAMPLE", Colours::black, Colours::white),
       slidersArray()
 
 {
+    MemoryInputStream mis(BinaryData::silkfont, BinaryData::silkfontSize, false);
+    typeSilk = new CustomTypeface(mis);
+    fontSilk = Font( typeSilk );
 
 
     DBG("GUI loaded");
@@ -91,6 +96,9 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	loadFilesBtn.addListener(this);
 	loadFilesBtn.setBounds(50, 350, 70, 25);
 
+ //   addAndMakeVisible(&testBtn);
+	//testBtn.addListener(this);
+	//testBtn.setBounds(50, 190, 70, 25);
 
     setUpRecordResampleUI();
 
@@ -136,7 +144,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
 {
     sampleStripControlArray.clear(true);
-
+    
     DBG("GUI destructor finished.");
 }
 
@@ -231,6 +239,11 @@ void mlrVSTAudioProcessorEditor::timerCallback()
 
         if (lastDisplayedPosition != newPos) bpmSlider.setValue(newPos.bpm);
     }
+
+    recordBtn.setPercentDone(ourProcessor->getRecordingPrecountPercent(),
+                             ourProcessor->getRecordingPercent());
+    resampleBtn.setPercentDone(ourProcessor->getResamplingPrecountPercent(),
+                               ourProcessor->getResamplingPercent());
 
     // see if the host has changed the master gain
     masterGainSlider.setValue(ourProcessor->getParameter(mlrVSTAudioProcessor::pMasterGainParam));
@@ -497,7 +510,8 @@ void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
     addAndMakeVisible(&resampleBtn);
 	resampleBtn.addListener(this);
 	resampleBtn.setBounds(PAD_AMOUNT, 450, 70, 25);
-    
+    resampleBtn.setFont(fontSilk, fontSize);
+
     addAndMakeVisible(&precountLbl);
     precountLbl.setBounds(70 + 2*PAD_AMOUNT, 430, 50, 20);
     precountLbl.setFont(fontSize);
@@ -542,6 +556,7 @@ void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
     addAndMakeVisible(&recordBtn);
 	recordBtn.addListener(this);
     recordBtn.setBounds(PAD_AMOUNT, 480, 70, 25);
+    recordBtn.setFont(fontSilk, fontSize);
 
     addAndMakeVisible(&recordPrecountSldr);
     recordPrecountSldr.setBounds(70 + 2*PAD_AMOUNT, 480, 50, 25);

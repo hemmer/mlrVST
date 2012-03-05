@@ -46,6 +46,7 @@ OBJECTS := \
   $(OBJDIR)/AudioSample_c5634f81.o \
   $(OBJDIR)/PluginProcessor_a059e380.o \
   $(OBJDIR)/SampleStrip_9922baef.o \
+  $(OBJDIR)/timedButton_8bab4a.o \
   $(OBJDIR)/PresetPanel_1f2c0a46.o \
   $(OBJDIR)/SettingsPanel_89b72282.o \
   $(OBJDIR)/SampleStripControl_45995bf8.o \
@@ -94,6 +95,11 @@ $(OBJDIR)/PluginProcessor_a059e380.o: ../../Source/PluginProcessor.cpp
 $(OBJDIR)/SampleStrip_9922baef.o: ../../Source/SampleStrip.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling SampleStrip.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/timedButton_8bab4a.o: ../../Source/timedButton.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling timedButton.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/PresetPanel_1f2c0a46.o: ../../Source/PresetPanel.cpp

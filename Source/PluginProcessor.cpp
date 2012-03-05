@@ -29,9 +29,9 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     stripModifier(false),
     stripContrib(2, 0),
     resampleBuffer(2, 0), isResampling(false), resamplePrecountLength(0),
-    resampleLength(8), resampleBank(0),
+    resampleLength(8), resampleBank(0), resamplePrecountPosition(0), resamplePrecountLengthInSamples(0),
     recordBuffer(2, 0), isRecording(false), recordPrecountLength(0),
-    recordLength(8), recordBank(0),
+    recordLength(8), recordBank(0), recordPrecountPosition(0), recordPrecountLengthInSamples(0),
     presetList("PRESETLIST"), setlist("SETLIST"),
     playbackLEDPosition(), buttonStatus(), monitorInputs(false)
 {
@@ -321,6 +321,9 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
                 DBG("record slot " << recordBank << " updated.");
 
+                // this is just so buttons can work out that it's finished
+                recordPosition += samplesToEnd;
+
                 // make sure all strips redraw to reflect new waveform
                 for (int s = 0; s < sampleStripArray.size(); ++s)
                     sampleStripArray[s]->sendChangeMessage();
@@ -406,6 +409,9 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
                     resampleSlotToReplace->copyFrom(1, 0, resampleBuffer, 1, 0, resampleLengthInSamples);
 
                     resamplePool[resampleBank]->generateThumbnail(THUMBNAIL_LENGTH);
+
+                    // this is just so buttons can work out that it's finished
+                    resamplePosition += samplesToEnd;
 
                     DBG("resample slot " << resampleBank << " updated.");
 
@@ -666,17 +672,27 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
 
 
 
-    /* When the top left button is held, each strip turns into a
-       set of control buttons. See below for the mapping.
-    */
-    if (monomeRow == 0 && monomeCol == 0)
-    {
-        stripModifier = state;
-    }
+
 
 
     if (monomeRow == 0)
-    {
+    {   
+        /* When the top left button is held, each strip turns into a
+         set of control buttons. See below for the mapping.
+         */
+        if (monomeCol == 0)
+        {
+            stripModifier = state;
+        }
+        else if (monomeCol == 6)
+        {
+            startRecording();
+        }
+        else if (monomeCol == 7)
+        {
+            startResampling();
+        }
+
         /*
         // TODO proper control mappings for top row
         // stops channels 1-N playing
@@ -1119,7 +1135,8 @@ String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID) const
 void mlrVSTAudioProcessor::startResampling()
 {
     resampleLengthInSamples = (int) (getSampleRate() * (60.0 * resampleLength / currentBPM));
-    resamplePrecountPosition = (int) (getSampleRate() * (60.0 * resamplePrecountLength / currentBPM));
+    resamplePrecountLengthInSamples = (int) (getSampleRate() * (60.0 * resamplePrecountLength / currentBPM));
+    resamplePrecountPosition = resamplePrecountLengthInSamples;
 
     // TODO: try writing directly into the bank
     //resamplePool[resampleBank]->
@@ -1136,7 +1153,8 @@ void mlrVSTAudioProcessor::startResampling()
 void mlrVSTAudioProcessor::startRecording()
 {
     recordLengthInSamples = (int) (getSampleRate() * (60.0 * recordLength / currentBPM));
-    recordPrecountPosition = (int) (getSampleRate() * (60.0 * recordPrecountLength / currentBPM));
+    recordPrecountLengthInSamples = (int) (getSampleRate() * (60.0 * recordPrecountLength / currentBPM));
+    recordPrecountPosition = recordPrecountLengthInSamples;
 
     recordBuffer.setSize(2, recordLengthInSamples, false, true);
     recordBuffer.clear();

@@ -11,6 +11,9 @@
     <Filter Include="mlrVST\gui">
       <UniqueIdentifier>{C61B0762-8645-E544-AB1D-5772C3986C81}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mlrVST\gui\buttons">
+      <UniqueIdentifier>{FB68786E-6B5D-6B34-7BFF-720EFB2A0059}</UniqueIdentifier>
+    </Filter>
     <Filter Include="mlrVST\gui\panels">
       <UniqueIdentifier>{F6C6FC24-7667-21E4-F567-4A679D77333F}</UniqueIdentifier>
     </Filter>
@@ -51,6 +54,9 @@
     </ClCompile>
     <ClCompile Include="..\..\Source\SampleStrip.cpp">
       <Filter>mlrVST\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\timedButton.cpp">
+      <Filter>mlrVST\gui\buttons</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\PresetPanel.cpp">
       <Filter>mlrVST\gui\panels</Filter>
@@ -146,6 +152,9 @@
     </ClInclude>
     <ClInclude Include="..\..\Source\SampleStrip.h">
       <Filter>mlrVST\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\timedButton.h">
+      <Filter>mlrVST\gui\buttons</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PresetPanel.h">
       <Filter>mlrVST\gui\panels</Filter>
