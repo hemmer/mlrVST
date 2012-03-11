@@ -41,7 +41,7 @@ public:
 
     void mouseDown(const MouseEvent&);
     void mouseDrag(const MouseEvent&);
-    void mouseUp(const MouseEvent&);
+    //void mouseUp(const MouseEvent&);
 
     void paint(Graphics& g);
     void changeListenerCallback(ChangeBroadcaster*);
@@ -154,8 +154,8 @@ private:
 
     // This is so we can drag with middle mouse
     int selectionStartBeforeDrag;
-    int *selectionPointToChange;
-    int dragStart;
+    int *selectionPointToChange, *selectionPointFixed;
+
     ModifierKeys mouseDownMods;
 
     // stuff for drawing waveforms

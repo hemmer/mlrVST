@@ -39,7 +39,7 @@ SampleStripControl::SampleStripControl(const int &id,
     speedLockBtn("speed lock", DrawableButton::ImageRaw), isSpeedLocked(false),
     lockImg(), unlockImg(),
     stripVolumeSldr("strip volume"),
-    selectionPointToChange(0),
+    selectionPointToChange(0), selectionPointFixed(0),
     mouseDownMods(),
     mlrVSTEditor(owner), dataStrip(dataStripLink),
     menuLF()
@@ -444,22 +444,6 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
         selectionStartBeforeDrag = visualSelectionStart;
     }
 
-    // ctrl-left and ctrl-shift-left move one of the end points
-    else if ((e.mods == (ModifierKeys::ctrlModifier + 
-                         ModifierKeys::leftButtonModifier)) ||
-             (e.mods == (ModifierKeys::ctrlModifier + 
-                         ModifierKeys::leftButtonModifier + 
-                         ModifierKeys::shiftModifier)))
-    {
-        if ( abs(e.x - visualSelectionStart) > abs(e.x - visualSelectionEnd) )
-            selectionPointToChange = &visualSelectionEnd;
-        else
-            selectionPointToChange = &visualSelectionStart;
-        dragStart = e.x;
-
-        DBG("storing start");
-    }
-
     // double click to select whole waveform
     else if (e.mods == ModifierKeys::leftButtonModifier && e.getNumberOfClicks() == 2)
     {
@@ -470,57 +454,68 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
         visualChunkSize = (visualSelectionLength / (float) numChunks);
 
         // update the selection
-        float start = 0.0f, end = 1.0f;
-        dataStrip->setSampleStripParam(SampleStrip::pFractionalStart, &start);
-        dataStrip->setSampleStripParam(SampleStrip::pFractionalEnd, &end);
+        dataStrip->setSampleStripParam(SampleStrip::pVisualStart, &visualSelectionStart);
+        dataStrip->setSampleStripParam(SampleStrip::pVisualEnd, &visualSelectionEnd);
 
         mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);
 
         // repaint when we next get a timed update
         stripChanged = true;
     }
-}
 
-void SampleStripControl::mouseUp(const MouseEvent &e)
-{
-    if (e.mods == ModifierKeys::leftButtonModifier)
+    // Determine which point we are moving based on proximity to either
+    // start or end points. The use of pointers here means we don't need
+    // to worry about which end of the selection is actually moving.
+    if ( abs(e.x - visualSelectionStart) > abs(e.x - visualSelectionEnd) )
     {
-        //// try to send the new selection to the SampleStrips
-        //mlrVSTAudioProcessorEditor *pluginUI = findParentComponentOfClass((mlrVSTAudioProcessorEditor*) 0);
-        //// let the sample strip know about the change
-        //if (pluginUI != 0)
-        //{
-        //    float fractionalStart = visualSelectionStart / (float) componentWidth;
-        //    float fractionalEnd = visualSelectionEnd / (float) componentWidth;
-        //    pluginUI->setSampleStripParameter(SampleStrip::pFractionalStart, &fractionalStart, sampleStripID);
-        //    pluginUI->setSampleStripParameter(SampleStrip::pFractionalEnd, &fractionalEnd, sampleStripID);
-        //}
-
-        //// redraw to reflect new selection
-        //repaint();
+        selectionPointToChange = &visualSelectionEnd;
+        selectionPointFixed = &visualSelectionStart;
+    }
+    else
+    {
+        selectionPointToChange = &visualSelectionStart;
+        selectionPointFixed = &visualSelectionEnd;
     }
 }
 
 void SampleStripControl::mouseDrag(const MouseEvent &e)
 {
-    if (mouseDownMods == ModifierKeys::leftButtonModifier)
-    {
 
+    // CASE: ctrl-shift-LMB allows us to snap to specific intervals
+    if ((e.mods == (ModifierKeys::ctrlModifier + 
+                    ModifierKeys::leftButtonModifier +
+                    ModifierKeys::shiftModifier)))
+    {
+        // TODO: have snapping interval as an option
+        int eighth = componentWidth / 16;
+
+        // round to the nearest snap point
+        int newSeg = (int) floor(0.5 + e.x / (float) eighth);
+        
+        // update the changing part of the selection to the snapped position
+        *selectionPointToChange = (int)(newSeg * eighth);
+    }
+
+    // CASE: traditional drag-to-select
+    else if (mouseDownMods == ModifierKeys::leftButtonModifier)
+    {
         int mouseX = e.x;
 
         // Make sure we don't select outside the waveform
         if (mouseX > componentWidth) mouseX = componentWidth;
         if (mouseX < 0) mouseX = 0;
 
-        visualSelectionStart = e.getMouseDownX();
-        visualSelectionEnd = mouseX;
-
+        *selectionPointFixed = e.getMouseDownX();
+        *selectionPointToChange = mouseX;
     }
+
+    // CASE: moving the entire selection (fixed size)
     else if (mouseDownMods == ModifierKeys::middleButtonModifier)
     {
         // Don't select outside the component!
         int newStart = selectionStartBeforeDrag + e.getDistanceFromDragStartX();
         int newEnd = newStart + visualSelectionLength;
+
         if(newStart < 0)
         {
             newStart = 0;
@@ -535,6 +530,8 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
         visualSelectionStart = newStart;
         visualSelectionEnd = newEnd;
     }
+
+    // CASE: just moving one end of an existing selection
     else if (mouseDownMods == (ModifierKeys::ctrlModifier + ModifierKeys::leftButtonModifier))
     {
         // Don't select outside the component!
@@ -545,43 +542,30 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
         *selectionPointToChange = newValue;
     }
 
-    ///* SNAPPING CODE, not yet working */
-    //else if ((e.mods == (ModifierKeys::ctrlModifier + 
-    //                     ModifierKeys::leftButtonModifier +
-    //                     ModifierKeys::shiftModifier)))
-    //{
-    //    // TODO: have snapping interval as an option
-    //    float eighth = componentWidth / 8.0;
-    //    float snapPos = fmod(e.x, eighth);
-    //    int newSeg = (int) (e.x / eighth);
 
-    //    if (snapPos > eighth / 2.0)
-    //    {
-    //        newSeg += 1;
-    //    }
-    //    *selectionPointToChange = (int)(newSeg * eighth);
-    //}
-    //DBG(visualSelectionStart);
-    //DBG(visualSelectionEnd);
-
-
-    // Swap if inverse selection
+    // Swap selection positions if inverse selection is made
     if (visualSelectionEnd < visualSelectionStart)
     {
         int temp = visualSelectionStart;
         visualSelectionStart = visualSelectionEnd;
         visualSelectionEnd = temp;
+
+        // same for the pointers
+        int *tempPointer = selectionPointFixed;
+        selectionPointFixed = selectionPointToChange;
+        selectionPointToChange = tempPointer;
     }
 
     visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
     visualChunkSize = (visualSelectionLength / (float) numChunks);
 
-    // try to send the new selection to the SampleStrips
-    float fractionalStart = visualSelectionStart / (float) componentWidth;
-    float fractionalEnd = visualSelectionEnd / (float) componentWidth;
-    dataStrip->setSampleStripParam(SampleStrip::pFractionalStart, &fractionalStart);
-    dataStrip->setSampleStripParam(SampleStrip::pFractionalEnd, &fractionalEnd);
+    // send the new selection to the SampleStrips
+    dataStrip->setSampleStripParam(SampleStrip::pVisualStart, &visualSelectionStart);
+    dataStrip->setSampleStripParam(SampleStrip::pVisualEnd, &visualSelectionEnd);
 
+    // update the play speed to account for new selection,
+    // of course this doesn't change if we are just moving the 
+    // selection (i.e. using the middle mouse button)
     if (mouseDownMods != ModifierKeys::middleButtonModifier)
         mlrVSTEditor->updatePlaySpeedForNewSelection(sampleStripID);
 
@@ -681,9 +665,8 @@ void SampleStripControl::selectNewSample(const int &fileChoice, const int &poolI
     visualChunkSize = (visualSelectionLength / (float) numChunks);
 
     // update the selection
-    float start = 0.0f, end = 1.0f;
-    dataStrip->setSampleStripParam(SampleStrip::pFractionalStart, &start);
-    dataStrip->setSampleStripParam(SampleStrip::pFractionalEnd, &end);
+    dataStrip->setSampleStripParam(SampleStrip::pVisualStart, &visualSelectionStart);
+    dataStrip->setSampleStripParam(SampleStrip::pVisualEnd, &visualSelectionEnd);
 
     // and try to find the best playback speed (i.e. closest to 1).
     mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);
@@ -743,19 +726,17 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
         break;
 
 
-    case SampleStrip::pFractionalStart :
+    case SampleStrip::pVisualStart :
         {
-            float fractionalStart = *static_cast<const float*>(newValue);
-            visualSelectionStart = (int)(fractionalStart * componentWidth);
+            visualSelectionStart =  *static_cast<const int*>(newValue);
             visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
             visualChunkSize = (visualSelectionLength / (float) numChunks);
             break;
         }
 
-    case SampleStrip::pFractionalEnd :
+    case SampleStrip::pVisualEnd :
         {
-            float fractionalEnd = *static_cast<const float*>(newValue);
-            visualSelectionEnd = (int)(fractionalEnd * componentWidth);
+            visualSelectionEnd =  *static_cast<const int*>(newValue);
             visualSelectionLength = (visualSelectionEnd - visualSelectionStart);
             visualChunkSize = (visualSelectionLength / (float) numChunks);
             break;

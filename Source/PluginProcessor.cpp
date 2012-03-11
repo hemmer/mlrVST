@@ -8,8 +8,6 @@ It contains the basic startup code for a Juce application.
 ==============================================================================
 */
 
-#define THUMBNAIL_LENGTH 700
-
 // use this to help track down memory leaks (SLOW)
 // #include <vld.h>
 
@@ -35,6 +33,9 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     presetList("PRESETLIST"), setlist("SETLIST"),
     playbackLEDPosition(), buttonStatus(), monitorInputs(false)
 {
+    // compile time assertions
+    static_jassert(THUMBNAIL_WIDTH % 8 == 0);
+
     // start listening for messages
     oscMsgHandler.startThread();
     DBG("OSC thread started");
@@ -51,8 +52,8 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     {
         // these should be empty to start with
         // TODO: have actual sample rate
-        resamplePool.add(new AudioSample(44100.0, 44100, THUMBNAIL_LENGTH, "resample #" + String(i)));
-        recordPool.add(new AudioSample(44100.0, 44100, THUMBNAIL_LENGTH, "record #" + String(i)));
+        resamplePool.add(new AudioSample(44100.0, 44100, THUMBNAIL_WIDTH, "resample #" + String(i)));
+        recordPool.add(new AudioSample(44100.0, 44100, THUMBNAIL_WIDTH, "record #" + String(i)));
     }
 
     setlist.createNewChildElement("PRESETNONE");
@@ -96,7 +97,7 @@ int mlrVSTAudioProcessor::addNewSample(File &sampleFile)
     // load to load the Sample
     try{
         // TODO: add actual length here
-        samplePool.add(new AudioSample(sampleFile, 700));
+        samplePool.add(new AudioSample(sampleFile, THUMBNAIL_WIDTH));
         DBG("Sample Loaded: " + samplePool.getLast()->getSampleName());
 
         // if it is sucessful, it will be the last sample in the pool
@@ -317,7 +318,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
                 recordSlotToReplace->copyFrom(0, 0, recordBuffer, 0, 0, recordLengthInSamples);
                 recordSlotToReplace->copyFrom(1, 0, recordBuffer, 1, 0, recordLengthInSamples);
 
-                recordPool[recordBank]->generateThumbnail(THUMBNAIL_LENGTH);
+                recordPool[recordBank]->generateThumbnail(THUMBNAIL_WIDTH);
 
                 DBG("record slot " << recordBank << " updated.");
 
@@ -408,7 +409,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
                     resampleSlotToReplace->copyFrom(0, 0, resampleBuffer, 0, 0, resampleLengthInSamples);
                     resampleSlotToReplace->copyFrom(1, 0, resampleBuffer, 1, 0, resampleLengthInSamples);
 
-                    resamplePool[resampleBank]->generateThumbnail(THUMBNAIL_LENGTH);
+                    resamplePool[resampleBank]->generateThumbnail(THUMBNAIL_WIDTH);
 
                     // this is just so buttons can work out that it's finished
                     resamplePosition += samplesToEnd;
@@ -943,6 +944,10 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
 
     newPreset.setAttribute("name", presetName);
 
+    ///////////////////////////
+    /// TODO
+    // - make sure store fractional start not visual 
+    
     // Store the SampleStrip specific settings
     for (int strip = 0; strip < sampleStripArray.size(); ++strip)
     {

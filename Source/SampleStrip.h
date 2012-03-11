@@ -44,8 +44,7 @@ public:
         pPlaySpeed,
         pIsPlaySpeedLocked,
         pPlaybackPercentage,
-        pFractionalStart,
-        pFractionalEnd,
+        pVisualStart, pVisualEnd,       // start / end points in pixels
         pAudioSample,
         NumGUIParams,
         // The above are the only params needed by the GUI
@@ -105,8 +104,8 @@ public:
         case pIsPlaySpeedLocked : return "is_play_speed_locked";
         case pIsPlaying : return "is_playing";
         case pChunkSize : return "chunk_size";
-        case pFractionalStart : return "fractional_start";
-        case pFractionalEnd : return "fractional_end";
+        case pVisualStart : return "visual_start";
+        case pVisualEnd : return "visual_end";
         case pAudioSample : return "audio_sample";
         case pPlaybackPercentage : return "playback_percentage";
         case pSampleStart : return "sample_start";
@@ -131,8 +130,8 @@ public:
         case pIsPlaySpeedLocked : return TypeBool;
         case pIsPlaying : return TypeBool;
         case pChunkSize : return TypeInt;
-        case pFractionalStart : return TypeFloat;
-        case pFractionalEnd : return TypeFloat;
+        case pVisualStart : return TypeInt;
+        case pVisualEnd : return TypeInt;
         case pAudioSample : return TypeAudioSample;
         case pPlaybackPercentage : return TypeFloat;
         case pSampleStart : return TypeInt;
@@ -187,6 +186,9 @@ private:
 
     // start / end points (fractional, i.e. 0.5 is half way through)
     float fractionalSampleStart, fractionalSampleEnd;
+
+    // start / end / length of the selection (in pixels)
+    int visualSelectionStart, visualSelectionEnd, visualSelectionLength;
 
     // start / end / length of the selection (in samples)
     int selectionStart, selectionEnd, selectionLength;

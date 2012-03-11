@@ -24,13 +24,13 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       addPresetBtn("save preset", "Save Preset"),
       toggleSetlistBtn("Show Setlist"),
       toggleSettingsBtn("Settings"),
-      presetPanelBounds(314, PAD_AMOUNT, 350, 725),
-      settingsPanelBounds(314, PAD_AMOUNT, 350, 725),
+      presetPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH / 2, 725),
+      settingsPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH / 2, 725),
       presetPanel(presetPanelBounds, this),
       settingsPanel(settingsPanelBounds, this),
       sampleStripControlArray(), numStrips(newNumStrips),
       waveformControlHeight( (GUI_HEIGHT - numStrips * PAD_AMOUNT) / numStrips),
-      waveformControlWidth(700),
+      waveformControlWidth(THUMBNAIL_WIDTH),
 	  numChannels(newNumChannels), useExternalTempo(true),
       fontSize(7.4f),
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
@@ -185,7 +185,7 @@ void mlrVSTAudioProcessorEditor::buildSliders()
     slidersArray.clear();
 
     // work out the correct width
-    int sliderWidth = (int)(290 / (float) (numChannels + 1));
+    int sliderWidth = (int)(270 / (float) (numChannels + 1));
 
     // Set master volume first
     addAndMakeVisible(&masterGainSlider);

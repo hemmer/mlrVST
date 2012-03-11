@@ -19,6 +19,7 @@ SampleStrip::SampleStrip(const int &newID,
     parent(owner),
     currentSample(0), sampleSampleRate(0.0),
     totalSampleLength(0), fractionalSampleStart(0), fractionalSampleEnd(0),
+    visualSelectionStart(0), visualSelectionEnd(THUMBNAIL_WIDTH), visualSelectionLength(THUMBNAIL_WIDTH),
     numChunks(8), chunkSize(0),
     currentChannel(0),
     isPlaying(false), playbackPercentage(0.0),
@@ -71,16 +72,22 @@ void SampleStrip::setSampleStripParam(const int &parameterID,
     case pPlaybackPercentage :
         playbackPercentage = *static_cast<const float*>(newValue); break;
 
-    case pFractionalStart :
-        fractionalSampleStart = *static_cast<const float*>(newValue);
+    case pVisualStart :
+        visualSelectionStart = *static_cast<const int*>(newValue);
+        // get the percentage at which the selection begins from
+        fractionalSampleStart = (float) visualSelectionStart / (float) THUMBNAIL_WIDTH;
+        // and which sample (of the audio sample) does this refer to
         selectionStart = (int)(fractionalSampleStart * totalSampleLength);
         selectionLength = selectionEnd - selectionStart;
         chunkSize = (int) (selectionLength / (float) numChunks);
         updatePlayParams();
         break;
 
-    case pFractionalEnd :
-        fractionalSampleEnd = *static_cast<const float*>(newValue);
+    case pVisualEnd :
+        visualSelectionEnd = *static_cast<const int*>(newValue);
+        // get the percentage at which the selection begins from
+        fractionalSampleEnd = (float) visualSelectionEnd / (float) THUMBNAIL_WIDTH;
+        // and which sample (of the audio sample) does this refer to
         selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
         selectionLength = selectionEnd - selectionStart;
         chunkSize = (int) (selectionLength / (float) numChunks);
@@ -175,11 +182,11 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
     case pPlaybackPercentage :
         p = &playbackPercentage; break;
 
-    case pFractionalStart :
-        p = &fractionalSampleStart; break;
+    case pVisualStart :
+        p = &visualSelectionStart; break;
 
-    case pFractionalEnd :
-        p = &fractionalSampleEnd; break;
+    case pVisualEnd :
+        p = &visualSelectionEnd; break;
 
     // Audio processing only params
     case pChunkSize :
