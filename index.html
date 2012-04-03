@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>mlrvst by hemmer</title>
+    
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>mlrvst</h1>
+        <p>VST port of the popular monome app using JUCE. At this stage, the app is very much in the experimental phase, so be careful!</p>
+        <p class="view"><a href="https://github.com/hemmer/mlrVST">View the Project on GitHub <small>hemmer/mlrVST</small></a></p>
+        <ul>
+          <li><a href="https://github.com/hemmer/mlrVST/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/hemmer/mlrVST/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/hemmer/mlrVST">Fork On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h2>Intro</h2>
+
+<p>VST port of the popular monome app using JUCE. At this stage the app is still very much in the alpha phase, so please make sure your speakers are on low volume and pop a limiter / compressor on the track with the VST just in case. I have had a couple of nasty clicks with some samples so watch out (you are responsible for your equipment!).</p>
+
+<p>If you have any bug / issues, please feel free to report them on the <a href="https://github.com/hemmer/mlrVST/issues">issue tracker</a>.</p>
+
+<h2>Current Status</h2>
+
+<ul>
+<li>Framework for sample manipulation (several playmodes implemented)</li>
+<li>Follows host BPM and calculates speeds accordingly</li>
+<li>GUI starting to take shape nicely, volume, speed, playmode controls</li>
+<li>Handles OSC messages from the monome (only tested on Windows so far)</li>
+<li>Number of playback channels can be set at runtime (has no difficult running 8 channels of audio)</li>
+<li>Native linux build works (kindof)!</li>
+<li>can load .wavs with arbitrary sample rates (48Hz users rejoice).</li>
+<li>basic recording and resampling</li>
+</ul><h2>Latest Screenshot</h2>
+
+<p><img src="https://github.com/hemmer/mlrVST/raw/master/Screenshots/Latest.png" alt="Latest Screenshot"></p>
+
+<h2>Possible Upcoming Features</h2>
+
+<ul>
+<li>ADSR envelopes for samples (maybe make advanced options).</li>
+<li>configurable number of channels</li>
+<li>Also load MIDI tracks into strips</li>
+<li>Speed independent pitch control of samples</li>
+<li>64 bit version?</li>
+<li>proper sample management</li>
+</ul><h2>Links of Interest</h2>
+
+<ul>
+<li><a href="http://monome.org">monome</a></li>
+<li><a href="http://post.monome.org/comments.php?DiscussionID=12988">forum thread</a></li>
+<li><a href="http://parallelogram.cc/mlrv/">mlrV</a></li>
+</ul>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/hemmer">hemmer</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
+  </body>
+</html>
