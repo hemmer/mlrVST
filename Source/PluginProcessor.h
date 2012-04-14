@@ -12,7 +12,8 @@
 #define __PLUGINPROCESSOR_H_526ED7A9__
 
 #define THUMBNAIL_WIDTH 720
-
+#define NUM_ROWS 8
+#define NUM_COLS 8
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
@@ -89,6 +90,8 @@ public:
         sUseExternalTempo,
         sNumChannels,
         sCurrentBPM,
+        sQuantiseLevel,             // options None (-1), 1/1, 1/2, 1/4, etc
+        sQuantiseMenuSelection,     // allows menu to be correctly selected
         sOSCPrefix,
         sMonitorInputs,
         sResamplePrecount,
@@ -244,6 +247,28 @@ public:
         else
             return (float) (resamplePosition) / (float) (resampleLengthInSamples);
     }
+
+    // here rate is the level of quantisation, so for 1 / 32th
+    // note quantisation, quantisationLevel = 0.03125 etc
+    void updateQuantizeSettings()
+    {
+        if (quantisationLevel < 0.0)
+        {
+            quantisationOn = false;
+
+            jassert(NUM_ROWS == quantisedBuffers.size());
+            // if we are turning off quantisation, may as well clear the buffers
+            for (int q = 0; q < NUM_ROWS; ++q)
+                quantisedBuffers.getUnchecked(q)->clear();
+        }
+        else
+        {
+            quantisationGap = (int) (getSampleRate() * (120.0 * quantisationLevel / currentBPM));
+            quantRemaining = quantisationGap;
+            quantisationOn = true;
+        }
+    }
+
 private:
 
     /* OSC messages from the monome are converted to MIDI messages
@@ -251,6 +276,13 @@ private:
        buffer.
     */
     MidiKeyboardState monomeState;
+    OwnedArray<MidiBuffer> quantisedBuffers;
+
+    // quantisation level stores the fineness of the quantisation
+    // so that 1/4 note quantisation is 0.25 etc. NOTE: any negative
+    // values will be interpreted as no quantisation (-1.0 preferred).
+    double quantisationLevel; bool quantisationOn;
+    int quantisationGap, quantRemaining, quantiseMenuSelection;
 
     // Store collection of AudioSamples in memory
     OwnedArray<AudioSample> samplePool;         // for sample files (.wavs etc)
@@ -322,11 +354,6 @@ private:
        for displaying playback position.
     */
     Array<int> playbackLEDPosition;
-
-    // Boolean grid which stores the status of button presses
-    // where the indices correspond to the row, and col:
-    // i.e. buttonStatus[row]->getUnchecked[col] or similar
-    OwnedArray<Array<bool> > buttonStatus;
 
     // This is true when top left button is held down, 
     // so strips can be used to stop, reverse sample etc.

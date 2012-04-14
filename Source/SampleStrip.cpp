@@ -26,16 +26,18 @@ SampleStrip::SampleStrip(const int &newID,
     currentPlayMode(LOOP), isReversed(false), isLatched(true),
     stripVolume(1.0f), volumeIncreasing(false), volumeDecreasing(false),
     playSpeed(1.0), playSpeedIncreasing(false), playSpeedDecreasing(false),
-    isPlaySpeedLocked(false),
+    isPlaySpeedLocked(false), buttonStatus(),
     previousBPM(120.0), previousSelectionLength(0)
 {
-
+    for (int i = 0; i < NUM_COLS; ++i) buttonStatus.add(false);
 }
 
 void SampleStrip::setSampleStripParam(const int &parameterID,
                                       const void *newValue,
                                       const bool &sendChangeMsg)
 {
+    /////////////////////////////////////////////////////
+    // TODO: optimise switch case by order of importance!
 
     switch (parameterID)
     {
@@ -344,20 +346,73 @@ void SampleStrip::handleMidiEvent (const MidiMessage& m)
        either a button lift or the arrive of a new sample
        from a different strip.              
     */
-    if (m.isNoteOff())
+
+    const bool state = m.isNoteOn();
+    const int monomeCol = m.getNoteNumber();
+
+
+    // if not latched, stop playing once the button is lifted
+    if (!state && !isLatched)
+        stopSamplePlaying();
+
+    // if we have a sample and a button is pressed
+    else if (currentSample && state)
     {
-        if (!isLatched)
-            stopSamplePlaying();
-    }
-    else if (currentSample && m.isNoteOn())
-    {
-        initialColumn = m.getNoteNumber();
+        const int leftmostBtn = getLeftmostButton();
+
+        initialColumn = monomeCol;
 
         if (initialColumn < numChunks)
         {
-            startSamplePlaying(initialColumn);
+
+
+
+            // MODE: INNER LOOP /////////////////////////////////////////
+            // Check if there is a button being held to the left of the 
+            // current button and if so, loop the strip between those points.
+            if ( (leftmostBtn >= 0) && (monomeCol > leftmostBtn) && state )
+            {
+                setSampleStripParam(SampleStrip::pStartChunk, &leftmostBtn);
+                setSampleStripParam(SampleStrip::pEndChunk, &monomeCol);
+                DBG("STRIP " << sampleStripID << ": inner loop between " << leftmostBtn << " and " << monomeCol);
+            }
+            // SPECIAL CASE: last button looping
+            else if (buttonStatus[NUM_COLS-1] && monomeCol == 0 && state)
+            {
+                int endLoopStart = NUM_COLS - 1;
+                int endLoopFinish = NUM_COLS;
+
+                setSampleStripParam(SampleStrip::pStartChunk, &endLoopStart);
+                setSampleStripParam(SampleStrip::pEndChunk, &endLoopFinish);
+                DBG("STRIP " << sampleStripID << ": inner loop between " << endLoopStart << " and " << endLoopFinish);
+            }
+
+            // MODE: STOP SAMPLE ///////////////////////////////////////
+            // Check if there is a button being held to the right of the 
+            // current button and if so, stop that strip.
+            else if ( (monomeCol < leftmostBtn) && state && isLatched )
+            {
+                stopSamplePlaying();
+                DBG("STRIP " << sampleStripID << ": stopped by button combo");
+            }
+
+            // MODE: NORMAL PLAY //////////////////////////
+            // Loop over all chunks, starting at monome col
+            else
+            {
+                int loopStart = 0;
+                int loopEnd = numChunks;    // select all chunks
+
+                setSampleStripParam(SampleStrip::pStartChunk, &loopStart);
+                setSampleStripParam(SampleStrip::pEndChunk, &loopEnd);
+
+                startSamplePlaying(initialColumn);
+            }
         }
     }
+
+    // track the current status of the buttons
+    setButtonStatus(monomeCol, state);
 }
 
 
@@ -383,6 +438,7 @@ void SampleStrip::renderNextBlock(AudioSampleBuffer& outputBuffer,
         // try to find a corresponding MIDI event and see if it's within range
         // and is the correct channel
         bool useEvent = false;
+        // if there are events in the queue get the next one
         if(midiIterator.getNextEvent(m, midiEventPos))
         {
             // First get the sample strip from the channel

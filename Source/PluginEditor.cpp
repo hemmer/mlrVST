@@ -21,7 +21,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       infoLabel(),
       masterGainSlider("master gain"),
       bpmSlider("bpm slider"), bpmLabel("BPM", "BPM"),
-      addPresetBtn("save preset", "Save Preset"),
+      addPresetBtn("save preset", "Save Preset"), quantiseSettingsCbox("quantise settings"),
       toggleSetlistBtn("Show Setlist"),
       toggleSettingsBtn("Settings"),
       presetPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH / 2, 725),
@@ -57,7 +57,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     useExternalTempo = *static_cast<const bool*>(getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
 
     addAndMakeVisible(&bpmSlider);
-    bpmSlider.setBounds(PAD_AMOUNT, 400, 200, 30);
+    bpmSlider.setBounds(PAD_AMOUNT, 400, 150, 30);
     bpmSlider.setColour(Slider::backgroundColourId, Colours::black.withAlpha(0.3f));
     bpmSlider.setSliderStyle(Slider::LinearBar);
     bpmSlider.setRange(20.0, 300.0, 0.01);
@@ -75,10 +75,13 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     }
 
     addAndMakeVisible(&bpmLabel);
-    bpmLabel.setBounds(250, 400, 50, 30);
+    bpmLabel.setBounds(PAD_AMOUNT, 360, 50, 30);
     bpmLabel.setFont(2*fontSize);
     bpmLabel.setColour(Label::textColourId, Colours::black);
     //bpmLabel.setLookAndFeel(&menuLF);
+
+    setUpQuantiseUI();
+
 
     // add a label that will display the current timecode and status..
     addAndMakeVisible(&infoLabel);
@@ -96,9 +99,6 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	loadFilesBtn.addListener(this);
 	loadFilesBtn.setBounds(50, 350, 70, 25);
 
- //   addAndMakeVisible(&testBtn);
-	//testBtn.addListener(this);
-	//testBtn.setBounds(50, 190, 70, 25);
 
     setUpRecordResampleUI();
 
@@ -106,7 +106,6 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
     masterGainSlider.addListener(this);
     buildSliders();
-
 
 
 
@@ -322,6 +321,17 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
         }
     }
    
+}
+
+void mlrVSTAudioProcessorEditor::comboBoxChanged(ComboBox* comboBoxChanged)
+{
+    if (comboBoxChanged == &quantiseSettingsCbox)
+    {
+        const int choice = quantiseSettingsCbox.getSelectedId();
+        
+        if (choice > 0)
+            getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sQuantiseMenuSelection, &choice);
+    }
 }
 
 void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
@@ -587,3 +597,21 @@ void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
 
 }
 
+void mlrVSTAudioProcessorEditor::setUpQuantiseUI()
+{
+    // add dropdown box for quantisation settings
+    addAndMakeVisible(&quantiseSettingsCbox);
+    quantiseSettingsCbox.setBounds(170, 400, 100, 30);
+    quantiseSettingsCbox.addListener(this);
+
+    // add items to it
+    quantiseSettingsCbox.addItem("None", 1);
+    for (int i = 2, denom = 1; i < 8; ++i, denom *= 2)
+        quantiseSettingsCbox.addItem("1 / " + String(denom), i);
+
+    // and load the stored selection if suitable
+    const int menuSelection = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sQuantiseMenuSelection));
+    if (menuSelection >= 0 && menuSelection < 8) quantiseSettingsCbox.setSelectedId(menuSelection);
+    else quantiseSettingsCbox.setSelectedId(1);
+
+}

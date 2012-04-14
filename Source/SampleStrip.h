@@ -165,6 +165,27 @@ public:
     void startSamplePlaying(const int &chunk);
     double stopSamplePlaying();
     
+    void setButtonStatus(int column, bool state) { buttonStatus.set(column, state); }
+    // returns the button being held furthest left
+    int getLeftmostButton()
+    {
+        int leftmostButton = -1;
+        for (int i = 0; i < buttonStatus.size(); ++i)
+        {
+            if (buttonStatus.getUnchecked(i)) { leftmostButton = i; break; }
+        }
+        return leftmostButton;
+    }
+
+    void printState()
+    {
+        String test = " "; 
+        for (int i = 0; i < buttonStatus.size(); ++i)
+        {
+            test += (buttonStatus[i]) ? "#" : "@";
+        }
+        DBG(test);
+    }
 
 private:
     const int sampleStripID;
@@ -227,6 +248,9 @@ private:
      // where we are in the sample at the moment
     double sampleCurrentPosition;
 
+    // Boolean grid which stores the status of button presses
+    // where the indices correspond to the col
+    Array<bool> buttonStatus;
 
     //==============================================================================
     /** This is used to control access to the rendering

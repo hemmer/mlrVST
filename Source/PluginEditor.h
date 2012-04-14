@@ -43,6 +43,7 @@ class WaveformControl;
 class mlrVSTAudioProcessorEditor  : public AudioProcessorEditor,
                                     public SliderListener,
 									public ButtonListener,
+                                    public ComboBoxListener,
                                     public Timer, 
                                     public FileDragAndDropTarget
 {
@@ -105,6 +106,9 @@ private:
 
     mlrVSTLookAndFeel myLookAndFeel;
     menuLookandFeel menuLF;
+
+    void setUpQuantiseUI();
+    ComboBox quantiseSettingsCbox;
 
     Label infoLabel, bpmLabel;
     Slider masterGainSlider, bpmSlider;

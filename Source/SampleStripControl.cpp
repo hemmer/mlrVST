@@ -605,10 +605,6 @@ void SampleStripControl::paint(Graphics& g)
             g.fillRect(visualSelectionStart + visualPlaybackPoint, controlbarSize,
                 visualSelectionLength - visualPlaybackPoint, componentHeight - controlbarSize);
         }
-        g.setColour(Colours::white);
-        g.drawFittedText("Playback at " + String(playbackPercentage), 0,
-                         controlbarSize, componentWidth,
-                         componentHeight - controlbarSize, Justification::centred, 2);
     }
 
 
