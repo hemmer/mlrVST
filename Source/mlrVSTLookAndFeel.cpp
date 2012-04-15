@@ -428,12 +428,13 @@ void mlrVSTLookAndFeel::drawLinearSlider (Graphics& g,
 
     else if (style == Slider::LinearVertical)
     {
-        h += 2*y;       // TODO: this seems ridiculous, but I couldn't see how I was supposed to do it otherwise!!
-        g.setColour (slider.findColour (Slider::thumbColourId));
-        g.fillRect (x, h - (int)(slider.getValue() * h), w, (int)(slider.getValue() * h));
+        const int height = slider.getBounds().getHeight();
 
-        g.setColour (slider.findColour (Slider::thumbColourId).brighter());
-        g.drawRect (x, h - (int)(slider.getValue() * h), w, (int)(slider.getValue() * h));
+        g.setColour (slider.findColour (Slider::thumbColourId));
+        g.fillRect (x, height - (int)(slider.getValue() * height), w, (int)(slider.getValue() * height));
+
+        g.setColour (slider.findColour (Slider::thumbColourId).darker(0.7f));
+        g.drawRect (x, height - (int)(slider.getValue() * height), w, (int)(slider.getValue() * height));
     }
 
     else

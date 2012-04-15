@@ -5,31 +5,31 @@ VST port of the popular monome app using JUCE. At this stage the app is very muc
 
 Things that might lead to odd behaviour:
 
-	- changing internal tempo (and possibly other global settings) then closing and reopening the GUI
+- changing internal tempo (and possibly other global settings) then closing and reopening the GUI
 
-
-
-Current Status
---------------
+Features / Status
+-----------------
 
 - Framework for sample manipulation (several playmodes implemented)
-- Follows host BPM and calculates speeds accordingly
-- GUI starting to take shape nicely, volume, speed, playmode controls
-- Handles OSC messages from the monome (only tested on Windows so far)
-- Number of playback channels can be set at runtime (has no difficult running 8 channels of audio)
-- Native linux build works (kindof)!
-- can load .wavs with arbitrary sample rates (48Hz users rejoice).
+- Can use host BPM or internal tempo (can calculate playback speeds accordingly)
+- Handles OSC messages to and from the monome
+- Number of playback channels can be set at runtime (has no difficult running 8 simultaneous channels of audio)
+- Native Linux build works (kindof)!
+- Can load .wav, .flac, .ogg, .aiff, .caf, with arbitrary sample rates
+- Quantisation of button presses
+- Recording / Resampling (though needs to become more user friendly)
 
 Latest Screenshot
 -----------------
 
 ![Latest Screenshot](/hemmer/mlrVST/raw/master/Screenshots/Latest.png)
 
-Possible Upcoming Features
+(Possible) Upcoming Features
 -------------------------
+- MIDI / OSC mapping for all controls
 - ADSR envelopes for samples (maybe make advanced options).
-- configurable number of channels
-- Also load MIDI tracks into strips
+- Load MIDI tracks into strips
+- Pattern recorder
 - Speed independent pitch control of samples
 - 64 bit version?
 - proper sample management
@@ -37,9 +37,9 @@ Possible Upcoming Features
 Links of Interest
 -----------------
 
-[monome](http://monome.org)
-[forum thread](http://post.monome.org/comments.php?DiscussionID=12988)
-[mlrV](http://parallelogram.cc/mlrv/)
+- [monome](http://monome.org)
+- [forum thread](http://post.monome.org/comments.php?DiscussionID=12988)
+- [mlrV](http://parallelogram.cc/mlrv/)
 
 
 

@@ -33,7 +33,7 @@ ifeq ($(CONFIG),Release)
   OBJDIR := build/intermediate/Release
   OUTDIR := build
   CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I "~/SDKs/vstsdk2.4" -I "/usr/include" -I "/usr/include/freetype2" -I "../../oscpack/" -I "../../JuceLibraryCode"
-  CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -fPIC -Os
+  CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -fPIC -O3
   CXXFLAGS += $(CFLAGS) -DOSC_HOST_LITTLE_ENDIAN
   LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -L"/usr/X11R6/lib/" -L"../../../../../../Documents/bin" -lfreetype -lpthread -lrt -lX11 -lGL -lGLU -lXinerama -lasound 
   LDDEPS :=

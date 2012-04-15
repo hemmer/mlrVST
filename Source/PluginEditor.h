@@ -107,11 +107,25 @@ private:
     mlrVSTLookAndFeel myLookAndFeel;
     menuLookandFeel menuLF;
 
-    void setUpQuantiseUI();
-    ComboBox quantiseSettingsCbox;
+    // these are just helpers for positioning
+    int xPosition, yPosition;
 
-    Label infoLabel, bpmLabel;
-    Slider masterGainSlider, bpmSlider;
+    // volume controls (and labels)
+    Slider masterGainSlider; Label masterSliderLabel;
+    OwnedArray<Slider> slidersArray;
+    OwnedArray<Label> slidersLabelArray;
+    // this just sets it all up
+    void buildSliders();
+
+
+    // bpm slider components
+    Label bpmLabel; Slider bpmSlider;
+    // quantise options components
+    Label quantiseLabel; ComboBox quantiseSettingsCbox;
+    void setUpTempoUI();
+
+
+
 	DrawableButton debugButton;
     TextButton loadFilesBtn, addPresetBtn;
     TimedButton resampleBtn, recordBtn;
@@ -146,23 +160,15 @@ private:
     // Settings //
     //////////////
 
-    // This is the number of seperate channels. In 
-    // pratical terms, this is just the number of 
-    // samples that can be played at once.
+    // This is the number of seperate channels. In pratical terms, this
+    // is just the number of samples that can be played at once.
 	int numChannels;
     bool useExternalTempo;
 
-
-    OwnedArray<Slider> slidersArray;
-    void buildSliders();
-
-    // For simplicity, let's stick to a fixed size GUI
-
+    // this object is used to store bpm information from the host
     AudioPlayHead::CurrentPositionInfo lastDisplayedPosition;
 
     mlrVSTAudioProcessor* getProcessor() const { return static_cast <mlrVSTAudioProcessor*> (getAudioProcessor()); }
-
-    void displayPositionInfo (const AudioPlayHead::CurrentPositionInfo& pos);
 
     JUCE_LEAK_DETECTOR(mlrVSTAudioProcessorEditor);  
 };

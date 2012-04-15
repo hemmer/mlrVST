@@ -28,6 +28,7 @@ public:
                 mlrVSTAudioProcessor *owner);
     ~SampleStrip()
     {
+        buttonStatus.clear();
         parent.release();
     }
 

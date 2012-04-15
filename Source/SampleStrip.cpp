@@ -350,6 +350,8 @@ void SampleStrip::handleMidiEvent (const MidiMessage& m)
     const bool state = m.isNoteOn();
     const int monomeCol = m.getNoteNumber();
 
+    // if (state) {DBG(sampleStripID << " note on col " << monomeCol);}
+    // else {DBG(sampleStripID << " note off col " << monomeCol);}
 
     // if not latched, stop playing once the button is lifted
     if (!state && !isLatched)
@@ -438,29 +440,37 @@ void SampleStrip::renderNextBlock(AudioSampleBuffer& outputBuffer,
         // try to find a corresponding MIDI event and see if it's within range
         // and is the correct channel
         bool useEvent = false;
-        // if there are events in the queue get the next one
-        if(midiIterator.getNextEvent(m, midiEventPos))
+
+
+        // look for events in the queue and get the next one (if it exists)
+        while (midiIterator.getNextEvent(m, midiEventPos) )
         {
             // First get the sample strip from the channel
-            int stripRow = m.getChannel() - 1;
-            // filter out dodgy input
-            if (stripRow < 0 || stripRow > numSampleStrips) break;
-
-            if ((stripRow == sampleStripID) &&
-                (midiEventPos < startSample + numSamples))
-            {
-                useEvent = true;
-            }
-
-            // Then get the channel associated with that sample strip
-            int messageSelChannel = *static_cast<const int*>
+            const int stripRow = m.getChannel() - 1;
+            // and get the channel associated with that sample strip
+            const int messageSelChannel = *static_cast<const int*>
                 (parent->getSampleStrip(stripRow)->getSampleStripParam(SampleStrip::pCurrentChannel));
 
-            // If a different strip is using the same channel
-            // then stop THIS strip from playing.
-            if (isPlaying && (midiEventPos < startSample + numSamples) &&
-                (stripRow != sampleStripID) && (messageSelChannel == currentChannel))
-                stopSamplePlaying();
+
+            // If the midi message is associated with different strip
+            if (stripRow != sampleStripID)
+            {
+                // and that strip is using the same channel then stop THIS strip from playing.
+                if ((messageSelChannel == currentChannel) && isPlaying && (midiEventPos < startSample + numSamples))
+                    stopSamplePlaying();
+
+                // As the midi message is from a different strip, then it is of
+                // no use here so we keep looking.
+                continue;
+            }
+
+
+            // if the event is usable
+            if (midiEventPos < startSample + numSamples)
+                useEvent = true;
+
+            // stop looking (for now) and process the message
+            break;
         }
 
         // if there was an event, process up until that position
@@ -538,7 +548,6 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
             if (!isReversed)
             {
                 sampleCurrentPosition += playSpeed;
-                //DBG("#2 " << currentPlayMode << " strip " << sampleStripID << " " << playSpeed);
 
                 switch (currentPlayMode)
                 {

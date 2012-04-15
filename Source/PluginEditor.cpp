@@ -16,12 +16,16 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
                                                         const int &newNumChannels, 
                                                         const int &newNumStrips)
     : AudioProcessorEditor (ownerFilter),
-      myLookAndFeel(), menuLF(),
+      myLookAndFeel(), menuLF(), fontSize(7.4f),
+      xPosition(0), yPosition(0),
 
-      infoLabel(),
-      masterGainSlider("master gain"),
-      bpmSlider("bpm slider"), bpmLabel("BPM", "BPM"),
-      addPresetBtn("save preset", "Save Preset"), quantiseSettingsCbox("quantise settings"),
+      masterGainSlider("master gain"), masterSliderLabel("master", "MSTR"),
+      slidersArray(), slidersLabelArray(),
+
+      bpmSlider("bpm slider"), bpmLabel(),
+      quantiseSettingsCbox("quantise settings"), quantiseLabel(),
+
+      addPresetBtn("save preset", "Save Preset"),
       toggleSetlistBtn("Show Setlist"),
       toggleSettingsBtn("Settings"),
       presetPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH / 2, 725),
@@ -32,7 +36,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       waveformControlHeight( (GUI_HEIGHT - numStrips * PAD_AMOUNT) / numStrips),
       waveformControlWidth(THUMBNAIL_WIDTH),
 	  numChannels(newNumChannels), useExternalTempo(true),
-      fontSize(7.4f),
+      
       debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
       loadFilesBtn("load files", "LOAD FILES"),
 
@@ -41,53 +45,26 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
       recordPrecountSldr(), recordLengthSldr(), recordBankSldr(),
       recordBtn("RECORD", Colours::black, Colours::white),
       resampleBtn("RESAMPLE", Colours::black, Colours::white),
-      slidersArray()
-
+      lastDisplayedPosition()
 {
+    DBG("GUI loaded " << " strips of height " << waveformControlHeight);
+
+    // set up font stuff
     MemoryInputStream mis(BinaryData::silkfont, BinaryData::silkfontSize, false);
     typeSilk = new CustomTypeface(mis);
     fontSilk = Font( typeSilk );
 
-
-    DBG("GUI loaded");
+    // these are compile time constants   
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
     setWantsKeyboardFocus(true);
 
-    useExternalTempo = *static_cast<const bool*>(getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
+    // set up volume sliders
+    buildSliders();
 
-    addAndMakeVisible(&bpmSlider);
-    bpmSlider.setBounds(PAD_AMOUNT, 400, 150, 30);
-    bpmSlider.setColour(Slider::backgroundColourId, Colours::black.withAlpha(0.3f));
-    bpmSlider.setSliderStyle(Slider::LinearBar);
-    bpmSlider.setRange(20.0, 300.0, 0.01);
-    bpmSlider.setTextBoxIsEditable(true);
-    bpmSlider.addListener(this);
-    
-    if (useExternalTempo)
-    {
-        bpmSlider.setEnabled(false);
-    }
-    else 
-    {
-        double newBPM = *static_cast<const double*>(getGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM));
-        bpmSlider.setValue(newBPM);
-    }
+    // add the bpm slider and quantise settings
+    setUpTempoUI();
 
-    addAndMakeVisible(&bpmLabel);
-    bpmLabel.setBounds(PAD_AMOUNT, 360, 50, 30);
-    bpmLabel.setFont(2*fontSize);
-    bpmLabel.setColour(Label::textColourId, Colours::black);
-    //bpmLabel.setLookAndFeel(&menuLF);
-
-    setUpQuantiseUI();
-
-
-    // add a label that will display the current timecode and status..
-    addAndMakeVisible(&infoLabel);
-    infoLabel.setColour(Label::textColourId, Colours::black);
-	infoLabel.setBounds(10, 200, 400, 25);
-    infoLabel.setLookAndFeel(&menuLF);
 
     // useful UI debugging components
     addAndMakeVisible(&debugButton);
@@ -105,7 +82,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     buildSampleStripControls();
 
     masterGainSlider.addListener(this);
-    buildSliders();
+    
 
 
 
@@ -180,41 +157,67 @@ void mlrVSTAudioProcessorEditor::buildSampleStripControls()
 
 void mlrVSTAudioProcessorEditor::buildSliders()
 {
+    xPosition = yPosition = PAD_AMOUNT;
+
+    // work out the correct height width
+    const int sliderWidth = (int)(270 / (float) (numChannels + 1));
+    const int sliderHeight = waveformControlHeight - 16;
+
     // clear any existing sliders
     slidersArray.clear();
-
-    // work out the correct width
-    int sliderWidth = (int)(270 / (float) (numChannels + 1));
+    slidersLabelArray.clear();
 
     // Set master volume first
     addAndMakeVisible(&masterGainSlider);
     masterGainSlider.setSliderStyle(Slider::LinearVertical);
+    
     masterGainSlider.setRange(0.0, 1.0, 0.01);
     masterGainSlider.setValue(0.0, false);
-    masterGainSlider.setBounds(PAD_AMOUNT, PAD_AMOUNT, sliderWidth, waveformControlHeight);
-    masterGainSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
+    masterGainSlider.setBounds(xPosition, yPosition, sliderWidth, sliderHeight);
+    masterGainSlider.setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
     masterGainSlider.setColour(Slider::thumbColourId, Colours::darkgrey);
     masterGainSlider.setColour(Slider::backgroundColourId, (Colours::darkgrey).darker());
     masterGainSlider.setLookAndFeel(&menuLF);
+    // and its label
+    addAndMakeVisible(&masterSliderLabel);
+    masterSliderLabel.setBounds(xPosition, yPosition + sliderHeight, sliderWidth, 16);
+    masterSliderLabel.setColour(Label::backgroundColourId, Colours::black);
+    masterSliderLabel.setColour(Label::textColourId, Colours::white);
+    masterSliderLabel.setFont(fontSize);
+
+    xPosition += 1;
 
     // then individual channel volumes
     for(int i = 0; i < numChannels; ++i)
     {
+        xPosition += sliderWidth;
+
         slidersArray.add(new Slider("channel " + String(i) + " vol"));
         addAndMakeVisible(slidersArray[i]);
         slidersArray[i]->setSliderStyle(Slider::LinearVertical);
         slidersArray[i]->addListener(this);
         slidersArray[i]->setRange(0.0, 1.0, 0.01);
-        slidersArray[i]->setBounds(PAD_AMOUNT + (i + 1) * sliderWidth, PAD_AMOUNT, sliderWidth - 1, waveformControlHeight);
+        slidersArray[i]->setBounds(xPosition, yPosition, sliderWidth - 1, sliderHeight);
         slidersArray[i]->setValue(getProcessor()->getChannelGain(i));
 
         Colour sliderColour = getProcessor()->getChannelColour(i);
-        slidersArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
+        slidersArray[i]->setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
         slidersArray[i]->setLookAndFeel(&menuLF);
         slidersArray[i]->setColour(Slider::thumbColourId, sliderColour);
         slidersArray[i]->setColour(Slider::backgroundColourId, sliderColour.darker());
+
+        // add the labels
+        slidersLabelArray.add(new Label("chn " + String(i), "ch " + String(i)));
+        addAndMakeVisible(slidersLabelArray[i]);
+        slidersLabelArray[i]->setBounds(xPosition, yPosition + sliderHeight, sliderWidth - 1, 16);
+        slidersLabelArray[i]->setColour(Label::backgroundColourId, Colours::black);
+        slidersLabelArray[i]->setColour(Label::textColourId, Colours::white);
+        slidersLabelArray[i]->setFont(fontSize);
     }
 
+    // increment yPosition for the next GUI item
+    xPosition = PAD_AMOUNT;
+    yPosition += waveformControlHeight + PAD_AMOUNT;
 }
 
 //==============================================================================
@@ -422,65 +425,6 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 	}
 }
 
-static const String timeToTimecodeString (const double seconds)
-{
-    const double absSecs = fabs (seconds);
-
-    const int hours = (int) (absSecs / (60.0 * 60.0));
-    const int mins  = ((int) (absSecs / 60.0)) % 60;
-    const int secs  = ((int) absSecs) % 60;
-
-    String s;
-    if (seconds < 0)
-        s = "-";
-
-    s << String (hours).paddedLeft ('0', 2) << ":"
-      << String (mins).paddedLeft ('0', 2) << ":"
-      << String (secs).paddedLeft ('0', 2) << ":"
-      << String (roundToInt (absSecs * 1000) % 1000).paddedLeft ('0', 3);
-
-    return s;
-}
-
-// quick-and-dirty function to format a bars/beats string
-static const String ppqToBarsBeatsString (double ppq, double /*lastBarPPQ*/, int numerator, int denominator)
-{
-    if (numerator == 0 || denominator == 0)
-        return "1|1|0";
-
-    const int ppqPerBar = (numerator * 4 / denominator);
-    const double beats  = (fmod (ppq, ppqPerBar) / ppqPerBar) * numerator;
-
-    const int bar    = ((int) ppq) / ppqPerBar + 1;
-    const int beat   = ((int) beats) + 1;
-    const int ticks  = ((int) (fmod (beats, 1.0) * 960.0));
-
-    String s;
-    s << bar << '|' << beat << '|' << ticks;
-    return s;
-}
-
-// Updates the text in our position label.
-void mlrVSTAudioProcessorEditor::displayPositionInfo (const AudioPlayHead::CurrentPositionInfo& pos)
-{
-    lastDisplayedPosition = pos;
-    String displayText;
-    displayText.preallocateBytes (128);
-
-    displayText << String (pos.bpm, 2) << " bpm, "
-                << pos.timeSigNumerator << '/' << pos.timeSigDenominator
-                << "  -  " << timeToTimecodeString (pos.timeInSeconds)
-                << "  -  " << ppqToBarsBeatsString (pos.ppqPosition, pos.ppqPositionOfLastBarStart,
-                                                    pos.timeSigNumerator, pos.timeSigDenominator);
-
-    if (pos.isRecording)
-        displayText << "  (recording)";
-    else if (pos.isPlaying)
-        displayText << "  (playing)";
-
-    infoLabel.setText(displayText, false);
-}
-
 
 // Setting handling stuff
 void mlrVSTAudioProcessorEditor::updateGlobalSetting(const int &parameterID, const void *newValue)
@@ -495,9 +439,22 @@ void mlrVSTAudioProcessorEditor::updateGlobalSetting(const int &parameterID, con
     switch (parameterID) 
     {
     case mlrVSTAudioProcessor::sUseExternalTempo :
-        useExternalTempo = *static_cast<const bool*>(newValue);
-        bpmSlider.setEnabled(!useExternalTempo);
-        break;
+        {
+            useExternalTempo = *static_cast<const bool*>(newValue);
+
+            if (useExternalTempo)
+            {
+                bpmSlider.setEnabled(false);
+                bpmLabel.setText("BPM (EXTERNAL)", false);
+            }
+            else 
+            {
+                bpmSlider.setEnabled(true);
+                bpmLabel.setText("BPM (INTERNAL)", false);
+            }
+                        
+            break;
+        }
 
     case mlrVSTAudioProcessor::sNumChannels :
         {
@@ -597,21 +554,77 @@ void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
 
 }
 
-void mlrVSTAudioProcessorEditor::setUpQuantiseUI()
+void mlrVSTAudioProcessorEditor::setUpTempoUI()
 {
+    int bpmSliderWidth = 180, bpmSliderHeight = 32;
+    int bpmLabelWidth = bpmSliderWidth, bpmLabelHeight = 16;
+
+    int quantiseBoxWidth = 80, quantiseBoxHeight = 32;
+    int quantiseLabelWidth = quantiseBoxWidth, quantiseLabelHeight = 16;
+
+    xPosition = PAD_AMOUNT;
+
+    ///////////////////////
+    // First add the labels
+    addAndMakeVisible(&bpmLabel);
+    bpmLabel.setBounds(xPosition, yPosition, bpmLabelWidth, bpmLabelHeight);
+    bpmLabel.setFont(fontSize);
+    bpmLabel.setColour(Label::textColourId, Colours::white);
+    bpmLabel.setColour(Label::backgroundColourId, Colours::black);
+    xPosition += bpmLabelWidth + PAD_AMOUNT;
+
+    addAndMakeVisible(&quantiseLabel);
+    quantiseLabel.setBounds(xPosition, yPosition, quantiseLabelWidth, quantiseLabelHeight);
+    quantiseLabel.setFont(fontSize);
+    quantiseLabel.setColour(Label::textColourId, Colours::white);
+    quantiseLabel.setColour(Label::backgroundColourId, Colours::black);
+    quantiseLabel.setText("QUANTISATION", false);
+
+    xPosition = PAD_AMOUNT;
+    yPosition += quantiseLabelHeight;
+
+    
+
+    ///////////////////////////////
+    // Then add sliders and boxes
+    addAndMakeVisible(&bpmSlider);
+    bpmSlider.setBounds(xPosition, yPosition, bpmSliderWidth, bpmSliderHeight);
+    bpmSlider.setColour(Slider::backgroundColourId, Colours::black.withAlpha(0.3f));
+    bpmSlider.setSliderStyle(Slider::LinearBar);
+    bpmSlider.setRange(20.0, 300.0, 0.01);
+    bpmSlider.setTextBoxIsEditable(true);
+    bpmSlider.addListener(this);
+    
+    useExternalTempo = *static_cast<const bool*>(getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
+    if (useExternalTempo)
+    {
+        bpmSlider.setEnabled(false);
+        bpmLabel.setText("BPM (EXTERNAL)", false);
+    }
+    else 
+    {
+        double newBPM = *static_cast<const double*>(getGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM));
+        bpmSlider.setValue(newBPM);
+        bpmLabel.setText("BPM (INTERNAL)", false);
+    }
+
+    xPosition += bpmSliderWidth + PAD_AMOUNT;
+
     // add dropdown box for quantisation settings
     addAndMakeVisible(&quantiseSettingsCbox);
-    quantiseSettingsCbox.setBounds(170, 400, 100, 30);
+    quantiseSettingsCbox.setBounds(xPosition, yPosition, quantiseBoxWidth, quantiseBoxHeight);
     quantiseSettingsCbox.addListener(this);
 
     // add items to it
     quantiseSettingsCbox.addItem("None", 1);
     for (int i = 2, denom = 1; i < 8; ++i, denom *= 2)
-        quantiseSettingsCbox.addItem("1 / " + String(denom), i);
+        quantiseSettingsCbox.addItem(String(denom) + "n", i);
 
     // and load the stored selection if suitable
     const int menuSelection = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sQuantiseMenuSelection));
     if (menuSelection >= 0 && menuSelection < 8) quantiseSettingsCbox.setSelectedId(menuSelection);
     else quantiseSettingsCbox.setSelectedId(1);
 
+    xPosition = PAD_AMOUNT;
+    yPosition += bpmSliderHeight;
 }

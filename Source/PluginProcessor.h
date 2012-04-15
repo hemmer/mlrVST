@@ -271,56 +271,61 @@ public:
 
 private:
 
-    /* OSC messages from the monome are converted to MIDI messages
-       and stored in monomeState to be mixed in with the main MIDI
-       buffer.
-    */
-    MidiKeyboardState monomeState;
-    OwnedArray<MidiBuffer> quantisedBuffers;
-
-    // quantisation level stores the fineness of the quantisation
+    // MIDI / quantisation //////////////////////////////////////
+    // quantisationLevel stores the fineness of the quantisation
     // so that 1/4 note quantisation is 0.25 etc. NOTE: any negative
     // values will be interpreted as no quantisation (-1.0 preferred).
     double quantisationLevel; bool quantisationOn;
     int quantisationGap, quantRemaining, quantiseMenuSelection;
+    // quantised notes are stored in one buffer per strip
+    OwnedArray<MidiBuffer> quantisedBuffers;
+    // OSC messages from the monome are converted to MIDI messages and
+    // stored in monomeState to be mixed in with the main MIDI buffer.
+    MidiKeyboardState monomeState;
 
-    // Store collection of AudioSamples in memory
+
+    // Sample Pools /////////////////////
     OwnedArray<AudioSample> samplePool;         // for sample files (.wavs etc)
     OwnedArray<AudioSample> resamplePool;       // for recorded internal sounds
     OwnedArray<AudioSample> recordPool;         // for external recordings
 
 
-    // Max number of channels
-    const int maxChannels;
+    // Channel Setup /////////////
+    const int maxChannels;          // Max number of channels
+    Array<float> channelGains;      // individual channel volumes
+    float masterGain;               // gain for combined signal
+    const float defaultChannelGain; // initial channel gain level
+    Array<Colour> channelColours;   // colours for channels in the GUI
 
-    float masterGain;
-    // These are the seperate audio channels
-    const float defaultChannelGain;
-    // individual channel volumes
-    Array<float> channelGains;
-    Array<Colour> channelColours;
 
-    /* These track the seperate SampleStrips (related
-       to the GUI component SampleStripControl). */
+    // Global settings ////////////
+    int numChannels;
+    bool useExternalTempo;
+    double currentBPM;
+
+
+    // SampleStrips ////////////////
+    // These track the seperate SampleStrips (related to the GUI component
+    // SampleStripControl). They control the audio for each strip
     OwnedArray<SampleStrip> sampleStripArray;
     int numSampleStrips;
 
-    // Send and receive OSC messages through this
-    String OSCPrefix;
-    OSCHandler oscMsgHandler;
+    // OSC ////////////////////////
+    String OSCPrefix;           // prefix for incoming / outgoing OSC messages
+    OSCHandler oscMsgHandler;   // Send and receive OSC messages through this
     
 
-
+    // Audio Buffers /////////////////
+    // this is for summing the contributions from SampleStrips
     AudioSampleBuffer stripContrib;
-
-    // TODO: make this an array
+    // Store resampled information
     AudioSampleBuffer resampleBuffer;
     int resampleLength, resamplePrecountLength;                     // length in bars
     int resampleLengthInSamples, resamplePrecountLengthInSamples;   // length in samples
-    int resamplePosition, resamplePrecountPosition; // track resampling progress
-    int resampleBank;                               // which slot to use
+    int resamplePosition, resamplePrecountPosition;     // track resampling progress
+    int resampleBank;                                   // which slot to use
     bool isResampling;
-
+    // Store recorded information
     AudioSampleBuffer recordBuffer;
     int recordPosition, recordPrecountPosition;
     int recordLengthInSamples, recordPrecountLengthInSamples;
@@ -328,36 +333,24 @@ private:
     int recordBank;
     bool isRecording;
 
-    bool monitorInputs;
 
-    /////////////////////
-    // PRESET HANDLING //
-    /////////////////////
+    // Preset Handling //////////////////////////////////////////
     // this is a unique list of possible presets (used internally)
     XmlElement presetList;      
     // this is an ordered list of consisting of a selection from presetList
     XmlElement setlist;         
 
 
-    /////////////////////
-    // GLOBAL SETTINGS //
-    /////////////////////
-    bool useExternalTempo;
-    int numChannels;
-    double currentBPM;
+    // Misc ////////////////
 
-    ///////////////////////////
-    // BUTTON / LED TRACKING //
-    ///////////////////////////
-
-    /* Store which LED column is currently being used
-       for displaying playback position.
-    */
+    // Store which LED column is currently being used
+    // for displaying playback position.
     Array<int> playbackLEDPosition;
-
     // This is true when top left button is held down, 
     // so strips can be used to stop, reverse sample etc.
     bool stripModifier;
+    // Do we want to play incoming input?
+    bool monitorInputs;
 
     void setMonomeStatusGrids(const int &width, const int &height);
 

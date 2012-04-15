@@ -25,24 +25,33 @@ GLOBAL TODO:
 
 //==============================================================================
 mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
-    currentBPM(120.0), channelColours(),
-    maxChannels(8), numChannels(maxChannels),
+    // MIDI / quantisation /////////////////////////////////////////
+    quantisationLevel(-1.0), quantisationOn(false), 
+    quantisationGap(0), quantRemaining(0), quantiseMenuSelection(1),
+    quantisedBuffers(), monomeState(),
+    // Sample Pools ///////////////////////////
+    samplePool(), recordPool(), resamplePool(),
+    // Channel Setup ////////////////////////////////
+    maxChannels(8), channelGains(), masterGain(0.8f),
+    defaultChannelGain(0.8f), channelColours(),
+    // Global Settings //////////////////////////////////////////////////
+    numChannels(maxChannels), useExternalTempo(false), currentBPM(120.0),
+    // Sample Strips //////////////////////
     sampleStripArray(), numSampleStrips(7),
-    channelGains(), defaultChannelGain(0.8f),
-    samplePool(), recordPool(), resamplePool(),     // sample pools are initially empty
+    // OSC /////////////////////////////////////////////
     OSCPrefix("mlrvst"), oscMsgHandler(OSCPrefix, this),
-    stripModifier(false),
+    // Audio Buffers ////////////////////////////////////////////////////////////////////
     stripContrib(2, 0),
     resampleBuffer(2, 0), isResampling(false), resamplePrecountLength(0),
-    resampleLength(8), resampleBank(0), resamplePrecountPosition(0), resamplePrecountLengthInSamples(0),
+    resampleLength(8), resampleBank(0),
+    resamplePrecountPosition(0), resamplePrecountLengthInSamples(0),
     recordBuffer(2, 0), isRecording(false), recordPrecountLength(0),
-    recordLength(8), recordBank(0), recordPrecountPosition(0), recordPrecountLengthInSamples(0),
+    recordLength(8), recordBank(0),
+    recordPrecountPosition(0), recordPrecountLengthInSamples(0),
+    // Presets //////////////////////////////////
     presetList("PRESETLIST"), setlist("SETLIST"),
-    playbackLEDPosition(), monitorInputs(false),
-
-    // starting assumption is no quantisation
-    quantisationLevel(-1.0), quantisationOn(false), quantiseMenuSelection(1),
-    quantisationGap(0), quantRemaining(0), quantisedBuffers()
+    // Misc /////////////////////////////////////////////////////////
+    playbackLEDPosition(), stripModifier(false), monitorInputs(false)
 {
     // compile time assertions
     static_jassert(THUMBNAIL_WIDTH % 8 == 0);
@@ -50,9 +59,6 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     // start listening for messages
     oscMsgHandler.startThread();
     DBG("OSC thread started");
-
-    // Set up some default values..
-    masterGain = 0.8f;
 
     // create our SampleStrip objects 
     buildSampleStripArray(numSampleStrips);
@@ -88,11 +94,30 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
 
 mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
 {
+    // stop all sample strips
+    AudioSample *nullSample = 0;
+    for (int s = 0; s < sampleStripArray.size(); s++)
+    {
+        sampleStripArray[s]->stopSamplePlaying();
+        sampleStripArray[s]->setSampleStripParam(SampleStrip::pAudioSample, nullSample, false);
+    }
+
+    // stop any sort of audio
+    suspendProcessing(true);
+
+    // empty midi queue
+    monomeState.reset();
+
     // be polite and turn off any remaining LEDs!
     oscMsgHandler.clearGrid();
 
-    samplePool.clear(true);
+    // and sample strips
     sampleStripArray.clear(true);
+
+    // unload samples from memory
+    samplePool.clear(true);
+    resamplePool.clear(true);
+    recordPool.clear(true);
 
     DBG("Processor destructor finished.");
 }
@@ -133,7 +158,7 @@ int mlrVSTAudioProcessor::addNewSample(File &sampleFile)
 
 }
 
-void mlrVSTAudioProcessor::setMonomeStatusGrids(const int &width, const int &height)
+void mlrVSTAudioProcessor::setMonomeStatusGrids(const int &/*width*/, const int &height)
 {
     // ignore the top row (reserved for other things)
     int effectiveHeight = height - 1;
@@ -270,9 +295,6 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
                     // extract any messages from it
                     while(i.getNextEvent(message, time))
                     {
-                        if (message.isNoteOn()) { DBG("dumping midi events - ON:  " << q << " " << quantRemaining << " " << quantisationGap << " " << message.getNoteNumber()); }
-                        else { DBG("dumping midi events - OFF: " << q << " " << quantRemaining << " " << quantisationGap << " " << message.getNoteNumber()); }
-
                         midiMessages.addEvent(message, quantRemaining);
                     }
 
@@ -672,7 +694,7 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
             {
                 if (quantisationOn)
                 {
-                    MidiMessage quantisedMessage(MidiMessage::noteOff(monomeRow, monomeCol, 1.0f), 0.01);
+                    MidiMessage quantisedMessage(MidiMessage::noteOff(monomeRow, monomeCol), 0.01);
                     quantisedBuffers.getUnchecked(monomeRow)->addEvent(quantisedMessage, 0);
                 }
                 else

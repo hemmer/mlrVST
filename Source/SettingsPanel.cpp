@@ -87,7 +87,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     oscPrefixTxtBx.setEnabled(true);
     const String currentPrefix = *static_cast<const String*>
         (mlrVSTEditor->getGlobalSetting(mlrVSTAudioProcessor::sOSCPrefix));
-    DBG("prefix" << currentPrefix);
+    DBG("settings panel: prefix " << currentPrefix);
     // eh?
     //oscPrefixTxtBx.setText("test", false);
 
