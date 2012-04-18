@@ -39,9 +39,17 @@ public:
                        mlrVSTAudioProcessorEditor * const owner);
     ~SampleStripControl();
 
+    enum hitZone 
+    {
+        pNone,
+        pSample,
+        pRecord,
+        pResample
+    };
+
     void mouseDown(const MouseEvent&);
     void mouseDrag(const MouseEvent&);
-    //void mouseUp(const MouseEvent&);
+    void mouseUp(const MouseEvent&);
 
     void paint(Graphics& g);
     void changeListenerCallback(ChangeBroadcaster*);
@@ -103,71 +111,67 @@ public:
 
 private:
 
-    // Pointer to parent GUI component
+    // ID / communication //////////////////////////
     mlrVSTAudioProcessorEditor * const mlrVSTEditor;
-    // which strip we are representing
-    const int sampleStripID;
-    // Pointer to data structure for samplestrip
-    SampleStrip * const dataStrip;
-    bool stripChanged;
+    const int sampleStripID;            // which strip we are representing
+    SampleStrip * const dataStrip;      // pointer to data structure for samplestrip
+    bool stripChanged;                  // do we need to redraw
 
-    // GUI components
-    Label trackNumberLbl, filenameLbl, chanLbl, volLbl, modeLbl, playSpeedLbl;
-    OwnedArray<DrawableButton> channelButtonArray;
-    ComboBox selNumChunks, selPlayMode;
-    ToggleButton isLatchedBtn, isReversedBtn;
-    TextButton times2, div2;
-    
-    DrawableButton speedLockBtn;
-    DrawableImage lockImg, unlockImg;
-    bool isSpeedLocked;
-
-    Slider stripVolumeSldr, playbackSpeedSldr;
-
+    // GUI dimensions //////////////////////////////
     const int componentHeight, componentWidth;
     const int controlbarSize;
     Rectangle<int> waveformPaintBounds;
 
-
+    // SampleStrip GUI ////////////////////////////////////////
     menuLookandFeel menuLF;
+    const float fontSize;
+    Colour backgroundColour;
+    // channel selector
+    Label chanLbl;
+    OwnedArray<DrawableButton> channelButtonArray;
+    // volume controls
+    Label volLbl;
+    Slider stripVolumeSldr;
+    // playmode selector
+    Label modeLbl;
+    ComboBox selPlayMode;
+    ToggleButton isLatchedBtn;
+    // playspeed controls
+    Label playspeedLbl;
+    Slider playspeedSldr;
+    DrawableButton speedLockBtn;
+    ToggleButton isReversedBtn;
+    DrawableImage lockImg, unlockImg;
+    TextButton times2, div2;
+    // select num chunks
+    ComboBox selNumChunks;
+    // bottom row labels
+    Label trackNumberLbl, filenameLbl;
+    // bit of a hack, for some reason popup menu needs a component
+    // to spawn from so I use blank labels
+    OwnedArray<Label> popupLocators;
 
-    int numChannels;        // total number of channels available
+    // Waveform control ////////////////////////
+    // dimensions of selection in pixels
+    int visualSelectionStart, visualSelectionEnd, visualSelectionLength;
+    float visualChunkSize;      // this needs to be a float as chunkSize might need anti-aliasing.
+    int numChunks;              // how many chunks to break the sample into
+    // This is so we can drag with middle mouse
+    int selectionStartBeforeDrag, *selectionPointToChange, *selectionPointFixed;
+    ModifierKeys mouseDownMods;         // so we can track what mouse combination is used
+    bool rightMouseDown;                // track RMB usage
+    int selectedHitZone;                // what type of sample are we selecting
+    double thumbnailScaleFactor;        // scale waveform height by volume
+    const AudioSample *currentSample;   // pointer to the sample (to get waveform)
 
-    /* ============================================================
-       properties about the waveformcontrols handling of the sample
-       note these are waveform strip independent, i.e. they are not
-       properties of the AudioSample. This means we can have
-       different start points on different rows for the same sample
-       ============================================================*/
-    bool isReversed, isPlaying, isLatched;
+    // Settings //////////////
+    int numChannels;                // total number of channels available
+    bool isSpeedLocked;             // does playspeed change with selection
+    bool isLatched;                 // if latched then button up events are ignored
+    bool isReversed, isPlaying;     // play settings
     float playbackPercentage;
 
-    // these are the same, except refering to the component
-    // rather than the sample
-    int visualSelectionStart, visualSelectionEnd;
-    int visualSelectionLength;
-    // this need to be a float as chunkSize might need anti aliasing.
-    float visualChunkSize;
-    // how many chunks to break the sample into (default 8 for
-    // standard monome) and what size (in samples) they are
-    int numChunks;
-
-    // This is so we can drag with middle mouse
-    int selectionStartBeforeDrag;
-    int *selectionPointToChange, *selectionPointFixed;
-
-    ModifierKeys mouseDownMods;
-
-    // stuff for drawing waveforms
-    double thumbnailScaleFactor;
-    const AudioSample *currentSample;
-
-    // main strip background colour
-    Colour backgroundColour;
-
     JUCE_LEAK_DETECTOR(SampleStripControl);  
-
-    const float fontSize;
 };
 
 

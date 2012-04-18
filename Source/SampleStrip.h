@@ -168,7 +168,7 @@ public:
     
     void setButtonStatus(int column, bool state) { buttonStatus.set(column, state); }
     // returns the button being held furthest left
-    int getLeftmostButton()
+    int getLeftmostButton() const
     {
         int leftmostButton = -1;
         for (int i = 0; i < buttonStatus.size(); ++i)
@@ -178,7 +178,7 @@ public:
         return leftmostButton;
     }
 
-    void printState()
+    void printState() const
     {
         String test = " "; 
         for (int i = 0; i < buttonStatus.size(); ++i)

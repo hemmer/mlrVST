@@ -34,6 +34,11 @@ Latest Screenshot
 - 64 bit version?
 - proper sample management
 
+Downloads
+---------
+
+Both Win / Mac versions are available from [here](/hemmer/mlrVST/downloads).
+
 Links of Interest
 -----------------
 

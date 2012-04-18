@@ -30,7 +30,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     quantisationGap(0), quantRemaining(0), quantiseMenuSelection(1),
     quantisedBuffers(), monomeState(),
     // Sample Pools ///////////////////////////
-    samplePool(), recordPool(), resamplePool(),
+    samplePool(), resamplePool(), recordPool(),
     // Channel Setup ////////////////////////////////
     maxChannels(8), channelGains(), masterGain(0.8f),
     defaultChannelGain(0.8f), channelColours(),
@@ -42,12 +42,17 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     OSCPrefix("mlrvst"), oscMsgHandler(OSCPrefix, this),
     // Audio Buffers ////////////////////////////////////////////////////////////////////
     stripContrib(2, 0),
-    resampleBuffer(2, 0), isResampling(false), resamplePrecountLength(0),
-    resampleLength(8), resampleBank(0),
-    resamplePrecountPosition(0), resamplePrecountLengthInSamples(0),
-    recordBuffer(2, 0), isRecording(false), recordPrecountLength(0),
-    recordLength(8), recordBank(0),
-    recordPrecountPosition(0), recordPrecountLengthInSamples(0),
+    resampleBuffer(2, 0), isResampling(false),
+    resampleLength(8), resamplePrecountLength(0),
+    resampleLengthInSamples(0), resamplePrecountLengthInSamples(0),
+    resamplePosition(0), resamplePrecountPosition(0),
+    resampleBank(0),
+
+    recordBuffer(2, 0), isRecording(false),
+    recordLength(8), recordPrecountLength(0),
+    recordLengthInSamples(0), recordPrecountLengthInSamples(0),
+    recordPosition(0), recordPrecountPosition(0),
+    recordBank(0),
     // Presets //////////////////////////////////
     presetList("PRESETLIST"), setlist("SETLIST"),
     // Misc /////////////////////////////////////////////////////////
@@ -170,6 +175,9 @@ void mlrVSTAudioProcessor::setMonomeStatusGrids(const int &/*width*/, const int 
     {
         playbackLEDPosition.add(-1);
     }
+
+    // just in case, turn off any LEDs that might have been on!
+    oscMsgHandler.clearGrid();
 }
 
 void mlrVSTAudioProcessor::buildChannelArray(const int &newNumChannels)
@@ -779,10 +787,6 @@ SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index)
     jassert( index < sampleStripArray.size() );
     SampleStrip *tempStrip = sampleStripArray[index];
     return tempStrip;
-}
-int mlrVSTAudioProcessor::getNumSampleStrips()
-{
-    return sampleStripArray.size();
 }
 
 void mlrVSTAudioProcessor::switchChannels(const int &newChan, const int &stripID)

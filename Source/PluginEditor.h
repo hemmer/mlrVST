@@ -99,74 +99,70 @@ public:
     const void* getGlobalSetting(const int &parameterID) const;
 
 private:
-
-    Typeface::Ptr typeSilk;
-    Font fontSilk;
-    float fontSize;
-
+    // Style / positioning objects ///////////////
     mlrVSTLookAndFeel myLookAndFeel;
     menuLookandFeel menuLF;
-
     // these are just helpers for positioning
     int xPosition, yPosition;
 
-    // volume controls (and labels)
+    // Fonts ///////////////////////
+    float fontSize;
+    MemoryInputStream mis;
+    Typeface::Ptr typeSilk;
+    Font fontSilk;
+
+    // Volume controls //////////////////////////////
     Slider masterGainSlider; Label masterSliderLabel;
     OwnedArray<Slider> slidersArray;
     OwnedArray<Label> slidersLabelArray;
     // this just sets it all up
     void buildSliders();
 
-
-    // bpm slider components
-    Label bpmLabel; Slider bpmSlider;
-    // quantise options components
-    Label quantiseLabel; ComboBox quantiseSettingsCbox;
+    // Tempo controls /////////////////
+    Slider bpmSlider; Label bpmLabel;                       // bpm components
+    ComboBox quantiseSettingsCbox; Label quantiseLabel;     // quantise options components
     void setUpTempoUI();
 
-
-
-	DrawableButton debugButton;
-    TextButton loadFilesBtn, addPresetBtn;
-    TimedButton resampleBtn, recordBtn;
+    // Buttons ////////////////////////////
     ToggleButton toggleSetlistBtn, toggleSettingsBtn;
-	ListBox fileList;
+    TextButton loadFilesBtn;
 
+    // Record / resample UI ////////////////////////////////////////
     Label precountLbl, recordLengthLbl, bankLbl;
-
-
+    // sliders for choosing banks etc
+    Slider recordPrecountSldr, recordLengthSldr, recordBankSldr;
+    Slider resamplePrecountSldr, resampleLengthSldr, resampleBankSldr;
+    // these give visual progress of recording / resampling status
+    TimedButton recordBtn, resampleBtn;
     void setUpRecordResampleUI();
-    Slider recordLengthSldr, recordPrecountSldr, recordBankSldr;
-    Slider resampleLengthSldr, resamplePrecountSldr, resampleBankSldr;
 
+    // Misc /////////////////////
+    // this object is used to store bpm information from the host
+    AudioPlayHead::CurrentPositionInfo lastDisplayedPosition;
+    DrawableButton debugButton;
 
-
+    // Presets //////////////////////
+    TextButton addPresetBtn;
     Rectangle<int> presetPanelBounds;
     PresetPanel presetPanel;
 
+    // Settings ///////////////
+    // in practical terms, this is the number of simultaneous audio channels
+    int numChannels;
+    // are we using the bpm from the host?
+    bool useExternalTempo;
+    // These provide the overlay for the settings Panel
     Rectangle<int> settingsPanelBounds;
     SettingsPanel settingsPanel;
 
-	AudioFormatManager formatManager;
-
-	// Store the waveform controls/strips in array. 
-    // For a standard monome64 this is 7
+    // SampleStrip controls ///////////////////////////////
+    // Store the waveform controls/strips in array, this is 
+    // NUM_ROWS - 1 (for the top row controls)
     OwnedArray<SampleStripControl> sampleStripControlArray;
     const int numStrips;
-    void buildSampleStripControls();
     const int waveformControlHeight, waveformControlWidth;
+    void buildSampleStripControls();
 
-    //////////////
-    // Settings //
-    //////////////
-
-    // This is the number of seperate channels. In pratical terms, this
-    // is just the number of samples that can be played at once.
-	int numChannels;
-    bool useExternalTempo;
-
-    // this object is used to store bpm information from the host
-    AudioPlayHead::CurrentPositionInfo lastDisplayedPosition;
 
     mlrVSTAudioProcessor* getProcessor() const { return static_cast <mlrVSTAudioProcessor*> (getAudioProcessor()); }
 

@@ -16,43 +16,56 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
                                                         const int &newNumChannels, 
                                                         const int &newNumStrips)
     : AudioProcessorEditor (ownerFilter),
-      myLookAndFeel(), menuLF(), fontSize(7.4f),
-      xPosition(0), yPosition(0),
+    // Style / positioning objects //////////
+    myLookAndFeel(), menuLF(),
+    xPosition(0), yPosition(0),
 
-      masterGainSlider("master gain"), masterSliderLabel("master", "MSTR"),
-      slidersArray(), slidersLabelArray(),
+    // Fonts //////////////////
+    fontSize(7.4f),
+    mis(BinaryData::silkfont, BinaryData::silkfontSize, false),
+    typeSilk(new CustomTypeface(mis)),
+    fontSilk( typeSilk ),
 
-      bpmSlider("bpm slider"), bpmLabel(),
-      quantiseSettingsCbox("quantise settings"), quantiseLabel(),
+    // Volume controls //////////////////////////////
+    masterGainSlider("master gain"), masterSliderLabel("master", "MSTR"),
+    slidersArray(), slidersLabelArray(),
 
-      addPresetBtn("save preset", "Save Preset"),
-      toggleSetlistBtn("Show Setlist"),
-      toggleSettingsBtn("Settings"),
-      presetPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH / 2, 725),
-      settingsPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH / 2, 725),
-      presetPanel(presetPanelBounds, this),
-      settingsPanel(settingsPanelBounds, this),
-      sampleStripControlArray(), numStrips(newNumStrips),
-      waveformControlHeight( (GUI_HEIGHT - numStrips * PAD_AMOUNT) / numStrips),
-      waveformControlWidth(THUMBNAIL_WIDTH),
-	  numChannels(newNumChannels), useExternalTempo(true),
-      
-      debugButton("loadfile", DrawableButton::ImageRaw),    // debugging stuff
-      loadFilesBtn("load files", "LOAD FILES"),
+    // Tempo controls ///////////////////////////////////////
+    bpmSlider("bpm slider"), bpmLabel(),
+    quantiseSettingsCbox("quantise settings"), quantiseLabel(),
 
-      precountLbl("precount", "precount"), recordLengthLbl("length", "length"), bankLbl("bank", "bank"),
-      resamplePrecountSldr(), resampleBankSldr(), resampleLengthSldr(),
-      recordPrecountSldr(), recordLengthSldr(), recordBankSldr(),
-      recordBtn("RECORD", Colours::black, Colours::white),
-      resampleBtn("RESAMPLE", Colours::black, Colours::white),
-      lastDisplayedPosition()
+    // Buttons ////////////////////////////
+    toggleSetlistBtn("Show Setlist"),
+    toggleSettingsBtn("Settings"),
+    loadFilesBtn("load files", "LOAD FILES"),
+
+    // Record / resample UI ////////////////////////////////////////
+    precountLbl("precount", "precount"), recordLengthLbl("length", "length"), bankLbl("bank", "bank"),
+    recordPrecountSldr(), recordLengthSldr(), recordBankSldr(),
+    resamplePrecountSldr(), resampleLengthSldr(), resampleBankSldr(),
+    recordBtn("RECORD", Colours::black, Colours::white),
+    resampleBtn("RESAMPLE", Colours::black, Colours::white),
+    
+    // Misc ///////////////////////////////////////////
+    lastDisplayedPosition(),
+    debugButton("loadfile", DrawableButton::ImageRaw),    // temporary button
+
+    // Presets //////////////////////////////////////////////////
+    addPresetBtn("save preset", "Save Preset"),
+    presetPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH / 2, 725),
+    presetPanel(presetPanelBounds, this),
+
+    // Settings ///////////////////////////////////////
+    numChannels(newNumChannels), useExternalTempo(true),
+    settingsPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH / 2, 725),
+    settingsPanel(settingsPanelBounds, this),
+
+    // SampleStrip controls ///////////////////////////
+    sampleStripControlArray(), numStrips(newNumStrips),
+    waveformControlHeight( (GUI_HEIGHT - numStrips * PAD_AMOUNT) / numStrips),
+    waveformControlWidth(THUMBNAIL_WIDTH)
 {
     DBG("GUI loaded " << " strips of height " << waveformControlHeight);
-
-    // set up font stuff
-    MemoryInputStream mis(BinaryData::silkfont, BinaryData::silkfontSize, false);
-    typeSilk = new CustomTypeface(mis);
-    fontSilk = Font( typeSilk );
 
     // these are compile time constants   
     setSize(GUI_WIDTH, GUI_HEIGHT);
@@ -64,7 +77,6 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
     // add the bpm slider and quantise settings
     setUpTempoUI();
-
 
     // useful UI debugging components
     addAndMakeVisible(&debugButton);
@@ -78,12 +90,9 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
 
     setUpRecordResampleUI();
-
     buildSampleStripControls();
 
     masterGainSlider.addListener(this);
-    
-
 
 
     // Preset associated stuff
@@ -107,8 +116,6 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
     addChildComponent(&settingsPanel);
     settingsPanel.setBounds(settingsPanelBounds);
-
-    formatManager.registerBasicFormats();
 
     // start timer to update play positions, slider values etc.
     startTimer(50);
@@ -382,7 +389,6 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
         w.addButton("cancel", 0, KeyPress (KeyPress::escapeKey, 0, 0));
 
 
-
         if (w.runModalLoop() != 0) // is they picked 'ok'
         {
             // this is the text they entered..
@@ -390,10 +396,7 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 
             getProcessor()->savePreset(newPresetName);
         }
-
-        
     #endif
-
     }
 
     else if(btn == &resampleBtn)
@@ -406,11 +409,13 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
         getProcessor()->startRecording();
     }
 
-    // USEFUL FOR TESTING
+    // load files manually using file dialog
 	else if(btn == &loadFilesBtn)
     {
-        
-		FileChooser myChooser ("Please choose a file:", File::getSpecialLocation(File::userDesktopDirectory), "*.wav");
+        FileChooser myChooser ("Please choose a file:",
+                               File::getSpecialLocation(File::userDesktopDirectory),
+                               "*.wav;*.flac;*.ogg;*.aif;*.aiff;*.caf");
+
         if(myChooser.browseForMultipleFilesToOpen())
         {	
             Array<File> newFiles = myChooser.getResults();

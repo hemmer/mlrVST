@@ -15,34 +15,43 @@ Custom component to display a waveform (corresponding to an mlr row)
 #include <cstdlib>
 #include <cmath>
 
-SampleStripControl::SampleStripControl(const int &id,
-                                       const int &width,
-                                       const int &height,
+SampleStripControl::SampleStripControl(const int &id, const int &width, const int &height,
                                        const int &newNumChannels,
                                        SampleStrip * const dataStripLink,
                                        mlrVSTAudioProcessorEditor * const owner) :
-    componentHeight(height), componentWidth(width), sampleStripID(id),
-    backgroundColour(Colours::black), controlbarSize(16), fontSize(7.4f),
+
+    // ID / communication //////////////////////////
+    mlrVSTEditor(owner), sampleStripID(id),
+    dataStrip(dataStripLink), stripChanged(true),
+
+    // GUI dimensions //////////////////////////////
+    componentHeight(height), componentWidth(width), controlbarSize(16),
     waveformPaintBounds(0, controlbarSize, componentWidth, (componentHeight - controlbarSize)),
-    thumbnailScaleFactor(1.0),
-    trackNumberLbl("track number", String(sampleStripID)),
-    filenameLbl("filename", "No File"),
-    chanLbl("channel label", "CHAN"), volLbl("volume label", "VOL"),
-    modeLbl("mode", "MODE"), playSpeedLbl("play speed label", "PLAY SPEED"),
+
+    // SampleStrip GUI ////////////////////////////////////////
+    menuLF(), fontSize(7.4f), backgroundColour(Colours::black),
+    chanLbl("channel label", "CHAN"), channelButtonArray(),
+    volLbl("volume label", "VOL"), stripVolumeSldr("volume"),
+    modeLbl("mode", "MODE"), selPlayMode("select playmode"), isLatchedBtn("LATCH"),
+    playspeedLbl("playspeed label", "PLAY SPEED"), playspeedSldr("playspeed"),
+    speedLockBtn("speed lock", DrawableButton::ImageRaw), isReversedBtn("NORM"),
+    lockImg(), unlockImg(), times2("x2"), div2("/2"), selNumChunks(),
+    trackNumberLbl("track number", String(sampleStripID)), filenameLbl("filename", "No File"),
+    popupLocators(),
+
+    // Waveform control ////////////////////////
+    visualSelectionStart(0), visualSelectionEnd(componentWidth), visualSelectionLength(componentWidth),
+    visualChunkSize(0.0), numChunks(8),
+    selectionStartBeforeDrag(0), selectionPointToChange(0), selectionPointFixed(0),
+    mouseDownMods(), rightMouseDown(false), selectedHitZone(0),
+    thumbnailScaleFactor(1.0), currentSample(0),
+
+    // Settings ///////////////////////
     numChannels(newNumChannels),
-    channelButtonArray(),
-    isReversed(false),
-    numChunks(8), currentSample(0),
-    visualSelectionStart(0), visualSelectionEnd(componentWidth), visualChunkSize(0.0), visualSelectionLength(0),
-    selNumChunks(), selPlayMode(),
-    isLatchedBtn("LATCH"), isReversedBtn("NORM"), times2("x2"), div2("/2"),
-    speedLockBtn("speed lock", DrawableButton::ImageRaw), isSpeedLocked(false),
-    lockImg(), unlockImg(),
-    stripVolumeSldr("strip volume"),
-    selectionPointToChange(0), selectionPointFixed(0),
-    mouseDownMods(),
-    mlrVSTEditor(owner), dataStrip(dataStripLink),
-    menuLF()
+    isSpeedLocked(false), isLatched(true),
+    isReversed(false), isPlaying(false),
+    playbackPercentage(0.0f)
+
 {
     // load binary data for lock icon
     lockImg.setImage(ImageCache::getFromMemory(BinaryData::locked_png, BinaryData::locked_pngSize));
@@ -52,12 +61,24 @@ SampleStripControl::SampleStripControl(const int &id,
     buildUI();
     buildNumBlocksList(8);
 
-    
+    popupLocators.add(new Label("none"));
+    addAndMakeVisible(popupLocators.getLast());
+    popupLocators.getLast()->setBounds(0, controlbarSize, 1, 1);
+    popupLocators.add(new Label("samples"));
+    addAndMakeVisible(popupLocators.getLast());
+    popupLocators.getLast()->setBounds(1 * componentWidth / 4, controlbarSize, 1, 1);
+    popupLocators.add(new Label("recordings"));
+    addAndMakeVisible(popupLocators.getLast());
+    popupLocators.getLast()->setBounds(2 * componentWidth / 4, controlbarSize, 1, 1);
+    popupLocators.add(new Label("resamplings"));
+    addAndMakeVisible(popupLocators.getLast());
+    popupLocators.getLast()->setBounds(3 * componentWidth / 4, controlbarSize, 1, 1);
+
     dataStrip->addChangeListener(this);
 
     // listen for user input
     selPlayMode.addListener(this);
-    playbackSpeedSldr.addListener(this);
+    playspeedSldr.addListener(this);
     stripVolumeSldr.addListener(this);
     isReversedBtn.addListener(this);
     isLatchedBtn.addListener(this);
@@ -71,6 +92,7 @@ SampleStripControl::~SampleStripControl()
 {
     dataStrip->removeChangeListener(this);
     channelButtonArray.clear(true);
+    popupLocators.clear(true);
 }
 
 void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
@@ -88,8 +110,6 @@ void SampleStripControl::changeListenerCallback(ChangeBroadcaster * sender)
     if (sender == dataStrip)
     {
         stripChanged = true;
-
- 
     }
 }
 
@@ -102,7 +122,7 @@ void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
         visualChunkSize = (visualSelectionLength / (float) numChunks);
 
         // It's actually quite complicated/risky to change this on the fly,
-        // so just stop the sample first instead!
+        // it's easiest just stop the sample first instead!
         dataStrip->stopSamplePlaying();
         dataStrip->setSampleStripParam(SampleStrip::pNumChunks,
                                        &numChunks);
@@ -170,9 +190,9 @@ void SampleStripControl::sliderValueChanged(Slider *sldr)
         thumbnailScaleFactor = newStripVol;
         dataStrip->setSampleStripParam(SampleStrip::pStripVolume, &newStripVol);
     }
-    else if(sldr == &playbackSpeedSldr)
+    else if(sldr == &playspeedSldr)
     {
-        double newPlaySpeed = playbackSpeedSldr.getValue();
+        double newPlaySpeed = playspeedSldr.getValue();
         dataStrip->setSampleStripParam(SampleStrip::pPlaySpeed, &newPlaySpeed);
     }
 }
@@ -188,8 +208,8 @@ void SampleStripControl::updateChannelColours(const int &newChannel)
     stripVolumeSldr.setColour(Slider::thumbColourId, backgroundColour);
     stripVolumeSldr.setColour(Slider::backgroundColourId, backgroundColour.darker());
 
-    playbackSpeedSldr.setColour(Slider::thumbColourId, backgroundColour);
-    playbackSpeedSldr.setColour(Slider::backgroundColourId, backgroundColour.darker());
+    playspeedSldr.setColour(Slider::thumbColourId, backgroundColour);
+    playspeedSldr.setColour(Slider::backgroundColourId, backgroundColour.darker());
 
     isLatchedBtn.setColour(ToggleButton::textColourId, backgroundColour);
     isReversedBtn.setColour(ToggleButton::textColourId, backgroundColour);
@@ -298,21 +318,21 @@ void SampleStripControl::buildUI()
 
     newXposition += 40;
 
-    addAndMakeVisible(&playSpeedLbl);
-    playSpeedLbl.setBounds(newXposition, 0, 64, controlbarSize);
-    playSpeedLbl.setColour(Label::backgroundColourId, Colours::black);
-    playSpeedLbl.setColour(Label::textColourId, Colours::white);
-    playSpeedLbl.setFont(fontSize);
+    addAndMakeVisible(&playspeedLbl);
+    playspeedLbl.setBounds(newXposition, 0, 64, controlbarSize);
+    playspeedLbl.setColour(Label::backgroundColourId, Colours::black);
+    playspeedLbl.setColour(Label::textColourId, Colours::white);
+    playspeedLbl.setFont(fontSize);
 
     newXposition += 64;
 
-    addAndMakeVisible(&playbackSpeedSldr);
-    playbackSpeedSldr.setSliderStyle(Slider::LinearBar);
-    playbackSpeedSldr.setColour(Slider::textBoxTextColourId, Colours::white);
-    playbackSpeedSldr.setBounds(newXposition, 0, 80, controlbarSize);
-    playbackSpeedSldr.setRange(0.0, 4.0, 0.001);
-    playbackSpeedSldr.setTextBoxIsEditable(true);
-    playbackSpeedSldr.setLookAndFeel(&menuLF);
+    addAndMakeVisible(&playspeedSldr);
+    playspeedSldr.setSliderStyle(Slider::LinearBar);
+    playspeedSldr.setColour(Slider::textBoxTextColourId, Colours::white);
+    playspeedSldr.setBounds(newXposition, 0, 80, controlbarSize);
+    playspeedSldr.setRange(0.0, 4.0, 0.001);
+    playspeedSldr.setTextBoxIsEditable(true);
+    playspeedSldr.setLookAndFeel(&menuLF);
     
 
     newXposition += 80;
@@ -343,99 +363,12 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
     // Save modifers of the initial press
     mouseDownMods = e.mods;
 
+    // right click displays hit zones for sample popup menus
     if (e.mods == ModifierKeys::rightButtonModifier && e.y > controlbarSize)
     {
-
-        int currentSamplePoolSize = mlrVSTEditor->getSamplePoolSize(mlrVSTAudioProcessor::pSamplePool);
-        int currentResamplePoolSize = mlrVSTEditor->getSamplePoolSize(mlrVSTAudioProcessor::pResamplePool);
-        int currentRecordPoolSize = mlrVSTEditor->getSamplePoolSize(mlrVSTAudioProcessor::pRecordPool);
-
-        // TODO: can this be cached and only repopulated when the sample pool changes?
-        // TODO: middle click to delete sample under cursor in menu?
-        PopupMenu p = PopupMenu();
-        PopupMenu resamplePoolMenu = PopupMenu();
-        PopupMenu recordPoolMenu = PopupMenu();
-
-        int menuCounter = 1;        // tracks how many items in the menu
-        p.addItem(menuCounter, "None");
-        
-
-        for (int m = 0; m < currentResamplePoolSize; ++m)
-        {
-            ++menuCounter;
-            resamplePoolMenu.addItem(menuCounter, "resample " + String(m));
-        }
-        
-        for (int m = 0; m < currentRecordPoolSize; ++m)
-        {
-            ++menuCounter;
-            recordPoolMenu.addItem(menuCounter, "record " + String(m));
-        }
-
-        
-        p.addSubMenu("resample", resamplePoolMenu);
-        p.addSubMenu("record", recordPoolMenu);
-
-
-        // for each sample, add it to the list
-        for (int i = 0; i < currentSamplePoolSize; ++i)
-        {
-            // +1 because 0 is result for no item clicked
-            // +1 because "none" is also an option
-            String iFileName = mlrVSTEditor->getSampleName(i, mlrVSTAudioProcessor::pSamplePool);
-
-            ++menuCounter;
-            p.addItem(menuCounter, iFileName);
-        }
-
-        // show the menu and store choice
-        int fileChoice = p.showMenu(PopupMenu::Options().withTargetComponent(&chanLbl));
-
-
-        // If "none is selected"
-        if (fileChoice == 1)
-        {
-            dataStrip->stopSamplePlaying();
-
-            const AudioSample *newSample = 0;
-            dataStrip->setSampleStripParam(SampleStrip::pAudioSample, newSample);
-
-        }
-        // If a menu option has been chosen that is a file
-        else if (fileChoice != 0)
-        {
-            // -1 as everyitem is offset by 1
-            // -1 to correct for "none" option
-            fileChoice -= 2;
-
-            // something is selected from the resample menu
-            if (fileChoice < currentResamplePoolSize && fileChoice >= 0)
-            {
-                DBG("resample option: "<< fileChoice);
-                selectNewSample(fileChoice, mlrVSTAudioProcessor::pResamplePool);
-                return;
-            }
-            else fileChoice -= currentResamplePoolSize;
-
-            // something is selected from the record menu
-            if (fileChoice < currentRecordPoolSize && fileChoice >= 0)
-            {
-                DBG("record option: "<< fileChoice);
-                selectNewSample(fileChoice, mlrVSTAudioProcessor::pRecordPool);
-                return;
-            }
-            else fileChoice -= currentRecordPoolSize;
-
-            // an audio sample has been selected
-            if(fileChoice < currentSamplePoolSize && fileChoice >= 0)
-            {
-                DBG("sample option: " << fileChoice);
-                selectNewSample(fileChoice, mlrVSTAudioProcessor::pSamplePool);
-            }
-            
-        }
-
-
+        rightMouseDown = true;
+        selectedHitZone = e.x / (componentWidth / 4);
+        repaint();        
     }
 
     // middle click-drag to move the selection
@@ -478,13 +411,125 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
     }
 }
 
+void SampleStripControl::mouseUp(const MouseEvent& e)
+{
+    // TODO: middle click to delete sample under cursor in menu?
+    if (e.mods == ModifierKeys::rightButtonModifier)
+    {
+        switch (selectedHitZone)
+        {
+        // user selected NONE
+        case pNone :
+            {
+                dataStrip->stopSamplePlaying();
+                const AudioSample *newSample = 0;
+                dataStrip->setSampleStripParam(SampleStrip::pAudioSample, newSample);
+                break;
+            }
+
+        // user selected SAMPLE
+        case pSample :
+            {
+                PopupMenu sampleMenu = PopupMenu();
+                const int currentSamplePoolSize = mlrVSTEditor->getSamplePoolSize(mlrVSTAudioProcessor::pSamplePool);
+
+                // for each sample, populate the menu
+                for (int i = 0; i < currentSamplePoolSize; ++i)
+                {
+                    // get the sample name
+                    String iFileName = mlrVSTEditor->getSampleName(i, mlrVSTAudioProcessor::pSamplePool);
+                    // +1 because 0 is result for no item clicked
+                    sampleMenu.addItem(i + 1, iFileName);
+
+                    DBG("option none selected");
+                }
+
+                // show the menu and store choice
+                int fileChoice = sampleMenu.showMenu(PopupMenu::Options().withTargetComponent(popupLocators[selectedHitZone]));
+                // subtract 1 from loop above
+                fileChoice -= 1;
+
+                // if we have a valid choice, pick it
+                if (fileChoice >= 0 && fileChoice < currentSamplePoolSize)
+                {
+                    DBG("sample option: " << fileChoice);
+                    selectNewSample(fileChoice, mlrVSTAudioProcessor::pSamplePool);
+                }
+                break;
+            }
+
+        case pRecord :
+            {
+                PopupMenu recordPoolMenu = PopupMenu();
+                const int currentRecordPoolSize = mlrVSTEditor->getSamplePoolSize(mlrVSTAudioProcessor::pRecordPool);
+
+                // populate menu
+                for (int m = 0; m < currentRecordPoolSize; ++m)
+                {
+                    // +1 because 0 is result for no item clicked
+                    recordPoolMenu.addItem(m + 1, "record " + String(m));
+                }
+
+                // show the menu and store choice
+                int fileChoice = recordPoolMenu.showMenu(PopupMenu::Options().withTargetComponent(popupLocators[selectedHitZone]));
+                // subtract 1 from loop above
+                fileChoice -= 1;
+
+                // if we have a valid choice, pick it
+                if (fileChoice >= 0 && fileChoice < currentRecordPoolSize)
+                {
+                    DBG("record option: " << fileChoice);
+                    selectNewSample(fileChoice, mlrVSTAudioProcessor::pRecordPool);
+
+                }
+                break;
+            }
+
+        case pResample :
+            {
+                PopupMenu resamplePoolMenu = PopupMenu();
+                const int currentResamplePoolSize = mlrVSTEditor->getSamplePoolSize(mlrVSTAudioProcessor::pResamplePool);
+
+                // populate menu
+                for (int m = 0; m < currentResamplePoolSize; ++m)
+                {
+                    // +1 because 0 is result for no item clicked
+                    resamplePoolMenu.addItem(m + 1, "resample " + String(m));
+                }
+
+                // show the menu and store choice
+                int fileChoice = resamplePoolMenu.showMenu(PopupMenu::Options().withTargetComponent(popupLocators[selectedHitZone]));
+                // subtract 1 from loop above
+                fileChoice -= 1;
+
+                // if we have a valid choice, pick it
+                if (fileChoice >= 0 && fileChoice < currentResamplePoolSize)
+                {
+                    DBG("resample option: " << fileChoice);
+                    selectNewSample(fileChoice, mlrVSTAudioProcessor::pResamplePool);
+                }
+                break;
+            }
+        }
+
+        // stop drawing hit zones
+        rightMouseDown = false;
+        repaint();
+    }
+}
+
 void SampleStripControl::mouseDrag(const MouseEvent &e)
 {
+    // while RMB is held, see which hit zone it selects
+    if (e.mods == ModifierKeys::rightButtonModifier)
+    {
+        selectedHitZone = e.x / (componentWidth / 4);
+    }
 
     // CASE: ctrl-shift-LMB allows us to snap to specific intervals
-    if ((e.mods == (ModifierKeys::ctrlModifier + 
-                    ModifierKeys::leftButtonModifier +
-                    ModifierKeys::shiftModifier)))
+    else if ((e.mods == (ModifierKeys::ctrlModifier +
+                         ModifierKeys::leftButtonModifier +
+                         ModifierKeys::shiftModifier)))
     {
         // TODO: have snapping interval as an option
         int eighth = componentWidth / 16;
@@ -588,7 +633,6 @@ void SampleStripControl::paint(Graphics& g)
                                     (float) thumbnailScaleFactor);
     }
 
-
     // Indicate where we are in playback
     if (isPlaying)
     {
@@ -597,8 +641,8 @@ void SampleStripControl::paint(Graphics& g)
         
         if (!isReversed)
         {
-        g.fillRect(visualSelectionStart, controlbarSize,
-                   visualPlaybackPoint, componentHeight - controlbarSize);
+            g.fillRect(visualSelectionStart, controlbarSize,
+                visualPlaybackPoint, componentHeight - controlbarSize);
         }
         else
         {
@@ -623,6 +667,21 @@ void SampleStripControl::paint(Graphics& g)
     {
         g.fillRect((float) (visualSelectionStart + i * visualChunkSize),
             (float) controlbarSize, visualChunkSize, (float)(componentHeight - controlbarSize));
+    }
+
+    // draw hit zones
+    if (rightMouseDown)
+    {
+        g.setColour(Colours::black.withAlpha(0.2f));
+        g.fillRect(waveformPaintBounds);
+        g.setColour(Colours::black.withAlpha(0.6f));
+        g.fillRect(selectedHitZone * componentWidth / 4, controlbarSize, componentWidth / 4, waveformPaintBounds.getHeight());
+
+        g.setColour(Colours::white);
+        g.drawFittedText("NONE", 0 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
+        g.drawFittedText("SAMPLES", 1 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
+        g.drawFittedText("RECORDINGS", 2 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
+        g.drawFittedText("RESAMPLINGS", 3 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
     }
 }
 
@@ -748,7 +807,7 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
     case SampleStrip::pPlaySpeed :
         {
             double newPlaySpeed = *static_cast<const double*>(newValue);
-            playbackSpeedSldr.setValue(newPlaySpeed, false);
+            playspeedSldr.setValue(newPlaySpeed, false);
             break;
         }
 
@@ -761,12 +820,12 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
                 if (isSpeedLocked)
                 {
                     speedLockBtn.setImages(&lockImg);
-                    playbackSpeedSldr.setEnabled(false);
+                    playspeedSldr.setEnabled(false);
                 }
                 else
                 {
                     speedLockBtn.setImages(&unlockImg);
-                    playbackSpeedSldr.setEnabled(true);
+                    playspeedSldr.setEnabled(true);
                 }
             }
             break;
@@ -786,7 +845,7 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
                 else
                 {
                     filenameLbl.setText("No file", false);
-                    playbackSpeedSldr.setValue(1.0, true);
+                    playspeedSldr.setValue(1.0, true);
                 }
             }
             

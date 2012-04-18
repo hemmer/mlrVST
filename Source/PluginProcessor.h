@@ -113,7 +113,7 @@ public:
     // adds a sample to the sample pool
     int addNewSample(File &sampleFile);
     AudioSample * getAudioSample(const int &samplePoolIndex, const int &poolID);
-    int getSamplePoolSize(const int &index)
+    int getSamplePoolSize(const int &index) const
     {
         switch (index)
         {
@@ -127,7 +127,7 @@ public:
     
 
     // TODO: bounds checking?
-    String getSampleName(const int &index, const int &poolID)
+    String getSampleName(const int &index, const int &poolID) const
     {
         switch (poolID)
         {
@@ -164,9 +164,9 @@ public:
     void buildSampleStripArray(const int &numSampleStrips);
 
     SampleStrip* getSampleStrip(const int &index);
-    int getNumSampleStrips();
+    int getNumSampleStrips() const { return sampleStripArray.size(); }
 
-    float getChannelGain(const int &chan)
+    float getChannelGain(const int &chan) const
     { 
         jassert(chan < channelGains.size());
         return channelGains[chan];
@@ -176,7 +176,7 @@ public:
         jassert(chan < channelGains.size());
         channelGains.set(chan, newGain);
     }
-    Colour getChannelColour(const int &chan)
+    Colour getChannelColour(const int &chan) const
     { 
         jassert(chan < channelColours.size());
         return channelColours[chan];
@@ -191,7 +191,7 @@ public:
     {
         sampleStripArray[stripID]->toggleSampleStripParam(parameterID);
     }
-    const void* getSampleStripParameter(const int &parameterID, const int &stripID)
+    const void* getSampleStripParameter(const int &parameterID, const int &stripID) const
     {
         return sampleStripArray[stripID]->getSampleStripParam(parameterID);   
     }
@@ -218,14 +218,14 @@ public:
     void startRecording();
     void startResampling();
 
-    float getRecordingPrecountPercent()
+    float getRecordingPrecountPercent() const
     {
         if (recordPrecountPosition <= 0 || recordPrecountLengthInSamples <= 0)
             return 0.0;
         else
             return (float) (recordPrecountPosition) / (float) (recordPrecountLengthInSamples);
     }
-    float getRecordingPercent()
+    float getRecordingPercent() const
     {
         if (recordPosition >= recordLengthInSamples || recordLengthInSamples <= 0)
             return 0.0;
@@ -233,14 +233,14 @@ public:
             return (float) (recordPosition) / (float) (recordLengthInSamples);
     }
 
-    float getResamplingPrecountPercent()
+    float getResamplingPrecountPercent() const
     {
         if (resamplePrecountPosition <= 0 || resamplePrecountLengthInSamples <= 0)
             return 0.0;
         else
             return (float) (resamplePrecountPosition) / (float) (resamplePrecountLengthInSamples);
     }
-    float getResamplingPercent()
+    float getResamplingPercent() const
     {
         if (resamplePosition >= resampleLengthInSamples || resampleLengthInSamples <= 0)
             return 0.0;
@@ -320,18 +320,19 @@ private:
     AudioSampleBuffer stripContrib;
     // Store resampled information
     AudioSampleBuffer resampleBuffer;
+    bool isResampling;
     int resampleLength, resamplePrecountLength;                     // length in bars
     int resampleLengthInSamples, resamplePrecountLengthInSamples;   // length in samples
     int resamplePosition, resamplePrecountPosition;     // track resampling progress
     int resampleBank;                                   // which slot to use
-    bool isResampling;
+
     // Store recorded information
     AudioSampleBuffer recordBuffer;
+    bool isRecording;
     int recordPosition, recordPrecountPosition;
     int recordLengthInSamples, recordPrecountLengthInSamples;
     int recordLength, recordPrecountLength;
     int recordBank;
-    bool isRecording;
 
 
     // Preset Handling //////////////////////////////////////////
