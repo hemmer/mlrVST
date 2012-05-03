@@ -17,7 +17,9 @@
 class TimedButton  : public Button
 {
 public:
-    TimedButton (const String& buttonName, const Colour& prim, const Colour& sec);
+    TimedButton (const String& buttonName,
+                 const Colour& prim,
+                 const Colour& sec);
 
     /** Destructor. */
     ~TimedButton() { };
@@ -47,12 +49,16 @@ protected:
     void paintButton (Graphics& g, bool isMouseOverButton, bool isButtonDown);
 
 private:
-    //==============================================================================
+    
+    // Style /////////////////////////////
     Colour primaryColour, secondaryColour;
     Font btnFont;
-    float topPercentDone, bottomPercentDone, fontSize;
+    float fontSize;
 
+    // Playback params ///////////////////////////////
+    float topPercentDone, bottomPercentDone;
 
+    // Check for leaks!
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TimedButton);
 };
 

@@ -36,7 +36,7 @@ public:
                        const int &width,
                        const int &newNumChannels,
                        SampleStrip * const dataStrip,
-                       mlrVSTAudioProcessorEditor * const owner);
+                       mlrVSTAudioProcessor * const owner);
     ~SampleStripControl();
 
     enum hitZone 
@@ -112,7 +112,7 @@ public:
 private:
 
     // ID / communication //////////////////////////
-    mlrVSTAudioProcessorEditor * const mlrVSTEditor;
+    mlrVSTAudioProcessor * const processor;
     const int sampleStripID;            // which strip we are representing
     SampleStrip * const dataStrip;      // pointer to data structure for samplestrip
     bool stripChanged;                  // do we need to redraw

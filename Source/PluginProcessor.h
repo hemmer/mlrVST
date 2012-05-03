@@ -104,11 +104,48 @@ public:
 
     enum SamplePool
     {
+        mNoMapping,
         pSamplePool,
         pResamplePool,
         pRecordPool
     };
 
+    // Mapping stuff ////////////////////
+
+    // these are the possible options for mappings for
+    // the top row(s)
+    enum TopRowMappings
+    {
+        tmNoMapping,
+        tmModifierBtn,
+        tmStartRecording,
+        tmStartResampling,
+        numTopRowMappings
+    };
+
+    // these are the various options for mapping normal
+    // rows (for when the modifier is held)
+    enum NormalRowMappings
+    {
+        nmNoMapping,
+        nmFindBestTempo,
+        nmToggleReverse,
+        nmDecVolume,
+        nmIncVolume,
+        nmDecPlayspeed,
+        nmIncPlayspeed,
+        nmHalvePlayspeed,
+        nmDoublePlayspeed,
+        numNormalRowMappings
+    };
+
+    int getTopRowMapping(const int &col) const { return topRowMappings[col];}
+    void setTopRowMapping(const int &col, const int &newMapping) { topRowMappings.set(col, newMapping);}
+    int getNormalRowMapping(const int &col) const { return normalRowMappings[col];}
+    void setNormalRowMapping(const int &col, const int &newMapping) { normalRowMappings.set(col, newMapping);}
+
+    String getTopRowMappingName(const int &mappingID);
+    String getNormalRowMappingName(const int &mappingID);
 
     // adds a sample to the sample pool
     int addNewSample(File &sampleFile);
@@ -201,6 +238,7 @@ public:
     void updateGlobalSetting(const int &settingID, const void *newVal);
     const void* getGlobalSetting(const int &settingID) const;
     String getGlobalSettingName(const int &settingID) const;
+
 
 
     // Preset stuff
@@ -329,9 +367,9 @@ private:
     // Store recorded information
     AudioSampleBuffer recordBuffer;
     bool isRecording;
-    int recordPosition, recordPrecountPosition;
-    int recordLengthInSamples, recordPrecountLengthInSamples;
     int recordLength, recordPrecountLength;
+    int recordLengthInSamples, recordPrecountLengthInSamples;
+    int recordPosition, recordPrecountPosition;
     int recordBank;
 
 
@@ -340,6 +378,11 @@ private:
     XmlElement presetList;      
     // this is an ordered list of consisting of a selection from presetList
     XmlElement setlist;         
+
+    // Mapping settings ////////////////////////////////////////
+    Array<int> topRowMappings, normalRowMappings;
+    void setupDefaultRowMappings();
+
 
 
     // Misc ////////////////

@@ -5,8 +5,8 @@
 
 
 PresetPanel::PresetPanel(const Rectangle<int> &bounds,
-                         mlrVSTAudioProcessorEditor * const owner) :
-    mlrVSTEditor(owner),
+                         mlrVSTAudioProcessor * const owner) :
+    processor(owner),
     panelLabel("preset panel label", "Setlist Manager"),
     fontSize(7.4f), panelBounds(bounds),
     selectedPreset(0),
@@ -46,13 +46,13 @@ void PresetPanel::buttonClicked(Button *btn)
         }
         else if (selectBtnArray[b] == btn)
         {
-            mlrVSTEditor->setCurrentPreset(b);
+            processor->switchPreset(b);
         }
         else if (setListSlotArray[b] == btn)
         {
 
-            XmlElement currentPresetList = mlrVSTEditor->getPresetList();
-            XmlElement currentSetlist = mlrVSTEditor->getSetlist();
+            XmlElement currentPresetList = processor->getPresetList();
+            XmlElement currentSetlist = processor->getSetlist();
 
             // The button clicked corresponds to this preset slot
             XmlElement* presetToChange = currentSetlist.getChildElement(b);
@@ -92,7 +92,7 @@ void PresetPanel::buttonClicked(Button *btn)
             }
 
             setListSlotArray[b]->setToggleState(false, false);
-            mlrVSTEditor->setSetlist(currentSetlist);
+            processor->setSetlist(currentSetlist);
         }
 
     }
@@ -101,12 +101,12 @@ void PresetPanel::buttonClicked(Button *btn)
 
 void PresetPanel::addRow()
 {
-    XmlElement currentSetlist = mlrVSTEditor->getSetlist();
+    XmlElement currentSetlist = processor->getSetlist();
     
     // add a new blank preset
     currentSetlist.createNewChildElement("PRESETNONE");
     // let the processor know about the change
-    mlrVSTEditor->setSetlist(currentSetlist);
+    processor->setSetlist(currentSetlist);
 
     // and rebuild setlist manager
     arrangeButtons();
@@ -114,13 +114,13 @@ void PresetPanel::addRow()
 
 void PresetPanel::deleteRow(const int &index)
 {
-    XmlElement currentSetlist = mlrVSTEditor->getSetlist();
+    XmlElement currentSetlist = processor->getSetlist();
     XmlElement* itemToRemove = currentSetlist.getChildElement(index);
 
     // add a new blank preset
     currentSetlist.removeChildElement(itemToRemove, true);
     // let the processor know about the change
-    mlrVSTEditor->setSetlist(currentSetlist);
+    processor->setSetlist(currentSetlist);
 
     // and rebuild setlist manager
     arrangeButtons();
@@ -129,7 +129,7 @@ void PresetPanel::deleteRow(const int &index)
 void PresetPanel::arrangeButtons()
 {
     // get the current setlist
-    XmlElement currentSetlist = mlrVSTEditor->getSetlist();
+    XmlElement currentSetlist = processor->getSetlist();
 
     // TODO: rebuilding each time is maybe a little inefficient
     setListSlotArray.clear(true);

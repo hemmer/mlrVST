@@ -126,6 +126,7 @@
     <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
     <ClCompile Include="..\..\Source\SampleStrip.cpp"/>
     <ClCompile Include="..\..\Source\timedButton.cpp"/>
+    <ClCompile Include="..\..\Source\MappingPanel.cpp"/>
     <ClCompile Include="..\..\Source\PresetPanel.cpp"/>
     <ClCompile Include="..\..\Source\SettingsPanel.cpp"/>
     <ClCompile Include="..\..\Source\SampleStripControl.cpp"/>
@@ -151,6 +152,7 @@
     <ClInclude Include="..\..\Source\PluginProcessor.h"/>
     <ClInclude Include="..\..\Source\SampleStrip.h"/>
     <ClInclude Include="..\..\Source\timedButton.h"/>
+    <ClInclude Include="..\..\Source\MappingPanel.h"/>
     <ClInclude Include="..\..\Source\PresetPanel.h"/>
     <ClInclude Include="..\..\Source\SettingsPanel.h"/>
     <ClInclude Include="..\..\Source\SampleStripControl.h"/>

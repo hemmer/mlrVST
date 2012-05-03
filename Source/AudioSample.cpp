@@ -12,12 +12,17 @@ Author:  Hemmer
 
 AudioSample::AudioSample(const File &sampleSource,
                          const int &thumbnailLength) :
-    sampleFile(sampleSource),
-    data(0), sampleSampleRate(0.0),
+    // Files //////////////////////////////////////////////
+    sampleFile(sampleSource), formatManager(),
+    fileType(sampleSource.getFileExtension()),
+
+    // Sample information //////////////////////////////
     sampleLength(0), numChannels(0),
     sampleName(sampleSource.getFileName()),
-    fileType(sampleSource.getFileExtension()),
-    thumbnailFinished(false)
+    data(0), sampleSampleRate(0.0),
+
+    // Thumbnails ///////////////////////////
+    thumbnailData(), thumbnailFinished(false)
 {
     formatManager.registerBasicFormats();
 
@@ -55,45 +60,34 @@ AudioSample::AudioSample(const File &sampleSource,
 }
 
 
-AudioSample::AudioSample(const AudioSampleBuffer &bufferSampleSource,
-                         const double &sampleRate,
-                         const int &thumbnailLength) :
-    sampleFile(),
-    data(new AudioSampleBuffer(bufferSampleSource)),
-    sampleSampleRate(sampleRate),
-    sampleLength(0), numChannels(0),
-    sampleName("resample"), fileType(String::empty),
-    thumbnailFinished(false)
-{
-    numChannels = bufferSampleSource.getNumChannels();
-    sampleLength = bufferSampleSource.getNumSamples();
-
-    // this shouldn't happen
-    jassert(sampleLength > 0);
-
-    generateThumbnail(thumbnailLength);
-}
-
 // empty AudioSample used for resampling etc
 AudioSample::AudioSample(const double &sampleRate,
                          const int &initialSamplelength, 
                          const int &thumbnailLength,
                          const String &name) :
-    sampleFile(),
-    data(new AudioSampleBuffer(2, initialSamplelength)),
-    sampleSampleRate(sampleRate),
+    // Files //////////////////////////////////////////////
+    sampleFile(), formatManager(), fileType(String::empty),
+
+    // Sample information //////////////////////////////
     sampleLength(initialSamplelength), numChannels(2),
-    sampleName(name), fileType(String::empty),
-    thumbnailFinished(false)
+    sampleName(name),
+    data(new AudioSampleBuffer(numChannels, sampleLength)),
+    sampleSampleRate(sampleRate),
+
+    // Thumbnails ///////////////////////////
+    thumbnailData(), thumbnailFinished(false)
 {
     // this shouldn't happen
     jassert(sampleLength > 0);
     data->clear();
-
+    // this is just a flat line (for empty sample)
     generateThumbnail(thumbnailLength);
 }
 
-
+AudioSample::~AudioSample()
+{
+    thumbnailData.clear(true);
+}
 
 
 void AudioSample::generateThumbnail(const int &thumbnailLength)

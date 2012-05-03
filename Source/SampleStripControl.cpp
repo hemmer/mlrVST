@@ -18,10 +18,10 @@ Custom component to display a waveform (corresponding to an mlr row)
 SampleStripControl::SampleStripControl(const int &id, const int &width, const int &height,
                                        const int &newNumChannels,
                                        SampleStrip * const dataStripLink,
-                                       mlrVSTAudioProcessorEditor * const owner) :
+                                       mlrVSTAudioProcessor * const owner) :
 
     // ID / communication //////////////////////////
-    mlrVSTEditor(owner), sampleStripID(id),
+    processor(owner), sampleStripID(id),
     dataStrip(dataStripLink), stripChanged(true),
 
     // GUI dimensions //////////////////////////////
@@ -147,7 +147,7 @@ void SampleStripControl::buttonClicked(Button *btn)
             // update the processor / GUI
             updateChannelColours(i);
             // ...so we can let the processor know
-            mlrVSTEditor->switchChannels(i, sampleStripID);
+            processor->switchChannels(i, sampleStripID);
             // no need to check the rest of the buttons
             return;
         }
@@ -167,11 +167,11 @@ void SampleStripControl::buttonClicked(Button *btn)
     }
     else if (btn == &times2)
     {
-        mlrVSTEditor->modPlaySpeed(2.0, sampleStripID);
+        processor->modPlaySpeed(2.0, sampleStripID);
     }
     else if (btn == &div2)
     {
-        mlrVSTEditor->modPlaySpeed(0.5, sampleStripID);
+        processor->modPlaySpeed(0.5, sampleStripID);
     }
     else if (btn == &speedLockBtn)
     {
@@ -262,7 +262,7 @@ void SampleStripControl::buildUI()
         addAndMakeVisible(channelButtonArray.getLast());
         channelButtonArray.getLast()->setBounds(35 + chan * controlbarSize, 0, controlbarSize, controlbarSize);
         channelButtonArray.getLast()->addListener(this);
-        Colour chanColour = mlrVSTEditor->getChannelColour(chan);
+        Colour chanColour = processor->getChannelColour(chan);
         channelButtonArray.getLast()->setBackgroundColours(chanColour, chanColour);
     }
 
@@ -270,7 +270,7 @@ void SampleStripControl::buildUI()
     if (previousChannel >= numChannels){
         DBG("Current channel outside range: resetting to channel 0.");
         updateChannelColours(0);
-        mlrVSTEditor->switchChannels(0, sampleStripID);
+        processor->switchChannels(0, sampleStripID);
     }
 
     newXposition = 35 + (numChannels) * controlbarSize;
@@ -390,7 +390,7 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
         dataStrip->setSampleStripParam(SampleStrip::pVisualStart, &visualSelectionStart);
         dataStrip->setSampleStripParam(SampleStrip::pVisualEnd, &visualSelectionEnd);
 
-        mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);
+        processor->calcInitialPlaySpeed(sampleStripID);
 
         // repaint when we next get a timed update
         stripChanged = true;
@@ -431,13 +431,13 @@ void SampleStripControl::mouseUp(const MouseEvent& e)
         case pSample :
             {
                 PopupMenu sampleMenu = PopupMenu();
-                const int currentSamplePoolSize = mlrVSTEditor->getSamplePoolSize(mlrVSTAudioProcessor::pSamplePool);
+                const int currentSamplePoolSize = processor->getSamplePoolSize(mlrVSTAudioProcessor::pSamplePool);
 
                 // for each sample, populate the menu
                 for (int i = 0; i < currentSamplePoolSize; ++i)
                 {
                     // get the sample name
-                    String iFileName = mlrVSTEditor->getSampleName(i, mlrVSTAudioProcessor::pSamplePool);
+                    String iFileName = processor->getSampleName(i, mlrVSTAudioProcessor::pSamplePool);
                     // +1 because 0 is result for no item clicked
                     sampleMenu.addItem(i + 1, iFileName);
 
@@ -461,7 +461,7 @@ void SampleStripControl::mouseUp(const MouseEvent& e)
         case pRecord :
             {
                 PopupMenu recordPoolMenu = PopupMenu();
-                const int currentRecordPoolSize = mlrVSTEditor->getSamplePoolSize(mlrVSTAudioProcessor::pRecordPool);
+                const int currentRecordPoolSize = processor->getSamplePoolSize(mlrVSTAudioProcessor::pRecordPool);
 
                 // populate menu
                 for (int m = 0; m < currentRecordPoolSize; ++m)
@@ -488,7 +488,7 @@ void SampleStripControl::mouseUp(const MouseEvent& e)
         case pResample :
             {
                 PopupMenu resamplePoolMenu = PopupMenu();
-                const int currentResamplePoolSize = mlrVSTEditor->getSamplePoolSize(mlrVSTAudioProcessor::pResamplePool);
+                const int currentResamplePoolSize = processor->getSamplePoolSize(mlrVSTAudioProcessor::pResamplePool);
 
                 // populate menu
                 for (int m = 0; m < currentResamplePoolSize; ++m)
@@ -612,7 +612,7 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
     // of course this doesn't change if we are just moving the 
     // selection (i.e. using the middle mouse button)
     if (mouseDownMods != ModifierKeys::middleButtonModifier)
-        mlrVSTEditor->updatePlaySpeedForNewSelection(sampleStripID);
+        processor->calcPlaySpeedForSelectionChange(sampleStripID);
 
     // repaint when we next get a timed update
     stripChanged = true;
@@ -697,7 +697,7 @@ void SampleStripControl::filesDropped(const StringArray& files, int /*x*/, int /
         DBG("Dragged file: " << files[i]);
 
         // if a file is sucessfully loaded, update the file index
-        fileIndex = mlrVSTEditor->loadSampleFromFile(currentSampleFile);
+        fileIndex = processor->addNewSample(currentSampleFile);
     }
 
     // If we have a legitimate file
@@ -710,7 +710,7 @@ void SampleStripControl::filesDropped(const StringArray& files, int /*x*/, int /
 void SampleStripControl::selectNewSample(const int &fileChoice, const int &poolID)
 {
     // and let the audio processor update the sample strip
-    const AudioSample * newSample = mlrVSTEditor->getAudioSample(fileChoice, poolID);
+    const AudioSample * newSample = processor->getAudioSample(fileChoice, poolID);
     dataStrip->setSampleStripParam(SampleStrip::pAudioSample, newSample);
 
     // select whole sample by default
@@ -724,7 +724,7 @@ void SampleStripControl::selectNewSample(const int &fileChoice, const int &poolI
     dataStrip->setSampleStripParam(SampleStrip::pVisualEnd, &visualSelectionEnd);
 
     // and try to find the best playback speed (i.e. closest to 1).
-    mlrVSTEditor->calcInitialPlaySpeed(sampleStripID);
+    processor->calcInitialPlaySpeed(sampleStripID);
 
     // repaint when we next get a timed update
     stripChanged = true;

@@ -15,8 +15,10 @@
 #include "PluginEditor.h"
 
 SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
-                             mlrVSTAudioProcessorEditor * const owner) :
-    mlrVSTEditor(owner),
+                             mlrVSTAudioProcessor * const processorPtr,
+                             mlrVSTAudioProcessorEditor * const editorPtr) :
+    // Communication ////////////////////////////////
+    processor(processorPtr), pluginUI(editorPtr),
     panelLabel("settings panel label", "Settings"),
     fontSize(7.4f), panelBounds(bounds),
     menuLF(),
@@ -49,16 +51,15 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
 
     // load current values of settings from PluginProcessor
     bool useExternalTempo = *static_cast<const bool*>
-        (mlrVSTEditor->getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
+        (processor->getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
     useExternalTempoBtn.setToggleState(useExternalTempo, false);
     String tempoBtnText = (useExternalTempo) ? "external tempo" : "internal tempo";
     useExternalTempoBtn.setButtonText(tempoBtnText);
 
 
-
     // combobox to select the number of channels
     int numChannels = *static_cast<const int*>
-        (mlrVSTEditor->getGlobalSetting(mlrVSTAudioProcessor::sNumChannels));
+        (processor->getGlobalSetting(mlrVSTAudioProcessor::sNumChannels));
 
     yPos+=30;
 
@@ -86,7 +87,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     oscPrefixTxtBx.addListener(this);
     oscPrefixTxtBx.setEnabled(true);
     const String currentPrefix = *static_cast<const String*>
-        (mlrVSTEditor->getGlobalSetting(mlrVSTAudioProcessor::sOSCPrefix));
+        (processor->getGlobalSetting(mlrVSTAudioProcessor::sOSCPrefix));
     DBG("settings panel: prefix " << currentPrefix);
     // eh?
     //oscPrefixTxtBx.setText("test", false);
@@ -105,7 +106,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
 
     // load current values of settings from PluginProcessor
     bool monitorInputs = *static_cast<const bool*>
-        (mlrVSTEditor->getGlobalSetting(mlrVSTAudioProcessor::sMonitorInputs));
+        (processor->getGlobalSetting(mlrVSTAudioProcessor::sMonitorInputs));
 
     monitorInputsBtn.setToggleState(monitorInputs, false);
     String monitorBtnText = (monitorInputs) ? "enabled" : "disabled";
@@ -124,14 +125,14 @@ void SettingsPanel::buttonClicked(Button *btn)
         bool useExternalTempo = useExternalTempoBtn.getToggleState();
         String tempoBtnText = (useExternalTempo) ? "external tempo" : "internal tempo";
         useExternalTempoBtn.setButtonText(tempoBtnText);
-        mlrVSTEditor->updateGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo, &useExternalTempo);
+        pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo, &useExternalTempo);
     }
     else if (btn == &monitorInputsBtn)
     {
         bool monitoringInputs = monitorInputsBtn.getToggleState();
         String monitorBtnText = (monitoringInputs) ? "enabled" : "disabled";
         monitorInputsBtn.setButtonText(monitorBtnText);
-        mlrVSTEditor->updateGlobalSetting(mlrVSTAudioProcessor::sMonitorInputs, &monitoringInputs);
+        pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sMonitorInputs, &monitoringInputs);
     }
 }
 
@@ -143,20 +144,20 @@ void SettingsPanel::comboBoxChanged(ComboBox *box)
         DBG("Number of channels changed to: " + String(numChannels));
 
         // Let the audio processor change the number of audio channels
-        mlrVSTEditor->updateGlobalSetting(mlrVSTAudioProcessor::sNumChannels, &numChannels);
+        pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sNumChannels, &numChannels);
     }
 }
 
 void SettingsPanel::textEditorChanged(TextEditor &editor)
 {
     String newPrefix = editor.getText();
-    mlrVSTEditor->updateGlobalSetting(mlrVSTAudioProcessor::sOSCPrefix, &newPrefix);
+    pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sOSCPrefix, &newPrefix);
     DBG(newPrefix);
 }
 
 void SettingsPanel::textEditorReturnKeyPressed (TextEditor &editor)
 {
     String newPrefix = editor.getText();
-    mlrVSTEditor->updateGlobalSetting(mlrVSTAudioProcessor::sOSCPrefix, &newPrefix);
+    pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sOSCPrefix, &newPrefix);
     DBG(newPrefix);
 }

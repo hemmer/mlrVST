@@ -58,6 +58,9 @@
     <ClCompile Include="..\..\Source\timedButton.cpp">
       <Filter>mlrVST\gui\buttons</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\MappingPanel.cpp">
+      <Filter>mlrVST\gui\panels</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\PresetPanel.cpp">
       <Filter>mlrVST\gui\panels</Filter>
     </ClCompile>
@@ -155,6 +158,9 @@
     </ClInclude>
     <ClInclude Include="..\..\Source\timedButton.h">
       <Filter>mlrVST\gui\buttons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\MappingPanel.h">
+      <Filter>mlrVST\gui\panels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PresetPanel.h">
       <Filter>mlrVST\gui\panels</Filter>

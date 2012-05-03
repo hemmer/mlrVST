@@ -26,7 +26,7 @@ GLOBAL TODO:
 //==============================================================================
 mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     // MIDI / quantisation /////////////////////////////////////////
-    quantisationLevel(-1.0), quantisationOn(false), 
+    quantisationLevel(-1.0), quantisationOn(false),
     quantisationGap(0), quantRemaining(0), quantiseMenuSelection(1),
     quantisedBuffers(), monomeState(),
     // Sample Pools ///////////////////////////
@@ -53,8 +53,10 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     recordLengthInSamples(0), recordPrecountLengthInSamples(0),
     recordPosition(0), recordPrecountPosition(0),
     recordBank(0),
-    // Presets //////////////////////////////////
+    // Preset handling /////////////////////////////////////////
     presetList("PRESETLIST"), setlist("SETLIST"),
+    // Mapping settings ////////////////////////////////////////
+    topRowMappings(), normalRowMappings(),
     // Misc /////////////////////////////////////////////////////////
     playbackLEDPosition(), stripModifier(false), monitorInputs(false)
 {
@@ -75,7 +77,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     for (int i = 0; i < 8; ++i)
         quantisedBuffers.add(new MidiBuffer());
 
-
+    setupDefaultRowMappings();
 
     for (int i = 0; i < 8; ++i)
     {
@@ -328,38 +330,52 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
         if (isRecording)
         {
+            // if we are still during the precount, do nothing
             if (recordPrecountPosition > 0)
+                // TODO: this sample count could be more accurate!
                 recordPrecountPosition -= numSamples;
-            // TODO: this sample count could be more accurate!
-            else if (numSamples + recordPosition < recordLengthInSamples)
-            {
-                recordBuffer.addFrom(0, recordPosition, buffer, 0, 0, numSamples);
-                recordBuffer.addFrom(1, recordPosition, buffer, 1, 0, numSamples);
-                recordPosition += numSamples;
-            }
+
             else
             {
-                const int samplesToEnd = recordLengthInSamples - recordPosition;
-                recordBuffer.addFrom(0, recordPosition, buffer, 0, 0, samplesToEnd);
-                recordBuffer.addFrom(1, recordPosition, buffer, 1, 0, samplesToEnd);
-                isRecording = false;
+                // if we are during recording (and not near the end), just
+                // add the current input into the record buffer
+                if (numSamples + recordPosition < recordLengthInSamples)
+                {
+                    recordBuffer.addFrom(0, recordPosition, buffer, 0, 0, numSamples);
+                    recordBuffer.addFrom(1, recordPosition, buffer, 1, 0, numSamples);
+                    recordPosition += numSamples;
+                }
 
-                AudioSampleBuffer *recordSlotToReplace = recordPool[recordBank]->getAudioData();
-                recordSlotToReplace->setSize(2, recordLengthInSamples, false, false, false);
-                    
-                recordSlotToReplace->copyFrom(0, 0, recordBuffer, 0, 0, recordLengthInSamples);
-                recordSlotToReplace->copyFrom(1, 0, recordBuffer, 1, 0, recordLengthInSamples);
+                // otherwise we are finishing up and we need to store the results
+                // in an AudioSample object
+                else
+                {
+                    const int samplesToEnd = recordLengthInSamples - recordPosition;
+                    // add the remaining samples
+                    recordBuffer.addFrom(0, recordPosition, buffer, 0, 0, samplesToEnd);
+                    recordBuffer.addFrom(1, recordPosition, buffer, 1, 0, samplesToEnd);
+                    // we are no longer recording
+                    isRecording = false;
 
-                recordPool[recordBank]->generateThumbnail(THUMBNAIL_WIDTH);
+                    // get the pointer to the slot in the record bank that we want to replace
+                    AudioSampleBuffer *recordSlotToReplace = recordPool[recordBank]->getAudioData();
+                    // and resize it in case the length has changed
+                    recordSlotToReplace->setSize(2, recordLengthInSamples, false, false, false);
+                    // copy in the newly recorded samples
+                    recordSlotToReplace->copyFrom(0, 0, recordBuffer, 0, 0, recordLengthInSamples);
+                    recordSlotToReplace->copyFrom(1, 0, recordBuffer, 1, 0, recordLengthInSamples);
+                    // and update the thumbnail
+                    recordPool[recordBank]->generateThumbnail(THUMBNAIL_WIDTH);
 
-                DBG("record slot " << recordBank << " updated.");
+                    DBG("record slot " << recordBank << " updated.");
 
-                // this is just so buttons can work out that it's finished
-                recordPosition += samplesToEnd;
+                    // this is just so the TimedButtons can work out that recording has finished
+                    recordPosition += samplesToEnd;
 
-                // make sure all strips redraw to reflect new waveform
-                for (int s = 0; s < sampleStripArray.size(); ++s)
-                    sampleStripArray[s]->sendChangeMessage();
+                    // make sure all SampleStrips redraw to reflect new waveform
+                    for (int s = 0; s < sampleStripArray.size(); ++s)
+                        sampleStripArray[s]->sendChangeMessage();
+                }
             }
         }
 
@@ -403,31 +419,41 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
         if (isResampling)
         {
+            // if we are still during the precount, do nothing
             if (resamplePrecountPosition > 0)
+                // TODO: this sample count could be more accurate!
                 resamplePrecountPosition -= numSamples;
-            // TODO: this sample count could be more accurate!
-            else 
+
+            else
             {
+                // if we are during recording (and not near the end), just
+                // add the current input into the record buffer
                 if (numSamples + resamplePosition < resampleLengthInSamples)
                 {
                     resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, numSamples);
                     resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, numSamples);
                     resamplePosition += numSamples;
                 }
+
+                // otherwise we are finishing up and we need to store the results
+                // in an AudioSample object
                 else
                 {
                     const int samplesToEnd = resampleLengthInSamples - resamplePosition;
+                    // add the remaining samples
                     resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, samplesToEnd);
                     resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, samplesToEnd);
+                    // we are no longer recording
                     isResampling = false;
 
+                    // get the pointer to the slot in the resample bank that we want to replace
                     AudioSampleBuffer *resampleSlotToReplace = resamplePool[resampleBank]->getAudioData();
+                    // and resize it in case the length has changed
                     resampleSlotToReplace->setSize(2, resampleLengthInSamples, false, false, false);
-                    DBG(resampleSlotToReplace->getNumSamples() << " " << resampleSlotToReplace->getNumChannels());
-
+                    // copy in the newly recorded samples
                     resampleSlotToReplace->copyFrom(0, 0, resampleBuffer, 0, 0, resampleLengthInSamples);
                     resampleSlotToReplace->copyFrom(1, 0, resampleBuffer, 1, 0, resampleLengthInSamples);
-
+                    // and update the thumbnail
                     resamplePool[resampleBank]->generateThumbnail(THUMBNAIL_WIDTH);
 
                     // this is just so buttons can work out that it's finished
@@ -435,7 +461,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
                     DBG("resample slot " << resampleBank << " updated.");
 
-                    // make sure all strips redraw to reflect new waveform
+                    // make sure all SampleStrips redraw to reflect new waveform
                     for (int s = 0; s < sampleStripArray.size(); ++s)
                         sampleStripArray[s]->sendChangeMessage();
                  }
@@ -579,7 +605,7 @@ void mlrVSTAudioProcessor::timerCallback()
 
 void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &monomeRow, const bool &state)
 {
-    
+
     /* The -1 is because we are treating the second row on the device as 
        the first "effective" row, the top row being reserved for other 
        functions. Yes this is confusing.
@@ -588,77 +614,76 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
 
     if (monomeRow == 0)
     {   
-        /* When the top left button is held, each strip turns into a
-          set of control buttons. See below for the mapping.
-        */
-        if (monomeCol == 0)
+        // find out the mapping for this button...
+        const int colMap = getTopRowMapping(monomeCol);
+        // ...and act accordingly
+        switch (colMap)
         {
-            stripModifier = state;
+        case tmNoMapping : break;
+        case tmModifierBtn : stripModifier = state; break;
+        case tmStartRecording : startRecording(); break;
+        case tmStartResampling : startResampling(); break;
+        default : jassertfalse;
         }
-        else if (monomeCol == 6)
-        {
-            startRecording();
-        }
-        else if (monomeCol == 7)
-        {
-            startResampling();
-        }
-
     }
     else if (stripModifier && monomeRow <= numSampleStrips && monomeRow > 0)
     {
-        switch (monomeCol)
+        // When the modifier button is held, each strip turns into a
+        // set of control buttons:
+
+        // find out the mapping for the button
+        const int colMap = getNormalRowMapping(monomeCol);
+
+        switch (colMap)
         {
-        case 0 :
+        case nmFindBestTempo :
             // TODO: next actual sample rate here!
-            if (state)
-                sampleStripArray[stripID]->findInitialPlaySpeed(currentBPM, 44100.0);
+            if (state) sampleStripArray[stripID]->findInitialPlaySpeed(currentBPM, 44100.0);
             break;
 
-        case 1:
-            if (state)
-                sampleStripArray[stripID]->toggleSampleStripParam(SampleStrip::pIsReversed);
-            break;
+        case nmToggleReverse:
+            {
+                if (state) sampleStripArray[stripID]->toggleSampleStripParam(SampleStrip::pIsReversed);
+                break;
+            }
 
-        case 2:
+        case nmDecVolume:
             {
                 const bool isVolDec = state;
                 sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pIsVolDec, &isVolDec, false);
                 break;
             }
 
-        case 3:
+        case nmIncVolume:
             {
                 const bool isVolInc = state;
                 sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pIsVolInc, &isVolInc, false);
                 break;
             }
 
-        case 4:
+        case nmDecPlayspeed:
             {
                 const bool isSpeedDec = state;
                 sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pIsPlaySpeedDec, &isSpeedDec, false);
                 break;
             }
 
-        case 5:
+        case nmIncPlayspeed:
             {
                 const bool isSpeedInc = state;
                 sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pIsPlaySpeedInc, &isSpeedInc, false);
                 break;
             }
 
-        case 6:
+        case nmHalvePlayspeed:
             {
-                if (state)
-                    sampleStripArray[stripID]->modPlaySpeed(0.5);
+                if (state) sampleStripArray[stripID]->modPlaySpeed(0.5);
                 break;
             }
 
-        case 7:
+        case nmDoublePlayspeed:
             {
-                if (state)
-                    sampleStripArray[stripID]->modPlaySpeed(2.0);
+                if (state) sampleStripArray[stripID]->modPlaySpeed(2.0);
                 break;
             }
         }
@@ -1193,8 +1218,57 @@ String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID) const
     }
 }
 
-//==============================================================================
-// This creates new instances of the plugin..
+String mlrVSTAudioProcessor::getTopRowMappingName(const int &mappingID)
+{
+    switch (mappingID)
+    {
+    case tmNoMapping : return "no mapping";
+    case tmModifierBtn : return "modifier button";
+    case tmStartRecording : return "start recording";
+    case tmStartResampling : return "stop recording";
+    default : jassertfalse; return "error: mappingID " + String(mappingID) + " not found!";
+    }
+}
+String mlrVSTAudioProcessor::getNormalRowMappingName(const int &mappingID)
+{
+    switch (mappingID)
+    {
+    case nmNoMapping : return "no mapping";
+    case nmFindBestTempo : return "find best tempo";
+    case nmToggleReverse : return "toggle reverse";
+    case nmDecVolume : return "decrease volume";
+    case nmIncVolume : return "increase volume";
+    case nmDecPlayspeed : return "decrease playspeed";
+    case nmIncPlayspeed : return "increase playspeed";
+    case nmHalvePlayspeed : return "/2 playspeed";
+    case nmDoublePlayspeed : return "x2 playspeed";
+    default : jassertfalse; return "error: mappingID " + String(mappingID) + " not found!";
+    }
+}
+
+void mlrVSTAudioProcessor::setupDefaultRowMappings()
+{
+    // clear any existing mappings
+    topRowMappings.clear();
+    normalRowMappings.clear();
+
+    // add the defaults
+    topRowMappings.add(tmModifierBtn);
+    topRowMappings.insertMultiple(1, tmNoMapping, 5);
+    topRowMappings.add(tmStartRecording);
+    topRowMappings.add(tmStartResampling);
+
+    normalRowMappings.add(nmFindBestTempo);
+    normalRowMappings.add(nmToggleReverse);
+    normalRowMappings.add(nmDecVolume);
+    normalRowMappings.add(nmIncVolume);
+    normalRowMappings.add(nmDecPlayspeed);
+    normalRowMappings.add(nmIncPlayspeed);
+    normalRowMappings.add(nmHalvePlayspeed);
+    normalRowMappings.add(nmDoublePlayspeed);
+}
+
+// This creates new instances of the plugin...
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new mlrVSTAudioProcessor();

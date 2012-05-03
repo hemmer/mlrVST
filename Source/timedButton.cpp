@@ -5,7 +5,8 @@
     Created: 5 Mar 2012 8:25:31pm
     Author:  Hemmer
 
-    A simple button class that can display a progress bar
+    A simple button class that can display a progress bar. Useful for recording
+    and resampling buttons as it lets the user know when recording is finishing.
 
   ==============================================================================
 */
@@ -20,10 +21,13 @@ TimedButton::TimedButton (const String& name,
                           const Colour& primaryCol,
                           const Colour& secondaryCol)
 : Button (name),
-  primaryColour(primaryCol),
-  secondaryColour(secondaryCol),
-  topPercentDone(1.0f), bottomPercentDone(1.0f),
-  btnFont(1.0f), fontSize(1.0f)
+    // Style /////////////////////////////
+    primaryColour(primaryCol), secondaryColour(secondaryCol),
+    btnFont(1.0f), fontSize(1.0f),
+
+    // Playback params ///////////////////////////////
+    topPercentDone(1.0f), bottomPercentDone(1.0f)
+
 {
 
 }

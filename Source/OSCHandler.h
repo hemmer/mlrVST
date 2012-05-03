@@ -21,32 +21,10 @@ class OSCHandler :  public osc::OscPacketListener,
                     public Thread
 {
 
-private:
-    // incoming messages
-    int incomingPort;
-    UdpListeningReceiveSocket s;
-    mlrVSTAudioProcessor * const parent;
-
-    // outgoing messages
-    char buffer[1536];
-    osc::OutboundPacketStream p;
-    UdpTransmitSocket transmitSocket;
-
-    String OSCPrefix, buttonPressMask, ledStr, ledRowStr, ledClearStr;
-
 public:
 
     // Constructor
-    OSCHandler(const String &prefix, mlrVSTAudioProcessor * const owner) :
-        Thread("OscListener Thread"), OSCPrefix(prefix),
-        incomingPort(8000), parent(owner),
-        s(IpEndpointName("localhost", incomingPort), this),
-        transmitSocket(IpEndpointName("localhost", 8080)), p(buffer, 1536)
-    {
-        // setup the mask
-        setPrefix(prefix);
-    }
-
+    OSCHandler(const String &prefix, mlrVSTAudioProcessor * const owner);
 
     ~OSCHandler()
     {
@@ -78,13 +56,31 @@ public:
         buttonPressMask = OSCPrefix + "press";
 
         DBG("prefix now: " << OSCPrefix);
-
     }
+
+private:
+    // incoming /////////////////////////////
+    // for communication with PluginProcessor
+    mlrVSTAudioProcessor * const parent;
+    int incomingPort;
+    UdpListeningReceiveSocket s;
+    
+
+    // outgoing messages ////////////////////
+    char buffer[1536];                  // to store message data
+    osc::OutboundPacketStream p;
+    UdpTransmitSocket transmitSocket;
+
+    // strings ////////////////////////////
+    String OSCPrefix;                       // main prefix (/mlrvst/ by default)
+    String buttonPressMask;                 // + "press"       
+    String ledStr, ledRowStr, ledClearStr;  // + "led", + "led_row", + "clear"
+
+    JUCE_LEAK_DETECTOR(OSCHandler);
 
 protected:
 
     void ProcessMessage(const osc::ReceivedMessage& m, const IpEndpointName& /*remoteEndpoint*/);
-
 };
 
 

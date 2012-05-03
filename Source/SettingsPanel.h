@@ -17,6 +17,7 @@
 
 /* Forward declaration to set up pointer arrangement 
    to allow settings panel access to the UI */
+class mlrVSTAudioProcessor;
 class mlrVSTAudioProcessorEditor;
 
 
@@ -30,7 +31,8 @@ class SettingsPanel :
 public:
 
     SettingsPanel(const Rectangle<int> &bounds,
-                mlrVSTAudioProcessorEditor * const owner);
+                  mlrVSTAudioProcessor * const processorPtr,
+                  mlrVSTAudioProcessorEditor * const editorPtr);
 
     void buttonClicked(Button *btn);
     void comboBoxChanged(ComboBox *box);
@@ -40,13 +42,17 @@ public:
 
 private:
     
-    menuLookandFeel menuLF;
+    // Communication ////////////////////////////////
+    // Here we have pointers to the main audio
+    // processor for getting global settings and
+    // to the UI for updating settings (as these 
+    // may affect the UI, e.g. changing # of channels
+    mlrVSTAudioProcessor * const processor;
+    mlrVSTAudioProcessorEditor * const pluginUI;
 
-    // Pointer to parent GUI component
-    mlrVSTAudioProcessorEditor * const mlrVSTEditor;
     // Main header label
     Label panelLabel;
-
+    menuLookandFeel menuLF;
     void setupLabel(Label &lbl)
     {
         lbl.setColour(Label::backgroundColourId, Colours::white);

@@ -17,7 +17,7 @@
 
 /* Forward declaration to set up pointer arrangement 
    to allow sample strips to access the UI */
-class mlrVSTAudioProcessorEditor;
+class mlrVSTAudioProcessor;
 
 
 class PresetPanel : 
@@ -27,7 +27,8 @@ class PresetPanel :
 
 public:
 
-    PresetPanel(const Rectangle<int> &bounds, mlrVSTAudioProcessorEditor * const owner);
+    PresetPanel(const Rectangle<int> &bounds,
+                mlrVSTAudioProcessor * const owner);
 
     void buttonClicked(Button *btn);
     void paint(Graphics& g);
@@ -35,7 +36,7 @@ public:
 private:
 
     // Pointer to parent GUI component
-    mlrVSTAudioProcessorEditor * const mlrVSTEditor;
+    mlrVSTAudioProcessor * const processor;
 
     void addRow();
     void deleteRow(const int &index);

@@ -42,6 +42,9 @@
         <FILE id="XisbQT" name="timedButton.h" compile="0" resource="0" file="Source/timedButton.h"/>
       </GROUP>
       <GROUP id="v6Zpj0" name="panels">
+        <FILE id="TLnaMn" name="MappingPanel.cpp" compile="1" resource="0"
+              file="Source/MappingPanel.cpp"/>
+        <FILE id="fuM49N" name="MappingPanel.h" compile="0" resource="0" file="Source/MappingPanel.h"/>
         <FILE id="kmxFbK" name="PresetPanel.cpp" compile="1" resource="0" file="Source/PresetPanel.cpp"/>
         <FILE id="qh5EK9" name="PresetPanel.h" compile="0" resource="0" file="Source/PresetPanel.h"/>
         <FILE id="LDqEQ2" name="SettingsPanel.cpp" compile="1" resource="0"

@@ -19,6 +19,7 @@
 #include "SampleStripControl.h"
 #include "PresetPanel.h"
 #include "SettingsPanel.h"
+#include "MappingPanel.h"
 #include "timedButton.h"
 #include "mlrVSTLookAndFeel.h"
 
@@ -63,42 +64,27 @@ public:
     void filesDropped(const StringArray&, int, int) { }
 
 
-    // listeners
+    // listeners for gui components
     void comboBoxChanged (ComboBox* comboBoxThatHasChanged);
     void sliderValueChanged (Slider*);
 	void buttonClicked(Button*);
 
     /* These just forward the various requests for sample information
        to the AudioProcessor (which holds the sample pool). */
-    int getSamplePoolSize(const int &poolID) { return getProcessor()->getSamplePoolSize(poolID); }
-    String getSampleName(const int &index, const int &poolID) { return getProcessor()->getSampleName(index, poolID); }
-    // AudioSample* getSample(const int &index) { return getProcessor()->getSample(index); }
-    // AudioSample* getLatestSample() { return getProcessor()->getLatestSample(); }
+    int getSamplePoolSize(const int &poolID) { return parent->getSamplePoolSize(poolID); }
+    String getSampleName(const int &index, const int &poolID) { return parent->getSampleName(index, poolID); }
 
-    /* This returns the index of a file if sucessfully loaded or exists
-       already and returns -1 if the loading failed.
-    */
-    int loadSampleFromFile(File &sampleFile) { return getProcessor()->addNewSample(sampleFile); }
-    
-    // Pass SampleStripControl messages back to the plugin processor
-    File getSampleSourceFile(const int &index) const { return getProcessor()->getSample(index)->getSampleFile(); }
+    void switchChannels(const int &newChan, const int &stripID) const { parent->switchChannels(newChan, stripID); }
+    Colour getChannelColour(const int &chan) const { return parent->getChannelColour(chan); }
 
-    void calcInitialPlaySpeed(const int &stripID) const { getProcessor()->calcInitialPlaySpeed(stripID); }
-    void updatePlaySpeedForNewSelection(const int &stripID) { getProcessor()->calcPlaySpeedForSelectionChange(stripID); }
-    void modPlaySpeed(const double &factor, const int &stripID) { getProcessor()->modPlaySpeed(factor, stripID); }
-    AudioSample * getAudioSample(const int &poolIndex, const int &poolID) const { return getProcessor()->getAudioSample(poolIndex, poolID); }
-
-    void switchChannels(const int &newChan, const int &stripID) const { getProcessor()->switchChannels(newChan, stripID); }
-    Colour getChannelColour(const int &chan) const { return getProcessor()->getChannelColour(chan); }
-
-    XmlElement getPresetList() const { return getProcessor()->getPresetList(); }
-    XmlElement getSetlist() const { return getProcessor()->getSetlist(); }
-    void setSetlist(const XmlElement &newSetlist) { getProcessor()->setSetlist(newSetlist); }
-    void setCurrentPreset(const int &id) { getProcessor()->switchPreset(id); }
     void updateGlobalSetting(const int &parameterID, const void *newValue);
-    const void* getGlobalSetting(const int &parameterID) const;
+    const void* getGlobalSetting(const int &parameterID) const { return parent->getGlobalSetting(parameterID); }
 
 private:
+
+    // Communication ///////////////////
+    mlrVSTAudioProcessor * const parent;
+
     // Style / positioning objects ///////////////
     mlrVSTLookAndFeel myLookAndFeel;
     menuLookandFeel menuLF;
@@ -121,10 +107,9 @@ private:
     // Tempo controls /////////////////
     Slider bpmSlider; Label bpmLabel;                       // bpm components
     ComboBox quantiseSettingsCbox; Label quantiseLabel;     // quantise options components
-    void setUpTempoUI();
+    void setupTempoUI();
 
     // Buttons ////////////////////////////
-    ToggleButton toggleSetlistBtn, toggleSettingsBtn;
     TextButton loadFilesBtn;
 
     // Record / resample UI ////////////////////////////////////////
@@ -141,19 +126,30 @@ private:
     AudioPlayHead::CurrentPositionInfo lastDisplayedPosition;
     DrawableButton debugButton;
 
-    // Presets //////////////////////
+    // Panels ///////////////////////
+    void setupPanels();     // positions panels / buttons
+    void closePanels();     // closes all panels
+
+    //// Presets //////////////////////
     TextButton addPresetBtn;
+    ToggleButton toggleSetlistBtn;
     Rectangle<int> presetPanelBounds;
     PresetPanel presetPanel;
 
-    // Settings ///////////////
-    // in practical terms, this is the number of simultaneous audio channels
-    int numChannels;
-    // are we using the bpm from the host?
-    bool useExternalTempo;
+    //// Settings ///////////////
+    int numChannels;        // sets number of simultaneous audio channels
+    bool useExternalTempo;  // are we using the bpm from the host?
     // These provide the overlay for the settings Panel
+    ToggleButton toggleSettingsBtn;
     Rectangle<int> settingsPanelBounds;
     SettingsPanel settingsPanel;
+
+    //// Mappings ///////////////////
+    Rectangle<int> mappingPanelBounds;
+    ToggleButton toggleMappingBtn;
+    MappingPanel mappingPanel;
+    
+
 
     // SampleStrip controls ///////////////////////////////
     // Store the waveform controls/strips in array, this is 
@@ -162,9 +158,6 @@ private:
     const int numStrips;
     const int waveformControlHeight, waveformControlWidth;
     void buildSampleStripControls();
-
-
-    mlrVSTAudioProcessor* getProcessor() const { return static_cast <mlrVSTAudioProcessor*> (getAudioProcessor()); }
 
     JUCE_LEAK_DETECTOR(mlrVSTAudioProcessorEditor);  
 };

@@ -47,6 +47,7 @@ OBJECTS := \
   $(OBJDIR)/PluginProcessor_a059e380.o \
   $(OBJDIR)/SampleStrip_9922baef.o \
   $(OBJDIR)/timedButton_8bab4a.o \
+  $(OBJDIR)/MappingPanel_5b8ca75f.o \
   $(OBJDIR)/PresetPanel_1f2c0a46.o \
   $(OBJDIR)/SettingsPanel_89b72282.o \
   $(OBJDIR)/SampleStripControl_45995bf8.o \
@@ -100,6 +101,11 @@ $(OBJDIR)/SampleStrip_9922baef.o: ../../Source/SampleStrip.cpp
 $(OBJDIR)/timedButton_8bab4a.o: ../../Source/timedButton.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling timedButton.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/MappingPanel_5b8ca75f.o: ../../Source/MappingPanel.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling MappingPanel.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/PresetPanel_1f2c0a46.o: ../../Source/PresetPanel.cpp

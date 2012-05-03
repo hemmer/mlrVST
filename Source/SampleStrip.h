@@ -5,7 +5,8 @@
     Created: 13 Sep 2011 1:07:11pm
     Author:  Hemmer
 
-    This class is the logic version equivalent of WaveformControl.
+    This class is the audio backend to the SampleStripControls. Each strip
+    processes its own audio.
 
   ==============================================================================
 */
@@ -29,14 +30,14 @@ public:
     ~SampleStrip()
     {
         buttonStatus.clear();
-        parent.release();
     }
 
     enum SampleStripParameter
     {
         FirstParam,                     // This is so we can loop over GUI params
-        pIsPlaying = FirstParam,
-        pCurrentChannel,        
+        pCurrentChannel = FirstParam,
+        pIsPlaying,
+        pPlaybackPercentage,
         pNumChunks,
         pPlayMode,
         pIsLatched,
@@ -44,7 +45,6 @@ public:
         pStripVolume,
         pPlaySpeed,
         pIsPlaySpeedLocked,
-        pPlaybackPercentage,
         pVisualStart, pVisualEnd,       // start / end points in pixels
         pAudioSample,
         NumGUIParams,
@@ -96,6 +96,7 @@ public:
         switch(parameterID)
         {
         case pCurrentChannel : return "current_channel";
+        case pIsPlaying : return "is_playing";
         case pNumChunks : return "num_chunks";
         case pPlayMode : return "playmode";
         case pIsLatched : return "is_latched";
@@ -103,7 +104,7 @@ public:
         case pStripVolume : return "strip_volume";
         case pPlaySpeed : return "play_speed";
         case pIsPlaySpeedLocked : return "is_play_speed_locked";
-        case pIsPlaying : return "is_playing";
+        
         case pChunkSize : return "chunk_size";
         case pVisualStart : return "visual_start";
         case pVisualEnd : return "visual_end";
@@ -113,7 +114,13 @@ public:
         case pSampleEnd : return "sample_end";
         case pStartChunk : return "sample_chunk_start";
         case pEndChunk : return "sample_chunk_end";
-        default : jassertfalse; return "parameter_not_found";
+
+        case pIsVolInc : return "is_vol_inc";
+        case pIsVolDec : return "is_vol_dec";
+        case pIsPlaySpeedInc : return "is_playspeed_inc";
+        case pIsPlaySpeedDec : return "is_playspeed_dec";
+        
+        default : jassertfalse; return "parameter_not_found_" + String(parameterID);
         }
     }
 
@@ -166,7 +173,9 @@ public:
     void startSamplePlaying(const int &chunk);
     double stopSamplePlaying();
     
-    void setButtonStatus(int column, bool state) { buttonStatus.set(column, state); }
+    void setButtonStatus(const int &column, const bool &state)
+    { buttonStatus.set(column, state); }
+
     // returns the button being held furthest left
     int getLeftmostButton() const
     {
@@ -189,74 +198,72 @@ public:
     }
 
 private:
+    // metadata //////////////
     const int sampleStripID;
     const int numSampleStrips;
 
-    ScopedPointer<mlrVSTAudioProcessor> parent;
+    // communication //////////////////////////
+    mlrVSTAudioProcessor * const parent;
 
-    void updatePlayParams();
-    void updateForNewSample();
-
-    // These are just so the GUI can show where in the sample we are
-    bool isPlaying;
-    float playbackPercentage;
-
-    // Pointer to currently selected sample
-    const AudioSample *currentSample;
-    int totalSampleLength;
-    double sampleSampleRate;
-
+    // playback parameters /////////////////////
+    int currentChannel;                     // what channel is selected
+    float playbackPercentage;               // where in the sample we are (GUI only)
+    int currentPlayMode;                    // which of the playmodes is selected
+    bool isPlaying, isReversed, isLatched;  // various playback params
+    double sampleCurrentPosition;           // where we are in the sample at the moment
     // start / end points (fractional, i.e. 0.5 is half way through)
     float fractionalSampleStart, fractionalSampleEnd;
-
     // start / end / length of the selection (in pixels)
     int visualSelectionStart, visualSelectionEnd, visualSelectionLength;
+    // start / end / length / previous length of the selection (in number of samples)
+    int selectionStart, selectionEnd, selectionLength, previousSelectionLength;
+        
+    const AudioSample *currentSample;   // pointer to currently selected AudioSample
+    int totalSampleLength;              // length of this AudioSample in samples
+    double sampleSampleRate;            // sample rate of the AudioSample (e.g. 44100Hz)
 
-    // start / end / length of the selection (in samples)
-    int selectionStart, selectionEnd, selectionLength;
-    // loop modes might only play a select part of that selection
-    int playbackStartPosition, playbackEndPosition;
+    // loop modes might only play a select part of the visual selection
+    // so store the sample number which playback starts / ends
+    int playbackStartPosition, playbackEndPosition;     
 
+    int loopStartChunk, loopEndChunk;   // which chunk to start / end the loop with
+    int initialColumn;                  // which button started playback
 
-    // which chunk to start / end the loop with
-    int loopStartChunk, loopEndChunk;
-    // which button started playback
-    int initialColumn;
+    int numChunks;      // How many blocks the sample is split up into...
+    int chunkSize;      // ...and what size are they (in samples).
 
-    // How many blocks the sample is split up into...
-    int numChunks;
-    // ...and what size are they (in samples).
-    int chunkSize;
-
-    int currentChannel;
-
-    // Playback options
-    int currentPlayMode;
-    bool isReversed, isLatched;
-
-    // Each strip has it's individual volume control
-    float stripVolume;
-    // these are used to (in/de)crement the strip volume using key combos
+   
+    // Each strip has it's individual volume control: these are
+    // used to (in/de)crement the strip volume using key combos
     bool volumeIncreasing, volumeDecreasing;
+    float stripVolume;
 
-    double playSpeed;
-    bool isPlaySpeedLocked;
+    // Each strip has it's individual playspeed control: these are
+    // used to (in/de)crement the strip speed using key combos
     bool playSpeedIncreasing, playSpeedDecreasing;
-
+    double playSpeed;
+    // if true, this means the playspeed is fixed even if the 
+    // sample selection is changed
+    bool isPlaySpeedLocked;         
+    
+    // use to calculate the new playspeed after bpm change
     double previousBPM;
-    int previousSelectionLength;
+    
 
-     // where we are in the sample at the moment
-    double sampleCurrentPosition;
-
+    // misc /////////////////////////////////////////////////
     // Boolean grid which stores the status of button presses
     // where the indices correspond to the col
     Array<bool> buttonStatus;
 
-    //==============================================================================
-    /** This is used to control access to the rendering
-        callback and the note trigger methods. */
+    void updatePlayParams();
+    void updateForNewSample();
+
+    
+    // This is used to control access to the rendering
+    // callback and the note trigger methods. 
     CriticalSection lock;
+
+    JUCE_LEAK_DETECTOR(SampleStrip);  
 };
 
 

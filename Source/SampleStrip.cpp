@@ -15,19 +15,27 @@
 SampleStrip::SampleStrip(const int &newID,
                          const int &newNumSampleStrips,
                          mlrVSTAudioProcessor *owner) :
+
+    // meta data /////////////////////////////////////////////
     sampleStripID(newID), numSampleStrips(newNumSampleStrips),
+    // communication //////////////////////////
     parent(owner),
-    currentSample(0), sampleSampleRate(0.0),
-    totalSampleLength(0), fractionalSampleStart(0), fractionalSampleEnd(0),
+    // playback parameters //////////////////////////////////////
+    currentChannel(0), playbackPercentage(0.0), currentPlayMode(LOOP),
+    isPlaying(false), isReversed(false), isLatched(true),
+    sampleCurrentPosition(0.0), fractionalSampleStart(0.0f), fractionalSampleEnd(1.0f),
     visualSelectionStart(0), visualSelectionEnd(THUMBNAIL_WIDTH), visualSelectionLength(THUMBNAIL_WIDTH),
+    selectionStart(0), selectionEnd(0), selectionLength(0), previousSelectionLength(0),
+    currentSample(nullptr), totalSampleLength(0), sampleSampleRate(0.0),
+    playbackStartPosition(0), playbackEndPosition(0),
+    loopStartChunk(0), loopEndChunk(0), initialColumn(0),
     numChunks(8), chunkSize(0),
-    currentChannel(0),
-    isPlaying(false), playbackPercentage(0.0),
-    currentPlayMode(LOOP), isReversed(false), isLatched(true),
-    stripVolume(1.0f), volumeIncreasing(false), volumeDecreasing(false),
-    playSpeed(1.0), playSpeedIncreasing(false), playSpeedDecreasing(false),
-    isPlaySpeedLocked(false), buttonStatus(),
-    previousBPM(120.0), previousSelectionLength(0)
+    volumeIncreasing(false), volumeDecreasing(false), stripVolume(1.0f), 
+    playSpeedIncreasing(false), playSpeedDecreasing(false), playSpeed(1.0),
+    isPlaySpeedLocked(false), previousBPM(120.0),
+    // misc //////
+    buttonStatus()
+    
 {
     for (int i = 0; i < NUM_COLS; ++i) buttonStatus.add(false);
 }
@@ -109,7 +117,7 @@ void SampleStrip::setSampleStripParam(const int &parameterID,
     case pAudioSample :
         currentSample = static_cast<const AudioSample*>(newValue);
         // update associated params if there is a sample
-        if (currentSample)
+        if (currentSample != nullptr)
         {
             updateForNewSample();
         }
@@ -152,63 +160,18 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
 {
     const void *p;
 
+    // this list is roughly ordered by number of times called for efficiency
     switch (parameterID)
     {
     case pCurrentChannel :
         p = &currentChannel; break;
-
-    case pNumChunks :
-        p = &numChunks; break;
-
-    case pPlayMode :
-        p = &currentPlayMode; break;
-
-    case pIsLatched :
-        p = &isLatched; break;
-
-    case pIsReversed :
-        p = &isReversed; break;
-
-    case pStripVolume :
-        p = &stripVolume; break;
-
-    case pPlaySpeed :
-        p = &playSpeed; break;
-
-    case pIsPlaySpeedLocked :
-        p = &isPlaySpeedLocked; break;
-
     case pIsPlaying :
         p = &isPlaying; break;
-
     case pPlaybackPercentage :
         p = &playbackPercentage; break;
 
-    case pVisualStart :
-        p = &visualSelectionStart; break;
 
-    case pVisualEnd :
-        p = &visualSelectionEnd; break;
-
-    // Audio processing only params
-    case pChunkSize :
-        p = &chunkSize; break;
-
-    case pSampleStart :
-        p = &selectionStart; break;
-
-    case pSampleEnd :
-        p = &selectionEnd; break;
-
-    case pAudioSample :
-        p = currentSample; break;
-
-    case pStartChunk :
-        p = &loopStartChunk; break;
-
-    case pEndChunk :
-        p = &loopEndChunk; break;
-
+    // these are near the top as get called quite regularly
     case pIsVolInc : 
         p = &volumeIncreasing; break;
     case pIsVolDec : 
@@ -217,6 +180,41 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
         p = &playSpeedIncreasing; break;
     case pIsPlaySpeedDec : 
         p = &playSpeedDecreasing; break;
+
+    case pNumChunks :
+        p = &numChunks; break;
+    case pPlayMode :
+        p = &currentPlayMode; break;
+    case pIsLatched :
+        p = &isLatched; break;
+    case pIsReversed :
+        p = &isReversed; break;
+    case pStripVolume :
+        p = &stripVolume; break;
+    case pPlaySpeed :
+        p = &playSpeed; break;
+    case pIsPlaySpeedLocked :
+        p = &isPlaySpeedLocked; break;
+
+   
+    case pVisualStart :
+        p = &visualSelectionStart; break;
+    case pVisualEnd :
+        p = &visualSelectionEnd; break;
+
+    // Audio processing only params
+    case pChunkSize :
+        p = &chunkSize; break;
+    case pSampleStart :
+        p = &selectionStart; break;
+    case pSampleEnd :
+        p = &selectionEnd; break;
+    case pAudioSample :
+        p = currentSample; break;
+    case pStartChunk :
+        p = &loopStartChunk; break;
+    case pEndChunk :
+        p = &loopEndChunk; break;
 
     default:
         DBG("Param not found!");
@@ -259,7 +257,7 @@ void SampleStrip::toggleSampleStripParam(const int &parameterID, const bool &sen
 
 void SampleStrip::updatePlaySpeedForBPMChange(const double &newBPM)
 {
-    if (!isPlaySpeedLocked && currentSample)
+    if (!isPlaySpeedLocked && currentSample != nullptr)
     {
         playSpeed *= (newBPM / previousBPM);
         previousBPM = newBPM;
@@ -271,7 +269,7 @@ void SampleStrip::updatePlaySpeedForBPMChange(const double &newBPM)
 
 void SampleStrip::updatePlaySpeedForSelectionChange()
 {
-    if (!isPlaySpeedLocked && currentSample && selectionLength > 0)
+    if (!isPlaySpeedLocked && currentSample != nullptr && selectionLength > 0)
     {
         jassert(previousSelectionLength > 0);
         playSpeed *= (selectionLength / (double) previousSelectionLength);
@@ -284,7 +282,7 @@ void SampleStrip::updatePlaySpeedForSelectionChange()
 
 void SampleStrip::findInitialPlaySpeed(const double &newBPM, const float &hostSampleRate)
 {
-    if (currentSample)
+    if (currentSample != nullptr)
     {
         double numSamplesInFourBars = ((newBPM / 960.0) * hostSampleRate);
         playSpeed = (double)(selectionLength / sampleSampleRate) * (numSamplesInFourBars / hostSampleRate);
@@ -358,7 +356,7 @@ void SampleStrip::handleMidiEvent (const MidiMessage& m)
         stopSamplePlaying();
 
     // if we have a sample and a button is pressed
-    else if (currentSample && state)
+    else if (currentSample != nullptr && state)
     {
         const int leftmostBtn = getLeftmostButton();
 
@@ -496,12 +494,11 @@ void SampleStrip::renderNextBlock(AudioSampleBuffer& outputBuffer,
 
 void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
 {
-
-    if (currentSample != 0 && isPlaying)
+    // if a sample is loaded AND we are playing
+    if (currentSample != nullptr && isPlaying)
     {
         updatePlayParams();
-        //DBG("playing " << totalSampleLength << " " << currentSample->getAudioData()->getNumSamples());
-
+        
         const float* const inL = currentSample->getAudioData()->getSampleData(0, 0);
         const float* const inR = currentSample->getNumChannels() > 1
             ? currentSample->getAudioData()->getSampleData(1, 0) : nullptr;
@@ -511,7 +508,6 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
 
         while (--numSamples >= 0)
         {
-
             // just using a very simple linear interpolation here..
             const int pos = (int) sampleCurrentPosition;
             const double alpha = (double) (sampleCurrentPosition - pos);
@@ -544,7 +540,6 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
             }
 
             
-
             if (!isReversed)
             {
                 sampleCurrentPosition += playSpeed;
@@ -577,8 +572,7 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
             {
                 // go back in time...
                 sampleCurrentPosition -= playSpeed;
-                //DBG("#2 " << sampleCurrentPosition << " strip " << sampleStripID << " " << playSpeed);
-
+                
                 switch (currentPlayMode)
                 {
 
@@ -626,7 +620,6 @@ void SampleStrip::startSamplePlaying(const int &chunk)
         playbackEndPosition = selectionStart + loopStartChunk * chunkSize;
         sampleCurrentPosition = (float) selectionStart + (chunk + 1) * chunkSize;
     }
-
 }
 
 double SampleStrip::stopSamplePlaying()
@@ -640,7 +633,7 @@ void SampleStrip::updatePlayParams()
 {
 
     // if the resample / record buffers change length
-    if (currentSample)
+    if (currentSample != nullptr)
     {
         if (currentSample->getSampleLength() != totalSampleLength)
         {

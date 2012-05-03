@@ -11,6 +11,23 @@
 #include "PluginProcessor.h"
 #include "OSCHandler.h"
 
+// Constructor
+OSCHandler::OSCHandler(const String &prefix, mlrVSTAudioProcessor * const owner) :
+    Thread("OscListener Thread"), 
+    // incoming ///////////////////////////////////////
+    parent(owner), incomingPort(8000),
+    s(IpEndpointName("localhost", incomingPort), this),
+    // incoming ///////////////////////////////////////
+    buffer(), p(buffer, 1536),
+    transmitSocket(IpEndpointName("localhost", 8080)),
+    // strings ////////////////////////////
+    OSCPrefix(prefix), ledStr(OSCPrefix + "led"), ledRowStr(OSCPrefix + "led_row"),
+    ledClearStr(OSCPrefix + "clear"), buttonPressMask(OSCPrefix + "press")
+{
+    // setup the mask
+    setPrefix(prefix);
+}
+
 void OSCHandler::buttonPressCallback(const int &monomeCol, const int &monomeRow, const bool &state)
 {
     parent->processOSCKeyPress(monomeCol, monomeRow, state);

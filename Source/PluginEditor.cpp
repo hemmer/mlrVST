@@ -12,10 +12,12 @@
 
 
 //==============================================================================
-mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ownerFilter,
+mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* owner,
                                                         const int &newNumChannels, 
                                                         const int &newNumStrips)
-    : AudioProcessorEditor (ownerFilter),
+    : AudioProcessorEditor (owner),
+    // Communication ////////////////////////
+    parent(owner),
     // Style / positioning objects //////////
     myLookAndFeel(), menuLF(),
     xPosition(0), yPosition(0),
@@ -35,8 +37,6 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     quantiseSettingsCbox("quantise settings"), quantiseLabel(),
 
     // Buttons ////////////////////////////
-    toggleSetlistBtn("Show Setlist"),
-    toggleSettingsBtn("Settings"),
     loadFilesBtn("load files", "LOAD FILES"),
 
     // Record / resample UI ////////////////////////////////////////
@@ -51,14 +51,19 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     debugButton("loadfile", DrawableButton::ImageRaw),    // temporary button
 
     // Presets //////////////////////////////////////////////////
-    addPresetBtn("save preset", "Save Preset"),
-    presetPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH / 2, 725),
-    presetPanel(presetPanelBounds, this),
+    addPresetBtn("save preset", "Save Preset"), toggleSetlistBtn("Setlist"),
+    presetPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH, 725),
+    presetPanel(presetPanelBounds, owner),
 
     // Settings ///////////////////////////////////////
-    numChannels(newNumChannels), useExternalTempo(true),
-    settingsPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH / 2, 725),
-    settingsPanel(settingsPanelBounds, this),
+    numChannels(newNumChannels), useExternalTempo(true), toggleSettingsBtn("Settings"),
+    settingsPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH, 725),
+    settingsPanel(settingsPanelBounds, owner, this),
+
+    // Mappings //////////////////////////////////////
+    mappingPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH, 725),
+    toggleMappingBtn("Mappings"),
+    mappingPanel(mappingPanelBounds, owner),
 
     // SampleStrip controls ///////////////////////////
     sampleStripControlArray(), numStrips(newNumStrips),
@@ -76,7 +81,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     buildSliders();
 
     // add the bpm slider and quantise settings
-    setUpTempoUI();
+    setupTempoUI();
 
     // useful UI debugging components
     addAndMakeVisible(&debugButton);
@@ -100,27 +105,13 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     addPresetBtn.addListener(this);
     addPresetBtn.setBounds(130, 350, 70, 25);
 
-    addAndMakeVisible(&toggleSetlistBtn);
-    toggleSetlistBtn.addListener(this);
-    toggleSetlistBtn.setBounds(210, 350, 75, 25);
-
-    addChildComponent(&presetPanel);
-    presetPanel.setBounds(presetPanelBounds);
-
-
-    // Settings associated stuff
-    addAndMakeVisible(&toggleSettingsBtn);
-    toggleSettingsBtn.addListener(this);
-    toggleSettingsBtn.setBounds(210, 230, 75, 25);
-    toggleSettingsBtn.setColour(TextButton::buttonColourId, Colours::black);
-
-    addChildComponent(&settingsPanel);
-    settingsPanel.setBounds(settingsPanelBounds);
+    // set up the various panels (settings, mapping, etc)
+    setupPanels();
 
     // start timer to update play positions, slider values etc.
     startTimer(50);
 
-        // This tells the GUI to use a custom "theme"
+    // This tells the GUI to use a custom "theme"
     LookAndFeel::setDefaultLookAndFeel(&myLookAndFeel);
 }
 
@@ -136,16 +127,16 @@ void mlrVSTAudioProcessorEditor::buildSampleStripControls()
     // make sure we start from scratch
     sampleStripControlArray.clear(true);
 
-    int numStrips = getProcessor()->getNumSampleStrips();
+    int numStrips = parent->getNumSampleStrips();
 
     // Add SampleStripControls, loading settings from the corresponding SampleStrip
     for(int i = 0; i < numStrips; ++i)
     {
         // this is passed to the SampleStripControl to allow data to be stored
-        SampleStrip * currentStrip = getProcessor()->getSampleStrip(i);
+        SampleStrip * currentStrip = parent->getSampleStrip(i);
 
         sampleStripControlArray.add(new SampleStripControl(i, waveformControlWidth, 
-            waveformControlHeight, numChannels, currentStrip, this));
+            waveformControlHeight, numChannels, currentStrip, parent));
         
         int stripX = getWidth() - waveformControlWidth - PAD_AMOUNT;
         int stripY = PAD_AMOUNT + i * (waveformControlHeight + PAD_AMOUNT);
@@ -155,7 +146,7 @@ void mlrVSTAudioProcessorEditor::buildSampleStripControls()
         // Programmatically load parameters
         for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
         {
-            const void *newValue = getProcessor()->getSampleStripParameter(p, i);
+            const void *newValue = parent->getSampleStripParameter(p, i);
             sampleStripControlArray[i]->recallParam(p, newValue, true);
         }
         DBG("params loaded for strip #" << i);
@@ -205,9 +196,9 @@ void mlrVSTAudioProcessorEditor::buildSliders()
         slidersArray[i]->addListener(this);
         slidersArray[i]->setRange(0.0, 1.0, 0.01);
         slidersArray[i]->setBounds(xPosition, yPosition, sliderWidth - 1, sliderHeight);
-        slidersArray[i]->setValue(getProcessor()->getChannelGain(i));
+        slidersArray[i]->setValue(parent->getChannelGain(i));
 
-        Colour sliderColour = getProcessor()->getChannelColour(i);
+        Colour sliderColour = parent->getChannelColour(i);
         slidersArray[i]->setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
         slidersArray[i]->setLookAndFeel(&menuLF);
         slidersArray[i]->setColour(Slider::thumbColourId, sliderColour);
@@ -240,22 +231,21 @@ void mlrVSTAudioProcessorEditor::paint (Graphics& g)
 // to see if the host has modified the parameters. 
 void mlrVSTAudioProcessorEditor::timerCallback()
 {
-    mlrVSTAudioProcessor* ourProcessor = getProcessor();
 
     if (useExternalTempo)
     {
-        AudioPlayHead::CurrentPositionInfo newPos(ourProcessor->lastPosInfo);
+        AudioPlayHead::CurrentPositionInfo newPos(parent->lastPosInfo);
 
         if (lastDisplayedPosition != newPos) bpmSlider.setValue(newPos.bpm);
     }
 
-    recordBtn.setPercentDone(ourProcessor->getRecordingPrecountPercent(),
-                             ourProcessor->getRecordingPercent());
-    resampleBtn.setPercentDone(ourProcessor->getResamplingPrecountPercent(),
-                               ourProcessor->getResamplingPercent());
+    recordBtn.setPercentDone(parent->getRecordingPrecountPercent(),
+                             parent->getRecordingPercent());
+    resampleBtn.setPercentDone(parent->getResamplingPrecountPercent(),
+                               parent->getResamplingPercent());
 
     // see if the host has changed the master gain
-    masterGainSlider.setValue(ourProcessor->getParameter(mlrVSTAudioProcessor::pMasterGainParam));
+    masterGainSlider.setValue(parent->getParameter(mlrVSTAudioProcessor::pMasterGainParam));
 
     // update the playback position     
     for(int i = 0; i < sampleStripControlArray.size(); ++i)
@@ -273,44 +263,44 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
         // It's vital to use setParameterNotifyingHost to change any parameters that are automatable
         // by the host, rather than just modifying them directly, otherwise the host won't know
         // that they've changed.
-        getProcessor()->setParameterNotifyingHost(mlrVSTAudioProcessor::pMasterGainParam,
+        parent->setParameterNotifyingHost(mlrVSTAudioProcessor::pMasterGainParam,
                                                    (float) masterGainSlider.getValue());
     }
     else if (slider == &bpmSlider)
     {
         double newBPM = bpmSlider.getValue();
-        getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM, &newBPM);
+        parent->updateGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM, &newBPM);
     }
 
     else if (slider == &resampleLengthSldr)
     {
         const int resampleLength = (int) resampleLengthSldr.getValue();
-        getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sResampleLength, &resampleLength);
+        parent->updateGlobalSetting(mlrVSTAudioProcessor::sResampleLength, &resampleLength);
     }
     else if (slider == &resamplePrecountSldr)
     {
         const int resamplePrecount = (int) resamplePrecountSldr.getValue();
-        getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sResamplePrecount, &resamplePrecount);
+        parent->updateGlobalSetting(mlrVSTAudioProcessor::sResamplePrecount, &resamplePrecount);
     }
     else if (slider == &resampleBankSldr)
     {
         const int resampleBank = (int) resampleBankSldr.getValue();
-        getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sResampleBank, &resampleBank);
+        parent->updateGlobalSetting(mlrVSTAudioProcessor::sResampleBank, &resampleBank);
     }
     else if (slider == &recordLengthSldr)
     {
         const int recordLength = (int) recordLengthSldr.getValue();
-        getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sRecordLength, &recordLength);
+        parent->updateGlobalSetting(mlrVSTAudioProcessor::sRecordLength, &recordLength);
     }
     else if (slider == &recordPrecountSldr)
     {
         const int recordPrecount = (int) recordPrecountSldr.getValue();
-        getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sRecordPrecount, &recordPrecount);
+        parent->updateGlobalSetting(mlrVSTAudioProcessor::sRecordPrecount, &recordPrecount);
     }
     else if (slider == &recordBankSldr)
     {
         const int recordBank = (int) recordBankSldr.getValue();
-        getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sRecordBank, &recordBank);
+        parent->updateGlobalSetting(mlrVSTAudioProcessor::sRecordBank, &recordBank);
     }
 
 
@@ -326,7 +316,7 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
 
                 // let host know about the new value
                 // channel0GainParam is the first channel id, so +i to access the rest
-                getProcessor()->setChannelGain(i, newChannelGainValue);
+                parent->setChannelGain(i, newChannelGainValue);
             }
         }
     }
@@ -340,7 +330,7 @@ void mlrVSTAudioProcessorEditor::comboBoxChanged(ComboBox* comboBoxChanged)
         const int choice = quantiseSettingsCbox.getSelectedId();
         
         if (choice > 0)
-            getProcessor()->updateGlobalSetting(mlrVSTAudioProcessor::sQuantiseMenuSelection, &choice);
+            parent->updateGlobalSetting(mlrVSTAudioProcessor::sQuantiseMenuSelection, &choice);
     }
 }
 
@@ -348,27 +338,35 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 {
     if(btn == &toggleSetlistBtn)
     {
-        // Toggle the setlist manager panel
-        bool currentlyVisible = presetPanel.isVisible();
-        String setlistBtnText = (currentlyVisible) ? "Show Setlist" : "Hide Setlist";
-        toggleSetlistBtn.setButtonText(setlistBtnText);
+        const bool currentlyVisible = presetPanel.isVisible();
+        // close any existing panels
+        closePanels();
+        // Toggle the visibility of the setlist manager panel
         presetPanel.setVisible(!currentlyVisible);
-
-        // Force existing panels to close
-        settingsPanel.setVisible(false);
-        toggleSettingsBtn.setToggleState(false, false);
+        // and update the button
+        toggleSetlistBtn.setToggleState(!currentlyVisible, false);
     }
 
     else if(btn == &toggleSettingsBtn)
     {
-        // Toggle the settings panel
-        bool currentlyVisible = settingsPanel.isVisible();
+        const bool currentlyVisible = settingsPanel.isVisible();
+        // close any existing panels
+        closePanels();
+        // Toggle the visibility of the settings panel
         settingsPanel.setVisible(!currentlyVisible);
+        // and update the button
+        toggleSettingsBtn.setToggleState(!currentlyVisible, false);
+    }
 
-        // Force existing panels to close
-        presetPanel.setVisible(false);
-        toggleSetlistBtn.setButtonText("Show Setlist");
-        toggleSetlistBtn.setToggleState(false, false);
+    else if(btn == &toggleMappingBtn)
+    {
+        const bool currentlyVisible = mappingPanel.isVisible();
+        // close any existing panels
+        closePanels();
+        // Toggle the settings panel
+        mappingPanel.setVisible(!currentlyVisible);
+        // and update the button
+        toggleMappingBtn.setToggleState(!currentlyVisible, false);
     }
 
     else if(btn == &addPresetBtn)
@@ -394,19 +392,19 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
             // this is the text they entered..
             String newPresetName(w.getTextEditorContents("text"));
 
-            getProcessor()->savePreset(newPresetName);
+            parent->savePreset(newPresetName);
         }
     #endif
     }
 
     else if(btn == &resampleBtn)
     {
-        getProcessor()->startResampling();
+        parent->startResampling();
     }
 
     else if(btn == &recordBtn)
     {
-        getProcessor()->startRecording();
+        parent->startRecording();
     }
 
     // load files manually using file dialog
@@ -416,17 +414,17 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
                                File::getSpecialLocation(File::userDesktopDirectory),
                                "*.wav;*.flac;*.ogg;*.aif;*.aiff;*.caf");
 
+        // ask user to load at least one file
         if(myChooser.browseForMultipleFilesToOpen())
         {	
+            // if sucessful, try to add these to the sample pool 
             Array<File> newFiles = myChooser.getResults();
             for (int i = 0; i < newFiles.size(); ++i)
             {
-                File newFile = newFiles[i];
-                loadSampleFromFile(newFile);
+                File currentFile = newFiles[i];
+                parent->addNewSample(currentFile);
             }
-
 		}
-
 	}
 }
 
@@ -438,7 +436,7 @@ void mlrVSTAudioProcessorEditor::updateGlobalSetting(const int &parameterID, con
        mlrVSTAudioProcessorEditor will lose these on 
        closing.
     */
-    getProcessor()->updateGlobalSetting(parameterID, newValue); 
+    parent->updateGlobalSetting(parameterID, newValue); 
 
     // a few settings are of interest to the GUI
     switch (parameterID) 
@@ -472,11 +470,6 @@ void mlrVSTAudioProcessorEditor::updateGlobalSetting(const int &parameterID, con
     }
 }
 
-const void* mlrVSTAudioProcessorEditor::getGlobalSetting(const int &parameterID) const
-{ 
-    return getProcessor()->getGlobalSetting(parameterID);
-}
-
 void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
 {
     addAndMakeVisible(&resampleBtn);
@@ -494,7 +487,7 @@ void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
     resamplePrecountSldr.setLookAndFeel(&menuLF);
     resamplePrecountSldr.setSliderStyle(Slider::LinearBar);
     resamplePrecountSldr.addListener(this);
-    const int resamplePrecount = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sResamplePrecount));
+    const int resamplePrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResamplePrecount));
     resamplePrecountSldr.setValue(resamplePrecount);
     
     addAndMakeVisible(&recordLengthLbl);
@@ -507,7 +500,7 @@ void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
     resampleLengthSldr.setLookAndFeel(&menuLF);
     resampleLengthSldr.setSliderStyle(Slider::LinearBar);
     resampleLengthSldr.addListener(this);
-    const int resampleLength = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sResampleLength));
+    const int resampleLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResampleLength));
     resampleLengthSldr.setValue(resampleLength);
 
     addAndMakeVisible(&bankLbl);
@@ -520,7 +513,7 @@ void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
     resampleBankSldr.setLookAndFeel(&menuLF);
     resampleBankSldr.setSliderStyle(Slider::LinearBar);
     resampleBankSldr.addListener(this);
-    const int resampleBank = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sResampleBank));
+    const int resampleBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResampleBank));
     resampleBankSldr.setValue(resampleBank);
 
 
@@ -536,7 +529,7 @@ void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
     recordPrecountSldr.setLookAndFeel(&menuLF);
     recordPrecountSldr.setSliderStyle(Slider::LinearBar);
     recordPrecountSldr.addListener(this);
-    const int recordPrecount = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sRecordPrecount));
+    const int recordPrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordPrecount));
     recordPrecountSldr.setValue(recordPrecount);
 
     addAndMakeVisible(&recordLengthSldr);
@@ -545,7 +538,7 @@ void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
     recordLengthSldr.setLookAndFeel(&menuLF);
     recordLengthSldr.setSliderStyle(Slider::LinearBar);
     recordLengthSldr.addListener(this);
-    const int recordLength = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sRecordLength));
+    const int recordLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordLength));
     recordLengthSldr.setValue(recordLength);
 
     addAndMakeVisible(&recordBankSldr);
@@ -554,12 +547,12 @@ void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
     recordBankSldr.setLookAndFeel(&menuLF);
     recordBankSldr.setSliderStyle(Slider::LinearBar);
     recordBankSldr.addListener(this);
-    const int recordBank = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sRecordBank));
+    const int recordBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordBank));
     resampleBankSldr.setValue(recordBank);
 
 }
 
-void mlrVSTAudioProcessorEditor::setUpTempoUI()
+void mlrVSTAudioProcessorEditor::setupTempoUI()
 {
     int bpmSliderWidth = 180, bpmSliderHeight = 32;
     int bpmLabelWidth = bpmSliderWidth, bpmLabelHeight = 16;
@@ -626,10 +619,59 @@ void mlrVSTAudioProcessorEditor::setUpTempoUI()
         quantiseSettingsCbox.addItem(String(denom) + "n", i);
 
     // and load the stored selection if suitable
-    const int menuSelection = *static_cast<const int*>(getProcessor()->getGlobalSetting(mlrVSTAudioProcessor::sQuantiseMenuSelection));
+    const int menuSelection = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sQuantiseMenuSelection));
     if (menuSelection >= 0 && menuSelection < 8) quantiseSettingsCbox.setSelectedId(menuSelection);
     else quantiseSettingsCbox.setSelectedId(1);
 
     xPosition = PAD_AMOUNT;
-    yPosition += bpmSliderHeight;
+    yPosition += bpmSliderHeight + PAD_AMOUNT;
+}
+
+void mlrVSTAudioProcessorEditor::setupPanels()
+{
+    const int buttonHeight = 25;
+    const int buttonWidth = 60;
+
+    // button to toggle the settings panel
+    addAndMakeVisible(&toggleSettingsBtn);
+    toggleSettingsBtn.addListener(this);
+    toggleSettingsBtn.setBounds(xPosition, yPosition, buttonWidth, buttonHeight);
+    // add the actual panel
+    addChildComponent(&settingsPanel);
+    settingsPanel.setBounds(settingsPanelBounds);
+    xPosition += PAD_AMOUNT + buttonWidth;
+
+
+    // button to toggle the setlist panel
+    addAndMakeVisible(&toggleSetlistBtn);
+    toggleSetlistBtn.addListener(this);
+    toggleSetlistBtn.setBounds(xPosition, yPosition, buttonWidth, buttonHeight);
+    // add the actual button
+    addChildComponent(&presetPanel);
+    presetPanel.setBounds(presetPanelBounds);
+    xPosition += PAD_AMOUNT + buttonWidth;
+
+    // button to toggle mappings panel
+    addAndMakeVisible(&toggleMappingBtn);
+    toggleMappingBtn.addListener(this);
+    toggleMappingBtn.setBounds(xPosition, yPosition, buttonWidth, buttonHeight);
+    // add the actual panel
+    addChildComponent(&mappingPanel);
+    mappingPanel.setBounds(mappingPanelBounds);
+
+    xPosition = PAD_AMOUNT;
+    yPosition += buttonHeight + PAD_AMOUNT;
+}
+
+// Force any visible panels to close
+void mlrVSTAudioProcessorEditor::closePanels()
+{
+    presetPanel.setVisible(false);
+    toggleSetlistBtn.setToggleState(false, false);
+
+    mappingPanel.setVisible(false);
+    toggleMappingBtn.setToggleState(false, false);
+
+    settingsPanel.setVisible(false);
+    toggleSettingsBtn.setToggleState(false, false);
 }

@@ -18,15 +18,19 @@
 class AudioSample 
 {
 public:
+
+    // create sample by loading file from disk
     AudioSample(const File &fileSampleSource,
                 const int &thumbnailLength);
-    AudioSample(const AudioSampleBuffer &bufferSampleSource,
-                const double &sampleRate,
-                const int &thumbnailLength);
+
+    // preallocate space for a recording / resampling
+    // type sample
     AudioSample(const double &sampleRate,
                 const int &length,
                 const int &thumbnailLength,
                 const String &name);
+
+    ~AudioSample();
 
     AudioSampleBuffer* getAudioData() const { return data; }
 
@@ -53,24 +57,28 @@ public:
     bool operator== (const AudioSample &s1) const;
 private:
     
+    // Files ////////////////////////////////////////
     // this stores the File object so we can retrieve 
     // metadata (path, comments etc)
     const File sampleFile;
     AudioFormatManager formatManager;
-    String sampleName, fileType;
+    String fileType;
     
-    // information about the current sample
-    int sampleLength, numChannels;
-    double sampleSampleRate;
-    ScopedPointer <AudioSampleBuffer> data;
-    //AudioSampleBuffer *data;
 
-    // Thumbnail stuff
+    // Sample information /////////////////
+    int sampleLength, numChannels;
+    String sampleName;
+    ScopedPointer <AudioSampleBuffer> data;
+    double sampleSampleRate;
+
+
+    // Thumbnails ///////////////////////////
+    // low res thumbnail version of the sample
     OwnedArray< Array<float> > thumbnailData;
-    
+    // has the thumbnail finished generating
     bool thumbnailFinished;
 
-    // DEBUG:
+    // DEBUG: check for leaks
     JUCE_LEAK_DETECTOR(AudioSample);
 };
 
