@@ -120,6 +120,8 @@ public:
         tmModifierBtn,
         tmStartRecording,
         tmStartResampling,
+        tmStopAll,
+        tmTapeStopAll,
         numTopRowMappings
     };
 
@@ -136,6 +138,8 @@ public:
         nmIncPlayspeed,
         nmHalvePlayspeed,
         nmDoublePlayspeed,
+        nmStopPlayback,
+        nmStopPlaybackTape,
         numNormalRowMappings
     };
 
@@ -161,20 +165,20 @@ public:
         }
 
     }
-    
+
 
     // TODO: bounds checking?
     String getSampleName(const int &index, const int &poolID) const
     {
         switch (poolID)
         {
-        case pSamplePool: 
+        case pSamplePool:
             jassert(index < samplePool.size());
             return samplePool[index]->getSampleName();
         case pResamplePool :
             jassert(index < resamplePool.size());
             return resamplePool[index]->getSampleName();
-        default : 
+        default :
             jassertfalse; return "error: pool not found";
         }
     }
@@ -185,7 +189,7 @@ public:
         jassert(index < samplePool.size());
         return samplePool[index];
     }
-    
+
     AudioSample* getLatestSample() { return samplePool.getLast(); }
 
     void calcInitialPlaySpeed(const int &stripID);
@@ -193,6 +197,7 @@ public:
     void calcPlaySpeedForSelectionChange(const int &stripID);
     void modPlaySpeed(const double &factor, const int &stripID);
     void switchChannels(const int &newChan, const int &stripID);
+    void stopAllStrips(const int &stopMode);
 
     void processOSCKeyPress(const int &monomeCol, const int &monomeRow, const bool &state);
 
@@ -204,17 +209,17 @@ public:
     int getNumSampleStrips() const { return sampleStripArray.size(); }
 
     float getChannelGain(const int &chan) const
-    { 
+    {
         jassert(chan < channelGains.size());
         return channelGains[chan];
     }
     void setChannelGain(const int &chan, const float &newGain)
-    { 
+    {
         jassert(chan < channelGains.size());
         channelGains.set(chan, newGain);
     }
     Colour getChannelColour(const int &chan) const
-    { 
+    {
         jassert(chan < channelColours.size());
         return channelColours[chan];
     }
@@ -230,7 +235,7 @@ public:
     }
     const void* getSampleStripParameter(const int &parameterID, const int &stripID) const
     {
-        return sampleStripArray[stripID]->getSampleStripParam(parameterID);   
+        return sampleStripArray[stripID]->getSampleStripParam(parameterID);
     }
 
 
@@ -245,7 +250,7 @@ public:
     void savePreset(const String &presetName);
     void switchPreset(const int &id);
     XmlElement getPresetList() const { return presetList; }
-    
+
     XmlElement getSetlist() const { return setlist; }
     void setSetlist(const XmlElement &newSetlist) {
         setlist = newSetlist;
@@ -351,7 +356,7 @@ private:
     // OSC ////////////////////////
     String OSCPrefix;           // prefix for incoming / outgoing OSC messages
     OSCHandler oscMsgHandler;   // Send and receive OSC messages through this
-    
+
 
     // Audio Buffers /////////////////
     // this is for summing the contributions from SampleStrips
@@ -375,9 +380,9 @@ private:
 
     // Preset Handling //////////////////////////////////////////
     // this is a unique list of possible presets (used internally)
-    XmlElement presetList;      
+    XmlElement presetList;
     // this is an ordered list of consisting of a selection from presetList
-    XmlElement setlist;         
+    XmlElement setlist;
 
     // Mapping settings ////////////////////////////////////////
     Array<int> topRowMappings, normalRowMappings;
@@ -390,7 +395,7 @@ private:
     // Store which LED column is currently being used
     // for displaying playback position.
     Array<int> playbackLEDPosition;
-    // This is true when top left button is held down, 
+    // This is true when top left button is held down,
     // so strips can be used to stop, reverse sample etc.
     bool stripModifier;
     // Do we want to play incoming input?

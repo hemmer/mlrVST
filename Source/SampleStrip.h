@@ -49,14 +49,14 @@ public:
         pAudioSample,
         NumGUIParams,
         // The above are the only params needed by the GUI
-         
+
         pChunkSize = NumGUIParams,
         pSampleStart,       // these return the key sample points
         pSampleEnd,         // (taking selection into account)
         pStartChunk,
         pEndChunk,
         pIsVolInc,
-        pIsVolDec, 
+        pIsVolDec,
         pIsPlaySpeedInc,
         pIsPlaySpeedDec,
         TotalNumParams
@@ -68,16 +68,23 @@ public:
         TypeDouble,
         TypeFloat,
         TypeBool,
-        TypeString, 
+        TypeString,
         TypeAudioSample
     };
 
     enum PlayMode
-    { 
+    {
         LOOP,                   // starts the sample looping
         PLAY_CHUNK_ONCE,        // plays the current chunk to the end
         PLAY_TO_END,            // plays from current point until the end then stops
         NUM_PLAY_MODES
+    };
+
+    enum StopMode
+    {
+        mStopNormal,
+        mStopTape,
+        mStopInstant
     };
 
     String getPlayModeName(const int &parameterID) const
@@ -104,7 +111,7 @@ public:
         case pStripVolume : return "strip_volume";
         case pPlaySpeed : return "play_speed";
         case pIsPlaySpeedLocked : return "is_play_speed_locked";
-        
+
         case pChunkSize : return "chunk_size";
         case pVisualStart : return "visual_start";
         case pVisualEnd : return "visual_end";
@@ -119,7 +126,7 @@ public:
         case pIsVolDec : return "is_vol_dec";
         case pIsPlaySpeedInc : return "is_playspeed_inc";
         case pIsPlaySpeedDec : return "is_playspeed_dec";
-        
+
         default : jassertfalse; return "parameter_not_found_" + String(parameterID);
         }
     }
@@ -171,8 +178,8 @@ public:
 
 
     void startSamplePlaying(const int &chunk);
-    double stopSamplePlaying();
-    
+    void stopSamplePlaying(const int &stopMode = 0);
+
     void setButtonStatus(const int &column, const bool &state)
     { buttonStatus.set(column, state); }
 
@@ -189,7 +196,7 @@ public:
 
     void printState() const
     {
-        String test = " "; 
+        String test = " ";
         for (int i = 0; i < buttonStatus.size(); ++i)
         {
             test += (buttonStatus[i]) ? "#" : "@";
@@ -217,14 +224,14 @@ private:
     int visualSelectionStart, visualSelectionEnd, visualSelectionLength;
     // start / end / length / previous length of the selection (in number of samples)
     int selectionStart, selectionEnd, selectionLength, previousSelectionLength;
-        
+
     const AudioSample *currentSample;   // pointer to currently selected AudioSample
     int totalSampleLength;              // length of this AudioSample in samples
     double sampleSampleRate;            // sample rate of the AudioSample (e.g. 44100Hz)
 
     // loop modes might only play a select part of the visual selection
     // so store the sample number which playback starts / ends
-    int playbackStartPosition, playbackEndPosition;     
+    int playbackStartPosition, playbackEndPosition;
 
     int loopStartChunk, loopEndChunk;   // which chunk to start / end the loop with
     int initialColumn;                  // which button started playback
@@ -232,7 +239,7 @@ private:
     int numChunks;      // How many blocks the sample is split up into...
     int chunkSize;      // ...and what size are they (in samples).
 
-   
+
     // Each strip has it's individual volume control: these are
     // used to (in/de)crement the strip volume using key combos
     bool volumeIncreasing, volumeDecreasing;
@@ -242,28 +249,39 @@ private:
     // used to (in/de)crement the strip speed using key combos
     bool playSpeedIncreasing, playSpeedDecreasing;
     double playSpeed;
-    // if true, this means the playspeed is fixed even if the 
+    // if true, this means the playspeed is fixed even if the
     // sample selection is changed
-    bool isPlaySpeedLocked;         
-    
+    bool isPlaySpeedLocked;
+
     // use to calculate the new playspeed after bpm change
     double previousBPM;
-    
+
+
+    // starting & stopping ////////////////////////////////////////////
+    bool playbackStarting;  // while this is true, ramp up the volume
+    float startVol;         // the volume during this ramp
+
+    bool playbackStopping;  // while this is true, ramp down the volume
+    float stopVol;          // the volume during this ramp
+    int stopMode;           // do we stop normally, or with tape effect
+    float tapeStopSpeed;    // the speed during the ramp (for tape mode)
+
 
     // misc /////////////////////////////////////////////////
     // Boolean grid which stores the status of button presses
     // where the indices correspond to the col
     Array<bool> buttonStatus;
 
+
     void updatePlayParams();
     void updateForNewSample();
 
-    
+
     // This is used to control access to the rendering
-    // callback and the note trigger methods. 
+    // callback and the note trigger methods.
     CriticalSection lock;
 
-    JUCE_LEAK_DETECTOR(SampleStrip);  
+    JUCE_LEAK_DETECTOR(SampleStrip);
 };
 
 

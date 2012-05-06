@@ -3,14 +3,16 @@
 
 PluginProcessor.cpp
 
-This is the main routine that handles all audio processing. The main 
-audio logic goes in processBlock() though this farms out individual 
+This is the main routine that handles all audio processing. The main
+audio logic goes in processBlock() though this farms out individual
 strips to the SampleStrip class.
 
 
-GLOBAL TODO: 
+GLOBAL TODO:
 
     - set monome dimensions as compile-time flag
+    - create abstract general panel class
+    - multiple modifier buttons
 
 ==============================================================================
 */
@@ -67,7 +69,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     oscMsgHandler.startThread();
     DBG("OSC thread started");
 
-    // create our SampleStrip objects 
+    // create our SampleStrip objects
     buildSampleStripArray(numSampleStrips);
     // add our channels
     buildChannelArray(numChannels);
@@ -204,13 +206,13 @@ void mlrVSTAudioProcessor::buildChannelArray(const int &newNumChannels)
     // reset the list of channels
     channelColours.clear();
     for (int c = 0; c < numChannels; c++)
-    {   
+    {
         //Colour channelColour((float) (0.1f * c), 0.5f, 0.5f, 1.0f);
         Colour channelColour(c / (float) (numChannels), 0.5f, 0.5f, 1.0f);
         channelColours.add(channelColour);
     }
 
-    
+
     // reset the gains to the default
     channelGains.clear();
     for (int c = 0; c < maxChannels; c++)
@@ -238,7 +240,7 @@ void mlrVSTAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
     updateQuantizeSettings();
 
-    // this is not a completely accurate size as the block size may change with 
+    // this is not a completely accurate size as the block size may change with
     // time, but at least we can allocate roughly the right size:
     stripContrib.setSize(2, samplesPerBlock, false, true, false);
 }
@@ -286,7 +288,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
 
 
-        // if we are using the quantised buffer, dump all 
+        // if we are using the quantised buffer, dump all
         // queued messages at the appropriate point
         if (quantisationOn)
         {
@@ -391,7 +393,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
         for (int s = 0; s < sampleStripArray.size(); s++)
         {
             sampleStripArray[s]->setBPM(currentBPM);
-            
+
             // clear the contribution from the previous strip
             stripContrib.clear();
             // find this channels contribution
@@ -399,7 +401,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
             // get the associated channel so we can apply gain
             stripChannel = *static_cast<const int *>(sampleStripArray[s]->getSampleStripParam(SampleStrip::pCurrentChannel));
-            
+
             // add this contribution scaled by the channel gain
             buffer.addFrom(0, 0, stripContrib, 0, 0, numSamples, channelGains[stripChannel]);
             buffer.addFrom(1, 0, stripContrib, 1, 0, numSamples, channelGains[stripChannel]);
@@ -468,7 +470,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
             }
         }
 
-        
+
     }
     else
     {
@@ -486,7 +488,7 @@ void mlrVSTAudioProcessor::timerCallback()
     // loop over each sample strip
     for (int row = 0; row < sampleStripArray.size(); ++row)
     {
-        
+
         const bool isVolInc = *static_cast<const bool*>
             (getSampleStripParameter(SampleStrip::pIsVolInc, row));
         const bool isVolDec = *static_cast<const bool*>
@@ -565,7 +567,7 @@ void mlrVSTAudioProcessor::timerCallback()
             if (!stripModifier) toggleSampleStripParameter(SampleStrip::pIsPlaySpeedDec, row);
         }
 
-        
+
         // TODO: this is still a pretty horrendous way to do this
         // and will be updated to use led/row once I have it
         // working with the new OSC spec!
@@ -606,14 +608,14 @@ void mlrVSTAudioProcessor::timerCallback()
 void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &monomeRow, const bool &state)
 {
 
-    /* The -1 is because we are treating the second row on the device as 
-       the first "effective" row, the top row being reserved for other 
+    /* The -1 is because we are treating the second row on the device as
+       the first "effective" row, the top row being reserved for other
        functions. Yes this is confusing.
     */
     const int stripID = monomeRow - 1;
 
     if (monomeRow == 0)
-    {   
+    {
         // find out the mapping for this button...
         const int colMap = getTopRowMapping(monomeCol);
         // ...and act accordingly
@@ -623,6 +625,8 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
         case tmModifierBtn : stripModifier = state; break;
         case tmStartRecording : startRecording(); break;
         case tmStartResampling : startResampling(); break;
+        case tmStopAll : stopAllStrips(SampleStrip::mStopNormal); break;
+        case tmTapeStopAll : stopAllStrips(SampleStrip::mStopTape); break;
         default : jassertfalse;
         }
     }
@@ -686,6 +690,21 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
                 if (state) sampleStripArray[stripID]->modPlaySpeed(2.0);
                 break;
             }
+
+        case nmStopPlayback:
+            {
+                if (state) sampleStripArray[stripID]->stopSamplePlaying();
+                break;
+            }
+
+        case nmStopPlaybackTape:
+            {
+                if (state) sampleStripArray[stripID]->stopSamplePlaying(1);
+                break;
+            }
+
+        // this should not happen!
+        default : jassertfalse;
         }
     }
     else if (monomeRow <= numSampleStrips && monomeRow > 0)
@@ -693,8 +712,8 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
 
         /* Only pass on messages that are from the allowed range of columns.
            NOTE: MIDI messages may still be passed from other sources that
-           are outside this range so the channelProcessor must be aware of 
-           numChunks too to filter these. 
+           are outside this range so the channelProcessor must be aware of
+           numChunks too to filter these.
         */
 
         const int numChunks = *static_cast<const int*>
@@ -709,9 +728,9 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
 
                 if (quantisationOn)
                 {
-                    // If we are quantising, create an on message and store it it the queue - 
-                    // then once the quantised interval (of length quantisationGap) has 
-                    // elapsed (i.e. quantisation remaining < 0) we can fire in all the messages 
+                    // If we are quantising, create an on message and store it it the queue -
+                    // then once the quantised interval (of length quantisationGap) has
+                    // elapsed (i.e. quantisation remaining < 0) we can fire in all the messages
                     // at once!
                     MidiMessage quantisedMessage(MidiMessage::noteOn(monomeRow, monomeCol, 1.0f), 0.01);
                     quantisedBuffers.getUnchecked(monomeRow)->addEvent(quantisedMessage, 0);
@@ -735,7 +754,7 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
             }
 
         }
-        
+
     }
 }
 
@@ -751,7 +770,7 @@ void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
 
     sampleStripArray.clear();
     numSampleStrips = newNumSampleStrips;
-    
+
     for (int i = 0; i < numSampleStrips; ++i)
     {
         sampleStripArray.add(new SampleStrip(i, numSampleStrips, this));
@@ -807,7 +826,7 @@ AudioSample * mlrVSTAudioProcessor::getAudioSample(const int &samplePoolIndex, c
         return 0;
     }
 }
-SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index) 
+SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index)
 {
     jassert( index < sampleStripArray.size() );
     SampleStrip *tempStrip = sampleStripArray[index];
@@ -820,6 +839,13 @@ void mlrVSTAudioProcessor::switchChannels(const int &newChan, const int &stripID
     sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pCurrentChannel, &newChan);
 }
 
+void mlrVSTAudioProcessor::stopAllStrips(const int &stopMode)
+{
+    for (int s = 0; s < sampleStripArray.size(); ++s)
+    {
+        sampleStripArray[s]->stopSamplePlaying(stopMode);
+    }
+}
 
 /////////////////////
 // Preset Handling //
@@ -841,8 +867,8 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
 
     ///////////////////////////
     /// TODO
-    // - make sure store fractional start not visual 
-    
+    // - make sure store fractional start not visual
+
     // Store the SampleStrip specific settings
     for (int strip = 0; strip < sampleStripArray.size(); ++strip)
     {
@@ -891,7 +917,7 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
 
         newPreset.addChildElement(stripXml);
     }
-    
+
 
     // See if a preset of this name exists in the set list
     XmlElement* p = presetList.getFirstChildElement();
@@ -1016,7 +1042,7 @@ void mlrVSTAudioProcessor::getStateInformation(MemoryBlock& destData)
         name += String(c);
         xml.setAttribute(name, channelGains[c]);
     }
-     
+
     xml.setAttribute("CURRENT_PRESET", "none");
 
     // then use this helper function to stuff it into the binary blob and return it..
@@ -1226,6 +1252,8 @@ String mlrVSTAudioProcessor::getTopRowMappingName(const int &mappingID)
     case tmModifierBtn : return "modifier button";
     case tmStartRecording : return "start recording";
     case tmStartResampling : return "stop recording";
+    case tmStopAll : return "stop all strips";
+    case tmTapeStopAll : return "tape stop all strips";
     default : jassertfalse; return "error: mappingID " + String(mappingID) + " not found!";
     }
 }
@@ -1242,6 +1270,8 @@ String mlrVSTAudioProcessor::getNormalRowMappingName(const int &mappingID)
     case nmIncPlayspeed : return "increase playspeed";
     case nmHalvePlayspeed : return "/2 playspeed";
     case nmDoublePlayspeed : return "x2 playspeed";
+    case nmStopPlayback : return "stop playback";
+    case nmStopPlaybackTape : return "stop playback (tape)";
     default : jassertfalse; return "error: mappingID " + String(mappingID) + " not found!";
     }
 }
@@ -1254,12 +1284,17 @@ void mlrVSTAudioProcessor::setupDefaultRowMappings()
 
     // add the defaults
     topRowMappings.add(tmModifierBtn);
-    topRowMappings.insertMultiple(1, tmNoMapping, 5);
+    topRowMappings.add(tmStopAll);
+    topRowMappings.add(tmTapeStopAll);
+    topRowMappings.add(tmNoMapping);
+    topRowMappings.add(tmNoMapping);
+    topRowMappings.add(tmNoMapping);
     topRowMappings.add(tmStartRecording);
     topRowMappings.add(tmStartResampling);
 
     normalRowMappings.add(nmFindBestTempo);
-    normalRowMappings.add(nmToggleReverse);
+    normalRowMappings.add(nmStopPlaybackTape);
+    //normalRowMappings.add(nmToggleReverse);
     normalRowMappings.add(nmDecVolume);
     normalRowMappings.add(nmIncVolume);
     normalRowMappings.add(nmDecPlayspeed);
