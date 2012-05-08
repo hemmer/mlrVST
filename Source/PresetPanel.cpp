@@ -18,7 +18,7 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
     panelLabel.setBounds(0, 0, panelBounds.getWidth(), 30);
     panelLabel.setColour(Label::backgroundColourId, Colours::black);
     panelLabel.setColour(Label::textColourId, Colours::white);
-    panelLabel.setFont(2 * fontSize);
+    panelLabel.setFont(2.0f * fontSize);
 
     addAndMakeVisible(&addNewRowBtn);
     addNewRowBtn.addListener(this);
@@ -102,7 +102,7 @@ void PresetPanel::buttonClicked(Button *btn)
 void PresetPanel::addRow()
 {
     XmlElement currentSetlist = processor->getSetlist();
-    
+
     // add a new blank preset
     currentSetlist.createNewChildElement("PRESETNONE");
     // let the processor know about the change

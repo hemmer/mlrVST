@@ -59,6 +59,7 @@ public:
         pIsVolDec,
         pIsPlaySpeedInc,
         pIsPlaySpeedDec,
+        pRampLength,
         TotalNumParams
     };
 
@@ -80,13 +81,6 @@ public:
         NUM_PLAY_MODES
     };
 
-    enum StopMode
-    {
-        mStopNormal,
-        mStopTape,
-        mStopInstant
-    };
-
     String getPlayModeName(const int &parameterID) const
     {
         switch(parameterID)
@@ -98,69 +92,20 @@ public:
         }
     }
 
-    String getParameterName(const int &parameterID) const
+    enum StopMode
     {
-        switch(parameterID)
-        {
-        case pCurrentChannel : return "current_channel";
-        case pIsPlaying : return "is_playing";
-        case pNumChunks : return "num_chunks";
-        case pPlayMode : return "playmode";
-        case pIsLatched : return "is_latched";
-        case pIsReversed : return "is_reversed";
-        case pStripVolume : return "strip_volume";
-        case pPlaySpeed : return "play_speed";
-        case pIsPlaySpeedLocked : return "is_play_speed_locked";
+        mStopNormal,
+        mStopTape,
+        mStopEnvelope,
+        mStopInstant
+    };
 
-        case pChunkSize : return "chunk_size";
-        case pVisualStart : return "visual_start";
-        case pVisualEnd : return "visual_end";
-        case pAudioSample : return "audio_sample";
-        case pPlaybackPercentage : return "playback_percentage";
-        case pSampleStart : return "sample_start";
-        case pSampleEnd : return "sample_end";
-        case pStartChunk : return "sample_chunk_start";
-        case pEndChunk : return "sample_chunk_end";
-
-        case pIsVolInc : return "is_vol_inc";
-        case pIsVolDec : return "is_vol_dec";
-        case pIsPlaySpeedInc : return "is_playspeed_inc";
-        case pIsPlaySpeedDec : return "is_playspeed_dec";
-
-        default : jassertfalse; return "parameter_not_found_" + String(parameterID);
-        }
-    }
-
-    int getParameterType(const int &parameterID) const
-    {
-        switch(parameterID)
-        {
-        case pCurrentChannel : return TypeInt;
-        case pNumChunks : return TypeInt;
-        case pPlayMode : return TypeInt;
-        case pIsLatched : return TypeBool;
-        case pIsReversed : return TypeBool;
-        case pStripVolume : return TypeFloat;
-        case pPlaySpeed : return TypeDouble;
-        case pIsPlaySpeedLocked : return TypeBool;
-        case pIsPlaying : return TypeBool;
-        case pChunkSize : return TypeInt;
-        case pVisualStart : return TypeInt;
-        case pVisualEnd : return TypeInt;
-        case pAudioSample : return TypeAudioSample;
-        case pPlaybackPercentage : return TypeFloat;
-        case pSampleStart : return TypeInt;
-        case pSampleEnd : return TypeInt;
-        case pStartChunk : return TypeInt;
-        case pEndChunk : return TypeInt;
-        default : jassertfalse; return -1;
-        }
-    }
-    // these are for getting / setting the int parameters
-    void setSampleStripParam(const int &parameterID,
-                             const void *newValue,
+    // these are for getting / setting the parameters
+    void setSampleStripParam(const int &parameterID, const void *newValue,
                              const bool &sendChangeMsg = true);
     const void* getSampleStripParam(const int &parameterID) const;
+    String getParameterName(const int &parameterID) const;
+    int getParameterType(const int &parameterID) const;
     void toggleSampleStripParam(const int &parameterID, const bool &sendChangeMsg = true);
 
     void updatePlaySpeedForBPMChange(const double &newBPM);
@@ -258,13 +203,19 @@ private:
 
 
     // starting & stopping ////////////////////////////////////////////
+    int rampLength;         // length of the ramp in samples
+
     bool playbackStarting;  // while this is true, ramp up the volume
     float startVol;         // the volume during this ramp
+    float startVolInc;      // and by how much it increases per sample
+    void beginVolRampUp(const int &length);
 
     bool playbackStopping;  // while this is true, ramp down the volume
     float stopVol;          // the volume during this ramp
+    float stopVolDec;       // and by how much it decreases per sample
     int stopMode;           // do we stop normally, or with tape effect
     float tapeStopSpeed;    // the speed during the ramp (for tape mode)
+    void beginVolRampDown(const int &length);
 
 
     // misc /////////////////////////////////////////////////
@@ -283,7 +234,5 @@ private:
 
     JUCE_LEAK_DETECTOR(SampleStrip);
 };
-
-
 
 #endif  // __SAMPLESTRIP_H_ACB589A6__

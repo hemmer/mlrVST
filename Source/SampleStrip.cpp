@@ -34,9 +34,11 @@ SampleStrip::SampleStrip(const int &newID,
     playSpeedIncreasing(false), playSpeedDecreasing(false), playSpeed(1.0),
     isPlaySpeedLocked(false), previousBPM(120.0),
     // starting / stopping ////////////////////////////////////
-    playbackStarting(false), startVol(0.0f),
-    playbackStopping(false), stopVol(1.0f),
+    rampLength(50),
+    playbackStarting(false), startVol(0.0f), startVolInc(1.0f / (float) rampLength),
+    playbackStopping(false), stopVol(1.0f), stopVolDec(1.0f / (float) rampLength),
     stopMode(mStopNormal), tapeStopSpeed(1.0f),
+
     // misc ///////////////////////////////////////////////////
     buttonStatus()
 
@@ -44,8 +46,9 @@ SampleStrip::SampleStrip(const int &newID,
     for (int i = 0; i < NUM_COLS; ++i) buttonStatus.add(false);
 }
 
-void SampleStrip::setSampleStripParam(const int &parameterID,
-                                      const void *newValue,
+// //////////////////////////////////
+// Parameter setting / getting etc //
+void SampleStrip::setSampleStripParam(const int &parameterID, const void *newValue,
                                       const bool &sendChangeMsg)
 {
     /////////////////////////////////////////////////////
@@ -146,6 +149,8 @@ void SampleStrip::setSampleStripParam(const int &parameterID,
     case pIsPlaySpeedDec :
         playSpeedDecreasing = *static_cast<const bool*>(newValue); break;
 
+    case pRampLength :
+        rampLength = *static_cast<const int*>(newValue); break;
 
     // TODO when pSampleStart is changes, make sure we change fractional too!
     default :
@@ -159,7 +164,6 @@ void SampleStrip::setSampleStripParam(const int &parameterID,
         sendChangeMessage();
     }
 }
-
 const void* SampleStrip::getSampleStripParam(const int &parameterID) const
 {
     const void *p;
@@ -228,7 +232,64 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
 
     return p;
 }
+String SampleStrip::getParameterName(const int &parameterID) const
+{
+    switch(parameterID)
+    {
+    case pCurrentChannel : return "current_channel";
+    case pIsPlaying : return "is_playing";
+    case pNumChunks : return "num_chunks";
+    case pPlayMode : return "playmode";
+    case pIsLatched : return "is_latched";
+    case pIsReversed : return "is_reversed";
+    case pStripVolume : return "strip_volume";
+    case pPlaySpeed : return "play_speed";
+    case pIsPlaySpeedLocked : return "is_play_speed_locked";
 
+    case pChunkSize : return "chunk_size";
+    case pVisualStart : return "visual_start";
+    case pVisualEnd : return "visual_end";
+    case pAudioSample : return "audio_sample";
+    case pPlaybackPercentage : return "playback_percentage";
+    case pSampleStart : return "sample_start";
+    case pSampleEnd : return "sample_end";
+    case pStartChunk : return "sample_chunk_start";
+    case pEndChunk : return "sample_chunk_end";
+    case pRampLength : return "ramp_length";
+
+    case pIsVolInc : return "is_vol_inc";
+    case pIsVolDec : return "is_vol_dec";
+    case pIsPlaySpeedInc : return "is_playspeed_inc";
+    case pIsPlaySpeedDec : return "is_playspeed_dec";
+
+    default : jassertfalse; return "parameter_not_found_" + String(parameterID);
+    }
+}
+int SampleStrip::getParameterType(const int &parameterID) const
+{
+    switch(parameterID)
+    {
+    case pCurrentChannel : return TypeInt;
+    case pNumChunks : return TypeInt;
+    case pPlayMode : return TypeInt;
+    case pIsLatched : return TypeBool;
+    case pIsReversed : return TypeBool;
+    case pStripVolume : return TypeFloat;
+    case pPlaySpeed : return TypeDouble;
+    case pIsPlaySpeedLocked : return TypeBool;
+    case pIsPlaying : return TypeBool;
+    case pChunkSize : return TypeInt;
+    case pVisualStart : return TypeInt;
+    case pVisualEnd : return TypeInt;
+    case pAudioSample : return TypeAudioSample;
+    case pPlaybackPercentage : return TypeFloat;
+    case pSampleStart : return TypeInt;
+    case pSampleEnd : return TypeInt;
+    case pStartChunk : return TypeInt;
+    case pEndChunk : return TypeInt;
+    default : jassertfalse; return -1;
+    }
+}
 void SampleStrip::toggleSampleStripParam(const int &parameterID, const bool &sendChangeMsg)
 {
     switch (parameterID)
@@ -258,6 +319,7 @@ void SampleStrip::toggleSampleStripParam(const int &parameterID, const bool &sen
         sendChangeMessage();
 
 }
+
 
 void SampleStrip::updatePlaySpeedForBPMChange(const double &newBPM)
 {
@@ -369,8 +431,6 @@ void SampleStrip::handleMidiEvent (const MidiMessage& m)
         if (initialColumn < numChunks)
         {
 
-
-
             // MODE: INNER LOOP /////////////////////////////////////////
             // Check if there is a button being held to the left of the
             // current button and if so, loop the strip between those points.
@@ -425,6 +485,8 @@ void SampleStrip::renderNextBlock(AudioSampleBuffer& outputBuffer,
                                    int startSample,
                                    int numSamples)
 {
+    // TODO: there is a lot that isn't quite right here!!!!
+    // useEvent is always false it seems
 
     // must set the sample rate before using this!
     //jassert (sampleRate != 0);
@@ -486,6 +548,8 @@ void SampleStrip::renderNextBlock(AudioSampleBuffer& outputBuffer,
             renderNextSection(outputBuffer, startSample, numThisTime);
         }
 
+        // DBG(numThisTime << " " << ((useEvent) ? "using event" : "not using") );
+
         if (useEvent)
             handleMidiEvent(m);
 
@@ -502,7 +566,6 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
     if (currentSample != nullptr && isPlaying)
     {
         updatePlayParams();
-        //DBG(startVol << " " << stopVol << " " << stopMode);
 
         const float* const inL = currentSample->getAudioData()->getSampleData(0, 0);
         const float* const inR = currentSample->getNumChannels() > 1
@@ -536,7 +599,7 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
             // envelope on it to avoid pops / clicks
             if (playbackStarting)
             {
-                startVol += 0.0005f;
+                startVol += startVolInc;
                 if (startVol > 1.0f)
                 {
                     startVol = 1.0f;
@@ -555,8 +618,10 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
                 {
                 // normal stop (linear volume ramp)
                 case mStopNormal :
+                case mStopEnvelope :
                     {
-                        stopVol -= 0.0005f;
+                        stopVol -= stopVolDec;
+
                         l *= stopVol;
                         r *= stopVol;
                         break;
@@ -575,7 +640,8 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
                         }
                         break;
                     }
-                // stop without any volume ramp
+                // stop without any volume ramp (bad idea generally
+                // as you get pops and clicks)
                 case mStopInstant :
                     {
                         const bool newPlayStatus = false;
@@ -590,8 +656,14 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
                 // small enough, stop the playing completely
                 if (stopVol < 0.0f || tapeStopSpeed < 0.1f)
                 {
-                    const bool newPlayStatus = false;
-                    setSampleStripParam(pIsPlaying, &newPlayStatus);
+                    if (stopMode != mStopEnvelope)
+                    {
+                        const bool newPlayStatus = false;
+                        setSampleStripParam(pIsPlaying, &newPlayStatus);
+                    }
+
+                    stopVol = 1.0f;
+                    playbackStopping = false;
                 }
             }
 
@@ -607,20 +679,37 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
                 *outL++ += (l + r) * 0.5f;
             }
 
+            // this is how much the playback position (in/de)creases by
+            const double playIncrement = playSpeed * tapeStopSpeed;
+            // how many audio samples in our playback buffer until we loop / finish playback
+            const int playbackSamplesLeftToEnd = (int) (abs(sampleCurrentPosition - playbackEndPosition) / playIncrement);
 
+            // if we are close enough to the end, apply ramp
+            if (!playbackStopping && playbackSamplesLeftToEnd < rampLength && playbackSamplesLeftToEnd > 0)
+            {
+                stopSamplePlaying(mStopEnvelope);
+                beginVolRampDown(playbackSamplesLeftToEnd);
+            }
 
             if (!isReversed)
             {
-                sampleCurrentPosition += playSpeed * tapeStopSpeed;
+                sampleCurrentPosition += playIncrement;
 
                 switch (currentPlayMode)
                 {
 
                 case SampleStrip::LOOP :
-                    if (sampleCurrentPosition > playbackEndPosition)
-                        sampleCurrentPosition = (float) playbackStartPosition;
+                    {
+                        if (sampleCurrentPosition > playbackEndPosition)
+                        {
+                            // move back to start
+                            sampleCurrentPosition = (float) playbackStartPosition;
+                            // and apply the initial vol ramp to avoid clicks
+                            beginVolRampUp(rampLength);
+                        }
 
-                    break;
+                        break;
+                    }
 
                 case SampleStrip::PLAY_TO_END :
                     if (sampleCurrentPosition > playbackEndPosition)
@@ -640,15 +729,23 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
             else
             {
                 // go back in time...
-                sampleCurrentPosition -= playSpeed * tapeStopSpeed;
+                sampleCurrentPosition -= playIncrement;
 
                 switch (currentPlayMode)
                 {
 
                 case SampleStrip::LOOP :
-                    if (sampleCurrentPosition < playbackEndPosition)
-                        sampleCurrentPosition = (float) playbackStartPosition;
-                    break;
+                    {
+                        if (sampleCurrentPosition < playbackEndPosition)
+                        {
+                            // go back to the start
+                            sampleCurrentPosition = (float) playbackStartPosition;
+                            // and apply the initial vol ramp to avoid clicks
+                            beginVolRampUp(rampLength);
+                        }
+
+                        break;
+                    }
 
                 case SampleStrip::PLAY_TO_END :
                     if (sampleCurrentPosition < playbackEndPosition)
@@ -669,15 +766,35 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
     }
 }
 
-
-void SampleStrip::startSamplePlaying(const int &chunk)
+void SampleStrip::beginVolRampUp(const int &length)
 {
-    // reset the start / stop settings
-    playbackStarting = true;
-    startVol = 0.0f;
+    // clear any stopping ramps
     playbackStopping = false;
     stopVol = tapeStopSpeed = 1.0f;
 
+    // reset the start settings
+    playbackStarting = true;
+    startVol = 0.0f;
+    startVolInc = 1.0f / (float) length;
+}
+
+void SampleStrip::beginVolRampDown(const int &length)
+{
+    // if we are already stopping we can ignore this call
+    if (playbackStopping) return;
+
+    // clear any starting ramps
+    playbackStarting = false;
+
+    playbackStopping = true;
+    stopVol = tapeStopSpeed = 1.0f;
+    stopVolDec = 1.0f / (float) length;
+}
+
+void SampleStrip::startSamplePlaying(const int &chunk)
+{
+    // start the volume envelope
+    beginVolRampUp(rampLength);
 
     bool newPlayStatus = true;
     // this is to much sure listeners are informed
@@ -701,9 +818,8 @@ void SampleStrip::stopSamplePlaying(const int &newStopMode)
 {
     stopMode = newStopMode;
 
-    // reset the tape stop settings
-    playbackStopping = true;
-    stopVol = tapeStopSpeed = 1.0f;
+    // start ramping down (normal length)
+    beginVolRampDown(rampLength);
 }
 
 void SampleStrip::updatePlayParams()

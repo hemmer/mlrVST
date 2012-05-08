@@ -37,7 +37,7 @@ MappingPanel::MappingPanel(const Rectangle<int> &bounds,
 
     // setup the main panel label
     panelLabel.setBounds(xPosition, yPosition, panelBounds.getWidth(), 30);
-    setupNormalLabel(panelLabel, 2.0);
+    setupNormalLabel(panelLabel, 2.0f);
     xPosition = PAD_AMOUNT;
     yPosition += 30 + PAD_AMOUNT;
 

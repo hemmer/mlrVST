@@ -15,17 +15,18 @@
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "mlrVSTLookAndFeel.h"
 
-/* Forward declaration to set up pointer arrangement 
+/* Forward declaration to set up pointer arrangement
    to allow settings panel access to the UI */
 class mlrVSTAudioProcessor;
 class mlrVSTAudioProcessorEditor;
 
 
-class SettingsPanel : 
-    public Component,
-    public ButtonListener,
-    public ComboBoxListener,
-    public TextEditorListener
+class SettingsPanel : public Component,
+                      public ButtonListener,
+                      public ComboBoxListener,
+                      public SliderListener,
+                      public TextEditorListener
+
 {
 
 public:
@@ -36,35 +37,37 @@ public:
 
     void buttonClicked(Button *btn);
     void comboBoxChanged(ComboBox *box);
+    void sliderValueChanged(Slider *sldr);
     void textEditorChanged(TextEditor &editor);
     void textEditorReturnKeyPressed (TextEditor &editor);
     void paint(Graphics& g);
 
 private:
-    
+
     // Communication ////////////////////////////////
     // Here we have pointers to the main audio
     // processor for getting global settings and
-    // to the UI for updating settings (as these 
+    // to the UI for updating settings (as these
     // may affect the UI, e.g. changing # of channels
     mlrVSTAudioProcessor * const processor;
     mlrVSTAudioProcessorEditor * const pluginUI;
 
-    // Main header label
-    Label panelLabel;
+    // Layout ///////////////////////////////////////
+    const float fontSize;
+    const Rectangle<int> &panelBounds;
     menuLookandFeel menuLF;
-    void setupLabel(Label &lbl)
-    {
-        lbl.setColour(Label::backgroundColourId, Colours::white);
-        lbl.setColour(Label::textColourId, Colours::black);
-        lbl.setFont(fontSize);
-    }
+
+    // Components ///////////////////////////////////
+    Label panelLabel;       // Main header label
 
     Label tempoSourceLbl;
     ToggleButton useExternalTempoBtn;
-    
+
     Label setNumChannelsLbl;
     ComboBox selNumChannels;
+
+    Label setRampLengthLbl;
+    Slider rampLengthSldr;
 
     Label oscPrefixLbl;
     TextEditor oscPrefixTxtBx;
@@ -72,10 +75,13 @@ private:
     ToggleButton monitorInputsBtn;
     Label monitorInputsLbl;
 
-    const float fontSize;
-    const Rectangle<int> &panelBounds;
-
-
+    void setupLabel(Label &lbl)
+    {
+        addAndMakeVisible(&lbl);
+        lbl.setColour(Label::backgroundColourId, Colours::white);
+        lbl.setColour(Label::textColourId, Colours::black);
+        lbl.setFont(fontSize);
+    }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SettingsPanel);
 };

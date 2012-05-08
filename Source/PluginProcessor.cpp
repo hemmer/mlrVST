@@ -37,7 +37,8 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     maxChannels(8), channelGains(), masterGain(0.8f),
     defaultChannelGain(0.8f), channelColours(),
     // Global Settings //////////////////////////////////////////////////
-    numChannels(maxChannels), useExternalTempo(false), currentBPM(120.0),
+    numChannels(maxChannels), useExternalTempo(false),
+    currentBPM(120.0), rampLength(50),
     // Sample Strips //////////////////////
     sampleStripArray(), numSampleStrips(7),
     // OSC /////////////////////////////////////////////
@@ -1208,6 +1209,17 @@ void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID, const void 
             }
             updateQuantizeSettings(); break;
         }
+    case sRampLength :
+        {
+            rampLength = *static_cast<const int*>(newValue);
+
+            // let strips know of the change
+            for (int s = 0; s < sampleStripArray.size(); ++s)
+                sampleStripArray[s]->setSampleStripParam(SampleStrip::pRampLength, &rampLength, false);
+
+            break;
+        }
+
     default :
         jassertfalse;
     }
@@ -1229,6 +1241,7 @@ const void* mlrVSTAudioProcessor::getGlobalSetting(const int &settingID) const
     case sResampleLength : return &resampleLength;
     case sResamplePrecount : return &resamplePrecountLength;
     case sResampleBank : return &resampleBank;
+    case sRampLength : return &rampLength;
     default : jassertfalse; return 0;
     }
 }
@@ -1240,6 +1253,7 @@ String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID) const
     case sNumChannels : return "num_channels";
     case sCurrentBPM : return "current_bpm";
     case sQuantiseLevel : return "quantisation_level";
+    case sRampLength : return "ramp_length";
     default : jassertfalse; return "name_not_found";
     }
 }

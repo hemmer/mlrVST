@@ -94,12 +94,14 @@ public:
         sQuantiseMenuSelection,     // allows menu to be correctly selected
         sOSCPrefix,
         sMonitorInputs,
+        sRecordPrecount,
+        sRecordLength,
+        sRecordBank,
         sResamplePrecount,
         sResampleLength,
         sResampleBank,
-        sRecordPrecount,
-        sRecordLength,
-        sRecordBank
+        sRampLength,                // length of volume envelope (in samples)
+        sNumGlobalSettings
     };
 
     enum SamplePool
@@ -341,10 +343,15 @@ private:
     Array<Colour> channelColours;   // colours for channels in the GUI
 
 
-    // Global settings ////////////
+    // Global settings /////////////////////////////////////////////////
     int numChannels;
-    bool useExternalTempo;
+    bool useExternalTempo;      // either use VST hosts tempo or our own
     double currentBPM;
+    // Sometimes when starting / stopping / looping back we
+    // get a discontinuity in the stream of samples. To avoid
+    // this, we apply a short volume ramp at the start / end of
+    // playback and at either end of a loop point:
+    int rampLength;
 
 
     // SampleStrips ////////////////

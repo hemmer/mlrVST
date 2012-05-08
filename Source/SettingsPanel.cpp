@@ -19,15 +19,19 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
                              mlrVSTAudioProcessorEditor * const editorPtr) :
     // Communication ////////////////////////////////
     processor(processorPtr), pluginUI(editorPtr),
+    // Layout ///////////////////////////////////////
+    fontSize(7.4f), panelBounds(bounds), menuLF(),
+    // Components ///////////////////////////////////
     panelLabel("settings panel label", "Settings"),
-    fontSize(7.4f), panelBounds(bounds),
-    menuLF(),
 
     tempoSourceLbl("tempo source", "tempo source"),
     useExternalTempoBtn("Using external tempo"),
 
     setNumChannelsLbl("num channels", "num channels"),
-    selNumChannels("select number of channels"),
+    selNumChannels(),
+
+    setRampLengthLbl("length of envelope", "length of envelope"),
+    rampLengthSldr(),
 
     oscPrefixLbl("OSC prefix", "OSC prefix"),
     oscPrefixTxtBx("mlrvst"),
@@ -35,55 +39,71 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     monitorInputsLbl("monitor inputs", "monitor inputs"),
     monitorInputsBtn("")
 {
+    // main panel label
     addAndMakeVisible(&panelLabel);
     panelLabel.setBounds(0, 0, panelBounds.getWidth(), 30);
     panelLabel.setColour(Label::backgroundColourId, Colours::black);
     panelLabel.setColour(Label::textColourId, Colours::white);
-    panelLabel.setFont(2 * fontSize);
+    panelLabel.setFont(2.0f * fontSize);
+
+    const int labelWidth = 150;
+    const int labelHeight = 20;
 
     int yPos = 50;
-    addAndMakeVisible(&tempoSourceLbl);
-    tempoSourceLbl.setBounds(PAD_AMOUNT, yPos, 150, 20);
+
+    // select tempo source (internal / external)
+    tempoSourceLbl.setBounds(PAD_AMOUNT, yPos, labelWidth, labelHeight);
     setupLabel(tempoSourceLbl);
     addAndMakeVisible(&useExternalTempoBtn);
-    useExternalTempoBtn.setBounds(150 + 2 * PAD_AMOUNT, yPos, 150, 20);
+    useExternalTempoBtn.setBounds(labelWidth + 2 * PAD_AMOUNT, yPos, 150, 20);
     useExternalTempoBtn.addListener(this);
-
-    // load current values of settings from PluginProcessor
+    // load current value from PluginProcessor
     bool useExternalTempo = *static_cast<const bool*>
         (processor->getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
     useExternalTempoBtn.setToggleState(useExternalTempo, false);
     String tempoBtnText = (useExternalTempo) ? "external tempo" : "internal tempo";
     useExternalTempoBtn.setButtonText(tempoBtnText);
+    yPos += PAD_AMOUNT + labelHeight;
 
 
     // combobox to select the number of channels
-    int numChannels = *static_cast<const int*>
-        (processor->getGlobalSetting(mlrVSTAudioProcessor::sNumChannels));
-
-    yPos+=30;
-
-    addAndMakeVisible(&setNumChannelsLbl);
-    setNumChannelsLbl.setBounds(PAD_AMOUNT, yPos, 150, 20);
     setupLabel(setNumChannelsLbl);
-
+    setNumChannelsLbl.setBounds(PAD_AMOUNT, yPos, labelWidth, labelHeight);
     addAndMakeVisible(&selNumChannels);
     selNumChannels.addListener(this);
     for(int i = 1; i <= 8; ++i) selNumChannels.addItem(String(i), i);
     selNumChannels.addListener(this);
-    selNumChannels.setBounds(150 + 2 * PAD_AMOUNT, yPos, 150, 20);
+    selNumChannels.setBounds(labelWidth + 2 * PAD_AMOUNT, yPos, 150, labelHeight);
+    const int numChannels = *static_cast<const int*>
+        (processor->getGlobalSetting(mlrVSTAudioProcessor::sNumChannels));
     selNumChannels.setSelectedId(numChannels, true);
     selNumChannels.setLookAndFeel(&menuLF);
+    yPos += PAD_AMOUNT + labelHeight;
 
 
+    // choose envelope length
+    setupLabel(setRampLengthLbl);
+    setRampLengthLbl.setBounds(PAD_AMOUNT, yPos, labelWidth, labelHeight);
+    const int initialRampLength = *static_cast<const int*>(processor->getGlobalSetting(mlrVSTAudioProcessor::sRampLength));
+    addAndMakeVisible(&rampLengthSldr);
+    rampLengthSldr.setBounds(2*PAD_AMOUNT + labelWidth , yPos, labelWidth, labelHeight);
+    rampLengthSldr.setRange(0.0, 1000.0, 1.0);
+    rampLengthSldr.setValue(initialRampLength, false, false);
+    rampLengthSldr.setColour(Slider::textBoxTextColourId, Colours::white);
+    rampLengthSldr.setColour(Slider::thumbColourId, Colours::grey);
+    rampLengthSldr.setColour(Slider::backgroundColourId, Colours::grey.darker());
+    rampLengthSldr.addListener(this);
+    rampLengthSldr.setLookAndFeel(&menuLF);
+    rampLengthSldr.setSliderStyle(Slider::LinearBar);
+    yPos += PAD_AMOUNT + labelHeight;
 
-    yPos += PAD_AMOUNT + 20;
+
+    // set the OSC prefix
     addAndMakeVisible(&oscPrefixLbl);
     setupLabel(oscPrefixLbl);
-    oscPrefixLbl.setBounds(PAD_AMOUNT, yPos, 150, 20);
-    
+    oscPrefixLbl.setBounds(PAD_AMOUNT, yPos, labelWidth, labelHeight);
     addAndMakeVisible(&oscPrefixTxtBx);
-    oscPrefixTxtBx.setBounds(2*PAD_AMOUNT+150, yPos, 150, 20);
+    oscPrefixTxtBx.setBounds(labelWidth + 2*PAD_AMOUNT, yPos, 150, labelHeight);
     oscPrefixTxtBx.addListener(this);
     oscPrefixTxtBx.setEnabled(true);
     const String currentPrefix = *static_cast<const String*>
@@ -91,26 +111,22 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     DBG("settings panel: prefix " << currentPrefix);
     // eh?
     //oscPrefixTxtBx.setText("test", false);
+    yPos += PAD_AMOUNT + labelHeight;
 
 
-
-
-    yPos += PAD_AMOUNT + 20;
-    addAndMakeVisible(&monitorInputsLbl);
+    // are we including sound from host?
     setupLabel(monitorInputsLbl);
-    monitorInputsLbl.setBounds(PAD_AMOUNT, yPos, 150, 20);
-
+    monitorInputsLbl.setBounds(PAD_AMOUNT, yPos, labelWidth, labelHeight);
     addAndMakeVisible(&monitorInputsBtn);
-    monitorInputsBtn.setBounds(2*PAD_AMOUNT+150, yPos, 150, 20);
+    monitorInputsBtn.setBounds(labelWidth + 2*PAD_AMOUNT, yPos, 150, labelHeight);
     monitorInputsBtn.addListener(this);
-
-    // load current values of settings from PluginProcessor
-    bool monitorInputs = *static_cast<const bool*>
+    // load current value from PluginProcessor
+    const bool monitorInputs = *static_cast<const bool*>
         (processor->getGlobalSetting(mlrVSTAudioProcessor::sMonitorInputs));
-
     monitorInputsBtn.setToggleState(monitorInputs, false);
     String monitorBtnText = (monitorInputs) ? "enabled" : "disabled";
     monitorInputsBtn.setButtonText(monitorBtnText);
+
 }
 
 void SettingsPanel::paint(Graphics &g)
@@ -160,4 +176,14 @@ void SettingsPanel::textEditorReturnKeyPressed (TextEditor &editor)
     String newPrefix = editor.getText();
     pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sOSCPrefix, &newPrefix);
     DBG(newPrefix);
+}
+
+void SettingsPanel::sliderValueChanged(Slider *sldr)
+{
+    if (sldr == &rampLengthSldr)
+    {
+        // let the processor know the new value
+        int newRampLength = (int) rampLengthSldr.getValue();
+        processor->updateGlobalSetting(mlrVSTAudioProcessor::sRampLength, &newRampLength);
+    }
 }
