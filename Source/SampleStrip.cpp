@@ -548,7 +548,7 @@ void SampleStrip::renderNextBlock(AudioSampleBuffer& outputBuffer,
             renderNextSection(outputBuffer, startSample, numThisTime);
         }
 
-        // DBG(numThisTime << " " << ((useEvent) ? "using event" : "not using") );
+        DBG(numThisTime << " " << ((useEvent) ? "using event" : "not using") );
 
         if (useEvent)
             handleMidiEvent(m);

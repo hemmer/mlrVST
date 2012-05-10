@@ -13,6 +13,8 @@ GLOBAL TODO:
     - set monome dimensions as compile-time flag
     - create abstract general panel class
     - multiple modifier buttons
+    - sort out the MIDI timings mess
+    - (and get envelopes working for when playback is restarted whilst already playing)
 
 ==============================================================================
 */
@@ -30,7 +32,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     // MIDI / quantisation /////////////////////////////////////////
     quantisationLevel(-1.0), quantisationOn(false),
     quantisationGap(0), quantRemaining(0), quantiseMenuSelection(1),
-    quantisedBuffers(), monomeState(),
+    quantisedBuffer(), unquantisedCollector(),
     // Sample Pools ///////////////////////////
     samplePool(), resamplePool(), recordPool(),
     // Channel Setup ////////////////////////////////
@@ -75,10 +77,6 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     // add our channels
     buildChannelArray(numChannels);
 
-    // set up the quantisation buffers
-    quantisedBuffers.clear();
-    for (int i = 0; i < 8; ++i)
-        quantisedBuffers.add(new MidiBuffer());
 
     setupDefaultRowMappings();
 
@@ -114,9 +112,6 @@ mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
 
     // stop any sort of audio
     suspendProcessing(true);
-
-    // empty midi queue
-    monomeState.reset();
 
     // be polite and turn off any remaining LEDs!
     oscMsgHandler.clearGrid();
@@ -198,8 +193,6 @@ void mlrVSTAudioProcessor::buildChannelArray(const int &newNumChannels)
         sampleStripArray[s]->setSampleStripParam(SampleStrip::pCurrentChannel, &initialChannel);
     }
 
-    // clear MIDI queue
-    monomeState.reset();
     // make sure we're not doing any audio processing while (re)building it
     suspendProcessing(true);
 
@@ -220,7 +213,7 @@ void mlrVSTAudioProcessor::buildChannelArray(const int &newNumChannels)
         channelGains.add(defaultChannelGain);
 
 
-    DBG("Channel processor array built");
+    DBG("Channel processor array (re)built");
 
     // resume processing
     suspendProcessing(false);
@@ -235,9 +228,10 @@ void mlrVSTAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    // TODO: does ChannelProcessor need this?
-    //synth.setCurrentPlaybackSampleRate (sampleRate);
-    monomeState.reset();
+
+    // clear the note buffers
+    unquantisedCollector.reset(sampleRate);
+    quantisedBuffer.clear();
 
     updateQuantizeSettings();
 
@@ -250,7 +244,9 @@ void mlrVSTAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
-    monomeState.reset();
+
+    quantisedBuffer.clear();
+    unquantisedCollector.reset(getSampleRate());
 }
 
 void mlrVSTAudioProcessor::reset()
@@ -261,13 +257,16 @@ void mlrVSTAudioProcessor::reset()
 
 void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
 {
+    // store total number of samples in the audio/midi buffers
+    const int numSamples = buffer.getNumSamples();
+
+
     if (!isSuspended())
     {
         // ask the host for the current time so we can display it...
         AudioPlayHead::CurrentPositionInfo newTime;
 
-        if (useExternalTempo &&
-            getPlayHead() != 0 &&
+        if (useExternalTempo && getPlayHead() != 0 &&
             getPlayHead()->getCurrentPosition(newTime))
         {
             // Successfully got the current time from the host..
@@ -285,7 +284,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
             // If the host fails to fill-in the current time, we'll just clear it to a default..
             lastPosInfo.resetToDefault();
         }
-        const int numSamples = buffer.getNumSamples();
+
 
 
 
@@ -293,27 +292,25 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
         // queued messages at the appropriate point
         if (quantisationOn)
         {
+            // if we are within range
             if (quantRemaining < numSamples)
             {
-                MidiBuffer *currentStrip = 0;
-                // each row has its own buffer
-                for (int q = 0; q < NUM_ROWS; ++q)
+                // ...and have data
+                if (!quantisedBuffer.isEmpty())
                 {
-                    currentStrip = quantisedBuffers.getUnchecked(q);
                     // get the iterator for this buffer
-                    MidiBuffer::Iterator i( *currentStrip );
+                    MidiBuffer::Iterator i( quantisedBuffer );
                     MidiMessage message (0xf4, 0.0);
                     int time;
 
-                    // extract any messages from it
+                    // dump any messages from it into the main MIDI message queue
                     while(i.getNextEvent(message, time))
-                    {
                         midiMessages.addEvent(message, quantRemaining);
-                    }
 
-                    // once we've added all the queued messages, clear the queue
-                    quantisedBuffers.getUnchecked(q)->clear();
+                    // empty the queue as these notes are no longer needed
+                    quantisedBuffer.clear();
                 }
+
                 // finally, reset the quantisation counter
                 quantRemaining += quantisationGap;
             }
@@ -321,13 +318,13 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
             // subtract this buffer's samples from the counter
             quantRemaining -= numSamples;
         }
-
-
-        /* This adds the "live / realtime" OSC messages from the monome which
-           have been converted to midi messages (where MIDI channel is row, note
-           number is column). NOTE: even the quantised messages are processed here.
-        */
-        monomeState.processNextMidiBuffer(midiMessages, 0, numSamples, true);
+        else
+        {
+            // This adds the "live / realtime" OSC messages from the monome which
+            // have been converted to midi messages (where MIDI channel is row, note
+            // number is column).
+            unquantisedCollector.removeNextBlockOfMessages(midiMessages, numSamples);
+        }
 
 
 
@@ -726,7 +723,6 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
             // button pressed down
             if (state)
             {
-
                 if (quantisationOn)
                 {
                     // If we are quantising, create an on message and store it it the queue -
@@ -734,12 +730,17 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
                     // elapsed (i.e. quantisation remaining < 0) we can fire in all the messages
                     // at once!
                     MidiMessage quantisedMessage(MidiMessage::noteOn(monomeRow, monomeCol, 1.0f), 0.01);
-                    quantisedBuffers.getUnchecked(monomeRow)->addEvent(quantisedMessage, 0);
-                    DBG("OSC quantising: (" << stripID << ", " << monomeCol << ")");
+                    quantisedBuffer.addEvent(quantisedMessage, 0);
+                    // DBG("OSC quantising NOTE ON: (" << stripID << ", " << monomeCol << ")");
                 }
                 // The implicit +1 here is because midi channels start at 1 not 0!
                 else
-                    monomeState.noteOn(monomeRow, monomeCol, 1.0f);
+                {
+                    MidiMessage unquantisedMessage(MidiMessage::noteOn(monomeRow, monomeCol, 1.0f), 0.01);
+                    const double stamp = juce::Time::getMillisecondCounterHiRes() / 1000.0;
+                    unquantisedMessage.setTimeStamp(stamp);
+                    unquantisedCollector.addMessageToQueue(unquantisedMessage);
+                }
             }
 
             // button released
@@ -748,10 +749,16 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
                 if (quantisationOn)
                 {
                     MidiMessage quantisedMessage(MidiMessage::noteOff(monomeRow, monomeCol), 0.01);
-                    quantisedBuffers.getUnchecked(monomeRow)->addEvent(quantisedMessage, 0);
+                    quantisedBuffer.addEvent(quantisedMessage, 0);
+                    // DBG("OSC quantising NOTE OFF: (" << stripID << ", " << monomeCol << ")");
                 }
                 else
-                    monomeState.noteOff(monomeRow, monomeCol);
+                {
+                    MidiMessage unquantisedMessage(MidiMessage::noteOff(monomeRow, monomeCol), 0.01);
+                    const double stamp = juce::Time::getMillisecondCounterHiRes() / 1000.0;
+                    unquantisedMessage.setTimeStamp(stamp);
+                    unquantisedCollector.addMessageToQueue(unquantisedMessage);
+                }
             }
 
         }
@@ -1307,8 +1314,8 @@ void mlrVSTAudioProcessor::setupDefaultRowMappings()
     topRowMappings.add(tmStartResampling);
 
     normalRowMappings.add(nmFindBestTempo);
-    normalRowMappings.add(nmStopPlaybackTape);
-    //normalRowMappings.add(nmToggleReverse);
+    //normalRowMappings.add(nmStopPlaybackTape);
+    normalRowMappings.add(nmToggleReverse);
     normalRowMappings.add(nmDecVolume);
     normalRowMappings.add(nmIncVolume);
     normalRowMappings.add(nmDecPlayspeed);

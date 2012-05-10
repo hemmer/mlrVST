@@ -300,11 +300,7 @@ public:
         if (quantisationLevel < 0.0)
         {
             quantisationOn = false;
-
-            jassert(NUM_ROWS == quantisedBuffers.size());
-            // if we are turning off quantisation, may as well clear the buffers
-            for (int q = 0; q < NUM_ROWS; ++q)
-                quantisedBuffers.getUnchecked(q)->clear();
+            quantisedBuffer.clear();
         }
         else
         {
@@ -317,16 +313,16 @@ public:
 private:
 
     // MIDI / quantisation //////////////////////////////////////
+    // OSC messages from the monome are converted to MIDI messages.
     // quantisationLevel stores the fineness of the quantisation
     // so that 1/4 note quantisation is 0.25 etc. NOTE: any negative
     // values will be interpreted as no quantisation (-1.0 preferred).
     double quantisationLevel; bool quantisationOn;
     int quantisationGap, quantRemaining, quantiseMenuSelection;
     // quantised notes are stored in one buffer per strip
-    OwnedArray<MidiBuffer> quantisedBuffers;
-    // OSC messages from the monome are converted to MIDI messages and
-    // stored in monomeState to be mixed in with the main MIDI buffer.
-    MidiKeyboardState monomeState;
+    MidiBuffer quantisedBuffer;
+    // unquantised notes are collected all together
+    MidiMessageCollector unquantisedCollector;
 
 
     // Sample Pools /////////////////////
