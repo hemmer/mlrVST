@@ -544,11 +544,11 @@ void SampleStrip::renderNextBlock(AudioSampleBuffer& outputBuffer,
 
         if (numThisTime > 0)
         {
-            // render the current section
-            renderNextSection(outputBuffer, startSample, numThisTime);
+            // if we are only rendering up to a certain point AND that
+            // point is a new noteOn event, then let the renderer know
+            const bool isFollowedByNoteOn = useEvent && m.isNoteOn();
+            renderNextSection(outputBuffer, startSample, numThisTime, isFollowedByNoteOn);
         }
-
-        DBG(numThisTime << " " << ((useEvent) ? "using event" : "not using") );
 
         if (useEvent)
             handleMidiEvent(m);
@@ -560,7 +560,8 @@ void SampleStrip::renderNextBlock(AudioSampleBuffer& outputBuffer,
 }
 
 
-void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
+void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSample,
+                                    int numSamples, const bool &isFollowedByNoteOn)
 {
     // if a sample is loaded AND we are playing
     if (currentSample != nullptr && isPlaying)
@@ -679,18 +680,35 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
                 *outL++ += (l + r) * 0.5f;
             }
 
-            // this is how much the playback position (in/de)creases by
-            const double playIncrement = playSpeed * tapeStopSpeed;
-            // how many audio samples in our playback buffer until we loop / finish playback
-            const int playbackSamplesLeftToEnd = (int) (abs(sampleCurrentPosition - playbackEndPosition) / playIncrement);
 
-            // if we are close enough to the end, apply ramp
-            if (!playbackStopping && playbackSamplesLeftToEnd < rampLength && playbackSamplesLeftToEnd > 0)
+            // this is how much the playback position (in/de)creases for each output sample
+            const double playIncrement = playSpeed * tapeStopSpeed;
+            // how many audio samples in our playback buffer until we loop or finish playback
+            int playbackSamplesLeftToEnd = (int) (abs(sampleCurrentPosition - playbackEndPosition) / playIncrement);
+
+
+            // if we are only rendering as far as the next noteOn, then start to
+            // ramp down as we near the end of the current batch to avoid clicks
+            // NOTE: this isn't bulletproof as we may have a buffer where a new event
+            // happens very near the start of the buffer. This means we don't have time
+            // to apply the ramp fast enough: however it's better than nothing and
+            // works the majority of the time!
+            if (!playbackStopping && isFollowedByNoteOn && numSamples < rampLength && numSamples > 0)
             {
+                // DBG("starting ramp down (as followed by new noteOn event). numSamples = " << numSamples);
+                stopSamplePlaying(mStopEnvelope);
+                beginVolRampDown(numSamples);
+            }
+            // othewise if we are close enough to the end of a loop / normal
+            // playback, then apply ramp to avoid clicks
+            else if (!playbackStopping && playbackSamplesLeftToEnd < rampLength && playbackSamplesLeftToEnd > 0)
+            {
+                // DBG("starting rampdown (as we're reaching loop point). numSamples = " << numSamples << ", pbs=" << playbackSamplesLeftToEnd);
                 stopSamplePlaying(mStopEnvelope);
                 beginVolRampDown(playbackSamplesLeftToEnd);
             }
 
+            // normal playback
             if (!isReversed)
             {
                 sampleCurrentPosition += playIncrement;

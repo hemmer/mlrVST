@@ -116,10 +116,10 @@ public:
     void updateCurrentPlaybackPercentage();
 
     void handleMidiEvent(const MidiMessage& m);
-    void renderNextBlock(AudioSampleBuffer& outputBuffer,
-                         const MidiBuffer& midiData,
+    void renderNextBlock(AudioSampleBuffer& outputBuffer, const MidiBuffer& midiData,
                          int startSample, int numSamples);
-    void renderNextSection(AudioSampleBuffer& outputBuffer, int startSample, int numSamples);
+    void renderNextSection(AudioSampleBuffer& outputBuffer, int startSample,
+                           int numSamples, const bool &isFollowedByNoteOn);
 
 
     void startSamplePlaying(const int &chunk);
