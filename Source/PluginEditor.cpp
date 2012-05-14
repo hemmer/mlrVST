@@ -13,7 +13,7 @@
 
 //==============================================================================
 mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* owner,
-                                                        const int &newNumChannels, 
+                                                        const int &newNumChannels,
                                                         const int &newNumStrips)
     : AudioProcessorEditor (owner),
     // Communication ////////////////////////
@@ -30,7 +30,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
     // Volume controls //////////////////////////////
     masterGainSlider("master gain"), masterSliderLabel("master", "MSTR"),
-    slidersArray(), slidersLabelArray(),
+    slidersArray(), slidersMuteBtnArray(),
 
     // Tempo controls ///////////////////////////////////////
     bpmSlider("bpm slider"), bpmLabel(),
@@ -45,7 +45,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     resamplePrecountSldr(), resampleLengthSldr(), resampleBankSldr(),
     recordBtn("RECORD", Colours::black, Colours::white),
     resampleBtn("RESAMPLE", Colours::black, Colours::white),
-    
+
     // Misc ///////////////////////////////////////////
     lastDisplayedPosition(),
     debugButton("loadfile", DrawableButton::ImageRaw),    // temporary button
@@ -72,7 +72,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 {
     DBG("GUI loaded " << " strips of height " << waveformControlHeight);
 
-    // these are compile time constants   
+    // these are compile time constants
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
     setWantsKeyboardFocus(true);
@@ -88,7 +88,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 	debugButton.addListener(this);
 	debugButton.setBackgroundColours(Colours::blue, Colours::black);
 	debugButton.setBounds(50, 300, 50, 25);
-    
+
     addAndMakeVisible(&loadFilesBtn);
 	loadFilesBtn.addListener(this);
 	loadFilesBtn.setBounds(50, 350, 70, 25);
@@ -118,7 +118,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
 {
     sampleStripControlArray.clear(true);
-    
+
     DBG("GUI destructor finished.");
 }
 
@@ -135,9 +135,9 @@ void mlrVSTAudioProcessorEditor::buildSampleStripControls()
         // this is passed to the SampleStripControl to allow data to be stored
         SampleStrip * currentStrip = parent->getSampleStrip(i);
 
-        sampleStripControlArray.add(new SampleStripControl(i, waveformControlWidth, 
+        sampleStripControlArray.add(new SampleStripControl(i, waveformControlWidth,
             waveformControlHeight, numChannels, currentStrip, parent));
-        
+
         int stripX = getWidth() - waveformControlWidth - PAD_AMOUNT;
         int stripY = PAD_AMOUNT + i * (waveformControlHeight + PAD_AMOUNT);
         sampleStripControlArray[i]->setBounds(stripX, stripY, waveformControlWidth, waveformControlHeight);
@@ -163,12 +163,12 @@ void mlrVSTAudioProcessorEditor::buildSliders()
 
     // clear any existing sliders
     slidersArray.clear();
-    slidersLabelArray.clear();
+    slidersMuteBtnArray.clear();
 
     // Set master volume first
     addAndMakeVisible(&masterGainSlider);
     masterGainSlider.setSliderStyle(Slider::LinearVertical);
-    
+
     masterGainSlider.setRange(0.0, 1.0, 0.01);
     masterGainSlider.setValue(0.0, false);
     masterGainSlider.setBounds(xPosition, yPosition, sliderWidth, sliderHeight);
@@ -205,12 +205,14 @@ void mlrVSTAudioProcessorEditor::buildSliders()
         slidersArray[i]->setColour(Slider::backgroundColourId, sliderColour.darker());
 
         // add the labels
-        slidersLabelArray.add(new Label("chn " + String(i), "ch " + String(i)));
-        addAndMakeVisible(slidersLabelArray[i]);
-        slidersLabelArray[i]->setBounds(xPosition, yPosition + sliderHeight, sliderWidth - 1, 16);
-        slidersLabelArray[i]->setColour(Label::backgroundColourId, Colours::black);
-        slidersLabelArray[i]->setColour(Label::textColourId, Colours::white);
-        slidersLabelArray[i]->setFont(fontSize);
+        slidersMuteBtnArray.add(new ToggleButton("ch " + String(i)));
+        addAndMakeVisible(slidersMuteBtnArray[i]);
+        slidersMuteBtnArray[i]->setBounds(xPosition, yPosition + sliderHeight, sliderWidth - 1, 16);
+        slidersMuteBtnArray[i]->setColour(Label::backgroundColourId, Colours::black);
+        slidersMuteBtnArray[i]->setColour(Label::textColourId, Colours::white);
+        slidersMuteBtnArray[i]->addListener(this);
+        slidersMuteBtnArray[i]->setToggleState(parent->getChannelMuteStatus(i), false);
+        //slidersMuteBtnArray[i]->setFont(fontSilk, fontSize);
     }
 
     // increment yPosition for the next GUI item
@@ -221,14 +223,14 @@ void mlrVSTAudioProcessorEditor::buildSliders()
 //==============================================================================
 void mlrVSTAudioProcessorEditor::paint (Graphics& g)
 {
-    g.fillAll(Colours::grey);      // fill with background colour 
+    g.fillAll(Colours::grey);      // fill with background colour
 }
 
 
 //==============================================================================
 // This timer periodically checks whether any of the filter's
-// parameters have changed. In pratical terms, this is usually 
-// to see if the host has modified the parameters. 
+// parameters have changed. In pratical terms, this is usually
+// to see if the host has modified the parameters.
 void mlrVSTAudioProcessorEditor::timerCallback()
 {
 
@@ -247,7 +249,7 @@ void mlrVSTAudioProcessorEditor::timerCallback()
     // see if the host has changed the master gain
     masterGainSlider.setValue(parent->getParameter(mlrVSTAudioProcessor::pMasterGainParam));
 
-    // update the playback position     
+    // update the playback position
     for(int i = 0; i < sampleStripControlArray.size(); ++i)
     {
         sampleStripControlArray[i]->updatePlaybackStatus();
@@ -320,7 +322,7 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
             }
         }
     }
-   
+
 }
 
 void mlrVSTAudioProcessorEditor::comboBoxChanged(ComboBox* comboBoxChanged)
@@ -328,7 +330,7 @@ void mlrVSTAudioProcessorEditor::comboBoxChanged(ComboBox* comboBoxChanged)
     if (comboBoxChanged == &quantiseSettingsCbox)
     {
         const int choice = quantiseSettingsCbox.getSelectedId();
-        
+
         if (choice > 0)
             parent->updateGlobalSetting(mlrVSTAudioProcessor::sQuantiseMenuSelection, &choice);
     }
@@ -417,7 +419,7 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
         // ask user to load at least one file
         if(myChooser.browseForMultipleFilesToOpen())
         {	
-            // if sucessful, try to add these to the sample pool 
+            // if sucessful, try to add these to the sample pool
             Array<File> newFiles = myChooser.getResults();
             for (int i = 0; i < newFiles.size(); ++i)
             {
@@ -426,20 +428,30 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
             }
 		}
 	}
+
+    else
+    {
+        for (int s = 0; s < slidersMuteBtnArray.size(); ++s)
+        {
+            if (btn == slidersMuteBtnArray[s])
+                parent->setChannelMute(s, btn->getToggleState());
+        }
+    }
+
 }
 
 
 // Setting handling stuff
 void mlrVSTAudioProcessorEditor::updateGlobalSetting(const int &parameterID, const void *newValue)
 {
-    /* First let the processor store the setting (as 
-       mlrVSTAudioProcessorEditor will lose these on 
+    /* First let the processor store the setting (as
+       mlrVSTAudioProcessorEditor will lose these on
        closing.
     */
-    parent->updateGlobalSetting(parameterID, newValue); 
+    parent->updateGlobalSetting(parameterID, newValue);
 
     // a few settings are of interest to the GUI
-    switch (parameterID) 
+    switch (parameterID)
     {
     case mlrVSTAudioProcessor::sUseExternalTempo :
         {
@@ -450,12 +462,12 @@ void mlrVSTAudioProcessorEditor::updateGlobalSetting(const int &parameterID, con
                 bpmSlider.setEnabled(false);
                 bpmLabel.setText("BPM (EXTERNAL)", false);
             }
-            else 
+            else
             {
                 bpmSlider.setEnabled(true);
                 bpmLabel.setText("BPM (INTERNAL)", false);
             }
-                        
+
             break;
         }
 
@@ -489,7 +501,7 @@ void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
     resamplePrecountSldr.addListener(this);
     const int resamplePrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResamplePrecount));
     resamplePrecountSldr.setValue(resamplePrecount);
-    
+
     addAndMakeVisible(&recordLengthLbl);
     recordLengthLbl.setBounds(120 + 3*PAD_AMOUNT, 430, 50, 20);
     recordLengthLbl.setFont(fontSize);
@@ -581,7 +593,7 @@ void mlrVSTAudioProcessorEditor::setupTempoUI()
     xPosition = PAD_AMOUNT;
     yPosition += quantiseLabelHeight;
 
-    
+
 
     ///////////////////////////////
     // Then add sliders and boxes
@@ -592,14 +604,14 @@ void mlrVSTAudioProcessorEditor::setupTempoUI()
     bpmSlider.setRange(20.0, 300.0, 0.01);
     bpmSlider.setTextBoxIsEditable(true);
     bpmSlider.addListener(this);
-    
+
     useExternalTempo = *static_cast<const bool*>(getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
     if (useExternalTempo)
     {
         bpmSlider.setEnabled(false);
         bpmLabel.setText("BPM (EXTERNAL)", false);
     }
-    else 
+    else
     {
         double newBPM = *static_cast<const double*>(getGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM));
         bpmSlider.setValue(newBPM);

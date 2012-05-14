@@ -15,7 +15,7 @@
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 
 
-class AudioSample 
+class AudioSample
 {
 public:
 
@@ -23,14 +23,25 @@ public:
     AudioSample(const File &fileSampleSource,
                 const int &thumbnailLength);
 
-    // preallocate space for a recording / resampling
-    // type sample
+    // preallocate space for a recording / resampling type sample
     AudioSample(const double &sampleRate,
                 const int &length,
                 const int &thumbnailLength,
-                const String &name);
+                const String &name,
+                const int &newSampleType);
 
     ~AudioSample();
+
+    // store the type of AudioSample (so
+    // we can cycle through the banks)
+    enum SampleType
+    {
+        tFileSample,
+        tRecordedSample,
+        tResampledSample,
+    };
+
+    int getSampleType() const { return sampleType; }
 
     AudioSampleBuffer* getAudioData() const { return data; }
 
@@ -53,23 +64,24 @@ public:
     // allows the thumbnail to be refreshed externally
     void generateThumbnail(const int &thumbnailLength);
 
-    // override comparison operator == 
+    // override comparison operator ==
     bool operator== (const AudioSample &s1) const;
 private:
-    
+
     // Files ////////////////////////////////////////
-    // this stores the File object so we can retrieve 
+    // this stores the File object so we can retrieve
     // metadata (path, comments etc)
     const File sampleFile;
     AudioFormatManager formatManager;
     String fileType;
-    
+
 
     // Sample information /////////////////
     int sampleLength, numChannels;
     String sampleName;
     ScopedPointer <AudioSampleBuffer> data;
     double sampleSampleRate;
+    const int sampleType;
 
 
     // Thumbnails ///////////////////////////

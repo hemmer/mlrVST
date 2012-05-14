@@ -19,21 +19,21 @@ MappingPanel::MappingPanel(const Rectangle<int> &bounds,
     menuLF(), fontSize(7.4f), panelBounds(bounds),
     xPosition(0), yPosition(0),
     // Button maps ///////////////////////////////////
-    topRowButtons(), normalRowButtons(), monomePath(),
+    buttonMatrix(), monomePath(),
     topRowMappingLabel("top row mapping:", "top row mapping:"),
     normalRowMappingLabel("normal row mapping:", "normal row mapping:"),
+    numCols(8), numRows(3),
 
     panelLabel("Mapping Setup", "Mapping Setup")
 {
     const int labelWidth = 246;
     // setup for virtual monome
-    const int numCols = 8;
     const float monomeWidth = (float) (panelBounds.getWidth() - labelWidth - 3*PAD_AMOUNT);
     // size of monome buttons in pixels
     const int buttonSize = (int) ( (monomeWidth - (numCols+1)*PAD_AMOUNT) / (float) numCols );
-    const float monomeHeight = 2.0f * buttonSize + 3.0f*PAD_AMOUNT;
+    const float monomeHeight = (float) (numRows * buttonSize + (numRows+1)*PAD_AMOUNT);
     // dimensions of rowMappingLabel
-    const int labelHeight = (int) (monomeHeight / 2.0f);
+    const int labelHeight = (int) (monomeHeight / numRows);
 
     // setup the main panel label
     panelLabel.setBounds(xPosition, yPosition, panelBounds.getWidth(), 30);
@@ -70,98 +70,92 @@ MappingPanel::MappingPanel(const Rectangle<int> &bounds,
     over.setFill(Colours::orange);
 
     // add the rows of buttons
-    for (int b = 0; b < numCols; ++b)
+    for (int r = 0; r < numRows; ++r)
     {
-        topRowButtons.add(new DrawableButton("top row", DrawableButton::ImageRaw));
-        DrawableButton *latestBtn = topRowButtons.getLast();
-        latestBtn->setImages(&normal, &over);
-        latestBtn->addListener(this);
-        latestBtn->setBounds(xPosition, yPosition, buttonSize, buttonSize);
-        latestBtn->addMouseListener(this, false);
-        latestBtn->setTriggeredOnMouseDown(true);
-        addAndMakeVisible(latestBtn);
+        for (int b = 0; b < numCols; ++b)
+        {
+            buttonMatrix.add(new DrawableButton("top row", DrawableButton::ImageRaw));
+            DrawableButton *latestBtn = buttonMatrix.getLast();
+            latestBtn->setImages(&normal, &over);
+            latestBtn->addListener(this);
+            latestBtn->setBounds(xPosition, yPosition, buttonSize, buttonSize);
+            latestBtn->addMouseListener(this, false);
+            latestBtn->setTriggeredOnMouseDown(true);
+            addAndMakeVisible(latestBtn);
 
-        yPosition += (int) buttonSize + PAD_AMOUNT;
+            xPosition += PAD_AMOUNT + buttonSize;
+        }
 
-        normalRowButtons.add(new DrawableButton("normal row", DrawableButton::ImageRaw));
-        latestBtn = normalRowButtons.getLast();
-        latestBtn->setImages(&normal, &over);
-        latestBtn->addListener(this);
-        latestBtn->setBounds(xPosition, yPosition, buttonSize, buttonSize);
-        latestBtn->addMouseListener(this, false);
-        latestBtn->setTriggeredOnMouseDown(true);
-        addAndMakeVisible(latestBtn);
-
-        xPosition += PAD_AMOUNT + buttonSize;
-        yPosition -= (int) buttonSize + PAD_AMOUNT;
+        // reset positions for next row
+        xPosition -= (PAD_AMOUNT + buttonSize) * numCols;
+        yPosition += buttonSize + PAD_AMOUNT;
     }
+}
 
-    // update positions
-    xPosition = PAD_AMOUNT;
-    yPosition += buttonSize + PAD_AMOUNT;
+MappingPanel::~MappingPanel()
+{
+    buttonMatrix.clear(true);
 }
 
 void MappingPanel::buttonClicked(Button *btn)
 {
-    // check if any of the top buttons have been clicked
-    for (int b = 0; b < topRowButtons.size(); ++b)
-    {
-        // if so display the menu of possible mappings
-        if (btn == topRowButtons[b])
+    // check if any of the monome buttons have been clicked
+    for (int r = 0; r < numRows; ++r)
+        for (int c = 0; c < numCols; ++c)
         {
-            PopupMenu topRowMappingMenu;
-            const int numOptions = processor->numTopRowMappings;
-
-            // add the list of mappings (+1 is because 0 reserved for no click)
-            for (int m = 0; m < numOptions; ++m)
-                topRowMappingMenu.addItem(m + 1, processor->getTopRowMappingName(m));
-
-            // show the menu and store choice
-            int mappingChoice = topRowMappingMenu.showMenu(PopupMenu::Options().withTargetComponent(btn));
-
-            if (mappingChoice > 0 && mappingChoice <= numOptions)
+            const int index = r * numCols + c;
+            // if so display the menu of possible mappings
+            if (btn == buttonMatrix.getUnchecked(index))
             {
-                mappingChoice--;
-                processor->setTopRowMapping(b, mappingChoice);
-                const String newMappingName = processor->getTopRowMappingName(mappingChoice);
+                PopupMenu mappingMenu;
+                int numOptions;
 
-                topRowButtons[b]->setButtonText(newMappingName);
-                topRowButtons[b]->setTooltip(newMappingName);
-                topRowMappingLabel.setText("top row mapping: " + newMappingName, false);
+                // top row mappings
+                if (r == 0)
+                {
+                    numOptions = processor->numTopRowMappings;
+
+                    // add the list of mappings (+1 is because 0 reserved for no click)
+                    for (int m = 0; m < numOptions; ++m)
+                        mappingMenu.addItem(m + 1, processor->getTopRowMappingName(m));
+                }
+                // normal row mappings
+                else
+                {
+                    numOptions = processor->numNormalRowMappings;
+
+                    // add the list of mappings (+1 is because 0 reserved for no click)
+                    for (int m = 0; m < numOptions; ++m)
+                        mappingMenu.addItem(m + 1, processor->getNormalRowMappingName(m));
+                }
+
+                // show the menu and store choice
+                int mappingChoice = mappingMenu.showMenu(PopupMenu::Options().withTargetComponent(btn));
+
+                if (mappingChoice > 0 && mappingChoice <= numOptions)
+                {
+
+                    mappingChoice--;
+                    String newMappingName;
+                    if (r == 0)
+                    {
+                        processor->setTopRowMapping(c, mappingChoice);
+                        newMappingName = processor->getTopRowMappingName(mappingChoice);
+                    }
+                    else
+                    {
+                        const int modifierBtn = r - 1;
+                        processor->setNormalRowMapping(modifierBtn, c, mappingChoice);
+                        newMappingName = processor->getNormalRowMappingName(mappingChoice);
+                    }
+
+                    btn->setButtonText(newMappingName);
+                    btn->setTooltip(newMappingName);
+                    topRowMappingLabel.setText("row mapping: " + newMappingName, false);
+                }
+                return;
             }
-            return;
         }
-    }
-
-    // check if any of the normal row buttons have been clicked
-    for (int b = 0; b < normalRowButtons.size(); ++b)
-    {
-        // if so display the menu of possible mappings
-        if (btn == normalRowButtons[b])
-        {
-            PopupMenu normalRowMappingMenu;
-            const int numOptions = processor->numNormalRowMappings;
-
-            // add the list of mappings (+1 is because 0 reserved for no click)
-            for (int m = 0; m < numOptions; ++m)
-                normalRowMappingMenu.addItem(m + 1, processor->getNormalRowMappingName(m));
-
-            // show the menu and store choice
-            int mappingChoice = normalRowMappingMenu.showMenu(PopupMenu::Options().withTargetComponent(btn));
-
-            if (mappingChoice > 0 && mappingChoice <= numOptions)
-            {
-                mappingChoice--;
-                processor->setNormalRowMapping(b, mappingChoice);
-                const String newMappingName = processor->getNormalRowMappingName(mappingChoice);
-
-                normalRowButtons[b]->setButtonText(newMappingName);
-                normalRowButtons[b]->setTooltip(newMappingName);
-                normalRowMappingLabel.setText("normal row mapping: " + newMappingName, false);
-            }
-            return;
-        }
-    }
 }
 
 void MappingPanel::comboBoxChanged(ComboBox * /*box*/)
@@ -179,68 +173,55 @@ void MappingPanel::paint(Graphics &g)
 
 void MappingPanel::mouseEnter (const MouseEvent &e)
 {
-    // cast the component that the mouse entered to
-    // a DrawableButton to check if it was one of the
-    // mapping buttons
+    // cast the component that the mouse entered to a DrawableButton
+    // to check if it was one of the mapping buttons
     DrawableButton *currentBtn = static_cast< DrawableButton * >(e.eventComponent);
 
-    // check if the mouse has wandered onto any of
-    // the top row buttons
-    for (int b = 0; b < topRowButtons.size(); ++b)
-    {
-        // if so display the mapping for that button
-        if (currentBtn == topRowButtons[b])
+    // check if the mouse has wandered onto any of fake monome buttons
+    for (int r = 0; r < numRows; ++r)
+        for (int c = 0; c < numCols; ++c)
         {
-            const int currentMapping = processor->getTopRowMapping(b);
-            String mappingName = processor->getTopRowMappingName(currentMapping);
-            topRowMappingLabel.setText("top row mapping: " + mappingName, false);
-            return;
+            const int index = r * numCols + c;
+            // if so display the mapping for that button
+            if (currentBtn == buttonMatrix.getUnchecked(index))
+            {
+                if (r == 0)
+                {
+                    const int currentMapping = processor->getTopRowMapping(c);
+                    String mappingName = processor->getTopRowMappingName(currentMapping);
+                    topRowMappingLabel.setText("top row mapping: " + mappingName, false);
+                }
+                else
+                {
+                    const int modifierBtn = r - 1;
+                    const int currentMapping = processor->getNormalRowMapping(modifierBtn, c);
+                    String mappingName = processor->getNormalRowMappingName(currentMapping);
+                    normalRowMappingLabel.setText("normal row mapping: " + mappingName, false);
+                }
+                return;
+            }
         }
-    }
 
-    // otherwise check if the mouse has wandered onto any of
-    // the normal row buttons
-    for (int b = 0; b < normalRowButtons.size(); ++b)
-    {
-        // if so display the mapping for that button
-        if (currentBtn == normalRowButtons[b])
-        {
-            const int currentMapping = processor->getNormalRowMapping(b);
-            String mappingName = processor->getNormalRowMappingName(currentMapping);
-            normalRowMappingLabel.setText("normal row mapping: " + mappingName, false);
-            return;
-        }
-    }
+
 }
 
 void MappingPanel::mouseExit (const MouseEvent &e)
 {
-    // cast the component that the mouse entered to
-    // a DrawableButton to check if it was one of the
-    // mapping buttons
+    // cast the component that the mouse left to a DrawableButton
+    // to check if it was one of the mapping buttons
     DrawableButton *currentBtn = static_cast< DrawableButton * >(e.eventComponent);
 
-    // check if the mouse has wandered onto any of
-    // the top row buttons
-    for (int b = 0; b < topRowButtons.size(); ++b)
-    {
-        // if so display the mapping for that button
-        if (currentBtn == topRowButtons[b])
+    // check if the mouse has wandered off any of the buttons
+    for (int r = 0; r < numRows; ++r)
+        for (int c = 0; c < numCols; ++c)
         {
-            topRowMappingLabel.setText("top row mapping:", false);
-            return;
+            const int index = r * numCols + c;
+            // if so hide the mappings
+            if (currentBtn == buttonMatrix.getUnchecked(index))
+            {
+                topRowMappingLabel.setText("top row mapping:", false);
+                normalRowMappingLabel.setText("normal row mapping:", false);
+                return;
+            }
         }
-    }
-
-    // otherwise check if the mouse has wandered onto any of
-    // the normal row buttons
-    for (int b = 0; b < normalRowButtons.size(); ++b)
-    {
-        // if so display the mapping for that button
-        if (currentBtn == normalRowButtons[b])
-        {
-            normalRowMappingLabel.setText("normal row mapping:", false);
-            return;
-        }
-    }
 }

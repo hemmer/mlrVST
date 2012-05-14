@@ -15,6 +15,11 @@ GLOBAL TODO:
     - multiple modifier buttons
     - sort out the MIDI timings mess
     - (and get envelopes working for when playback is restarted whilst already playing)
+    - CHECK FOR THIS "operator[] returns the object by value, so creates a copy.
+      When your object is a massive lump of data, you obviously never want to
+      create a copy of it (and if your object is a HeapBlock it's impossible
+      to copy it), so you should never use operator[], but use getReference
+      instead."
 
 ==============================================================================
 */
@@ -35,10 +40,10 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     quantisedBuffer(), unquantisedCollector(),
     // Sample Pools ///////////////////////////
     samplePool(), resamplePool(), recordPool(),
-    // Channel Setup ////////////////////////////////
-    maxChannels(8), channelGains(), masterGain(0.8f),
+    // Channel Setup ////////////////////////////////////////////////
+    maxChannels(8), channelGains(), channelMutes(), masterGain(0.8f),
     defaultChannelGain(0.8f), channelColours(),
-    // Global Settings //////////////////////////////////////////////////
+    // Global Settings //////////////////////////////////////////////
     numChannels(maxChannels), useExternalTempo(false),
     currentBPM(120.0), rampLength(50),
     // Sample Strips //////////////////////
@@ -51,19 +56,20 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     resampleLength(8), resamplePrecountLength(0),
     resampleLengthInSamples(0), resamplePrecountLengthInSamples(0),
     resamplePosition(0), resamplePrecountPosition(0),
-    resampleBank(0),
+    resampleBank(0), resampleBankSize(8),
 
     recordBuffer(2, 0), isRecording(false),
     recordLength(8), recordPrecountLength(0),
     recordLengthInSamples(0), recordPrecountLengthInSamples(0),
     recordPosition(0), recordPrecountPosition(0),
-    recordBank(0),
+    recordBank(0), recordBankSize(8),
     // Preset handling /////////////////////////////////////////
     presetList("PRESETLIST"), setlist("SETLIST"),
     // Mapping settings ////////////////////////////////////////
     topRowMappings(), normalRowMappings(),
+    numModifierButtons(2), currentStripModifier(-1),
     // Misc /////////////////////////////////////////////////////////
-    playbackLEDPosition(), stripModifier(false), monitorInputs(false)
+    playbackLEDPosition(), monitorInputs(false)
 {
     // compile time assertions
     static_jassert(THUMBNAIL_WIDTH % 8 == 0);
@@ -80,23 +86,21 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
 
     setupDefaultRowMappings();
 
-    for (int i = 0; i < 8; ++i)
-    {
-        // these should be empty to start with
-        // TODO: have actual sample rate
-        resamplePool.add(new AudioSample(44100.0, 44100, THUMBNAIL_WIDTH, "resample #" + String(i)));
-        recordPool.add(new AudioSample(44100.0, 44100, THUMBNAIL_WIDTH, "record #" + String(i)));
-    }
+    // TODO: have actual sample rate
+    for (int i = 0; i < resampleBankSize; ++i)
+        resamplePool.add(new AudioSample(44100.0, 44100, THUMBNAIL_WIDTH, "resample #" + String(i), AudioSample::tResampledSample));
+    for (int i = 0; i < recordBankSize; ++i)
+        recordPool.add(new AudioSample(44100.0, 44100, THUMBNAIL_WIDTH, "record #" + String(i), AudioSample::tRecordedSample));
 
     setlist.createNewChildElement("PRESETNONE");
 
     lastPosInfo.resetToDefault();
 
     // timer for re-drawing LEDs
-    startTimer(100);
+    const int ledRedrawIntervalInMillisecs = 100;
+    startTimer(ledRedrawIntervalInMillisecs);
 
-    // setup 2D arrays for tracking button presses
-    // or LED status
+    // setup 2D arrays for tracking LED states
     setMonomeStatusGrids(8, 8);
 }
 
@@ -209,8 +213,12 @@ void mlrVSTAudioProcessor::buildChannelArray(const int &newNumChannels)
 
     // reset the gains to the default
     channelGains.clear();
+    channelMutes.clear();
     for (int c = 0; c < maxChannels; c++)
+    {
         channelGains.add(defaultChannelGain);
+        channelMutes.add(false);
+    }
 
 
     DBG("Channel processor array (re)built");
@@ -387,7 +395,6 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
         // *exactly* the right size and avoid reallocating if possible
         stripContrib.setSize(2, numSamples, false, false, true);
 
-        int stripChannel;
         for (int s = 0; s < sampleStripArray.size(); s++)
         {
             sampleStripArray[s]->setBPM(currentBPM);
@@ -398,11 +405,14 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
             sampleStripArray[s]->renderNextBlock(stripContrib, midiMessages, 0, numSamples);
 
             // get the associated channel so we can apply gain
-            stripChannel = *static_cast<const int *>(sampleStripArray[s]->getSampleStripParam(SampleStrip::pCurrentChannel));
+            const int stripChannel = *static_cast<const int *>(sampleStripArray[s]->getSampleStripParam(SampleStrip::pCurrentChannel));
 
-            // add this contribution scaled by the channel gain
-            buffer.addFrom(0, 0, stripContrib, 0, 0, numSamples, channelGains[stripChannel]);
-            buffer.addFrom(1, 0, stripContrib, 1, 0, numSamples, channelGains[stripChannel]);
+            if (!channelMutes[stripChannel])
+            {
+                // add this contribution scaled by the channel gain
+                buffer.addFrom(0, 0, stripContrib, 0, 0, numSamples, channelGains[stripChannel]);
+                buffer.addFrom(1, 0, stripContrib, 1, 0, numSamples, channelGains[stripChannel]);
+            }
         }
 
         // Go through the outgoing data, and apply our master gain to it...
@@ -509,7 +519,7 @@ void mlrVSTAudioProcessor::timerCallback()
             setSampleStripParameter(SampleStrip::pStripVolume, &stripVol, row);
 
             // finally if the modifier button is lifted, stop increasing
-            if (!stripModifier) toggleSampleStripParameter(SampleStrip::pIsVolInc, row);
+            if (currentStripModifier == -1) toggleSampleStripParameter(SampleStrip::pIsVolInc, row);
         }
         else if (isVolDec)
         {
@@ -527,7 +537,7 @@ void mlrVSTAudioProcessor::timerCallback()
             setSampleStripParameter(SampleStrip::pStripVolume, &stripVol, row);
 
             // finally if the modifier button is lifted, stop increasing
-            if (!stripModifier) toggleSampleStripParameter(SampleStrip::pIsVolDec, row);
+            if (currentStripModifier == -1) toggleSampleStripParameter(SampleStrip::pIsVolDec, row);
         }
 
 
@@ -545,7 +555,7 @@ void mlrVSTAudioProcessor::timerCallback()
             setSampleStripParameter(SampleStrip::pPlaySpeed, &stripPlaySpeed, row);
 
             // finally if the modifier button is lifted, stop increasing
-            if (!stripModifier) toggleSampleStripParameter(SampleStrip::pIsPlaySpeedInc, row);
+            if (currentStripModifier == -1) toggleSampleStripParameter(SampleStrip::pIsPlaySpeedInc, row);
         }
         else if (isSpeedDec)
         {
@@ -562,7 +572,7 @@ void mlrVSTAudioProcessor::timerCallback()
             setSampleStripParameter(SampleStrip::pPlaySpeed, &stripPlaySpeed, row);
 
             // finally if the modifier button is lifted, stop increasing
-            if (!stripModifier) toggleSampleStripParameter(SampleStrip::pIsPlaySpeedDec, row);
+            if (currentStripModifier == -1) toggleSampleStripParameter(SampleStrip::pIsPlaySpeedDec, row);
         }
 
 
@@ -620,7 +630,20 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
         switch (colMap)
         {
         case tmNoMapping : break;
-        case tmModifierBtn : stripModifier = state; break;
+        case tmModifierBtnA :
+            {
+                // if pressed down, set this as the current
+                // modifier button, otherwise set it to off (-1)
+                currentStripModifier = (state) ? 0 : -1;
+                break;
+            }
+        case tmModifierBtnB :
+            {
+                // if pressed down, set this as the current
+                // modifier button, otherwise set it to off (-1)
+                currentStripModifier = (state) ? 1 : -1;
+                break;
+            }
         case tmStartRecording : startRecording(); break;
         case tmStartResampling : startResampling(); break;
         case tmStopAll : stopAllStrips(SampleStrip::mStopNormal); break;
@@ -628,16 +651,17 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
         default : jassertfalse;
         }
     }
-    else if (stripModifier && monomeRow <= numSampleStrips && monomeRow > 0)
+    else if (currentStripModifier != -1 && monomeRow <= numSampleStrips && monomeRow > 0)
     {
         // When the modifier button is held, each strip turns into a
         // set of control buttons:
 
         // find out the mapping for the button
-        const int colMap = getNormalRowMapping(monomeCol);
+        const int colMap = getNormalRowMapping(currentStripModifier, monomeCol);
 
         switch (colMap)
         {
+        case nmNoMapping : break;
         case nmFindBestTempo :
             // TODO: next actual sample rate here!
             if (state) sampleStripArray[stripID]->findInitialPlaySpeed(currentBPM, 44100.0);
@@ -701,9 +725,90 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
                 break;
             }
 
+        case nmCycleThruRecordings:
+            {
+                if (state)
+                {
+                    const AudioSample *currentSample = static_cast<const AudioSample*>(sampleStripArray[stripID]->getSampleStripParam(SampleStrip::pAudioSample));
+
+                    // if the sample is not a recording, cycle to the first recorded sample
+                    if (currentSample == nullptr || currentSample->getSampleType() != AudioSample::tRecordedSample)
+                        sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, recordPool.getFirst(), true);
+                    // otherwise load the next sample
+                    else
+                    {
+                        int s = 0;
+                        // find the current sample index s
+                        for (; s < recordPool.size(); ++s)
+                            if (recordPool[s] == currentSample) break;
+
+                        // and load the next sample, s + 1
+                        const AudioSample *nextSample = recordPool[(++s % recordPool.size())];
+                        sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, nextSample, true);
+                    }
+                }
+                break;
+            }
+
+        case nmCycleThruResamplings:
+            {
+                if (state)
+                {
+                    const AudioSample *currentSample = static_cast<const AudioSample*>(sampleStripArray[stripID]->getSampleStripParam(SampleStrip::pAudioSample));
+
+                    // if the sample is not a resampling, cycle to the first recorded resampling
+                    if (currentSample == nullptr || currentSample->getSampleType() != AudioSample::tResampledSample)
+                        sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, resamplePool.getFirst(), true);
+                    // otherwise load the next resampling
+                    else
+                    {
+                        int s = 0;
+                        // find the current sample index s
+                        for (; s < resamplePool.size(); ++s)
+                            if (resamplePool[s] == currentSample) break;
+
+                        // and load the next sample, s + 1
+                        const AudioSample *nextSample = resamplePool[(++s % resamplePool.size())];
+                        sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, nextSample, true);
+                    }
+                }
+                break;
+            }
+
+        case nmCycleThruFileSamples:
+            {
+                if (state)
+                {
+                    const AudioSample *currentSample = static_cast<const AudioSample*>(sampleStripArray[stripID]->getSampleStripParam(SampleStrip::pAudioSample));
+
+                    // if the sample is not a resampling, cycle to the first recorded resampling
+                    if (currentSample == nullptr || currentSample->getSampleType() != AudioSample::tFileSample)
+                        sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, samplePool.getFirst(), true);
+                    // otherwise load the next resampling
+                    else
+                    {
+                        int s = 0;
+                        // find the current sample index s
+                        for (; s < samplePool.size(); ++s)
+                            if (samplePool[s] == currentSample) break;
+
+                        // and load the next sample, s + 1
+                        const AudioSample *nextSample = samplePool[(++s % samplePool.size())];
+                        sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, nextSample, true);
+                    }
+                }
+                break;
+            }
+
         // this should not happen!
         default : jassertfalse;
         }
+
+        // The SampleStrips can get tricked into thinking a button is held
+        // if it starts out as a normal press but then a modifier button is
+        // pressed before the button is lifted. This corrects for this:
+        if (!state) sampleStripArray[stripID]->setButtonStatus(monomeCol, state);
+
     }
     else if (monomeRow <= numSampleStrips && monomeRow > 0)
     {
@@ -1270,7 +1375,8 @@ String mlrVSTAudioProcessor::getTopRowMappingName(const int &mappingID)
     switch (mappingID)
     {
     case tmNoMapping : return "no mapping";
-    case tmModifierBtn : return "modifier button";
+    case tmModifierBtnA : return "modifier button A";
+    case tmModifierBtnB : return "modifier button B";
     case tmStartRecording : return "start recording";
     case tmStartResampling : return "stop recording";
     case tmStopAll : return "stop all strips";
@@ -1293,6 +1399,10 @@ String mlrVSTAudioProcessor::getNormalRowMappingName(const int &mappingID)
     case nmDoublePlayspeed : return "x2 playspeed";
     case nmStopPlayback : return "stop playback";
     case nmStopPlaybackTape : return "stop playback (tape)";
+    case nmCycleThruRecordings : return "cycle through recorded samples";
+    case nmCycleThruResamplings : return "cycle through resampled samples";
+    case nmCycleThruFileSamples : return "cycle through sample files";
+
     default : jassertfalse; return "error: mappingID " + String(mappingID) + " not found!";
     }
 }
@@ -1304,24 +1414,37 @@ void mlrVSTAudioProcessor::setupDefaultRowMappings()
     normalRowMappings.clear();
 
     // add the defaults
-    topRowMappings.add(tmModifierBtn);
+    topRowMappings.add(tmModifierBtnA);
+    topRowMappings.add(tmModifierBtnB);
     topRowMappings.add(tmStopAll);
     topRowMappings.add(tmTapeStopAll);
-    topRowMappings.add(tmNoMapping);
     topRowMappings.add(tmNoMapping);
     topRowMappings.add(tmNoMapping);
     topRowMappings.add(tmStartRecording);
     topRowMappings.add(tmStartResampling);
 
-    normalRowMappings.add(nmFindBestTempo);
-    //normalRowMappings.add(nmStopPlaybackTape);
-    normalRowMappings.add(nmToggleReverse);
-    normalRowMappings.add(nmDecVolume);
-    normalRowMappings.add(nmIncVolume);
-    normalRowMappings.add(nmDecPlayspeed);
-    normalRowMappings.add(nmIncPlayspeed);
-    normalRowMappings.add(nmHalvePlayspeed);
-    normalRowMappings.add(nmDoublePlayspeed);
+    Array<int> rowMappingsA;
+    rowMappingsA.add(nmFindBestTempo);
+    rowMappingsA.add(nmToggleReverse);
+    rowMappingsA.add(nmDecVolume);
+    rowMappingsA.add(nmIncVolume);
+    rowMappingsA.add(nmDecPlayspeed);
+    rowMappingsA.add(nmIncPlayspeed);
+    rowMappingsA.add(nmHalvePlayspeed);
+    rowMappingsA.add(nmDoublePlayspeed);
+
+    Array<int> rowMappingsB;
+    rowMappingsB.add(nmCycleThruFileSamples);
+    rowMappingsB.add(nmCycleThruRecordings);
+    rowMappingsB.add(nmCycleThruResamplings);
+    rowMappingsB.add(nmStopPlaybackTape);
+    rowMappingsB.add(nmNoMapping);
+    rowMappingsB.add(nmNoMapping);
+    rowMappingsB.add(nmNoMapping);
+    rowMappingsB.add(nmNoMapping);
+
+    normalRowMappings.add(new Array<int>(rowMappingsA));
+    normalRowMappings.add(new Array<int>(rowMappingsB));
 }
 
 // This creates new instances of the plugin...

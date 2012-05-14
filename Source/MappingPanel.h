@@ -15,7 +15,7 @@
 #include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "mlrVSTLookAndFeel.h"
 
-/* Forward declaration to set up pointer arrangement 
+/* Forward declaration to set up pointer arrangement
    to allow settings panel access to the UI */
 class mlrVSTAudioProcessorEditor;
 
@@ -29,6 +29,8 @@ public:
     MappingPanel(const Rectangle<int> &bounds,
                  mlrVSTAudioProcessor * const owner);
 
+    ~MappingPanel();
+
     void buttonClicked(Button *btn);
     void comboBoxChanged(ComboBox *box);
     void paint(Graphics& g);
@@ -36,7 +38,7 @@ public:
     void mouseExit (const MouseEvent &e);
 
 private:
-    
+
     // Communication ///////////////////////////////
     // Pointer to parent GUI component
     mlrVSTAudioProcessor * const processor;
@@ -48,10 +50,10 @@ private:
     int xPosition, yPosition;
 
     // Button maps /////////////////////////////
-    OwnedArray<DrawableButton> topRowButtons;
-    OwnedArray<DrawableButton> normalRowButtons;
+    OwnedArray<DrawableButton> buttonMatrix;
     Path monomePath;
     Label topRowMappingLabel, normalRowMappingLabel;
+    int numCols, numRows;
 
     // Main header label
     Label panelLabel;
@@ -71,7 +73,7 @@ private:
         lbl.setFont(factor * fontSize);
     }
 
-    // may as well check for leaks!
+    // check for leaks while in DEBUG mode!
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MappingPanel);
 };
 

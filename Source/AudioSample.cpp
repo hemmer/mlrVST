@@ -10,6 +10,7 @@ Author:  Hemmer
 
 #include "AudioSample.h"
 
+// create sample by loading file from disk
 AudioSample::AudioSample(const File &sampleSource,
                          const int &thumbnailLength) :
     // Files //////////////////////////////////////////////
@@ -20,6 +21,7 @@ AudioSample::AudioSample(const File &sampleSource,
     sampleLength(0), numChannels(0),
     sampleName(sampleSource.getFileName()),
     data(0), sampleSampleRate(0.0),
+    sampleType(tFileSample),
 
     // Thumbnails ///////////////////////////
     thumbnailData(), thumbnailFinished(false)
@@ -48,7 +50,7 @@ AudioSample::AudioSample(const File &sampleSource,
         data->applyGain(0, 1, 0.0f);
         data->applyGain(sampleLength - 1, 1, 0.0f);
 
-        
+
         generateThumbnail(thumbnailLength);
     }
     else
@@ -60,11 +62,12 @@ AudioSample::AudioSample(const File &sampleSource,
 }
 
 
-// empty AudioSample used for resampling etc
+// preallocate space for a recording / resampling type sample
 AudioSample::AudioSample(const double &sampleRate,
-                         const int &initialSamplelength, 
+                         const int &initialSamplelength,
                          const int &thumbnailLength,
-                         const String &name) :
+                         const String &name,
+                         const int &newSampleType) :
     // Files //////////////////////////////////////////////
     sampleFile(), formatManager(), fileType(String::empty),
 
@@ -72,7 +75,7 @@ AudioSample::AudioSample(const double &sampleRate,
     sampleLength(initialSamplelength), numChannels(2),
     sampleName(name),
     data(new AudioSampleBuffer(numChannels, sampleLength)),
-    sampleSampleRate(sampleRate),
+    sampleSampleRate(sampleRate), sampleType(newSampleType),
 
     // Thumbnails ///////////////////////////
     thumbnailData(), thumbnailFinished(false)
@@ -157,7 +160,7 @@ void AudioSample::drawChannels(Graphics& g, const Rectangle<int>& area,
 }
 
 void AudioSample::drawChannel(Graphics& g, const Rectangle<int>& area,
-                              const int &channel, float verticalZoomFactor) const 
+                              const int &channel, float verticalZoomFactor) const
 {
 
     const float topY = (float) area.getY();

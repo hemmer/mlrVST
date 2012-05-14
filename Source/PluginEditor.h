@@ -45,7 +45,7 @@ class mlrVSTAudioProcessorEditor  : public AudioProcessorEditor,
                                     public SliderListener,
 									public ButtonListener,
                                     public ComboBoxListener,
-                                    public Timer, 
+                                    public Timer,
                                     public FileDragAndDropTarget
 {
 public:
@@ -59,7 +59,7 @@ public:
     void paint(Graphics& g);
 
     // These are required so that the WaveformControls
-    // can handle sample loading by Drag n' Drop 
+    // can handle sample loading by Drag n' Drop
     bool isInterestedInFileDrag(const StringArray&) { return true; }
     void filesDropped(const StringArray&, int, int) { }
 
@@ -100,7 +100,7 @@ private:
     // Volume controls //////////////////////////////
     Slider masterGainSlider; Label masterSliderLabel;
     OwnedArray<Slider> slidersArray;
-    OwnedArray<Label> slidersLabelArray;
+    OwnedArray<ToggleButton> slidersMuteBtnArray;
     // this just sets it all up
     void buildSliders();
 
@@ -148,18 +148,18 @@ private:
     Rectangle<int> mappingPanelBounds;
     ToggleButton toggleMappingBtn;
     MappingPanel mappingPanel;
-    
+
 
 
     // SampleStrip controls ///////////////////////////////
-    // Store the waveform controls/strips in array, this is 
+    // Store the waveform controls/strips in array, this is
     // NUM_ROWS - 1 (for the top row controls)
     OwnedArray<SampleStripControl> sampleStripControlArray;
     const int numStrips;
     const int waveformControlHeight, waveformControlWidth;
     void buildSampleStripControls();
 
-    JUCE_LEAK_DETECTOR(mlrVSTAudioProcessorEditor);  
+    JUCE_LEAK_DETECTOR(mlrVSTAudioProcessorEditor);
 };
 
 

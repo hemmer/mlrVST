@@ -119,7 +119,8 @@ public:
     enum TopRowMappings
     {
         tmNoMapping,
-        tmModifierBtn,
+        tmModifierBtnA,
+        tmModifierBtnB,
         tmStartRecording,
         tmStartResampling,
         tmStopAll,
@@ -142,13 +143,17 @@ public:
         nmDoublePlayspeed,
         nmStopPlayback,
         nmStopPlaybackTape,
+        nmCycleThruRecordings,
+        nmCycleThruResamplings,
+        nmCycleThruFileSamples,
         numNormalRowMappings
     };
 
     int getTopRowMapping(const int &col) const { return topRowMappings[col];}
     void setTopRowMapping(const int &col, const int &newMapping) { topRowMappings.set(col, newMapping);}
-    int getNormalRowMapping(const int &col) const { return normalRowMappings[col];}
-    void setNormalRowMapping(const int &col, const int &newMapping) { normalRowMappings.set(col, newMapping);}
+    // can have multiple modifier buttons
+    int getNormalRowMapping(const int &modifierBtn, const int &col) const { return normalRowMappings[modifierBtn]->getUnchecked(col);}
+    void setNormalRowMapping(const int &modifierBtn, const int &col, const int &newMapping) { normalRowMappings[modifierBtn]->set(col, newMapping);}
 
     String getTopRowMappingName(const int &mappingID);
     String getNormalRowMappingName(const int &mappingID);
@@ -210,6 +215,16 @@ public:
     SampleStrip* getSampleStrip(const int &index);
     int getNumSampleStrips() const { return sampleStripArray.size(); }
 
+    bool getChannelMuteStatus(const int &chan) const
+    {
+        jassert(chan < channelMutes.size());
+        return channelMutes[chan];
+    }
+    void setChannelMute(const int &chan, const bool &state)
+    {
+        jassert(chan < channelMutes.size());
+        channelMutes.set(chan, state);
+    }
     float getChannelGain(const int &chan) const
     {
         jassert(chan < channelGains.size());
@@ -334,6 +349,7 @@ private:
     // Channel Setup /////////////
     const int maxChannels;          // Max number of channels
     Array<float> channelGains;      // individual channel volumes
+    Array<bool> channelMutes;       // are we on or off
     float masterGain;               // gain for combined signal
     const float defaultChannelGain; // initial channel gain level
     Array<Colour> channelColours;   // colours for channels in the GUI
@@ -370,7 +386,7 @@ private:
     int resampleLength, resamplePrecountLength;                     // length in bars
     int resampleLengthInSamples, resamplePrecountLengthInSamples;   // length in samples
     int resamplePosition, resamplePrecountPosition;     // track resampling progress
-    int resampleBank;                                   // which slot to use
+    int resampleBank, resampleBankSize;                 // which slot to use (how many are free)
 
     // Store recorded information
     AudioSampleBuffer recordBuffer;
@@ -378,7 +394,7 @@ private:
     int recordLength, recordPrecountLength;
     int recordLengthInSamples, recordPrecountLengthInSamples;
     int recordPosition, recordPrecountPosition;
-    int recordBank;
+    int recordBank, recordBankSize;
 
 
     // Preset Handling //////////////////////////////////////////
@@ -388,9 +404,14 @@ private:
     XmlElement setlist;
 
     // Mapping settings ////////////////////////////////////////
-    Array<int> topRowMappings, normalRowMappings;
+    Array<int> topRowMappings;
+    OwnedArray< Array<int> > normalRowMappings;
+    // Tells us which of the modifier buttons are held
+    // so strips can be used to stop, reverse sample etc.
+    // NOTE: -1 means no strip is held
+    const int numModifierButtons;
+    int currentStripModifier;
     void setupDefaultRowMappings();
-
 
 
     // Misc ////////////////
@@ -398,9 +419,7 @@ private:
     // Store which LED column is currently being used
     // for displaying playback position.
     Array<int> playbackLEDPosition;
-    // This is true when top left button is held down,
-    // so strips can be used to stop, reverse sample etc.
-    bool stripModifier;
+
     // Do we want to play incoming input?
     bool monitorInputs;
 
