@@ -64,7 +64,7 @@ private:
     mlrVSTAudioProcessor * const parent;
     int incomingPort;
     UdpListeningReceiveSocket s;
-    
+
 
     // outgoing messages ////////////////////
     char buffer[1536];                  // to store message data
@@ -73,8 +73,8 @@ private:
 
     // strings ////////////////////////////
     String OSCPrefix;                       // main prefix (/mlrvst/ by default)
-    String buttonPressMask;                 // + "press"       
     String ledStr, ledRowStr, ledClearStr;  // + "led", + "led_row", + "clear"
+    String buttonPressMask;                 // + "press"
 
     JUCE_LEAK_DETECTOR(OSCHandler);
 

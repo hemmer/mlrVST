@@ -6,13 +6,16 @@
 
 PresetPanel::PresetPanel(const Rectangle<int> &bounds,
                          mlrVSTAudioProcessor * const owner) :
+    // communication //////////////////////
     processor(owner),
+    // gui setup //////////////////////////
     panelLabel("preset panel label", "Setlist Manager"),
     fontSize(7.4f), panelBounds(bounds),
-    selectedPreset(0),
-    setListLength(0), ROW_HEIGHT(20), ROW_WIDTH(250),
+    // setlist ///////////////////////////////
     setListSlotArray(), deleteBtnArray(), selectBtnArray(),
-    addNewRowBtn("Add new")
+    addNewRowBtn("Add new"), choosePresetMenu(),
+    selectedPreset(0), setListLength(0),
+    ROW_HEIGHT(20), ROW_WIDTH(250)
 {
     addAndMakeVisible(&panelLabel);
     panelLabel.setBounds(0, 0, panelBounds.getWidth(), 30);

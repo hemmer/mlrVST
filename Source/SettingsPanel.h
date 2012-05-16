@@ -72,8 +72,8 @@ private:
     Label oscPrefixLbl;
     TextEditor oscPrefixTxtBx;
 
-    ToggleButton monitorInputsBtn;
     Label monitorInputsLbl;
+    ToggleButton monitorInputsBtn;
 
     void setupLabel(Label &lbl)
     {

@@ -713,6 +713,13 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
                 break;
             }
 
+        case nmSetNormalPlayspeed:
+            {
+                const double newPlaySpeed = 1.0;
+                if (state) sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pPlaySpeed, &newPlaySpeed, true);
+                break;
+            }
+
         case nmStopPlayback:
             {
                 if (state) sampleStripArray[stripID]->stopSamplePlaying();
@@ -746,6 +753,9 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
                         const AudioSample *nextSample = recordPool[(++s % recordPool.size())];
                         sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, nextSample, true);
                     }
+
+                    // and find the optimal playspeed
+                    calcInitialPlaySpeed(stripID);
                 }
                 break;
             }
@@ -771,6 +781,9 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
                         const AudioSample *nextSample = resamplePool[(++s % resamplePool.size())];
                         sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, nextSample, true);
                     }
+
+                    // and find the optimal playspeed
+                    calcInitialPlaySpeed(stripID);
                 }
                 break;
             }
@@ -796,6 +809,9 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
                         const AudioSample *nextSample = samplePool[(++s % samplePool.size())];
                         sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, nextSample, true);
                     }
+
+                    // and find the optimal playspeed
+                    calcInitialPlaySpeed(stripID);
                 }
                 break;
             }
@@ -1397,6 +1413,7 @@ String mlrVSTAudioProcessor::getNormalRowMappingName(const int &mappingID)
     case nmIncPlayspeed : return "increase playspeed";
     case nmHalvePlayspeed : return "/2 playspeed";
     case nmDoublePlayspeed : return "x2 playspeed";
+    case nmSetNormalPlayspeed : return "set playspeed to 1.0 (normal speed)";
     case nmStopPlayback : return "stop playback";
     case nmStopPlaybackTape : return "stop playback (tape)";
     case nmCycleThruRecordings : return "cycle through recorded samples";
@@ -1438,7 +1455,7 @@ void mlrVSTAudioProcessor::setupDefaultRowMappings()
     rowMappingsB.add(nmCycleThruRecordings);
     rowMappingsB.add(nmCycleThruResamplings);
     rowMappingsB.add(nmStopPlaybackTape);
-    rowMappingsB.add(nmNoMapping);
+    rowMappingsB.add(nmSetNormalPlayspeed);
     rowMappingsB.add(nmNoMapping);
     rowMappingsB.add(nmNoMapping);
     rowMappingsB.add(nmNoMapping);

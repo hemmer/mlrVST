@@ -141,6 +141,7 @@ public:
         nmIncPlayspeed,
         nmHalvePlayspeed,
         nmDoublePlayspeed,
+        nmSetNormalPlayspeed,
         nmStopPlayback,
         nmStopPlaybackTape,
         nmCycleThruRecordings,
