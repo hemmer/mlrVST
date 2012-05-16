@@ -14,7 +14,6 @@
 #define __SAMPLESTRIPCONTROL_H_E96F19F8__
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "AudioSample.h"
 #include "SampleStripControl.h"
 #include "mlrVSTLookAndFeel.h"

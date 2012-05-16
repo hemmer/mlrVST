@@ -16,7 +16,6 @@
 
 #include "AudioSample.h"
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JuceLibraryCode/JucePluginCharacteristics.h"
 
 // forward declaration
 class mlrVSTAudioProcessor;

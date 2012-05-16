@@ -1,5 +1,5 @@
-# Automatically generated makefile, created by the Jucer
-# Don't edit this file! Your changes will be overwritten when you re-save the Jucer project!
+# Automatically generated makefile, created by the Introjucer
+# Don't edit this file! Your changes will be overwritten when you re-save the Introjucer project!
 
 ifndef CONFIG
   CONFIG=Debug
@@ -17,12 +17,12 @@ ifeq ($(CONFIG),Debug)
   LIBDIR := build
   OBJDIR := build/intermediate/Debug
   OUTDIR := build
-  CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I "~/SDKs/vstsdk2.4" -I "/usr/include" -I "/usr/include/freetype2" -I "../../oscpack/" -I "../../JuceLibraryCode"
+  CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -g -ggdb -fPIC -O0
   CXXFLAGS += $(CFLAGS) -DOSC_HOST_LITTLE_ENDIAN
-  LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -L"/usr/X11R6/lib/" -L"../../../../../../Documents/bin" -lfreetype -lpthread -lrt -lX11 -lGL -lGLU -lXinerama -lasound 
+  LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -L/usr/X11R6/lib/ -ldl -lfreetype -lpthread -lrt -lX11 -lGL -lXinerama -lasound -lXext 
   LDDEPS :=
-  RESFLAGS :=  -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I "~/SDKs/vstsdk2.4" -I "/usr/include" -I "/usr/include/freetype2" -I "../../oscpack/" -I "../../JuceLibraryCode"
+  RESFLAGS :=  -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
   TARGET := mlrVST.so
   BLDCMD = $(CXX) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS) $(RESOURCES) $(TARGET_ARCH)
 endif
@@ -32,27 +32,27 @@ ifeq ($(CONFIG),Release)
   LIBDIR := build
   OBJDIR := build/intermediate/Release
   OUTDIR := build
-  CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I "~/SDKs/vstsdk2.4" -I "/usr/include" -I "/usr/include/freetype2" -I "../../oscpack/" -I "../../JuceLibraryCode"
-  CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -fPIC -O3
+  CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
+  CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -fPIC -Os
   CXXFLAGS += $(CFLAGS) -DOSC_HOST_LITTLE_ENDIAN
-  LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -L"/usr/X11R6/lib/" -L"../../../../../../Documents/bin" -lfreetype -lpthread -lrt -lX11 -lGL -lGLU -lXinerama -lasound 
+  LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -L/usr/X11R6/lib/ -ldl -lfreetype -lpthread -lrt -lX11 -lGL -lXinerama -lasound -lXext 
   LDDEPS :=
-  RESFLAGS :=  -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I "~/SDKs/vstsdk2.4" -I "/usr/include" -I "/usr/include/freetype2" -I "../../oscpack/" -I "../../JuceLibraryCode"
+  RESFLAGS :=  -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
   TARGET := mlrVST.so
   BLDCMD = $(CXX) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS) $(RESOURCES) $(TARGET_ARCH)
 endif
 
 OBJECTS := \
-  $(OBJDIR)/AudioSample_c5634f81.o \
-  $(OBJDIR)/PluginProcessor_a059e380.o \
   $(OBJDIR)/SampleStrip_9922baef.o \
-  $(OBJDIR)/timedButton_8bab4a.o \
-  $(OBJDIR)/MappingPanel_5b8ca75f.o \
+  $(OBJDIR)/PluginProcessor_a059e380.o \
+  $(OBJDIR)/AudioSample_c5634f81.o \
   $(OBJDIR)/PresetPanel_1f2c0a46.o \
   $(OBJDIR)/SettingsPanel_89b72282.o \
-  $(OBJDIR)/SampleStripControl_45995bf8.o \
-  $(OBJDIR)/PluginEditor_94d4fb09.o \
+  $(OBJDIR)/MappingPanel_5b8ca75f.o \
+  $(OBJDIR)/timedButton_8bab4a.o \
   $(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o \
+  $(OBJDIR)/PluginEditor_94d4fb09.o \
+  $(OBJDIR)/SampleStripControl_45995bf8.o \
   $(OBJDIR)/OSCHandler_bb1eaf54.o \
   $(OBJDIR)/IpEndpointName_d4cc3aed.o \
   $(OBJDIR)/NetworkingUtils_571a8d2d.o \
@@ -61,12 +61,23 @@ OBJECTS := \
   $(OBJDIR)/OscPrintReceivedElements_db1e1922.o \
   $(OBJDIR)/OscReceivedElements_b8801585.o \
   $(OBJDIR)/OscTypes_b02e2cd6.o \
-  $(OBJDIR)/juce_VST_Wrapper_812bffb1.o \
   $(OBJDIR)/BinaryData_ce4232d4.o \
-  $(OBJDIR)/JuceLibraryCode1_682c927f.o \
-  $(OBJDIR)/JuceLibraryCode2_683aaa00.o \
-  $(OBJDIR)/JuceLibraryCode3_6848c181.o \
-  $(OBJDIR)/JuceLibraryCode4_6856d902.o \
+  $(OBJDIR)/juce_AAX_Wrapper_6b508a5d.o \
+  $(OBJDIR)/juce_audio_basics_2442e4ea.o \
+  $(OBJDIR)/juce_audio_devices_a4c8a728.o \
+  $(OBJDIR)/juce_audio_formats_d349f0c8.o \
+  $(OBJDIR)/juce_audio_processors_44a134a2.o \
+  $(OBJDIR)/juce_core_aff681cc.o \
+  $(OBJDIR)/juce_data_structures_bdd6d488.o \
+  $(OBJDIR)/juce_events_79b2840.o \
+  $(OBJDIR)/juce_graphics_c8f1e7a4.o \
+  $(OBJDIR)/juce_gui_basics_a630dd20.o \
+  $(OBJDIR)/juce_gui_extra_7767d6a8.o \
+  $(OBJDIR)/juce_RTAS_DigiCode1_fd8f0f15.o \
+  $(OBJDIR)/juce_RTAS_DigiCode2_fd9d2696.o \
+  $(OBJDIR)/juce_RTAS_DigiCode3_fdab3e17.o \
+  $(OBJDIR)/juce_RTAS_Wrapper_6747216b.o \
+  $(OBJDIR)/juce_VST_Wrapper_bb62e93d.o \
 
 .PHONY: clean
 
@@ -83,9 +94,9 @@ clean:
 	-@rm -rf $(OBJDIR)/*
 	-@rm -rf $(OBJDIR)
 
-$(OBJDIR)/AudioSample_c5634f81.o: ../../Source/AudioSample.cpp
+$(OBJDIR)/SampleStrip_9922baef.o: ../../Source/SampleStrip.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling AudioSample.cpp"
+	@echo "Compiling SampleStrip.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/PluginProcessor_a059e380.o: ../../Source/PluginProcessor.cpp
@@ -93,19 +104,9 @@ $(OBJDIR)/PluginProcessor_a059e380.o: ../../Source/PluginProcessor.cpp
 	@echo "Compiling PluginProcessor.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/SampleStrip_9922baef.o: ../../Source/SampleStrip.cpp
+$(OBJDIR)/AudioSample_c5634f81.o: ../../Source/AudioSample.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling SampleStrip.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/timedButton_8bab4a.o: ../../Source/timedButton.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling timedButton.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/MappingPanel_5b8ca75f.o: ../../Source/MappingPanel.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling MappingPanel.cpp"
+	@echo "Compiling AudioSample.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/PresetPanel_1f2c0a46.o: ../../Source/PresetPanel.cpp
@@ -118,9 +119,19 @@ $(OBJDIR)/SettingsPanel_89b72282.o: ../../Source/SettingsPanel.cpp
 	@echo "Compiling SettingsPanel.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/SampleStripControl_45995bf8.o: ../../Source/SampleStripControl.cpp
+$(OBJDIR)/MappingPanel_5b8ca75f.o: ../../Source/MappingPanel.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling SampleStripControl.cpp"
+	@echo "Compiling MappingPanel.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/timedButton_8bab4a.o: ../../Source/timedButton.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling timedButton.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o: ../../Source/mlrVSTLookAndFeel.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling mlrVSTLookAndFeel.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/PluginEditor_94d4fb09.o: ../../Source/PluginEditor.cpp
@@ -128,9 +139,9 @@ $(OBJDIR)/PluginEditor_94d4fb09.o: ../../Source/PluginEditor.cpp
 	@echo "Compiling PluginEditor.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o: ../../Source/mlrVSTLookAndFeel.cpp
+$(OBJDIR)/SampleStripControl_45995bf8.o: ../../Source/SampleStripControl.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling mlrVSTLookAndFeel.cpp"
+	@echo "Compiling SampleStripControl.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/OSCHandler_bb1eaf54.o: ../../Source/OSCHandler.cpp
@@ -173,34 +184,89 @@ $(OBJDIR)/OscTypes_b02e2cd6.o: ../../oscpack/osc/OscTypes.cpp
 	@echo "Compiling OscTypes.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/juce_VST_Wrapper_812bffb1.o: ../../../../../src/audio/plugin_client/VST/juce_VST_Wrapper.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_VST_Wrapper.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
 $(OBJDIR)/BinaryData_ce4232d4.o: ../../JuceLibraryCode/BinaryData.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling BinaryData.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/JuceLibraryCode1_682c927f.o: ../../JuceLibraryCode/JuceLibraryCode1.cpp
+$(OBJDIR)/juce_AAX_Wrapper_6b508a5d.o: ../../JuceLibraryCode/modules/juce_audio_plugin_client/AAX/juce_AAX_Wrapper.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling JuceLibraryCode1.cpp"
+	@echo "Compiling juce_AAX_Wrapper.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/JuceLibraryCode2_683aaa00.o: ../../JuceLibraryCode/JuceLibraryCode2.cpp
+$(OBJDIR)/juce_audio_basics_2442e4ea.o: ../../JuceLibraryCode/modules/juce_audio_basics/juce_audio_basics.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling JuceLibraryCode2.cpp"
+	@echo "Compiling juce_audio_basics.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/JuceLibraryCode3_6848c181.o: ../../JuceLibraryCode/JuceLibraryCode3.cpp
+$(OBJDIR)/juce_audio_devices_a4c8a728.o: ../../JuceLibraryCode/modules/juce_audio_devices/juce_audio_devices.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling JuceLibraryCode3.cpp"
+	@echo "Compiling juce_audio_devices.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/JuceLibraryCode4_6856d902.o: ../../JuceLibraryCode/JuceLibraryCode4.cpp
+$(OBJDIR)/juce_audio_formats_d349f0c8.o: ../../JuceLibraryCode/modules/juce_audio_formats/juce_audio_formats.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling JuceLibraryCode4.cpp"
+	@echo "Compiling juce_audio_formats.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/juce_audio_processors_44a134a2.o: ../../JuceLibraryCode/modules/juce_audio_processors/juce_audio_processors.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling juce_audio_processors.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/juce_core_aff681cc.o: ../../JuceLibraryCode/modules/juce_core/juce_core.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling juce_core.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/juce_data_structures_bdd6d488.o: ../../JuceLibraryCode/modules/juce_data_structures/juce_data_structures.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling juce_data_structures.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/juce_events_79b2840.o: ../../JuceLibraryCode/modules/juce_events/juce_events.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling juce_events.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/juce_graphics_c8f1e7a4.o: ../../JuceLibraryCode/modules/juce_graphics/juce_graphics.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling juce_graphics.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/juce_gui_basics_a630dd20.o: ../../JuceLibraryCode/modules/juce_gui_basics/juce_gui_basics.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling juce_gui_basics.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/juce_gui_extra_7767d6a8.o: ../../JuceLibraryCode/modules/juce_gui_extra/juce_gui_extra.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling juce_gui_extra.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/juce_RTAS_DigiCode1_fd8f0f15.o: ../../JuceLibraryCode/modules/juce_audio_plugin_client/RTAS/juce_RTAS_DigiCode1.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling juce_RTAS_DigiCode1.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/juce_RTAS_DigiCode2_fd9d2696.o: ../../JuceLibraryCode/modules/juce_audio_plugin_client/RTAS/juce_RTAS_DigiCode2.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling juce_RTAS_DigiCode2.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/juce_RTAS_DigiCode3_fdab3e17.o: ../../JuceLibraryCode/modules/juce_audio_plugin_client/RTAS/juce_RTAS_DigiCode3.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling juce_RTAS_DigiCode3.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/juce_RTAS_Wrapper_6747216b.o: ../../JuceLibraryCode/modules/juce_audio_plugin_client/RTAS/juce_RTAS_Wrapper.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling juce_RTAS_Wrapper.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/juce_VST_Wrapper_bb62e93d.o: ../../JuceLibraryCode/modules/juce_audio_plugin_client/VST/juce_VST_Wrapper.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling juce_VST_Wrapper.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 -include $(OBJECTS:%.o=%.d)

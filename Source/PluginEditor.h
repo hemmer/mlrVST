@@ -14,7 +14,6 @@
 
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "PluginProcessor.h"
 #include "SampleStripControl.h"
 #include "PresetPanel.h"

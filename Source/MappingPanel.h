@@ -12,7 +12,6 @@
 #define __MAPPINGPANEL_H_9FE09672__
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "mlrVSTLookAndFeel.h"
 
 /* Forward declaration to set up pointer arrangement

@@ -1,138 +1,158 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="0nRd9LLGO" name="mlrVST" projectType="audioplug" version="1.0.0"
-              juceLinkage="amalg_multi" buildVST="1" buildRTAS="0" buildAU="0"
-              pluginName="mlrVST" pluginDesc="VST port of monome app mlr" pluginManufacturer="Ewan Hemingway"
-              pluginManufacturerCode="HemR" pluginCode="vstX" pluginChannelConfigs="{1, 1}, {2, 2}"
-              pluginIsSynth="0" pluginWantsMidiIn="1" pluginProducesMidiOut="1"
-              pluginSilenceInIsSilenceOut="0" pluginTailLength="0" pluginEditorRequiresKeys="1"
-              pluginAUExportPrefix="JuceDemoProjectAU" pluginAUViewClass="JuceDemoProjectAU_V1"
-              pluginRTASCategory="" bundleIdentifier="uk.co.ewanhemingway.mlrvst"
-              jucerVersion="3.0.0">
+<JUCERPROJECT id="y5l2jf" name="mlrVST" projectType="audioplug" version="1.0.0"
+              buildVST="1" buildAU="1" pluginName="mlrVST" pluginDesc="Port of the popular mlr monome app"
+              pluginManufacturer="hemmer" pluginManufacturerCode="mlrX" pluginCode="mlrX"
+              pluginChannelConfigs="{1, 1}, {2, 2}" pluginIsSynth="0" pluginWantsMidiIn="1"
+              pluginProducesMidiOut="1" pluginSilenceInIsSilenceOut="0" pluginTailLength="0"
+              pluginEditorRequiresKeys="0" pluginAUExportPrefix="mlrVSTAU"
+              pluginAUViewClass="mlrVSTAU_V1" pluginRTASCategory="" bundleIdentifier="uk.co.ewanhemingway.mlrVST"
+              aaxIdentifier="com.yourcompany.mlrVST" jucerVersion="3.0.0">
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" vstFolder="../vstsdk2.4" rtasFolder="~/SDKs/PT_80_SDK"
-               juceFolder="../JUCE" objCExtraSuffix="mlrVST"/>
-    <LINUX_MAKE targetFolder="Builds/Linux" vstFolder="~/SDKs/vstsdk2.4" juceFolder="../../.."
-                extraCompilerFlags="-DOSC_HOST_LITTLE_ENDIAN"/>
-    <VS2010 targetFolder="Builds/VisualStudio2010" libraryType="1" juceFolder="c:\SDKs\juce"
-            vstFolder="c:\SDKs\vstsdk2.4" extraDefs=""/>
+    <VS2010 targetFolder="Builds/VisualStudio2010" libraryType="1" juceFolder="C:\SDKs\juce\"
+            vstFolder="C:\SDKs\vstsdk2.4">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
+                       isDebug="1" optimisation="1" targetName="mlrVST" headerPath="../../oscpack/"/>
+        <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
+                       isDebug="0" optimisation="3" targetName="mlrVST" headerPath="../../oscpack/"/>
+      </CONFIGURATIONS>
+    </VS2010>
+    <XCODE_MAC targetFolder="Builds/MacOSX" objCExtraSuffix="bx8mSr" juceFolder="../JUCE"
+               vstFolder="../vstsdk2.4">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="mlrVST"
+                       osxSDK="default" osxCompatibility="default" osxArchitecture="default"
+                       headerPath="../../oscpack"/>
+        <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="mlrVST"
+                       osxSDK="default" osxCompatibility="default" osxArchitecture="default"
+                       headerPath="../../oscpack"/>
+      </CONFIGURATIONS>
+    </XCODE_MAC>
+    <LINUX_MAKE targetFolder="Builds/Linux" juceFolder="~/SDKs/juce" vstFolder="~/SDKs/vstsdk2.4"
+                extraCompilerFlags="-DOSC_HOST_LITTLE_ENDIAN">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" libraryPath="/usr/X11R6/lib/" isDebug="1" optimisation="1"
+                       targetName="mlrVST" headerPath="../../oscpack/"/>
+        <CONFIGURATION name="Release" libraryPath="/usr/X11R6/lib/" isDebug="0" optimisation="2"
+                       targetName="mlrVST" headerPath="../../oscpack/"/>
+      </CONFIGURATIONS>
+    </LINUX_MAKE>
   </EXPORTFORMATS>
-  <CONFIGURATIONS>
-    <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="mlrVST"
-                   osxSDK="default" osxCompatibility="default" osxArchitecture="default"
-                   headerPath="../../oscpack/"/>
-    <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="mlrVST"
-                   osxSDK="default" osxCompatibility="default" osxArchitecture="default"
-                   headerPath="../../oscpack/"/>
-  </CONFIGURATIONS>
-  <MAINGROUP id="dYAMo6Ykd" name="mlrVST">
-    <GROUP id="HJba6d" name="audio">
-      <FILE id="xH6roY" name="AudioSample.cpp" compile="1" resource="0" file="Source/AudioSample.cpp"/>
-      <FILE id="UI00zN" name="AudioSample.h" compile="0" resource="0" file="Source/AudioSample.h"/>
-      <FILE id="gFFr0hbSp" name="PluginProcessor.cpp" compile="1" resource="0"
+  <MAINGROUP id="xktr81" name="mlrVST">
+    <GROUP id="{4A37796A-C71C-9BD2-2C70-00AB7FBCBA7F}" name="audio">
+      <FILE id="xJKwog" name="SampleStrip.cpp" compile="1" resource="0" file="Source/SampleStrip.cpp"/>
+      <FILE id="VT0rxj" name="SampleStrip.h" compile="0" resource="0" file="Source/SampleStrip.h"/>
+      <FILE id="SHTCVE" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
-      <FILE id="PkpMNdnIr" name="PluginProcessor.h" compile="0" resource="0"
+      <FILE id="XmmYPF" name="PluginProcessor.h" compile="0" resource="0"
             file="Source/PluginProcessor.h"/>
-      <FILE id="zjegya" name="SampleStrip.cpp" compile="1" resource="0" file="Source/SampleStrip.cpp"/>
-      <FILE id="Ps8rCl" name="SampleStrip.h" compile="0" resource="0" file="Source/SampleStrip.h"/>
+      <FILE id="HXWZeI" name="AudioSample.cpp" compile="1" resource="0" file="Source/AudioSample.cpp"/>
+      <FILE id="kWbebb" name="AudioSample.h" compile="0" resource="0" file="Source/AudioSample.h"/>
     </GROUP>
-    <GROUP id="Slqw4M" name="gui">
-      <GROUP id="CZiuGD" name="buttons">
-        <FILE id="Chji8T" name="timedButton.cpp" compile="1" resource="0" file="Source/timedButton.cpp"/>
-        <FILE id="XisbQT" name="timedButton.h" compile="0" resource="0" file="Source/timedButton.h"/>
-      </GROUP>
-      <GROUP id="v6Zpj0" name="panels">
-        <FILE id="TLnaMn" name="MappingPanel.cpp" compile="1" resource="0"
-              file="Source/MappingPanel.cpp"/>
-        <FILE id="fuM49N" name="MappingPanel.h" compile="0" resource="0" file="Source/MappingPanel.h"/>
-        <FILE id="kmxFbK" name="PresetPanel.cpp" compile="1" resource="0" file="Source/PresetPanel.cpp"/>
-        <FILE id="qh5EK9" name="PresetPanel.h" compile="0" resource="0" file="Source/PresetPanel.h"/>
-        <FILE id="LDqEQ2" name="SettingsPanel.cpp" compile="1" resource="0"
+    <GROUP id="{CFDF027A-882D-6CE9-C6EE-77934C0D4F4B}" name="gui">
+      <GROUP id="{722331CC-6173-9D9D-AAF5-6C51ABA0DA97}" name="panels">
+        <FILE id="eTJERZ" name="PresetPanel.cpp" compile="1" resource="0" file="Source/PresetPanel.cpp"/>
+        <FILE id="YQfU8B" name="PresetPanel.h" compile="0" resource="0" file="Source/PresetPanel.h"/>
+        <FILE id="OQSqUs" name="SettingsPanel.cpp" compile="1" resource="0"
               file="Source/SettingsPanel.cpp"/>
-        <FILE id="hwQOuY" name="SettingsPanel.h" compile="0" resource="0" file="Source/SettingsPanel.h"/>
+        <FILE id="Z42ZFm" name="SettingsPanel.h" compile="0" resource="0" file="Source/SettingsPanel.h"/>
+        <FILE id="nBi29I" name="MappingPanel.cpp" compile="1" resource="0"
+              file="Source/MappingPanel.cpp"/>
+        <FILE id="eCdxQC" name="MappingPanel.h" compile="0" resource="0" file="Source/MappingPanel.h"/>
       </GROUP>
-      <FILE id="V4lM8" name="SampleStripControl.cpp" compile="1" resource="0"
-            file="Source/SampleStripControl.cpp"/>
-      <FILE id="Vwhx63" name="SampleStripControl.h" compile="0" resource="0"
-            file="Source/SampleStripControl.h"/>
-      <FILE id="RCFlkTAef" name="PluginEditor.cpp" compile="1" resource="0"
-            file="Source/PluginEditor.cpp"/>
-      <FILE id="Iif5nfHL" name="PluginEditor.h" compile="0" resource="0"
-            file="Source/PluginEditor.h"/>
-      <FILE id="SDq6w" name="mlrVSTLookAndFeel.cpp" compile="1" resource="0"
+      <GROUP id="{378C0EA0-E9FD-F021-0022-4D2D75539E0C}" name="buttons">
+        <FILE id="j1D0QZ" name="timedButton.cpp" compile="1" resource="0" file="Source/timedButton.cpp"/>
+        <FILE id="Cg8kHg" name="timedButton.h" compile="0" resource="0" file="Source/timedButton.h"/>
+      </GROUP>
+      <FILE id="RwGXWB" name="mlrVSTLookAndFeel.cpp" compile="1" resource="0"
             file="Source/mlrVSTLookAndFeel.cpp"/>
-      <FILE id="YJ20Gh" name="mlrVSTLookAndFeel.h" compile="0" resource="0"
+      <FILE id="HLQs9q" name="mlrVSTLookAndFeel.h" compile="0" resource="0"
             file="Source/mlrVSTLookAndFeel.h"/>
+      <FILE id="tp7PIf" name="PluginEditor.cpp" compile="1" resource="0"
+            file="Source/PluginEditor.cpp"/>
+      <FILE id="RWJ5Kc" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="VsK1vr" name="SampleStripControl.cpp" compile="1" resource="0"
+            file="Source/SampleStripControl.cpp"/>
+      <FILE id="so6s66" name="SampleStripControl.h" compile="0" resource="0"
+            file="Source/SampleStripControl.h"/>
     </GROUP>
-    <GROUP id="s6ZsQk" name="other">
-      <FILE id="XwCRk4" name="OSCHandler.cpp" compile="1" resource="0" file="Source/OSCHandler.cpp"/>
-      <FILE id="cz1fGg" name="OSCHandler.h" compile="0" resource="0" file="Source/OSCHandler.h"/>
+    <GROUP id="{0A6CCAAD-D393-7667-E4AD-C30B5593142D}" name="other">
+      <FILE id="wIXFVT" name="OSCHandler.cpp" compile="1" resource="0" file="Source/OSCHandler.cpp"/>
+      <FILE id="xNCHIY" name="OSCHandler.h" compile="0" resource="0" file="Source/OSCHandler.h"/>
     </GROUP>
-    <GROUP id="cgKTwY" name="Resources">
-      <FILE id="E6gKfJ" name="locked.png" compile="0" resource="1" file="Resources/locked.png"/>
-      <FILE id="hbVbph" name="unlocked.png" compile="0" resource="1" file="Resources/unlocked.png"/>
-      <FILE id="OOHl59" name="silkfont" compile="0" resource="1" file="Resources/silkfont"/>
-    </GROUP>
-    <GROUP id="mkBFQj" name="oscpack">
-      <FILE id="nDRTg8" name="CHANGES" compile="0" resource="0" file="oscpack/CHANGES"/>
-      <GROUP id="IZH4cp" name="ip">
-        <FILE id="RVCEed" name="IpEndpointName.cpp" compile="1" resource="0"
+    <GROUP id="{193373ED-BED9-248F-6DD1-1EE791266FE0}" name="oscpack">
+      <FILE id="IXLt4g" name="CHANGES" compile="0" resource="0" file="oscpack/CHANGES"/>
+      <GROUP id="{B1D13981-1336-F37B-960E-7B53392AB046}" name="ip">
+        <FILE id="jYUXj0" name="IpEndpointName.cpp" compile="1" resource="0"
               file="oscpack/ip/IpEndpointName.cpp"/>
-        <FILE id="XU3bjD" name="IpEndpointName.h" compile="0" resource="0"
+        <FILE id="AcAb6D" name="IpEndpointName.h" compile="0" resource="0"
               file="oscpack/ip/IpEndpointName.h"/>
-        <FILE id="xlXbBG" name="NetworkingUtils.h" compile="0" resource="0"
+        <FILE id="LoANed" name="NetworkingUtils.h" compile="0" resource="0"
               file="oscpack/ip/NetworkingUtils.h"/>
-        <FILE id="AYvUpu" name="PacketListener.h" compile="0" resource="0"
+        <FILE id="PFGtt3" name="PacketListener.h" compile="0" resource="0"
               file="oscpack/ip/PacketListener.h"/>
-        <FILE id="ADkGNS" name="TimerListener.h" compile="0" resource="0" file="oscpack/ip/TimerListener.h"/>
-        <FILE id="DzxP24" name="UdpSocket.h" compile="0" resource="0" file="oscpack/ip/UdpSocket.h"/>
-        <GROUP id="arv1VW" name="win32">
-          <FILE id="aAehsf" name="NetworkingUtils.cpp" compile="1" resource="0"
-                file="oscpack/ip/win32/NetworkingUtils.cpp"/>
-          <FILE id="WijCnK" name="UdpSocket.cpp" compile="1" resource="0" file="oscpack/ip/win32/UdpSocket.cpp"/>
-        </GROUP>
-        <GROUP id="X60omD" name="posix">
-          <FILE id="Mq4kMH" name="NetworkingUtils.cpp" compile="0" resource="0"
+        <GROUP id="{3DFB108E-8306-662C-4FD8-672F70384C07}" name="posix">
+          <FILE id="Ypvjjc" name="NetworkingUtils.cpp" compile="0" resource="0"
                 file="oscpack/ip/posix/NetworkingUtils.cpp"/>
-          <FILE id="tv5VA2" name="UdpSocket.cpp" compile="0" resource="0" file="oscpack/ip/posix/UdpSocket.cpp"/>
+          <FILE id="vIiTyk" name="UdpSocket.cpp" compile="0" resource="0" file="oscpack/ip/posix/UdpSocket.cpp"/>
+        </GROUP>
+        <FILE id="rXYZiP" name="TimerListener.h" compile="0" resource="0" file="oscpack/ip/TimerListener.h"/>
+        <FILE id="sLkvEp" name="UdpSocket.h" compile="0" resource="0" file="oscpack/ip/UdpSocket.h"/>
+        <GROUP id="{4AFB6225-B87C-227D-1A12-6C6CA84749AA}" name="win32">
+          <FILE id="hG9HH2" name="NetworkingUtils.cpp" compile="1" resource="0"
+                file="oscpack/ip/win32/NetworkingUtils.cpp"/>
+          <FILE id="B55K4U" name="UdpSocket.cpp" compile="1" resource="0" file="oscpack/ip/win32/UdpSocket.cpp"/>
         </GROUP>
       </GROUP>
-      <FILE id="KLn1T" name="LICENSE" compile="0" resource="0" file="oscpack/LICENSE"/>
-      <GROUP id="FWJulM" name="osc">
-        <FILE id="MiVLlf" name="MessageMappingOscPacketListener.h" compile="0"
+      <FILE id="mH46A9" name="LICENSE" compile="0" resource="0" file="oscpack/LICENSE"/>
+      <GROUP id="{8B9BE46F-0718-F801-28D8-D9494F52C5A0}" name="osc">
+        <FILE id="Qjze18" name="MessageMappingOscPacketListener.h" compile="0"
               resource="0" file="oscpack/osc/MessageMappingOscPacketListener.h"/>
-        <FILE id="Fdobx6" name="OscException.h" compile="0" resource="0" file="oscpack/osc/OscException.h"/>
-        <FILE id="xUTZmF" name="OscHostEndianness.h" compile="0" resource="0"
+        <FILE id="jpwxQD" name="OscException.h" compile="0" resource="0" file="oscpack/osc/OscException.h"/>
+        <FILE id="O8RoNU" name="OscHostEndianness.h" compile="0" resource="0"
               file="oscpack/osc/OscHostEndianness.h"/>
-        <FILE id="p9m1Jz" name="OscOutboundPacketStream.cpp" compile="1" resource="0"
+        <FILE id="KIVs6x" name="OscOutboundPacketStream.cpp" compile="1" resource="0"
               file="oscpack/osc/OscOutboundPacketStream.cpp"/>
-        <FILE id="cnItvL" name="OscOutboundPacketStream.h" compile="0" resource="0"
+        <FILE id="FV0Lei" name="OscOutboundPacketStream.h" compile="0" resource="0"
               file="oscpack/osc/OscOutboundPacketStream.h"/>
-        <FILE id="OL7F6q" name="OscPacketListener.h" compile="0" resource="0"
+        <FILE id="Y9f2JS" name="OscPacketListener.h" compile="0" resource="0"
               file="oscpack/osc/OscPacketListener.h"/>
-        <FILE id="hRPrIE" name="OscPrintReceivedElements.cpp" compile="1" resource="0"
+        <FILE id="Zq6Rn1" name="OscPrintReceivedElements.cpp" compile="1" resource="0"
               file="oscpack/osc/OscPrintReceivedElements.cpp"/>
-        <FILE id="DWVwwF" name="OscPrintReceivedElements.h" compile="0" resource="0"
+        <FILE id="umhLjq" name="OscPrintReceivedElements.h" compile="0" resource="0"
               file="oscpack/osc/OscPrintReceivedElements.h"/>
-        <FILE id="bSSDe4" name="OscReceivedElements.cpp" compile="1" resource="0"
+        <FILE id="w3vXUB" name="OscReceivedElements.cpp" compile="1" resource="0"
               file="oscpack/osc/OscReceivedElements.cpp"/>
-        <FILE id="aEVrEX" name="OscReceivedElements.h" compile="0" resource="0"
+        <FILE id="JO6y7Y" name="OscReceivedElements.h" compile="0" resource="0"
               file="oscpack/osc/OscReceivedElements.h"/>
-        <FILE id="d1CX" name="OscTypes.cpp" compile="1" resource="0" file="oscpack/osc/OscTypes.cpp"/>
-        <FILE id="YRKc7B" name="OscTypes.h" compile="0" resource="0" file="oscpack/osc/OscTypes.h"/>
+        <FILE id="HLStyt" name="OscTypes.cpp" compile="1" resource="0" file="oscpack/osc/OscTypes.cpp"/>
+        <FILE id="KwXOYK" name="OscTypes.h" compile="0" resource="0" file="oscpack/osc/OscTypes.h"/>
       </GROUP>
-      <FILE id="iZ0Vgx" name="README" compile="0" resource="0" file="oscpack/README"/>
-      <FILE id="iLCvid" name="TODO" compile="0" resource="0" file="oscpack/TODO"/>
+      <FILE id="ITliF5" name="README" compile="0" resource="0" file="oscpack/README"/>
+      <FILE id="Xp4rrz" name="TODO" compile="0" resource="0" file="oscpack/TODO"/>
+    </GROUP>
+    <GROUP id="{75823C22-9487-CDE8-4422-6A35D0516FFE}" name="Resources">
+      <FILE id="TALS5L" name="locked.png" compile="0" resource="1" file="Resources/locked.png"/>
+      <FILE id="QgasLm" name="silkfont" compile="0" resource="1" file="Resources/silkfont"/>
+      <FILE id="xyfSiU" name="unlocked.png" compile="0" resource="1" file="Resources/unlocked.png"/>
     </GROUP>
   </MAINGROUP>
-  <JUCEOPTIONS JUCE_QUICKTIME="disabled" JUCE_FORCE_DEBUG="default" JUCE_LOG_ASSERTIONS="default"
-               JUCE_ASIO="default" JUCE_WASAPI="default" JUCE_DIRECTSOUND="default"
-               JUCE_ALSA="default" JUCE_OPENGL="default" JUCE_USE_FLAC="default"
-               JUCE_USE_OGGVORBIS="default" JUCE_USE_CDBURNER="disabled" JUCE_USE_CDREADER="disabled"
-               JUCE_USE_CAMERA="default" JUCE_ENABLE_REPAINT_DEBUGGING="default"
-               JUCE_USE_XINERAMA="default" JUCE_USE_XSHM="default" JUCE_USE_XRENDER="default"
-               JUCE_PLUGINHOST_VST="default" JUCE_PLUGINHOST_AU="default" JUCE_ONLY_BUILD_CORE_LIBRARY="default"
-               JUCE_WEB_BROWSER="disabled" JUCE_SUPPORT_CARBON="default" JUCE_CHECK_MEMORY_LEAKS="default"
-               JUCE_CATCH_UNHANDLED_EXCEPTIONS="default" JUCE_USE_XCURSOR="default"
-               JUCE_DIRECT2D="default" JUCE_DIRECTSHOW="default" JUCE_MEDIAFOUNDATION="default"/>
+  <MODULES>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_audio" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="1"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_QUICKTIME="disabled" JUCE_USE_FLAC="enabled" JUCE_USE_OGGVORBIS="enabled"
+               JUCE_WEB_BROWSER="disabled" JUCE_USE_ANDROID_OPENSLES="disabled"
+               JUCE_USE_CDREADER="disabled" JUCE_USE_CDBURNER="disabled"/>
 </JUCERPROJECT>

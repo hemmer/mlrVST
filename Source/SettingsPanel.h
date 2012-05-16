@@ -12,7 +12,6 @@
 #define __SETTINGSPANEL_H_726D4579__
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "mlrVSTLookAndFeel.h"
 
 /* Forward declaration to set up pointer arrangement

@@ -4,24 +4,34 @@
     project - if you alter its contents, your changes may be overwritten!
 
     This is the header file that your files should include in order to get all the
-    Juce library headers. You should NOT include juce.h or juce_amalgamated.h directly in
-    your own source files, because that wouldn't pick up the correct Juce configuration
+    JUCE library headers. You should avoid including the JUCE headers directly in
+    your own source files, because that wouldn't pick up the correct configuration
     options for your app.
 
 */
 
-#ifndef __APPHEADERFILE_0NRD9LLGO__
-#define __APPHEADERFILE_0NRD9LLGO__
+#ifndef __APPHEADERFILE_Y5L2JF__
+#define __APPHEADERFILE_Y5L2JF__
 
 #include "AppConfig.h"
-#if defined (JUCER_VS2010_78A501D)
- #include "c:/SDKs/juce/juce_amalgamated.h"
-#elif defined (JUCER_LINUX_MAKE_7346DA2A)
- #include "../../../../juce_amalgamated.h"
-#elif defined (JUCER_XCODE_MAC_F6D2F4CF)
- #include "../../JUCE/juce_amalgamated.h"
-#endif
+#include "modules/juce_audio_basics/juce_audio_basics.h"
+#include "modules/juce_audio_devices/juce_audio_devices.h"
+#include "modules/juce_audio_formats/juce_audio_formats.h"
+#include "modules/juce_audio_plugin_client/juce_audio_plugin_client.h"
+#include "modules/juce_audio_processors/juce_audio_processors.h"
+#include "modules/juce_core/juce_core.h"
+#include "modules/juce_data_structures/juce_data_structures.h"
+#include "modules/juce_events/juce_events.h"
+#include "modules/juce_graphics/juce_graphics.h"
+#include "modules/juce_gui_basics/juce_gui_basics.h"
+#include "modules/juce_gui_extra/juce_gui_extra.h"
 #include "BinaryData.h"
+
+#if ! DONT_SET_USING_JUCE_NAMESPACE
+ // If your code uses a lot of JUCE classes, then this will obviously save you
+ // a lot of typing, but can be disabled by setting DONT_SET_USING_JUCE_NAMESPACE.
+ using namespace juce;
+#endif
 
 namespace ProjectInfo
 {
@@ -30,4 +40,4 @@ namespace ProjectInfo
     const int          versionNumber  = 0x10000;
 }
 
-#endif   // __APPHEADERFILE_0NRD9LLGO__
+#endif   // __APPHEADERFILE_Y5L2JF__

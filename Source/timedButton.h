@@ -12,7 +12,6 @@
 #define __TIMEDBUTTON_H_5AC4D4C1__
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JuceLibraryCode/JucePluginCharacteristics.h"
 
 class TimedButton  : public Button
 {
@@ -49,7 +48,7 @@ protected:
     void paintButton (Graphics& g, bool isMouseOverButton, bool isButtonDown);
 
 private:
-    
+
     // Style /////////////////////////////
     Colour primaryColour, secondaryColour;
     Font btnFont;

@@ -12,7 +12,6 @@
 #define __AUDIOSAMPLE_H_DED61AB8__
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JuceLibraryCode/JucePluginCharacteristics.h"
 
 
 class AudioSample

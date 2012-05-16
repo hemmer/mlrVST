@@ -12,7 +12,6 @@
 #define __PRESETWINDOW_H_F0BDFA0B__
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JuceLibraryCode/JucePluginCharacteristics.h"
 
 
 /* Forward declaration to set up pointer arrangement

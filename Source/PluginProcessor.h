@@ -16,7 +16,6 @@
 #define NUM_COLS 8
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JuceLibraryCode/JucePluginCharacteristics.h"
 #include "AudioSample.h"
 #include "SampleStrip.h"
 #include "OSCHandler.h"

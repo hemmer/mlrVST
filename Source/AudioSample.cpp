@@ -43,7 +43,7 @@ AudioSample::AudioSample(const File &sampleSource,
 
         data = new AudioSampleBuffer(jmin(2, (int) audioReader->numChannels), sampleLength);
         sampleSampleRate = audioReader->sampleRate;
-        data->readFromAudioReader(audioReader, 0, sampleLength, 0, true, true);
+        audioReader->read(data, 0, sampleLength, 0, true, true);
 
         // Certain files would have a nasty click on the first/last sample,
         // so we zero that, just in case. UPDATE: this is still an issue!

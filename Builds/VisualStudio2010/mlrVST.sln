@@ -1,5 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
-Project("{FC74DF80-5B42-961E-C29F-46CEDD130DFB}") = "mlrVST", "mlrVST.vcxproj", "{BC07A08E-8205-B220-39D4-B2685FFC59CA}"
+# Visual Studio 2010
+Project("{D3D0E9D9-326F-6A16-FBF0-DF01053C2429}") = "mlrVST", "mlrVST.vcxproj", "{3A828C6A-66F2-7FEF-FB57-DBBF32D25EAD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -7,10 +8,10 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{BC07A08E-8205-B220-39D4-B2685FFC59CA}.Debug|Win32.ActiveCfg = Debug|Win32
-		{BC07A08E-8205-B220-39D4-B2685FFC59CA}.Debug|Win32.Build.0 = Debug|Win32
-		{BC07A08E-8205-B220-39D4-B2685FFC59CA}.Release|Win32.ActiveCfg = Release|Win32
-		{BC07A08E-8205-B220-39D4-B2685FFC59CA}.Release|Win32.Build.0 = Release|Win32
+		{3A828C6A-66F2-7FEF-FB57-DBBF32D25EAD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3A828C6A-66F2-7FEF-FB57-DBBF32D25EAD}.Debug|Win32.Build.0 = Debug|Win32
+		{3A828C6A-66F2-7FEF-FB57-DBBF32D25EAD}.Release|Win32.ActiveCfg = Release|Win32
+		{3A828C6A-66F2-7FEF-FB57-DBBF32D25EAD}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

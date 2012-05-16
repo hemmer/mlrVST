@@ -27,7 +27,6 @@
 #define __JUCE_mlrVSTLookAndFeel_JUCEHEADER__
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JuceLibraryCode/JucePluginCharacteristics.h"
 
 
 
