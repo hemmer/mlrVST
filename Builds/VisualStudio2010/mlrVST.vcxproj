@@ -137,15 +137,9 @@
     <ClCompile Include="..\..\Source\PluginEditor.cpp"/>
     <ClCompile Include="..\..\Source\SampleStripControl.cpp"/>
     <ClCompile Include="..\..\Source\OSCHandler.cpp"/>
+    <ClCompile Include="..\..\oscpack\ip\UdpSocket.cpp"/>
+    <ClCompile Include="..\..\oscpack\ip\NetworkingUtils.cpp"/>
     <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp"/>
-    <ClCompile Include="..\..\oscpack\ip\posix\NetworkingUtils.cpp">
-      <ExcludedFromBuild>true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\oscpack\ip\posix\UdpSocket.cpp">
-      <ExcludedFromBuild>true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\oscpack\ip\win32\NetworkingUtils.cpp"/>
-    <ClCompile Include="..\..\oscpack\ip\win32\UdpSocket.cpp"/>
     <ClCompile Include="..\..\oscpack\osc\OscOutboundPacketStream.cpp"/>
     <ClCompile Include="..\..\oscpack\osc\OscPrintReceivedElements.cpp"/>
     <ClCompile Include="..\..\oscpack\osc\OscReceivedElements.cpp"/>

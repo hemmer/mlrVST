@@ -26,12 +26,6 @@
     <Filter Include="mlrVST\oscpack\ip">
       <UniqueIdentifier>{D8041292-CCD3-DCEE-611E-D815A1A14FE0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="mlrVST\oscpack\ip\posix">
-      <UniqueIdentifier>{FAE07B9A-DD71-CBCF-FAF0-E52389BE20A4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mlrVST\oscpack\ip\win32">
-      <UniqueIdentifier>{8C035576-B93E-6B7F-70CE-C702DEEC4524}</UniqueIdentifier>
-    </Filter>
     <Filter Include="mlrVST\oscpack\osc">
       <UniqueIdentifier>{B718FC04-CC70-E9E0-466D-CBC23921D98C}</UniqueIdentifier>
     </Filter>
@@ -346,20 +340,14 @@
     <ClCompile Include="..\..\Source\OSCHandler.cpp">
       <Filter>mlrVST\other</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp">
+    <ClCompile Include="..\..\oscpack\ip\UdpSocket.cpp">
       <Filter>mlrVST\oscpack\ip</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\oscpack\ip\posix\NetworkingUtils.cpp">
-      <Filter>mlrVST\oscpack\ip\posix</Filter>
+    <ClCompile Include="..\..\oscpack\ip\NetworkingUtils.cpp">
+      <Filter>mlrVST\oscpack\ip</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\oscpack\ip\posix\UdpSocket.cpp">
-      <Filter>mlrVST\oscpack\ip\posix</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\oscpack\ip\win32\NetworkingUtils.cpp">
-      <Filter>mlrVST\oscpack\ip\win32</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\oscpack\ip\win32\UdpSocket.cpp">
-      <Filter>mlrVST\oscpack\ip\win32</Filter>
+    <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp">
+      <Filter>mlrVST\oscpack\ip</Filter>
     </ClCompile>
     <ClCompile Include="..\..\oscpack\osc\OscOutboundPacketStream.cpp">
       <Filter>mlrVST\oscpack\osc</Filter>

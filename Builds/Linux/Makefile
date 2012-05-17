@@ -54,9 +54,9 @@ OBJECTS := \
   $(OBJDIR)/PluginEditor_94d4fb09.o \
   $(OBJDIR)/SampleStripControl_45995bf8.o \
   $(OBJDIR)/OSCHandler_bb1eaf54.o \
+  $(OBJDIR)/UdpSocket_2b50ed78.o \
+  $(OBJDIR)/NetworkingUtils_921f9941.o \
   $(OBJDIR)/IpEndpointName_d4cc3aed.o \
-  $(OBJDIR)/NetworkingUtils_571a8d2d.o \
-  $(OBJDIR)/UdpSocket_34dc4264.o \
   $(OBJDIR)/OscOutboundPacketStream_595b04c5.o \
   $(OBJDIR)/OscPrintReceivedElements_db1e1922.o \
   $(OBJDIR)/OscReceivedElements_b8801585.o \
@@ -149,19 +149,19 @@ $(OBJDIR)/OSCHandler_bb1eaf54.o: ../../Source/OSCHandler.cpp
 	@echo "Compiling OSCHandler.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/IpEndpointName_d4cc3aed.o: ../../oscpack/ip/IpEndpointName.cpp
+$(OBJDIR)/UdpSocket_2b50ed78.o: ../../oscpack/ip/UdpSocket.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling IpEndpointName.cpp"
+	@echo "Compiling UdpSocket.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/NetworkingUtils_571a8d2d.o: ../../oscpack/ip/win32/NetworkingUtils.cpp
+$(OBJDIR)/NetworkingUtils_921f9941.o: ../../oscpack/ip/NetworkingUtils.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling NetworkingUtils.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/UdpSocket_34dc4264.o: ../../oscpack/ip/win32/UdpSocket.cpp
+$(OBJDIR)/IpEndpointName_d4cc3aed.o: ../../oscpack/ip/IpEndpointName.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling UdpSocket.cpp"
+	@echo "Compiling IpEndpointName.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/OscOutboundPacketStream_595b04c5.o: ../../oscpack/osc/OscOutboundPacketStream.cpp

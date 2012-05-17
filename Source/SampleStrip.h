@@ -107,6 +107,8 @@ public:
     int getParameterType(const int &parameterID) const;
     void toggleSampleStripParam(const int &parameterID, const bool &sendChangeMsg = true);
 
+	void cycleChannels();
+
     void updatePlaySpeedForBPMChange(const double &newBPM);
     void setBPM(const double &newBPM) { previousBPM = newBPM; }
     void updatePlaySpeedForSelectionChange();

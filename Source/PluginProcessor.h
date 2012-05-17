@@ -134,6 +134,7 @@ public:
         nmNoMapping,
         nmFindBestTempo,
         nmToggleReverse,
+		nmCycleThruChannels,
         nmDecVolume,
         nmIncVolume,
         nmDecPlayspeed,

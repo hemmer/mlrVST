@@ -12,9 +12,6 @@ GLOBAL TODO:
 
     - set monome dimensions as compile-time flag
     - create abstract general panel class
-    - multiple modifier buttons
-    - sort out the MIDI timings mess
-    - (and get envelopes working for when playback is restarted whilst already playing)
     - CHECK FOR THIS "operator[] returns the object by value, so creates a copy.
       When your object is a massive lump of data, you obviously never want to
       create a copy of it (and if your object is a HeapBlock it's impossible
@@ -667,12 +664,17 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
             if (state) sampleStripArray[stripID]->findInitialPlaySpeed(currentBPM, 44100.0);
             break;
 
-        case nmToggleReverse:
+        case nmToggleReverse :
             {
                 if (state) sampleStripArray[stripID]->toggleSampleStripParam(SampleStrip::pIsReversed);
                 break;
             }
 
+		case nmCycleThruChannels :
+			{
+				if (state) sampleStripArray[stripID]->cycleChannels();
+                break;
+			}
         case nmDecVolume:
             {
                 const bool isVolDec = state;
@@ -1407,6 +1409,7 @@ String mlrVSTAudioProcessor::getNormalRowMappingName(const int &mappingID)
     case nmNoMapping : return "no mapping";
     case nmFindBestTempo : return "find best tempo";
     case nmToggleReverse : return "toggle reverse";
+	case nmCycleThruChannels : return "cycle through channels";
     case nmDecVolume : return "decrease volume";
     case nmIncVolume : return "increase volume";
     case nmDecPlayspeed : return "decrease playspeed";
@@ -1441,7 +1444,7 @@ void mlrVSTAudioProcessor::setupDefaultRowMappings()
     topRowMappings.add(tmStartResampling);
 
     Array<int> rowMappingsA;
-    rowMappingsA.add(nmFindBestTempo);
+    rowMappingsA.add(nmStopPlaybackTape);
     rowMappingsA.add(nmToggleReverse);
     rowMappingsA.add(nmDecVolume);
     rowMappingsA.add(nmIncVolume);
@@ -1451,13 +1454,13 @@ void mlrVSTAudioProcessor::setupDefaultRowMappings()
     rowMappingsA.add(nmDoublePlayspeed);
 
     Array<int> rowMappingsB;
+	rowMappingsB.add(nmCycleThruChannels);
     rowMappingsB.add(nmCycleThruFileSamples);
     rowMappingsB.add(nmCycleThruRecordings);
     rowMappingsB.add(nmCycleThruResamplings);
-    rowMappingsB.add(nmStopPlaybackTape);
+	rowMappingsB.add(nmFindBestTempo);
     rowMappingsB.add(nmSetNormalPlayspeed);
-    rowMappingsB.add(nmNoMapping);
-    rowMappingsB.add(nmNoMapping);
+	rowMappingsB.add(nmNoMapping);
     rowMappingsB.add(nmNoMapping);
 
     normalRowMappings.add(new Array<int>(rowMappingsA));

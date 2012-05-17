@@ -84,6 +84,9 @@
     <GROUP id="{193373ED-BED9-248F-6DD1-1EE791266FE0}" name="oscpack">
       <FILE id="IXLt4g" name="CHANGES" compile="0" resource="0" file="oscpack/CHANGES"/>
       <GROUP id="{B1D13981-1336-F37B-960E-7B53392AB046}" name="ip">
+        <FILE id="y3upiH" name="UdpSocket.cpp" compile="1" resource="0" file="oscpack/ip/UdpSocket.cpp"/>
+        <FILE id="StFvQF" name="NetworkingUtils.cpp" compile="1" resource="0"
+              file="oscpack/ip/NetworkingUtils.cpp"/>
         <FILE id="jYUXj0" name="IpEndpointName.cpp" compile="1" resource="0"
               file="oscpack/ip/IpEndpointName.cpp"/>
         <FILE id="AcAb6D" name="IpEndpointName.h" compile="0" resource="0"
@@ -92,18 +95,8 @@
               file="oscpack/ip/NetworkingUtils.h"/>
         <FILE id="PFGtt3" name="PacketListener.h" compile="0" resource="0"
               file="oscpack/ip/PacketListener.h"/>
-        <GROUP id="{3DFB108E-8306-662C-4FD8-672F70384C07}" name="posix">
-          <FILE id="Ypvjjc" name="NetworkingUtils.cpp" compile="0" resource="0"
-                file="oscpack/ip/posix/NetworkingUtils.cpp"/>
-          <FILE id="vIiTyk" name="UdpSocket.cpp" compile="0" resource="0" file="oscpack/ip/posix/UdpSocket.cpp"/>
-        </GROUP>
         <FILE id="rXYZiP" name="TimerListener.h" compile="0" resource="0" file="oscpack/ip/TimerListener.h"/>
         <FILE id="sLkvEp" name="UdpSocket.h" compile="0" resource="0" file="oscpack/ip/UdpSocket.h"/>
-        <GROUP id="{4AFB6225-B87C-227D-1A12-6C6CA84749AA}" name="win32">
-          <FILE id="hG9HH2" name="NetworkingUtils.cpp" compile="1" resource="0"
-                file="oscpack/ip/win32/NetworkingUtils.cpp"/>
-          <FILE id="B55K4U" name="UdpSocket.cpp" compile="1" resource="0" file="oscpack/ip/win32/UdpSocket.cpp"/>
-        </GROUP>
       </GROUP>
       <FILE id="mH46A9" name="LICENSE" compile="0" resource="0" file="oscpack/LICENSE"/>
       <GROUP id="{8B9BE46F-0718-F801-28D8-D9494F52C5A0}" name="osc">

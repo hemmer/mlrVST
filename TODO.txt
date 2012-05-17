@@ -1,18 +1,15 @@
-mlrVST TODO
+mlrVST TODO /IDEAS
 
 HIGH PRIORTIY
 
-- resampling
 - preset system
 - (advanced) options panel
-	- could include envelopes for sample playback
+- could include envelopes for sample playback
 - handle different sample rates
-- save AudioThumbnail data so quicker GUI reopen
-- resampling
 - exception handling (if file is deleted while playing)
 - add SplashScreen
-- Allow MIDI clips too
-	- Have AudioSample subclass Sample to allow MIDISample
+- allow MIDI clips too
+- Have AudioSample subclass Sample to allow MIDISample
 - arpeggio mode, hold down button sequence to trigger blocks in that order
 
 LOW PRIORTIY

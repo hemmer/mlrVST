@@ -1,57 +1,65 @@
-Code Overview for Developers
-============================
+# Code Overview for Developers #
 
-First a few general points:
+**mlrVST** is written using the cross-platform JUCE library in C++. As as result the code should work on Win, Mac and Linux without too much trouble, though a couple of minor changes may need to be made.
+
+
+## Compiling ##
+
+### General ###
+
+First you will need to download both the [latest version of JUCE](https://github.com/julianstorer/JUCE) and the the VST SDK from Steinburg (vstsdk2.4). JUCE uses an internal program called the Introjucer to produce build targets and generally manage the project. The first step should be to build & run this (it can be build using the files in \juce\extras\Introjucer\Builds).
+
+Once this is done, you can open the *mlrVST.jucer* project file using the Introjucer to inspect the project settings etc. New files should be added here so they can be added to all of the build targets. Also at this point you should make sure that the paths to JUCE and the VST SDK are correctly specified.
+
+
+### Win ###
+
+Just open the .sln file in the *builds/Visual Studio 2010* folder and you should be ready to go. After a successful compilation, there should be a file *mlrVST.dll* in the Debug (or Release) folders - this can be added to your host's VST folder.
+
+### Mac ###
+
+First open the *Builds/MacOSX/mlrVST.xcodeproj* project file to load the project into Xcode. Apple's LLVM compiler finds an error with one of the VST files *audioeffect.cpp* which you can simply autofix. Alternatively, use the GCC compiler. If you want to build AU plugins, you will need to [follow the instructions here](http://www.rawmaterialsoftware.com/viewtopic.php?f=8&t=8682).
+
+### Linux ###
+
+Apparently builds fine. There is a Makefile generated, but I've not checked this thoroughly yet.
+
+
+
+## Guide to Key Classes ##
+
+### Audio Processing ###
+
+#### PluginProcessor ####
+
+The guts of the application are in this class. This is what deals with the VST code, handling the overall audio processing. As the PluginEditor is destroyed when you close the GUI, everything that wants to be persistant must be saved here. This is why you may see what looks like redundancy between similar objects (why we need SampleStrip and SampleStripControl for example). The sample pools are also stored in this class, i.e. the objects which store samples in memory.
+
+#### SampleStrip ####
+
+Each row on the monome controls a SampleStrip. This class handles the audio processing for that Strip, and stores the relevent parameters (e.g. playspeed, volume). Any changes to a SampleStripControl (the GUI analog) should update the corresponding SampleStrip parameters using setSampleStripParam. 
+
+### GUI ###
+
+#### PluginEditor ####
+
+This is the main GUI class that handles drawing the components, anything visual really. This should really just forward any commands to the PluginProcessor class and not do very much itself save for handling user input.
+
+#### SampleStripControl ####
+
+These represent the rows of the monome that are used to manipulate samples. This class allows the user to use the GUI to change parameters (such as volume, the selection of the sample etc), and does so by relaying this information to the SampleStrips.
+
+
+
+### Other ###
+
+#### OSCHandler ####
+
+Basic class which processes any OSC messages to / from the monome.
+
+
+
+## General points ##
 
 Every time the GUI (PluginEditor) is closed in the host, its destructor is called. This means that everything that needs to persist must originate in the PluginProcessor class (hence why AudioSamples and SampleStrips are stored there).
 
-The OSCpack library is cross platform but as yet I haven't figured out how to include it in a JUCE project in a way that Visual Studio is happy. So for now if you are on Mac, you will need to open the Jucer, remove the oscpack/ip/win32 folder and drag the oscpack/ip/posix folder into the project and Save (this will regenerate the Xcode project files).
-
-This is still in alpha, I have found in windows that if a Release build hangs, a restart is required! If you're running in in Visual Studio (using the PluginHost.exe included in utilities) then you can handle crashes without needing a restart.
-
-Compiling
-=========
-
-Win
----
-
-You need to download both JUCE and the vstsdk2.4 (available from Steinberg or elsewhere). Then open the file mlrVST.jucer in the Introjucer (downloads on SourceForge) and edit so that the paths to JUCE and the vstsdk are correct. Save then open in VisualStudio and compile!
-
-
-
-Audio Processing
-================
-
-PluginProcessor
----------------
-The guts of the application are in this class. This is what deals with the VST code, handling the overall audio processing. As the PluginEditor is destroy when you close the GUI, everything that wants to be persistant must be saved here. This is why you may see what looks like redundancy (why we need SampleStrip and SampleStripControl for example). The sample pool is also stored in this class.
-
-ChannelProcessor
-----------------
-This handles the actual sample manipulation for each channel. If we have four seperate channels of audio, we have four ChannelProcessors objects.
-
-SampleStrip
------------
-This contains the properties of a SampleStripControl, things like the current sample, how much of it is selected etc. Any changes to a SampleStrip control should update the corresponding SampleStrip. SampleStripControl communicates with the sample strip using a Parameter enum through intermediate functions in PluginEditor and PluginProcessor.
-
-
-
-GUI
-===
-
-PluginEditor 
-------------
-This is the main GUI class that handles drawing the components, anything visual really. This should just forward any logic to the PluginProcessor class.
-
-SampleStripControl
-------------------
-These are the waveform strips which map onto each row.
-
-
-
-Other
-=====
-
-OSCHandler
-----------
-This processes any OSC messages to / from the monome.
+This is still in alpha, I have found in windows that if a Release build hangs in your VST, a restart may be required. If you're running the plugin from Visual Studio (using the PluginHost.exe included in utilities) then you can handle crashes without needing a restart.

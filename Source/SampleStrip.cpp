@@ -320,6 +320,13 @@ void SampleStrip::toggleSampleStripParam(const int &parameterID, const bool &sen
 
 }
 
+void SampleStrip::cycleChannels()
+{
+	const int numChannels = *static_cast<const int *>(parent->getGlobalSetting(mlrVSTAudioProcessor::sNumChannels));
+	const int nextChannel = (currentChannel + 1) % numChannels;
+
+	setSampleStripParam(pCurrentChannel, &nextChannel, true);
+}
 
 void SampleStrip::updatePlaySpeedForBPMChange(const double &newBPM)
 {
