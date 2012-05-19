@@ -1,6 +1,23 @@
 CHANGELOG
 =========
 
+beta 0.1.7 (19/05/2012)
+-----------
+NEW FEATURES
+
+- added envelope option (of variable length) so don't get clicking sound when looping
+- added mapping setup for top row
+- added multiple modifier buttons that when held turn the rows into control strips
+- added TapeStop (tm) mode for stopping samples with a tape effect
+- added mutes (click channel number
+- updated to use latest version of JUCE library
+
+BUGFIXES
+
+- fixed bug where program would incorrectly think keys were being held
+- improved MIDI timing and accuracy (now only limited by system latency)
+
+
 alpha 0.1.6 (15/04/2012)
 -----------
 NEW FEATURES

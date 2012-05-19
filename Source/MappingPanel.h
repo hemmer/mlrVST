@@ -42,7 +42,8 @@ private:
     // Pointer to parent GUI component
     mlrVSTAudioProcessor * const processor;
 
-    // Style / layout ////////////////
+    // Style / layout //////////////////////////////
+    Label panelLabel;           // Main header label
     menuLookandFeel menuLF;
     const float fontSize;
     const Rectangle<int> &panelBounds;
@@ -51,11 +52,8 @@ private:
     // Button maps /////////////////////////////
     OwnedArray<DrawableButton> buttonMatrix;
     Path monomePath;
-    Label topRowMappingLabel, normalRowMappingLabel;
+    OwnedArray<Label> mappingLabels;
     int numCols, numRows;
-
-    // Main header label
-    Label panelLabel;
 
     void setupHeaderLabel(Label &lbl)
     {

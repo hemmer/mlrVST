@@ -1,7 +1,21 @@
-\documentclass[10pt,a4paper]{article}
+\documentclass[10pt,a4paper]{report}
 
+\usepackage{hyperref, graphicx, wrapfig}
+\usepackage[small,bf]{caption}
+\hypersetup{
+    colorlinks,%
+    citecolor=black,%
+    filecolor=black,%
+    linkcolor=black,%
+    urlcolor=blue
+}
 
+\usepackage[scaled]{helvet}
+\renewcommand*\familydefault{\sfdefault} %% Only if the base font of the document is to be sans serif
+\usepackage[T1]{fontenc}
 
+\usepackage{titlesec}
+\titleformat{\chapter}[hang]{\bf\huge}{\thechapter}{1pc}{}
 
 \begin{document}
 
@@ -9,31 +23,191 @@
 \author{Ewan Hemingway\\
   \texttt{info@ewanhemingway.co.uk}}
 \date{\today}
+
 \maketitle
 
 
+
+\setcounter{secnumdepth}{2}
+
 \tableofcontents
-\newpage
 
-\section{Installation / System Requirements}
+\setcounter{chapter}{0}
+\chapter{Introduction}
 
-The plugin is developed using the JUCE framework so should work on Windows, Mac and Linux . However the setup and installation may vary from platform to platform. You will need a \textit{relatively} new system with zero-latency drivers to get the most out of it, though older machines may be able to cope too. All shapes and sizes of monome are supported, and can be set up in the app's settings page.
+\textbf{mlrVST} is an audio plugin for manipulating audio \& MIDI samples using the monome controller. It is inspired heavily by both Brian Crabtree's brilliant and original \texttt{mlr} application, and the fantastic \texttt{mlrV} reboot by Trent Gill (galapagoose) and Michael Felix (\%). 
 
-\subsection{Windows}
+What mlrVST brings to the table is the stability and simplicity of the VST. Interaction with DAWs such as Ableton is made much simpler, no setup is required with rewire etc. You can easily resample the audio from other sources within the DAW such as other synths or external audio inputs.
 
-To install the plugin in Windows, just copy \texttt{mlrVST.dll} to your VST plugins folder. For example, in Ableton Live this folder can be found in \texttt{Options -> Perferences -> File/Folder -> Plugin Sources}.
+ One of the important shifts in direction from previous incarnations is towards an experience where minimal mouse / screen interaction is required. Each row on the monome can act as a control strip for changing volume, playspeed etc whilst a modifier button is held. For full details on this and other new features, please refer to the manual (section \ref{sec:mappings}).
 
-\subsection{Linux}
-TODO
+  The plugin is completely cross-platform\footnote{Linux support is lower priority during initial development due to unfamiliarity but any help is welcomed - working builds have been successfully produced}, the full feature-set should be available to Windows, Mac and Linux users. Finally, mlrVST is written in fully commented, open-source C++ and as such aims to be accessible to anyone who wants to hack in new features of their own (see Part \ref{sec:dev} for details).
+
+\section{Installation / Setup}
+
+\paragraph{Windows}
+
+To install the plugin in Windows, just copy \texttt{mlrVST.dll} to your VST plugins folder. For example, in Ableton Live this folder can be found in \texttt{Options $\rightarrow$ Preferences $\rightarrow$ File/Folder $\rightarrow$ Plugin Sources}.
+
+\paragraph{Mac}
+
+First extract the \texttt{mlrVST.vst} file from the archive. This should be placed in the folder \texttt{$\sim$/Library/Audio/Plug-Ins/VST} where it should be visible to Ableton and other hosts.
+
+\paragraph{Linux}
+
+Coming soon!
+
+\subsection{OSC}
+
+Unfortunately, for now the plugin still uses the old \textbf{OSC} spec (so MonomeSerial users can skip this section). Those with serialosc will need to use the \href{http://docs.monome.org/doku.php?id=app:monomepseudorial}{monomeserial} patch to emulate this, with prefix \texttt{mlrVST} and standard input:output ports of 8080:8000.
 
 \section{Quickstart}
 
 If you want to just start playing with mlrVST, start by dragging a sample onto the first horizontal strip. This strip maps the sample to one of your monome's rows. The top row is reserved for various functions, but the remaining rows can be used to play back.
 
-So now press a button on the 2nd row to start playing. You should hear that the sample starts playing from the point at which you pressed, e.g. pressing half way along the row starts the sample half way through.
+So now press a button on the 2nd row to start playing. You should hear that the sample starts playing from the point at which you pressed, e.g. pressing half way along the row starts the sample half way through. This should be you up and running!
 
-\section{Features}
 
-\section{Advanced: Compiling Yourself}
+\chapter{Manual}\label{sec:manual}
+
+
+
+\section{The Basic Idea}
+
+\begin{wrapfigure}{R}{0.6\textwidth}
+
+	\vspace{-13pt}
+	\centering
+	\includegraphics[scale=0.40]{img/monomemap}
+	\caption{Schematic of basic operations}
+	\label{fig:samplestrip}
+
+\end{wrapfigure}
+The basic idea of mlrVST is that each row of the monome is mapped to an audio sample in the program. Pressing a button on that row will jump you to that point in the sample, e.g. pressing the 5th button on a 8x8 sized monome will jump you to half way through.
+
+The top row of the device is reserved for various mappings (such as recording and resampling): these can be customised using the \texttt{Mappings} button. The remaining rows can be used to control samples.
+
+
+
+
+
+\section{The Interface}
+
+\begin{figure}[h!]
+%	\centering
+	\hspace{-100pt}
+	\includegraphics[scale=1.0]{img/samplestrip}
+	\caption{An example SampleStrip}
+	\label{fig:samplestrip}
+\end{figure}
+
+The main interface consists of a number of \texttt{SampleStrips} such as the one in Fig. \ref{fig:samplestrip}. These strips map onto the rows of the monome, bearing in mind that the top row of the device is reversed for mappings. Each strip has the following settings (left to right along the top of Fig. \ref{fig:samplestrip}):
+
+\paragraph{Channel} If multiple strips have the same channel, only one can be playing at once. For example, this could be used creatively if you wanted to switch back and forth between two strips without stopping and starting. Channels are specified by colour and have their own volume control.
+
+\paragraph{Volume} Each individual strip also has it's independent volume.
+
+\paragraph{Mode} There are several playmodes available:
+
+\begin{itemize}
+	\item \textbf{loop} - this just loops the full sample endlessly. You can also loop over a certain range of the sample (called \textit{inner looping}) by holding the button representing the leftmost loop point, \textit{then} pressing the button for the rightmost point.
+	\item \textbf{play chunk} - the sample is broken up into a set of chunks (for each column on the monome): this mode just plays the chunk associated with that column.
+	\item \textbf{play to end} - fairly self explanatory: play to the end of the sample and then stop.
+\end{itemize}
+
+\paragraph{Latch} By default button presses are ``latched'', i.e. if a button is lifted, playback still continues. This option allows the user to only have the sample playing back while the button is pressed down.
+
+\paragraph{Playspeed} This varies the speed at which the sample is played back (higher speeds will sound more high pitched).
+
+\paragraph{Lock playspeed (padlock icon)} By default the playspeed will be adjusted so that the sample stays in sync with everything else if the tempo is changed, or a if different selection is made. To keep the playspeed locked at one value, set this to locked.
+
+\paragraph{Norm / Rev} This just controls whether we play the sample forwards or backwards.
+
+\paragraph{x2 /2} These double or half the playspeed respectively. In musical terms, this is equivalent to changing the pitch by an octave.
+
+\paragraph{Number of chunks} This sets how many parts the sample is divided up into. By default this is the same as the number of columns, but you might change it if you wanted to use samples of a different time signature.
+
+\paragraph{Using the mouse} You can also use the mouse to select part of the sample. If \texttt{[Ctrl]} is held, only the edge of the loop nearest the mouse will be changed. This is useful if you just want to make an adjustment to the selection. \texttt{Double clicking} will select the whole sample. If \texttt{[Ctrl+Shift]} is held, the selection will snap to 16ths of the sample. To select a sample, \texttt{[Right click]} and hold: here you can choose to select an audio sample or one of the recordings / resamplings.
+
+
+
+\section{Monome / MIDI / OSC Mappings}
+\label{sec:mappings}
+
+One of the new features in mlrVST is the introduction of modifier buttons. When held, these turn each row into a set of controls. This means the musician can control things like playspeed or volume without leaving the monome. By default, the 2 leftmost buttons on the top row are modifier buttons. Each button can enable a different set of maps: to customise these, click on the \texttt{MAPPING} button.
+
+
+Coming soon: MIDI / OSC mapping.
+
+
+
+
+
+\chapter{Developer Information}
+\label{sec:dev}
+
+\section{Compiling Yourself}
+
+The mlrVST plugin is written using the cross-platform JUCE library in C++. As as result the code should work on Win, Mac and Linux without too much trouble, though a couple of minor changes may need to be made if you want to add platform dependent code (font rendering for example).
+
+First you will need to download both the \href{https://github.com/julianstorer/JUCE}{latest version of JUCE} and the \href{http://www.steinberg.net/en/company/developer.html}{VST SDK} from Steinberg (SDK version 2.4). JUCE uses an internal program called the Introjucer to produce build targets and generally manage the project. The first step should be to build and run this (it can be build using the appropriate project files in \texttt{/juce/extras/Introjucer/Builds}).
+
+Once this is done, you can open the \texttt{mlrVST.jucer} project file using the Introjucer to inspect the project settings etc. New files should be added here so they can be added to all of the build targets. Also at this point you should make sure that the paths to JUCE and the VST SDK are correctly specified (for example as in Fig. \ref{fig:jucer}).
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.37]{img/introjucer}
+	\caption{Introjucer settings for Visual Studio 2010}
+	\label{fig:jucer}
+\end{figure}
+
+\paragraph{Windows}
+
+Just open the \texttt{mlrVST.sln} file in the \texttt{/builds/Visual Studio 2010} folder and you should be ready to go. After a successful compilation, there should be a file \texttt{mlrVST.dll} in the Debug (or Release) folders - this can just be copied into your host's VST folder.
+
+\paragraph{Mac}
+
+First open the \texttt{/Builds/MacOSX/mlrVST.xcodeproj} project file to load the project into Xcode. Apple's LLVM compiler finds an error with one of the VST files \texttt{audioeffect.cpp} which you can simply autofix. Alternatively, use the GCC compiler. If you want to build AU plugins, you will need to \href{http://www.rawmaterialsoftware.com/viewtopic.php?f=8&t=8682}{ follow the instructions here}.
+
+\paragraph{Linux}
+
+Apparently builds fine. There is a \texttt{Makefile} generated, but I've not checked this thoroughly recently.
+
+\section{Guide to Key Classes}
+
+\subsection{Audio Processing}
+
+\paragraph{PluginProcessor}
+
+The guts of the application are in this class. This is what deals with the VST code, handling the overall audio processing. As the \texttt{PluginEditor} is destroyed when you close the GUI, everything that wants to be persistant must be saved here. This is why you may see what looks like redundancy between similar objects (why we need \texttt{SampleStrip} and \texttt{SampleStripControl} for example). The sample pools are also stored in this class, i.e. the objects which store samples in memory.
+
+\paragraph{SampleStrip}
+
+Each row on the monome controls a \texttt{SampleStrip}. This class handles the audio processing for that Strip, and stores the relevent parameters (e.g. playspeed, volume). Any changes to a \texttt{SampleStripControl} (the GUI analog) should update the corresponding \texttt{SampleStrip} parameters using \texttt{setSampleStripParam()}. 
+
+\subsection{GUI}
+
+\paragraph{PluginEditor}
+
+This is the main GUI class that handles drawing the components, anything visual really. This should really just forward any commands to the \texttt{PluginProcessor} class and not do very much itself save for handling user input.
+
+\paragraph{SampleStripControl}
+
+These represent the rows of the monome that are used to manipulate samples. This class allows the user to use the GUI to change parameters (such as volume, the selection of the sample etc), and does so by relaying this information to the \texttt{SampleStrips}.
+
+
+
+\subsection{Other}
+
+\paragraph{OSCHandler}
+
+Basic class which processes any OSC messages to / from the monome. Nothing too exciting here, but when we update to the new OSC spec changes will need to be made here.
+
+
+
+\section{General points for developers}
+
+The code is still in the beta stage: I have found in Windows that if a Release build hangs in your VST, a restart may be required. If you're running the plugin from Visual Studio (using the \texttt{PluginHost.exe} included in utilities) then you can handle crashes without needing a restart.
+
 
 \end{document}

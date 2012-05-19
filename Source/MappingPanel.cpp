@@ -16,15 +16,14 @@ MappingPanel::MappingPanel(const Rectangle<int> &bounds,
     // Communtication ////////////////////////////////
     processor(owner),
     // Style / layout ////////////////////////////////
+    panelLabel("Mapping Setup", "Mapping Setup"),
     menuLF(), fontSize(7.4f), panelBounds(bounds),
     xPosition(0), yPosition(0),
     // Button maps ///////////////////////////////////
     buttonMatrix(), monomePath(),
-    topRowMappingLabel("top row mapping:", "top row mapping:"),
-    normalRowMappingLabel("normal row mapping:", "normal row mapping:"),
-    numCols(8), numRows(3),
+    mappingLabels(),
+    numCols(8), numRows(3)     // TODO: this should be obtained from PluginProcessor
 
-    panelLabel("Mapping Setup", "Mapping Setup")
 {
     const int labelWidth = 246;
     // setup for virtual monome
@@ -41,27 +40,34 @@ MappingPanel::MappingPanel(const Rectangle<int> &bounds,
     xPosition = PAD_AMOUNT;
     yPosition += 30 + PAD_AMOUNT;
 
-    // row mapping stuff ///////////////////////////////////////////
-    // these are for displaying the mapping of the button currently
-    // being hovered over
-    topRowMappingLabel.setBounds(xPosition, yPosition, labelWidth, labelHeight);
-    setupNormalLabel(topRowMappingLabel);
-    yPosition += labelHeight;
-    normalRowMappingLabel.setJustificationType(Justification::centred);
-    normalRowMappingLabel.setBounds(xPosition, yPosition, labelWidth, (int) (monomeHeight - labelHeight));
-    setupNormalLabel(normalRowMappingLabel);
-    xPosition += labelWidth + PAD_AMOUNT;
-    yPosition = 40;
 
+    // row mapping stuff /////////////////////////
+    // these are for displaying the mapping of the
+    // button currently being hovered over
+    for (int r = 0; r < numRows; ++r)
+    {
+        mappingLabels.add(new Label());
+        Label *latestLbl = mappingLabels.getLast();
+        latestLbl->setBounds(xPosition, yPosition, labelWidth, labelHeight);
+        latestLbl->setText(((r==0) ? "Top row: " : "Modifier " + String(r) + ": "), false);
+        setupNormalLabel(*latestLbl);
+
+        yPosition += labelHeight;
+    }
+    xPosition = 2 * PAD_AMOUNT + labelWidth;
+    yPosition -= numRows * labelHeight;
+
+
+    ////////////////////////////////
     // add the faux monome + buttons
     monomePath.addRoundedRectangle((float) xPosition, (float) (yPosition),
                                    monomeWidth, monomeHeight, (float) PAD_AMOUNT);
     xPosition += PAD_AMOUNT;
     yPosition += PAD_AMOUNT;
+
     Path buttonPath;
     buttonPath.addRoundedRectangle(0.0f, 0.0f, (float) buttonSize,
-                                               (float) buttonSize,
-                                               (float) buttonSize / 5.0f);
+                                   (float) buttonSize, (float) buttonSize / 5.0f);
     // create actual images for the buttons
     DrawablePath normal, over;
     normal.setPath(buttonPath);
@@ -69,12 +75,13 @@ MappingPanel::MappingPanel(const Rectangle<int> &bounds,
     over.setPath(buttonPath);
     over.setFill(Colours::orange);
 
-    // add the rows of buttons
+
+    // and add the rows of buttons to the GUI
     for (int r = 0; r < numRows; ++r)
     {
         for (int b = 0; b < numCols; ++b)
         {
-            buttonMatrix.add(new DrawableButton("top row", DrawableButton::ImageRaw));
+            buttonMatrix.add(new DrawableButton("button", DrawableButton::ImageRaw));
             DrawableButton *latestBtn = buttonMatrix.getLast();
             latestBtn->setImages(&normal, &over);
             latestBtn->addListener(this);
@@ -90,6 +97,7 @@ MappingPanel::MappingPanel(const Rectangle<int> &bounds,
         xPosition -= (PAD_AMOUNT + buttonSize) * numCols;
         yPosition += buttonSize + PAD_AMOUNT;
     }
+
 }
 
 MappingPanel::~MappingPanel()
@@ -150,8 +158,8 @@ void MappingPanel::buttonClicked(Button *btn)
                     }
 
                     btn->setButtonText(newMappingName);
-                    btn->setTooltip(newMappingName);
-                    topRowMappingLabel.setText("row mapping: " + newMappingName, false);
+                    btn->setState(Button::buttonNormal);
+                    mappingLabels[r]->setText(((r==0) ? "Top row: " : "Modifier " + String(r) + ": " + newMappingName), false);
                 }
                 return;
             }
@@ -189,14 +197,14 @@ void MappingPanel::mouseEnter (const MouseEvent &e)
                 {
                     const int currentMapping = processor->getTopRowMapping(c);
                     String mappingName = processor->getTopRowMappingName(currentMapping);
-                    topRowMappingLabel.setText("top row mapping: " + mappingName, false);
+                    mappingLabels[r]->setText("Top row: " + mappingName, false);
                 }
                 else
                 {
                     const int modifierBtn = r - 1;
                     const int currentMapping = processor->getNormalRowMapping(modifierBtn, c);
                     String mappingName = processor->getNormalRowMappingName(currentMapping);
-                    normalRowMappingLabel.setText("normal row mapping: " + mappingName, false);
+                    mappingLabels[r]->setText("Modifier " + String(r) + ": " + mappingName, false);
                 }
                 return;
             }
@@ -219,8 +227,7 @@ void MappingPanel::mouseExit (const MouseEvent &e)
             // if so hide the mappings
             if (currentBtn == buttonMatrix.getUnchecked(index))
             {
-                topRowMappingLabel.setText("top row mapping:", false);
-                normalRowMappingLabel.setText("normal row mapping:", false);
+                mappingLabels[r]->setText(((r==0) ? "Top row: " : "Modifier " + String(r) + ": "), false);
                 return;
             }
         }
