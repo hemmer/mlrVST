@@ -8,6 +8,9 @@
     <Filter Include="mlrVST\audio">
       <UniqueIdentifier>{2A199914-C984-F3C3-B225-CCE1A39F38F5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mlrVST\midi">
+      <UniqueIdentifier>{2956D7E1-2039-F6DC-FD97-F50892970BAC}</UniqueIdentifier>
+    </Filter>
     <Filter Include="mlrVST\gui">
       <UniqueIdentifier>{897673A4-0009-B799-2E6D-1C8E7CE4EA73}</UniqueIdentifier>
     </Filter>
@@ -315,6 +318,9 @@
     </ClCompile>
     <ClCompile Include="..\..\Source\AudioSample.cpp">
       <Filter>mlrVST\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\PatternRecording.cpp">
+      <Filter>mlrVST\midi</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\PresetPanel.cpp">
       <Filter>mlrVST\gui\panels</Filter>
@@ -1472,6 +1478,9 @@
     </ClInclude>
     <ClInclude Include="..\..\Source\AudioSample.h">
       <Filter>mlrVST\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\PatternRecording.h">
+      <Filter>mlrVST\midi</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PresetPanel.h">
       <Filter>mlrVST\gui\panels</Filter>

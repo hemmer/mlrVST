@@ -50,6 +50,12 @@
       <FILE id="HXWZeI" name="AudioSample.cpp" compile="1" resource="0" file="Source/AudioSample.cpp"/>
       <FILE id="kWbebb" name="AudioSample.h" compile="0" resource="0" file="Source/AudioSample.h"/>
     </GROUP>
+    <GROUP id="{A125A3E6-EBE7-CD9F-E4E0-641740F6B68F}" name="midi">
+      <FILE id="enbC44" name="PatternRecording.cpp" compile="1" resource="0"
+            file="Source/PatternRecording.cpp"/>
+      <FILE id="GstSEi" name="PatternRecording.h" compile="0" resource="0"
+            file="Source/PatternRecording.h"/>
+    </GROUP>
     <GROUP id="{CFDF027A-882D-6CE9-C6EE-77934C0D4F4B}" name="gui">
       <GROUP id="{722331CC-6173-9D9D-AAF5-6C51ABA0DA97}" name="panels">
         <FILE id="eTJERZ" name="PresetPanel.cpp" compile="1" resource="0" file="Source/PresetPanel.cpp"/>

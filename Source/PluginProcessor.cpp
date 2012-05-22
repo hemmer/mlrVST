@@ -47,19 +47,21 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     sampleStripArray(), numSampleStrips(7),
     // OSC /////////////////////////////////////////////
     OSCPrefix("mlrvst"), oscMsgHandler(OSCPrefix, this),
-    // Audio Buffers ////////////////////////////////////////////////////////////////////
+    // Audio / MIDI Buffers /////////////////////////////////////////
     stripContrib(2, 0),
     resampleBuffer(2, 0), isResampling(false),
     resampleLength(8), resamplePrecountLength(0),
     resampleLengthInSamples(0), resamplePrecountLengthInSamples(0),
     resamplePosition(0), resamplePrecountPosition(0),
     resampleBank(0), resampleBankSize(8),
-
     recordBuffer(2, 0), isRecording(false),
     recordLength(8), recordPrecountLength(0),
     recordLengthInSamples(0), recordPrecountLengthInSamples(0),
     recordPosition(0), recordPrecountPosition(0),
     recordBank(0), recordBankSize(8),
+    patternRecorder(), currentPatternLength(8),
+    currentPatternPrecountLength(0), currentPatternBank(0),
+    patternBankSize(8),
     // Preset handling /////////////////////////////////////////
     presetList("PRESETLIST"), setlist("SETLIST"),
     // Mapping settings ////////////////////////////////////////
@@ -88,6 +90,8 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
         resamplePool.add(new AudioSample(44100.0, 44100, THUMBNAIL_WIDTH, "resample #" + String(i), AudioSample::tResampledSample));
     for (int i = 0; i < recordBankSize; ++i)
         recordPool.add(new AudioSample(44100.0, 44100, THUMBNAIL_WIDTH, "record #" + String(i), AudioSample::tRecordedSample));
+    for (int i = 0; i < patternBankSize; ++i)
+        patternRecordings.add(new PatternRecording(this, i));
 
     setlist.createNewChildElement("PRESETNONE");
 
@@ -124,6 +128,7 @@ mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
     samplePool.clear(true);
     resamplePool.clear(true);
     recordPool.clear(true);
+    patternRecordings.clear(true);
 
     DBG("Processor destructor finished.");
 }
@@ -143,7 +148,16 @@ int mlrVSTAudioProcessor::addNewSample(File &sampleFile)
         }
     }
 
-    // load to load the Sample
+    // use this to check that we are only loading audio files
+    WildcardFileFilter fileFilter(getWildcardFormats(), " ", "audio files");
+    // can straight up reject the file if it doesn't have the right extension
+    if (!fileFilter.isFileSuitable(sampleFile))
+    {
+        DBG("Invalid file extension \"" << sampleFile.getFileExtension() << "\", loading aborted");
+        return -1;
+    }
+
+    // otherwise try to load the Sample
     try{
         // TODO: add actual length here
         samplePool.add(new AudioSample(sampleFile, THUMBNAIL_WIDTH));
@@ -265,7 +279,6 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
     // store total number of samples in the audio/midi buffers
     const int numSamples = buffer.getNumSamples();
 
-
     if (!isSuspended())
     {
         // ask the host for the current time so we can display it...
@@ -289,7 +302,6 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
             // If the host fails to fill-in the current time, we'll just clear it to a default..
             lastPosInfo.resetToDefault();
         }
-
 
 
 
@@ -332,57 +344,19 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
         }
 
 
+        // use the pattern recorders (if recording)
+        for (int b = 0; b < patternBankSize; ++b)
+            patternRecordings[b]->recordPattern(midiMessages, numSamples);
 
+        // and play back patterns (if playing back)
+        for (int b = 0; b < patternBankSize; ++b)
+            patternRecordings[b]->playPattern(midiMessages, numSamples);
+
+
+        // if we are recording from mlrVST's inputs
         if (isRecording)
-        {
-            // if we are still during the precount, do nothing
-            if (recordPrecountPosition > 0)
-                // TODO: this sample count could be more accurate!
-                recordPrecountPosition -= numSamples;
+            processRecordingBuffer(buffer, numSamples);
 
-            else
-            {
-                // if we are during recording (and not near the end), just
-                // add the current input into the record buffer
-                if (numSamples + recordPosition < recordLengthInSamples)
-                {
-                    recordBuffer.addFrom(0, recordPosition, buffer, 0, 0, numSamples);
-                    recordBuffer.addFrom(1, recordPosition, buffer, 1, 0, numSamples);
-                    recordPosition += numSamples;
-                }
-
-                // otherwise we are finishing up and we need to store the results
-                // in an AudioSample object
-                else
-                {
-                    const int samplesToEnd = recordLengthInSamples - recordPosition;
-                    // add the remaining samples
-                    recordBuffer.addFrom(0, recordPosition, buffer, 0, 0, samplesToEnd);
-                    recordBuffer.addFrom(1, recordPosition, buffer, 1, 0, samplesToEnd);
-                    // we are no longer recording
-                    isRecording = false;
-
-                    // get the pointer to the slot in the record bank that we want to replace
-                    AudioSampleBuffer *recordSlotToReplace = recordPool[recordBank]->getAudioData();
-                    // and resize it in case the length has changed
-                    recordSlotToReplace->setSize(2, recordLengthInSamples, false, false, false);
-                    // copy in the newly recorded samples
-                    recordSlotToReplace->copyFrom(0, 0, recordBuffer, 0, 0, recordLengthInSamples);
-                    recordSlotToReplace->copyFrom(1, 0, recordBuffer, 1, 0, recordLengthInSamples);
-                    // and update the thumbnail
-                    recordPool[recordBank]->generateThumbnail(THUMBNAIL_WIDTH);
-
-                    DBG("record slot " << recordBank << " updated.");
-
-                    // this is just so the TimedButtons can work out that recording has finished
-                    recordPosition += samplesToEnd;
-
-                    // make sure all SampleStrips redraw to reflect new waveform
-                    for (int s = 0; s < sampleStripArray.size(); ++s)
-                        sampleStripArray[s]->sendChangeMessage();
-                }
-            }
-        }
 
         // if we're aren't monitoring, clear any incoming audio
         if (!monitorInputs) buffer.clear();
@@ -423,58 +397,9 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
         for (int i = getNumInputChannels(); i < getNumOutputChannels(); ++i)
             buffer.clear(i, 0, buffer.getNumSamples());
 
-
+        // if we are resampling the audio that mlrVST is producing...
         if (isResampling)
-        {
-            // if we are still during the precount, do nothing
-            if (resamplePrecountPosition > 0)
-                // TODO: this sample count could be more accurate!
-                resamplePrecountPosition -= numSamples;
-
-            else
-            {
-                // if we are during recording (and not near the end), just
-                // add the current input into the record buffer
-                if (numSamples + resamplePosition < resampleLengthInSamples)
-                {
-                    resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, numSamples);
-                    resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, numSamples);
-                    resamplePosition += numSamples;
-                }
-
-                // otherwise we are finishing up and we need to store the results
-                // in an AudioSample object
-                else
-                {
-                    const int samplesToEnd = resampleLengthInSamples - resamplePosition;
-                    // add the remaining samples
-                    resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, samplesToEnd);
-                    resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, samplesToEnd);
-                    // we are no longer recording
-                    isResampling = false;
-
-                    // get the pointer to the slot in the resample bank that we want to replace
-                    AudioSampleBuffer *resampleSlotToReplace = resamplePool[resampleBank]->getAudioData();
-                    // and resize it in case the length has changed
-                    resampleSlotToReplace->setSize(2, resampleLengthInSamples, false, false, false);
-                    // copy in the newly recorded samples
-                    resampleSlotToReplace->copyFrom(0, 0, resampleBuffer, 0, 0, resampleLengthInSamples);
-                    resampleSlotToReplace->copyFrom(1, 0, resampleBuffer, 1, 0, resampleLengthInSamples);
-                    // and update the thumbnail
-                    resamplePool[resampleBank]->generateThumbnail(THUMBNAIL_WIDTH);
-
-                    // this is just so buttons can work out that it's finished
-                    resamplePosition += samplesToEnd;
-
-                    DBG("resample slot " << resampleBank << " updated.");
-
-                    // make sure all SampleStrips redraw to reflect new waveform
-                    for (int s = 0; s < sampleStripArray.size(); ++s)
-                        sampleStripArray[s]->sendChangeMessage();
-                 }
-            }
-        }
-
+            processResamplingBuffer(buffer, numSamples);
 
     }
     else
@@ -988,7 +913,7 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
 
         - save global settings with each preset
         - have button that saves current global settings to all presets
-
+        - have function bool isSavedToPreset
     */
 
     // Create an outer XML element..
@@ -1132,6 +1057,70 @@ void mlrVSTAudioProcessor::startResampling()
 
     DBG("resampling started");
 }
+float mlrVSTAudioProcessor::getResamplingPrecountPercent() const
+{
+    if (resamplePrecountPosition <= 0 || resamplePrecountLengthInSamples <= 0)
+        return 0.0;
+    else
+        return (float) (resamplePrecountPosition) / (float) (resamplePrecountLengthInSamples);
+}
+float mlrVSTAudioProcessor::getResamplingPercent() const
+{
+    if (resamplePosition >= resampleLengthInSamples || resampleLengthInSamples <= 0)
+        return 0.0;
+    else
+        return (float) (resamplePosition) / (float) (resampleLengthInSamples);
+}
+void mlrVSTAudioProcessor::processResamplingBuffer(AudioSampleBuffer &buffer, const int &numSamples)
+{
+    // if we are still during the precount, do nothing
+    if (resamplePrecountPosition > 0)
+        // TODO: this sample count could be more accurate!
+        resamplePrecountPosition -= numSamples;
+
+    else
+    {
+        // if we are during recording (and not near the end), just
+        // add the current input into the record buffer
+        if (numSamples + resamplePosition < resampleLengthInSamples)
+        {
+            resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, numSamples);
+            resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, numSamples);
+            resamplePosition += numSamples;
+        }
+
+        // otherwise we are finishing up and we need to store the results
+        // in an AudioSample object
+        else
+        {
+            const int samplesToEnd = resampleLengthInSamples - resamplePosition;
+            // add the remaining samples
+            resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, samplesToEnd);
+            resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, samplesToEnd);
+            // we are no longer recording
+            isResampling = false;
+
+            // get the pointer to the slot in the resample bank that we want to replace
+            AudioSampleBuffer *resampleSlotToReplace = resamplePool[resampleBank]->getAudioData();
+            // and resize it in case the length has changed
+            resampleSlotToReplace->setSize(2, resampleLengthInSamples, false, false, false);
+            // copy in the newly recorded samples
+            resampleSlotToReplace->copyFrom(0, 0, resampleBuffer, 0, 0, resampleLengthInSamples);
+            resampleSlotToReplace->copyFrom(1, 0, resampleBuffer, 1, 0, resampleLengthInSamples);
+            // and update the thumbnail
+            resamplePool[resampleBank]->generateThumbnail(THUMBNAIL_WIDTH);
+
+            // this is just so buttons can work out that it's finished
+            resamplePosition += samplesToEnd;
+
+            DBG("resample slot " << resampleBank << " updated.");
+
+            // make sure all SampleStrips redraw to reflect new waveform
+            for (int s = 0; s < sampleStripArray.size(); ++s)
+                sampleStripArray[s]->sendChangeMessage();
+        }
+    }
+}
 
 void mlrVSTAudioProcessor::startRecording()
 {
@@ -1146,7 +1135,70 @@ void mlrVSTAudioProcessor::startRecording()
 
     DBG("recording started");
 }
+float mlrVSTAudioProcessor::getRecordingPrecountPercent() const
+{
+    if (recordPrecountPosition <= 0 || recordPrecountLengthInSamples <= 0)
+        return 0.0;
+    else
+        return (float) (recordPrecountPosition) / (float) (recordPrecountLengthInSamples);
+}
+float mlrVSTAudioProcessor::getRecordingPercent() const
+{
+    if (recordPosition >= recordLengthInSamples || recordLengthInSamples <= 0)
+        return 0.0;
+    else
+        return (float) (recordPosition) / (float) (recordLengthInSamples);
+}
+void mlrVSTAudioProcessor::processRecordingBuffer(AudioSampleBuffer &buffer, const int &numSamples)
+{
+    // if we are still during the precount, do nothing
+    if (recordPrecountPosition > 0)
+        // TODO: this sample count could be more accurate!
+        recordPrecountPosition -= numSamples;
 
+    else
+    {
+        // if we are during recording (and not near the end), just
+        // add the current input into the record buffer
+        if (numSamples + recordPosition < recordLengthInSamples)
+        {
+            recordBuffer.addFrom(0, recordPosition, buffer, 0, 0, numSamples);
+            recordBuffer.addFrom(1, recordPosition, buffer, 1, 0, numSamples);
+            recordPosition += numSamples;
+        }
+
+        // otherwise we are finishing up and we need to store the results
+        // in an AudioSample object
+        else
+        {
+            const int samplesToEnd = recordLengthInSamples - recordPosition;
+            // add the remaining samples
+            recordBuffer.addFrom(0, recordPosition, buffer, 0, 0, samplesToEnd);
+            recordBuffer.addFrom(1, recordPosition, buffer, 1, 0, samplesToEnd);
+            // we are no longer recording
+            isRecording = false;
+
+            // get the pointer to the slot in the record bank that we want to replace
+            AudioSampleBuffer *recordSlotToReplace = recordPool[recordBank]->getAudioData();
+            // and resize it in case the length has changed
+            recordSlotToReplace->setSize(2, recordLengthInSamples, false, false, false);
+            // copy in the newly recorded samples
+            recordSlotToReplace->copyFrom(0, 0, recordBuffer, 0, 0, recordLengthInSamples);
+            recordSlotToReplace->copyFrom(1, 0, recordBuffer, 1, 0, recordLengthInSamples);
+            // and update the thumbnail
+            recordPool[recordBank]->generateThumbnail(THUMBNAIL_WIDTH);
+
+            DBG("record slot " << recordBank << " updated.");
+
+            // this is just so the TimedButtons can work out that recording has finished
+            recordPosition += samplesToEnd;
+
+            // make sure all SampleStrips redraw to reflect new waveform
+            for (int s = 0; s < sampleStripArray.size(); ++s)
+                sampleStripArray[s]->sendChangeMessage();
+        }
+    }
+}
 
 
 /////////////////////////////
@@ -1313,6 +1365,24 @@ void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID, const void 
     case sRecordBank :
         recordBank = *static_cast<const int*>(newValue); break;
 
+    case sPatternLength :
+        currentPatternLength = *static_cast<const int*>(newValue);
+        patternRecordings[currentPatternBank]->patternLength = currentPatternLength;
+        break;
+
+    case sPatternPrecount :
+        currentPatternPrecountLength = *static_cast<const int*>(newValue);
+        patternRecordings[currentPatternBank]->patternPrecountLength = currentPatternPrecountLength;
+        break;
+
+    case sPatternBank :
+        currentPatternBank = *static_cast<const int*>(newValue);
+
+        // and load the settings associated with that bank
+        currentPatternLength = patternRecordings[currentPatternBank]->patternLength;
+        currentPatternPrecountLength = patternRecordings[currentPatternBank]->patternPrecountLength;
+        break;
+
     case sCurrentBPM :
         {
             currentBPM = *static_cast<const double*>(newValue);
@@ -1371,6 +1441,10 @@ const void* mlrVSTAudioProcessor::getGlobalSetting(const int &settingID) const
     case sResampleLength : return &resampleLength;
     case sResamplePrecount : return &resamplePrecountLength;
     case sResampleBank : return &resampleBank;
+
+    case sPatternLength : return &currentPatternLength;
+    case sPatternPrecount : return &currentPatternPrecountLength;
+    case sPatternBank : return &currentPatternBank;
     case sRampLength : return &rampLength;
     default : jassertfalse; return 0;
     }

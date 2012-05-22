@@ -79,6 +79,7 @@ public:
     void updateGlobalSetting(const int &parameterID, const void *newValue);
     const void* getGlobalSetting(const int &parameterID) const { return parent->getGlobalSetting(parameterID); }
 
+
 private:
 
     // Communication ///////////////////
@@ -111,13 +112,14 @@ private:
     // Buttons ////////////////////////////
     TextButton loadFilesBtn;
 
-    // Record / resample UI ////////////////////////////////////////
+    // Record / Resample / Pattern UI ////////////////////////////////
     Label precountLbl, recordLengthLbl, bankLbl;
     // sliders for choosing banks etc
     Slider recordPrecountSldr, recordLengthSldr, recordBankSldr;
     Slider resamplePrecountSldr, resampleLengthSldr, resampleBankSldr;
+    Slider patternPrecountSldr, patternLengthSldr, patternBankSldr;
     // these give visual progress of recording / resampling status
-    TimedButton recordBtn, resampleBtn;
+    TimedButton recordBtn, resampleBtn, patternBtn;
     void setUpRecordResampleUI();
 
     // Misc /////////////////////

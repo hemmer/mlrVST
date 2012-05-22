@@ -17,8 +17,9 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AudioSample.h"
-#include "SampleStrip.h"
 #include "OSCHandler.h"
+#include "PatternRecording.h"
+#include "SampleStrip.h"
 
 //==============================================================================
 class mlrVSTAudioProcessor : public AudioProcessor,
@@ -99,6 +100,9 @@ public:
         sResamplePrecount,
         sResampleLength,
         sResampleBank,
+        sPatternPrecount,
+        sPatternLength,
+        sPatternBank,
         sRampLength,                // length of volume envelope (in samples)
         sNumGlobalSettings
     };
@@ -277,37 +281,22 @@ public:
 
     // Recording / resampling stuff
     void startRecording();
+    float getRecordingPrecountPercent() const;
+    float getRecordingPercent() const;
+    void processRecordingBuffer(AudioSampleBuffer &input, const int &numSamples);
+    bool areWeRecording() const { return isRecording; }
+
     void startResampling();
+    float getResamplingPrecountPercent() const;
+    float getResamplingPercent() const;
+    void processResamplingBuffer(AudioSampleBuffer &input, const int &numSamples);
+    bool areWeResampling() const { return isResampling; }
 
-    float getRecordingPrecountPercent() const
-    {
-        if (recordPrecountPosition <= 0 || recordPrecountLengthInSamples <= 0)
-            return 0.0;
-        else
-            return (float) (recordPrecountPosition) / (float) (recordPrecountLengthInSamples);
-    }
-    float getRecordingPercent() const
-    {
-        if (recordPosition >= recordLengthInSamples || recordLengthInSamples <= 0)
-            return 0.0;
-        else
-            return (float) (recordPosition) / (float) (recordLengthInSamples);
-    }
+    void startPatternRecording() { patternRecordings[currentPatternBank]->startPatternRecording(); }
+    float getPatternPrecountPercent() const { return patternRecordings[currentPatternBank]->getPatternPrecountPercent(); }
+    float getPatternPercent() const { return patternRecordings[currentPatternBank]->getPatternPercent(); }
+    bool areWePatternRecording() const { return patternRecordings[currentPatternBank]->isPatternRecording; }
 
-    float getResamplingPrecountPercent() const
-    {
-        if (resamplePrecountPosition <= 0 || resamplePrecountLengthInSamples <= 0)
-            return 0.0;
-        else
-            return (float) (resamplePrecountPosition) / (float) (resamplePrecountLengthInSamples);
-    }
-    float getResamplingPercent() const
-    {
-        if (resamplePosition >= resampleLengthInSamples || resampleLengthInSamples <= 0)
-            return 0.0;
-        else
-            return (float) (resamplePosition) / (float) (resampleLengthInSamples);
-    }
 
     // here rate is the level of quantisation, so for 1 / 32th
     // note quantisation, quantisationLevel = 0.03125 etc
@@ -325,6 +314,9 @@ public:
             quantisationOn = true;
         }
     }
+
+    // which types of audio files can we load
+    const String getWildcardFormats() const { return "*.wav;*.flac;*.ogg;*.aif;*.aiff;*.caf"; }
 
 private:
 
@@ -345,6 +337,7 @@ private:
     OwnedArray<AudioSample> samplePool;         // for sample files (.wavs etc)
     OwnedArray<AudioSample> resamplePool;       // for recorded internal sounds
     OwnedArray<AudioSample> recordPool;         // for external recordings
+    OwnedArray<PatternRecording> patternRecordings;   // for pattern recordings
 
 
     // Channel Setup /////////////
@@ -388,7 +381,6 @@ private:
     int resampleLengthInSamples, resamplePrecountLengthInSamples;   // length in samples
     int resamplePosition, resamplePrecountPosition;     // track resampling progress
     int resampleBank, resampleBankSize;                 // which slot to use (how many are free)
-
     // Store recorded information
     AudioSampleBuffer recordBuffer;
     bool isRecording;
@@ -396,6 +388,12 @@ private:
     int recordLengthInSamples, recordPrecountLengthInSamples;
     int recordPosition, recordPrecountPosition;
     int recordBank, recordBankSize;
+    // Pattern recorder information
+    MidiBuffer patternRecorder;
+    int currentPatternLength;
+    int currentPatternPrecountLength;
+    int currentPatternBank;
+    int patternBankSize;
 
 
     // Preset Handling //////////////////////////////////////////

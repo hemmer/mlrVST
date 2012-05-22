@@ -57,7 +57,7 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     lockImg.setImage(ImageCache::getFromMemory(BinaryData::locked_png, BinaryData::locked_pngSize));
     unlockImg.setImage(ImageCache::getFromMemory(BinaryData::unlocked_png, BinaryData::unlocked_pngSize));
 
-    // does the heavy UI positioning   
+    // does the heavy UI positioning
     buildUI();
     buildNumBlocksList(8);
 
@@ -238,7 +238,7 @@ void SampleStripControl::buildUI()
     trackNumberLbl.setColour(Label::backgroundColourId, Colours::black);
     trackNumberLbl.setColour(Label::textColourId, Colours::white);
     trackNumberLbl.setFont(fontSize);
-    
+
     addAndMakeVisible(&filenameLbl);
     filenameLbl.setColour(Label::backgroundColourId, Colours::white.withAlpha(0.5f));
     filenameLbl.setColour(Label::textColourId, Colours::black);
@@ -333,7 +333,7 @@ void SampleStripControl::buildUI()
     playspeedSldr.setRange(0.0, 4.0, 0.001);
     playspeedSldr.setTextBoxIsEditable(true);
     playspeedSldr.setLookAndFeel(&menuLF);
-    
+
 
     newXposition += 80;
     addAndMakeVisible(&speedLockBtn);
@@ -368,7 +368,7 @@ void SampleStripControl::mouseDown(const MouseEvent &e)
     {
         rightMouseDown = true;
         selectedHitZone = e.x / (componentWidth / 4);
-        repaint();        
+        repaint();
     }
 
     // middle click-drag to move the selection
@@ -536,7 +536,7 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
 
         // round to the nearest snap point
         int newSeg = (int) floor(0.5 + e.x / (float) eighth);
-        
+
         // update the changing part of the selection to the snapped position
         *selectionPointToChange = (int)(newSeg * eighth);
     }
@@ -609,7 +609,7 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
     dataStrip->setSampleStripParam(SampleStrip::pVisualEnd, &visualSelectionEnd);
 
     // update the play speed to account for new selection,
-    // of course this doesn't change if we are just moving the 
+    // of course this doesn't change if we are just moving the
     // selection (i.e. using the middle mouse button)
     if (mouseDownMods != ModifierKeys::middleButtonModifier)
         processor->calcPlaySpeedForSelectionChange(sampleStripID);
@@ -638,7 +638,7 @@ void SampleStripControl::paint(Graphics& g)
     {
         g.setColour(Colours::black.withAlpha(0.25f));
         int visualPlaybackPoint = (int)(playbackPercentage * visualSelectionLength);
-        
+
         if (!isReversed)
         {
             g.fillRect(visualSelectionStart, controlbarSize,
@@ -653,12 +653,12 @@ void SampleStripControl::paint(Graphics& g)
 
 
     /* Finally we grey out the parts of the sample which aren't in
-       the selection and paint stripes to indicate what button 
+       the selection and paint stripes to indicate what button
        will do what.
     */
     g.setColour(Colours::black.withAlpha(0.5f));
-    g.fillRect(0, controlbarSize, visualSelectionStart, componentHeight - controlbarSize); 
-    g.fillRect(visualSelectionEnd, controlbarSize, componentWidth - visualSelectionEnd, componentHeight - controlbarSize); 
+    g.fillRect(0, controlbarSize, visualSelectionStart, componentHeight - controlbarSize);
+    g.fillRect(visualSelectionEnd, controlbarSize, componentWidth - visualSelectionEnd, componentHeight - controlbarSize);
 
     /* Add alternate strips to make it clear which
     button plays which part of the sample. */
@@ -690,17 +690,49 @@ void SampleStripControl::filesDropped(const StringArray& files, int /*x*/, int /
     // assume that all files fail (pessimistic I know)
     int fileIndex = -1;
 
+    // don't add files recursively
+    const bool useRecursive = false;
+
     // try to add each of the loaded files to the sample pool
     for (int i = 0; i < files.size(); ++i)
     {
         File currentSampleFile(files[i]);
-        DBG("Dragged file: " << files[i]);
 
-        // if a file is sucessfully loaded, update the file index
-        fileIndex = processor->addNewSample(currentSampleFile);
+        // if a folder is dragged, try to add all files in it
+        if (currentSampleFile.isDirectory())
+        {
+
+            DirectoryIterator di(currentSampleFile, useRecursive, "*", File::findFiles);
+
+            // iterate through the files in this directory
+            while(di.next())
+            {
+                File childFile = di.getFile();
+                DBG("Dragged file (in directory): " << childFile.getFileName());
+
+                // and if so try to load the file
+                const int newFileIndex = processor->addNewSample( childFile );
+
+                // if we have a sucessful load, we can set this as the
+                // SampleStrip's new sample
+                if (newFileIndex != -1) fileIndex = newFileIndex;
+            }
+        }
+        else
+        {
+            DBG("Dragged file: " << files[i]);
+
+            // try to load the file
+            const int newFileIndex = processor->addNewSample(currentSampleFile);
+
+            // if we have a sucessful load, we can set this as the
+            // SampleStrip's new sample
+            if (newFileIndex != -1) fileIndex = newFileIndex;
+        }
     }
 
-    // If we have a legitimate file
+    // if any of the the files loaded, select the last
+    // file to sucessfully load
     if (fileIndex >= 0)
     {
         selectNewSample(fileIndex, mlrVSTAudioProcessor::pSamplePool);
@@ -848,7 +880,7 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
                     playspeedSldr.setValue(1.0, true);
                 }
             }
-            
+
             break;
         }
 

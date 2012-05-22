@@ -46,6 +46,7 @@ OBJECTS := \
   $(OBJDIR)/SampleStrip_9922baef.o \
   $(OBJDIR)/PluginProcessor_a059e380.o \
   $(OBJDIR)/AudioSample_c5634f81.o \
+  $(OBJDIR)/PatternRecording_c3abd24a.o \
   $(OBJDIR)/PresetPanel_1f2c0a46.o \
   $(OBJDIR)/SettingsPanel_89b72282.o \
   $(OBJDIR)/MappingPanel_5b8ca75f.o \
@@ -107,6 +108,11 @@ $(OBJDIR)/PluginProcessor_a059e380.o: ../../Source/PluginProcessor.cpp
 $(OBJDIR)/AudioSample_c5634f81.o: ../../Source/AudioSample.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling AudioSample.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/PatternRecording_c3abd24a.o: ../../Source/PatternRecording.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling PatternRecording.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/PresetPanel_1f2c0a46.o: ../../Source/PresetPanel.cpp
