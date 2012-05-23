@@ -65,7 +65,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     // Preset handling /////////////////////////////////////////
     presetList("PRESETLIST"), setlist("SETLIST"),
     // Mapping settings ////////////////////////////////////////
-    topRowMappings(), normalRowMappings(),
+    topRowMappings(), normalRowMappings(), patternMappings(),
     numModifierButtons(2), currentStripModifier(-1),
     // Misc /////////////////////////////////////////////////////////
     playbackLEDPosition(), monitorInputs(false)
@@ -440,8 +440,12 @@ void mlrVSTAudioProcessor::timerCallback()
 
             setSampleStripParameter(SampleStrip::pStripVolume, &stripVol, row);
 
-            // finally if the modifier button is lifted, stop increasing
-            if (currentStripModifier == -1) toggleSampleStripParameter(SampleStrip::pIsVolInc, row);
+            // finally if either of the modifier buttons are lifted, stop increasing
+            if (currentStripModifier != rmNormalRowMappingBtnA
+                && currentStripModifier != rmNormalRowMappingBtnB)
+            {
+                toggleSampleStripParameter(SampleStrip::pIsVolInc, row);
+            }
         }
         else if (isVolDec)
         {
@@ -458,8 +462,12 @@ void mlrVSTAudioProcessor::timerCallback()
 
             setSampleStripParameter(SampleStrip::pStripVolume, &stripVol, row);
 
-            // finally if the modifier button is lifted, stop increasing
-            if (currentStripModifier == -1) toggleSampleStripParameter(SampleStrip::pIsVolDec, row);
+            // finally if either of the modifier buttons are lifted, stop decreasing
+            if (currentStripModifier != rmNormalRowMappingBtnA
+                && currentStripModifier != rmNormalRowMappingBtnB)
+            {
+                toggleSampleStripParameter(SampleStrip::pIsVolDec, row);
+            }
         }
 
 
@@ -476,9 +484,14 @@ void mlrVSTAudioProcessor::timerCallback()
             stripPlaySpeed += 0.01;
             setSampleStripParameter(SampleStrip::pPlaySpeed, &stripPlaySpeed, row);
 
-            // finally if the modifier button is lifted, stop increasing
-            if (currentStripModifier == -1) toggleSampleStripParameter(SampleStrip::pIsPlaySpeedInc, row);
+            // finally if either of the modifier buttons are lifted, stop increasing
+            if (currentStripModifier != rmNormalRowMappingBtnA
+                && currentStripModifier != rmNormalRowMappingBtnB)
+            {
+                toggleSampleStripParameter(SampleStrip::pIsPlaySpeedInc, row);
+            }
         }
+
         else if (isSpeedDec)
         {
             double stripPlaySpeed = *static_cast<const double*>
@@ -493,8 +506,12 @@ void mlrVSTAudioProcessor::timerCallback()
 
             setSampleStripParameter(SampleStrip::pPlaySpeed, &stripPlaySpeed, row);
 
-            // finally if the modifier button is lifted, stop increasing
-            if (currentStripModifier == -1) toggleSampleStripParameter(SampleStrip::pIsPlaySpeedDec, row);
+            // finally if either of the modifier buttons are lifted, stop decreasing
+            if (currentStripModifier != rmNormalRowMappingBtnA
+                && currentStripModifier != rmNormalRowMappingBtnB)
+            {
+                toggleSampleStripParameter(SampleStrip::pIsPlaySpeedDec, row);
+            }
         }
 
 
@@ -544,26 +561,34 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
     */
     const int stripID = monomeRow - 1;
 
+    // if the button is on the top row
     if (monomeRow == 0)
     {
-        // find out the mapping for this button...
-        const int colMap = getTopRowMapping(monomeCol);
+        // find out the mapping associated with it
+        const int mappingID = getMonomeMapping(rmTopRowMapping, monomeCol);
         // ...and act accordingly
-        switch (colMap)
+        switch (mappingID)
         {
         case tmNoMapping : break;
         case tmModifierBtnA :
             {
                 // if pressed down, set this as the current
                 // modifier button, otherwise set it to off (-1)
-                currentStripModifier = (state) ? 0 : -1;
+                currentStripModifier = (state) ? rmNormalRowMappingBtnA : -1;
                 break;
             }
         case tmModifierBtnB :
             {
                 // if pressed down, set this as the current
                 // modifier button, otherwise set it to off (-1)
-                currentStripModifier = (state) ? 1 : -1;
+                currentStripModifier = (state) ? rmNormalRowMappingBtnB : -1;
+                break;
+            }
+        case tmPatternModifierBtn :
+            {
+                // if pressed down, set this as the current
+                // modifier button, otherwise set it to off (-1)
+                currentStripModifier = (state) ? rmPatternBtn : -1;
                 break;
             }
         case tmStartRecording : startRecording(); break;
@@ -573,179 +598,17 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
         default : jassertfalse;
         }
     }
-    else if (currentStripModifier != -1 && monomeRow <= numSampleStrips && monomeRow > 0)
+
+    // if one of the normal row modifier buttons are held,
+    // each strip now turns into a set of control buttons
+    else if ( (currentStripModifier == rmNormalRowMappingBtnA || currentStripModifier == rmNormalRowMappingBtnB)
+              && monomeRow <= numSampleStrips && monomeRow > 0)
     {
-        // When the modifier button is held, each strip turns into a
-        // set of control buttons:
+        // first, find out which mapping is associated with the button
+        const int mappingID = getMonomeMapping(currentStripModifier, monomeCol);
 
-        // find out the mapping for the button
-        const int colMap = getNormalRowMapping(currentStripModifier, monomeCol);
-
-        switch (colMap)
-        {
-        case nmNoMapping : break;
-        case nmFindBestTempo :
-            // TODO: next actual sample rate here!
-            if (state) sampleStripArray[stripID]->findInitialPlaySpeed(currentBPM, 44100.0);
-            break;
-
-        case nmToggleReverse :
-            {
-                if (state) sampleStripArray[stripID]->toggleSampleStripParam(SampleStrip::pIsReversed);
-                break;
-            }
-
-		case nmCycleThruChannels :
-			{
-				if (state) sampleStripArray[stripID]->cycleChannels();
-                break;
-			}
-        case nmDecVolume:
-            {
-                const bool isVolDec = state;
-                sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pIsVolDec, &isVolDec, false);
-                break;
-            }
-
-        case nmIncVolume:
-            {
-                const bool isVolInc = state;
-                sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pIsVolInc, &isVolInc, false);
-                break;
-            }
-
-        case nmDecPlayspeed:
-            {
-                const bool isSpeedDec = state;
-                sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pIsPlaySpeedDec, &isSpeedDec, false);
-                break;
-            }
-
-        case nmIncPlayspeed:
-            {
-                const bool isSpeedInc = state;
-                sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pIsPlaySpeedInc, &isSpeedInc, false);
-                break;
-            }
-
-        case nmHalvePlayspeed:
-            {
-                if (state) sampleStripArray[stripID]->modPlaySpeed(0.5);
-                break;
-            }
-
-        case nmDoublePlayspeed:
-            {
-                if (state) sampleStripArray[stripID]->modPlaySpeed(2.0);
-                break;
-            }
-
-        case nmSetNormalPlayspeed:
-            {
-                const double newPlaySpeed = 1.0;
-                if (state) sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pPlaySpeed, &newPlaySpeed, true);
-                break;
-            }
-
-        case nmStopPlayback:
-            {
-                if (state) sampleStripArray[stripID]->stopSamplePlaying();
-                break;
-            }
-
-        case nmStopPlaybackTape:
-            {
-                if (state) sampleStripArray[stripID]->stopSamplePlaying(1);
-                break;
-            }
-
-        case nmCycleThruRecordings:
-            {
-                if (state)
-                {
-                    const AudioSample *currentSample = static_cast<const AudioSample*>(sampleStripArray[stripID]->getSampleStripParam(SampleStrip::pAudioSample));
-
-                    // if the sample is not a recording, cycle to the first recorded sample
-                    if (currentSample == nullptr || currentSample->getSampleType() != AudioSample::tRecordedSample)
-                        sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, recordPool.getFirst(), true);
-                    // otherwise load the next sample
-                    else
-                    {
-                        int s = 0;
-                        // find the current sample index s
-                        for (; s < recordPool.size(); ++s)
-                            if (recordPool[s] == currentSample) break;
-
-                        // and load the next sample, s + 1
-                        const AudioSample *nextSample = recordPool[(++s % recordPool.size())];
-                        sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, nextSample, true);
-                    }
-
-                    // and find the optimal playspeed
-                    calcInitialPlaySpeed(stripID);
-                }
-                break;
-            }
-
-        case nmCycleThruResamplings:
-            {
-                if (state)
-                {
-                    const AudioSample *currentSample = static_cast<const AudioSample*>(sampleStripArray[stripID]->getSampleStripParam(SampleStrip::pAudioSample));
-
-                    // if the sample is not a resampling, cycle to the first recorded resampling
-                    if (currentSample == nullptr || currentSample->getSampleType() != AudioSample::tResampledSample)
-                        sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, resamplePool.getFirst(), true);
-                    // otherwise load the next resampling
-                    else
-                    {
-                        int s = 0;
-                        // find the current sample index s
-                        for (; s < resamplePool.size(); ++s)
-                            if (resamplePool[s] == currentSample) break;
-
-                        // and load the next sample, s + 1
-                        const AudioSample *nextSample = resamplePool[(++s % resamplePool.size())];
-                        sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, nextSample, true);
-                    }
-
-                    // and find the optimal playspeed
-                    calcInitialPlaySpeed(stripID);
-                }
-                break;
-            }
-
-        case nmCycleThruFileSamples:
-            {
-                if (state)
-                {
-                    const AudioSample *currentSample = static_cast<const AudioSample*>(sampleStripArray[stripID]->getSampleStripParam(SampleStrip::pAudioSample));
-
-                    // if the sample is not a resampling, cycle to the first recorded resampling
-                    if (currentSample == nullptr || currentSample->getSampleType() != AudioSample::tFileSample)
-                        sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, samplePool.getFirst(), true);
-                    // otherwise load the next resampling
-                    else
-                    {
-                        int s = 0;
-                        // find the current sample index s
-                        for (; s < samplePool.size(); ++s)
-                            if (samplePool[s] == currentSample) break;
-
-                        // and load the next sample, s + 1
-                        const AudioSample *nextSample = samplePool[(++s % samplePool.size())];
-                        sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, nextSample, true);
-                    }
-
-                    // and find the optimal playspeed
-                    calcInitialPlaySpeed(stripID);
-                }
-                break;
-            }
-
-        // this should not happen!
-        default : jassertfalse;
-        }
+        // then excute that mapping
+        executeNormalRowMapping(mappingID, stripID, state);
 
         // The SampleStrips can get tricked into thinking a button is held
         // if it starts out as a normal press but then a modifier button is
@@ -753,6 +616,26 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
         if (!state) sampleStripArray[stripID]->setButtonStatus(monomeCol, state);
 
     }
+
+
+    // if pattern modifier buttons is held, each strip now turns into
+    // a set of control buttons that control the pattern recorder
+    else if ( currentStripModifier == rmPatternBtn && monomeRow <= numSampleStrips
+              && monomeRow > 0)
+    {
+        // first, find out which mapping is associated with the button
+        const int mappingID = getMonomeMapping(rmPatternBtn, monomeCol);
+
+        // then excute that mapping
+        executePatternRowMapping(mappingID, stripID, state);
+
+        // The SampleStrips can get tricked into thinking a button is held
+        // if it starts out as a normal press but then a modifier button is
+        // pressed before the button is lifted. This corrects for this:
+        if (!state) sampleStripArray[stripID]->setButtonStatus(monomeCol, state);
+
+    }
+
     else if (monomeRow <= numSampleStrips && monomeRow > 0)
     {
 
@@ -1462,6 +1345,33 @@ String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID) const
     }
 }
 
+// Mappings /////////////////////
+
+int mlrVSTAudioProcessor::getMonomeMapping(const int &rowType, const int &col) const
+{
+    switch (rowType)
+    {
+    case rmTopRowMapping : return topRowMappings[col];
+    case rmNormalRowMappingBtnA : return normalRowMappings[0]->getUnchecked(col);
+    case rmNormalRowMappingBtnB : return normalRowMappings[1]->getUnchecked(col);
+    case rmPatternBtn : return patternMappings[col];
+    case rmNoBtn :
+    default : jassertfalse; return -1;
+    }
+}
+void mlrVSTAudioProcessor::setMonomeMapping(const int &rowType, const int &col, const int &newMapping)
+{
+    switch (rowType)
+    {
+    case rmTopRowMapping : topRowMappings.set(col, newMapping);
+    case rmNormalRowMappingBtnA : normalRowMappings[0]->set(col, newMapping);
+    case rmNormalRowMappingBtnB : normalRowMappings[1]->set(col, newMapping);
+    case rmPatternBtn : return patternMappings.set(col, newMapping);
+    case rmNoBtn :
+    default : jassertfalse
+    }
+}
+
 String mlrVSTAudioProcessor::getTopRowMappingName(const int &mappingID)
 {
     switch (mappingID)
@@ -1469,6 +1379,7 @@ String mlrVSTAudioProcessor::getTopRowMappingName(const int &mappingID)
     case tmNoMapping : return "no mapping";
     case tmModifierBtnA : return "modifier button A";
     case tmModifierBtnB : return "modifier button B";
+    case tmPatternModifierBtn : return "pattern modifier button";
     case tmStartRecording : return "start recording";
     case tmStartResampling : return "stop recording";
     case tmStopAll : return "stop all strips";
@@ -1500,6 +1411,203 @@ String mlrVSTAudioProcessor::getNormalRowMappingName(const int &mappingID)
     default : jassertfalse; return "error: mappingID " + String(mappingID) + " not found!";
     }
 }
+String mlrVSTAudioProcessor::getPatternRowMappingName(const int &mappingID)
+{
+    switch (mappingID)
+    {
+    case patmapNoMapping : return "no mapping";
+    case patmapStartRecording : return "start recording";
+    case patmapStopRecording : return "stop recording";
+    case patmapStartPlaying : return "start playing";
+    case patmapStopPlaying : return "stop playing";
+    default : jassertfalse; return "error: mappingID " + String(mappingID) + " not found!";
+    }
+}
+
+void mlrVSTAudioProcessor::executeNormalRowMapping(const int &mappingID, const int &stripID, const bool &state)
+{
+    switch (mappingID)
+    {
+    case nmNoMapping : break;
+    case nmFindBestTempo :
+        // TODO: next actual sample rate here!
+        if (state) sampleStripArray[stripID]->findInitialPlaySpeed(currentBPM, 44100.0);
+        break;
+
+    case nmToggleReverse :
+        {
+            if (state) sampleStripArray[stripID]->toggleSampleStripParam(SampleStrip::pIsReversed);
+            break;
+        }
+
+    case nmCycleThruChannels :
+        {
+            if (state) sampleStripArray[stripID]->cycleChannels();
+            break;
+        }
+    case nmDecVolume:
+        {
+            const bool isVolDec = state;
+            sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pIsVolDec, &isVolDec, false);
+            break;
+        }
+
+    case nmIncVolume:
+        {
+            const bool isVolInc = state;
+            sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pIsVolInc, &isVolInc, false);
+            break;
+        }
+
+    case nmDecPlayspeed:
+        {
+            const bool isSpeedDec = state;
+            sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pIsPlaySpeedDec, &isSpeedDec, false);
+            break;
+        }
+
+    case nmIncPlayspeed:
+        {
+            const bool isSpeedInc = state;
+            sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pIsPlaySpeedInc, &isSpeedInc, false);
+            break;
+        }
+
+    case nmHalvePlayspeed:
+        {
+            if (state) sampleStripArray[stripID]->modPlaySpeed(0.5);
+            break;
+        }
+
+    case nmDoublePlayspeed:
+        {
+            if (state) sampleStripArray[stripID]->modPlaySpeed(2.0);
+            break;
+        }
+
+    case nmSetNormalPlayspeed:
+        {
+            const double newPlaySpeed = 1.0;
+            if (state) sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pPlaySpeed, &newPlaySpeed, true);
+            break;
+        }
+
+    case nmStopPlayback:
+        {
+            if (state) sampleStripArray[stripID]->stopSamplePlaying();
+            break;
+        }
+
+    case nmStopPlaybackTape:
+        {
+            if (state) sampleStripArray[stripID]->stopSamplePlaying(1);
+            break;
+        }
+
+    case nmCycleThruRecordings:
+        {
+            if (state)
+            {
+                const AudioSample *currentSample = static_cast<const AudioSample*>(sampleStripArray[stripID]->getSampleStripParam(SampleStrip::pAudioSample));
+
+                // if the sample is not a recording, cycle to the first recorded sample
+                if (currentSample == nullptr || currentSample->getSampleType() != AudioSample::tRecordedSample)
+                    sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, recordPool.getFirst(), true);
+                // otherwise load the next sample
+                else
+                {
+                    int s = 0;
+                    // find the current sample index s
+                    for (; s < recordPool.size(); ++s)
+                        if (recordPool[s] == currentSample) break;
+
+                    // and load the next sample, s + 1
+                    const AudioSample *nextSample = recordPool[(++s % recordPool.size())];
+                    sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, nextSample, true);
+                }
+
+                // and find the optimal playspeed
+                calcInitialPlaySpeed(stripID);
+            }
+            break;
+        }
+
+    case nmCycleThruResamplings:
+        {
+            if (state)
+            {
+                const AudioSample *currentSample = static_cast<const AudioSample*>(sampleStripArray[stripID]->getSampleStripParam(SampleStrip::pAudioSample));
+
+                // if the sample is not a resampling, cycle to the first recorded resampling
+                if (currentSample == nullptr || currentSample->getSampleType() != AudioSample::tResampledSample)
+                    sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, resamplePool.getFirst(), true);
+                // otherwise load the next resampling
+                else
+                {
+                    int s = 0;
+                    // find the current sample index s
+                    for (; s < resamplePool.size(); ++s)
+                        if (resamplePool[s] == currentSample) break;
+
+                    // and load the next sample, s + 1
+                    const AudioSample *nextSample = resamplePool[(++s % resamplePool.size())];
+                    sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, nextSample, true);
+                }
+
+                // and find the optimal playspeed
+                calcInitialPlaySpeed(stripID);
+            }
+            break;
+        }
+
+    case nmCycleThruFileSamples:
+        {
+            if (state)
+            {
+                const AudioSample *currentSample = static_cast<const AudioSample*>(sampleStripArray[stripID]->getSampleStripParam(SampleStrip::pAudioSample));
+
+                // if the sample is not a resampling, cycle to the first recorded resampling
+                if (currentSample == nullptr || currentSample->getSampleType() != AudioSample::tFileSample)
+                    sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, samplePool.getFirst(), true);
+                // otherwise load the next resampling
+                else
+                {
+                    int s = 0;
+                    // find the current sample index s
+                    for (; s < samplePool.size(); ++s)
+                        if (samplePool[s] == currentSample) break;
+
+                    // and load the next sample, s + 1
+                    const AudioSample *nextSample = samplePool[(++s % samplePool.size())];
+                    sampleStripArray[stripID]->setSampleStripParam(SampleStrip::pAudioSample, nextSample, true);
+                }
+
+                // and find the optimal playspeed
+                calcInitialPlaySpeed(stripID);
+            }
+            break;
+        }
+
+        // this should not happen!
+    default : jassertfalse;
+    }
+}
+void mlrVSTAudioProcessor::executePatternRowMapping(const int &mappingID, const int &stripID, const bool &state)
+{
+    // the pattern that we are modifing is determined by the row
+    const int patternID = stripID;
+
+    switch (mappingID)
+    {
+    case patmapNoMapping : break;
+    case patmapStartRecording : patternRecordings[patternID]->startPatternRecording(); break;
+    case patmapStopRecording : patternRecordings[patternID]->stopPatternRecording(); break;
+    case patmapStartPlaying : patternRecordings[patternID]->startPatternPlaying(); break;
+    case patmapStopPlaying : patternRecordings[patternID]->stopPatternPlaying(); break;
+    default : jassertfalse;
+    }
+}
+
 
 void mlrVSTAudioProcessor::setupDefaultRowMappings()
 {
@@ -1510,10 +1618,10 @@ void mlrVSTAudioProcessor::setupDefaultRowMappings()
     // add the defaults
     topRowMappings.add(tmModifierBtnA);
     topRowMappings.add(tmModifierBtnB);
+    topRowMappings.add(tmPatternModifierBtn);
+    topRowMappings.add(tmNoMapping);
     topRowMappings.add(tmStopAll);
     topRowMappings.add(tmTapeStopAll);
-    topRowMappings.add(tmNoMapping);
-    topRowMappings.add(tmNoMapping);
     topRowMappings.add(tmStartRecording);
     topRowMappings.add(tmStartResampling);
 
@@ -1539,6 +1647,15 @@ void mlrVSTAudioProcessor::setupDefaultRowMappings()
 
     normalRowMappings.add(new Array<int>(rowMappingsA));
     normalRowMappings.add(new Array<int>(rowMappingsB));
+
+    patternMappings.add(patmapStartRecording);
+    patternMappings.add(patmapStopRecording);
+    patternMappings.add(patmapStartPlaying);
+    patternMappings.add(patmapStopPlaying);
+    patternMappings.add(patmapNoMapping);
+    patternMappings.add(patmapNoMapping);
+    patternMappings.add(patmapNoMapping);
+    patternMappings.add(patmapNoMapping);
 }
 
 // This creates new instances of the plugin...

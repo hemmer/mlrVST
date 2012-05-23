@@ -29,7 +29,8 @@ public:
     void stopPatternRecording();
 
     void startPatternPlaying(const int &position = 0);
-    void stopPatternPlaying(MidiBuffer &input, const int &numSamples);
+    void resumePatternPlaying();
+    void stopPatternPlaying();
 
     // these are useful for giving visual feedback
     float getPatternPrecountPercent() const;
@@ -49,6 +50,7 @@ public:
 
     // Properties /////////////////////////////////////////////
     bool isPatternRecording, isPatternPlaying;
+    bool isPatternStopping;
     bool doesPatternLoop;
     int patternLength, patternPrecountLength;
     int patternLengthInSamples, patternPrecountLengthInSamples;

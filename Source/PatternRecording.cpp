@@ -19,7 +19,8 @@ PatternRecording::PatternRecording(mlrVSTAudioProcessor* owner, const int &idNum
     // MIDI //////////////////
     midiPattern(), noteOffs(),
     // Properties ////////////////////////////////////////////////////////////
-    isPatternRecording(false), isPatternPlaying(false), doesPatternLoop(true),
+    isPatternRecording(false), isPatternPlaying(false),
+    isPatternStopping(false), doesPatternLoop(true),
     patternLength(8), patternPrecountLength(0),
     patternLengthInSamples(0), patternPrecountLengthInSamples(0),
     patternPosition(0), patternPrecountPosition(0),
@@ -132,6 +133,7 @@ void PatternRecording::recordPattern(MidiBuffer &midiMessages, const int &numSam
 
 
                 // start playing back from the start straight away
+                isPatternStopping = false;
                 isPatternPlaying = true;
                 patternPosition = 0;
 
@@ -153,6 +155,20 @@ void PatternRecording::playPattern(MidiBuffer &midiMessages, const int &numSampl
     // Midi message queue
     if (isPatternPlaying)
     {
+        // if we are stopping
+        if (isPatternStopping)
+        {
+            // add the note off events to the end off the buffer
+            // to avoid any hanging notes
+            midiMessages.addEvents(noteOffs, 0, 1, numSamples - 1);
+
+            isPatternPlaying = false;
+            isPatternStopping = false;
+
+            // we are finished here
+            return;
+        }
+
         // calculate the correction to timesteps relative
         // to the current MIDI buffer
         const int correction = -patternPosition;
@@ -175,6 +191,9 @@ void PatternRecording::playPattern(MidiBuffer &midiMessages, const int &numSampl
             // if we are looping the pattern
             if (doesPatternLoop)
             {
+                isPatternStopping = false;
+                isPatternPlaying = true;
+
                 // go back to the start of the pattern and add these samples
                 // to what remains of the main MIDI buffer
                 const int samplesRemainingInBuffer = numSamples - numToAdd;
@@ -236,14 +255,17 @@ void PatternRecording::startPatternPlaying(const int &position)
 {
     patternPosition = position;
     isPatternPlaying = true;
+    isPatternStopping = false;
 }
-void PatternRecording::stopPatternPlaying(MidiBuffer &input, const int &numSamples)
+void PatternRecording::resumePatternPlaying()
 {
-    // add the note off events to the end off the buffer
-    // to avoid any hanging notes
-    input.addEvents(noteOffs, 0, 1, numSamples - 1);
-
-    isPatternPlaying = false;
+    isPatternPlaying = true;
+    isPatternStopping = false;
+}
+void PatternRecording::stopPatternPlaying()
+{
+    // signal that we are stopping
+    isPatternStopping = true;
 }
 
 

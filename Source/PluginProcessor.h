@@ -128,6 +128,7 @@ public:
         tmStartResampling,
         tmStopAll,
         tmTapeStopAll,
+        tmPatternModifierBtn,
         numTopRowMappings
     };
 
@@ -154,14 +155,32 @@ public:
         numNormalRowMappings
     };
 
-    int getTopRowMapping(const int &col) const { return topRowMappings[col];}
-    void setTopRowMapping(const int &col, const int &newMapping) { topRowMappings.set(col, newMapping);}
-    // can have multiple modifier buttons
-    int getNormalRowMapping(const int &modifierBtn, const int &col) const { return normalRowMappings[modifierBtn]->getUnchecked(col);}
-    void setNormalRowMapping(const int &modifierBtn, const int &col, const int &newMapping) { normalRowMappings[modifierBtn]->set(col, newMapping);}
+    enum PatternMappings
+    {
+        patmapNoMapping,
+        patmapStartRecording,
+        patmapStopRecording,
+        patmapStartPlaying,
+        patmapStopPlaying,
+        patmapNumMappings
+    };
+
+    enum RowMappingType
+    {
+        rmNoBtn = -1,
+        rmNormalRowMappingBtnA,
+        rmNormalRowMappingBtnB,
+        rmPatternBtn,
+        rmTopRowMapping
+    };
+
+    //
+    int getMonomeMapping(const int &rowType, const int &col) const;
+    void setMonomeMapping(const int &rowType, const int &col, const int &newMapping);
 
     String getTopRowMappingName(const int &mappingID);
     String getNormalRowMappingName(const int &mappingID);
+    String getPatternRowMappingName(const int &mappingID);
 
     // adds a sample to the sample pool
     int addNewSample(File &sampleFile);
@@ -405,11 +424,15 @@ private:
     // Mapping settings ////////////////////////////////////////
     Array<int> topRowMappings;
     OwnedArray< Array<int> > normalRowMappings;
-    // Tells us which of the modifier buttons are held
+    Array<int> patternMappings;
+    // Tells us which of the modifier button is being held
     // so strips can be used to stop, reverse sample etc.
     // NOTE: -1 means no strip is held
     const int numModifierButtons;
     int currentStripModifier;
+
+    void executeNormalRowMapping(const int &mappingID, const int &stripID, const bool &state);
+    void executePatternRowMapping(const int &mappingID, const int &stripID, const bool &state);
     void setupDefaultRowMappings();
 
 

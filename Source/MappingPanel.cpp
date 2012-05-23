@@ -147,13 +147,13 @@ void MappingPanel::buttonClicked(Button *btn)
                     String newMappingName;
                     if (r == 0)
                     {
-                        processor->setTopRowMapping(c, mappingChoice);
+                        processor->setMonomeMapping(mlrVSTAudioProcessor::rmTopRowMapping, c, mappingChoice);
                         newMappingName = processor->getTopRowMappingName(mappingChoice);
                     }
-                    else
+                    else if (r == 1 || r == 2)
                     {
-                        const int modifierBtn = r - 1;
-                        processor->setNormalRowMapping(modifierBtn, c, mappingChoice);
+                        const int modifierBtnType = r - 1;
+                        processor->setMonomeMapping(modifierBtnType, c, mappingChoice);
                         newMappingName = processor->getNormalRowMappingName(mappingChoice);
                     }
 
@@ -195,14 +195,17 @@ void MappingPanel::mouseEnter (const MouseEvent &e)
             {
                 if (r == 0)
                 {
-                    const int currentMapping = processor->getTopRowMapping(c);
+                    const int currentMapping = processor->getMonomeMapping(mlrVSTAudioProcessor::rmTopRowMapping, c);
                     String mappingName = processor->getTopRowMappingName(currentMapping);
                     mappingLabels[r]->setText("Top row: " + mappingName, false);
                 }
-                else
+                else if (r == 1 || r == 2)
                 {
+                    // modifierBtn = 0 - buttonA
+                    // modifierBtn = 1 - buttonB
                     const int modifierBtn = r - 1;
-                    const int currentMapping = processor->getNormalRowMapping(modifierBtn, c);
+                    const int currentMapping = processor->getMonomeMapping(modifierBtn, c);
+
                     String mappingName = processor->getNormalRowMappingName(currentMapping);
                     mappingLabels[r]->setText("Modifier " + String(r) + ": " + mappingName, false);
                 }
