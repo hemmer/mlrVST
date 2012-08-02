@@ -18,7 +18,7 @@
 #include "SampleStripControl.h"
 #include "mlrVSTLookAndFeel.h"
 
-/* Forward declaration to set up pointer arrangement 
+/* Forward declaration to set up pointer arrangement
    to allow sample strips to access the UI */
 class mlrVSTAudioProcessorEditor;
 
@@ -38,7 +38,7 @@ public:
                        mlrVSTAudioProcessor * const owner);
     ~SampleStripControl();
 
-    enum hitZone 
+    enum hitZone
     {
         pNone,
         pSample,
@@ -60,9 +60,8 @@ public:
     bool isInterestedInFileDrag(const StringArray&) { return true; }
     void filesDropped(const StringArray& files, int x, int y);
 
-    /* Picks a new sample from the sample pool,
-       selects it all and finds the new playSpeed.
-    */
+    // Picks a new sample from the sample pool,
+    // selects it all and finds the new playSpeed.
     void selectNewSample(const int &fileChoice, const int &poolID);
 
     // Update the strips if the number of channels changes
@@ -86,7 +85,7 @@ public:
     }
 
     void updateParamsIfChanged()
-    {        
+    {
         if (stripChanged)
         {
             for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
@@ -96,7 +95,7 @@ public:
             }
 
             // repaint once all params are checked
-            repaint(); 
+            repaint();
             stripChanged = false;
         }
     }
@@ -104,7 +103,13 @@ public:
     // These recall settings and update the GUI appropriately
     void recallParam(const int &paramID, const void *newValue, const bool &doRepaint);
 
+    void setModifierBtnStatus(const int &newStatus)
+    {
+        // if the situation has changed...
+        if (newStatus != modifierBtnStatus) repaint();
 
+        modifierBtnStatus = newStatus;
+    }
     void updateThumbnail(const File &newFile);
     void buildNumBlocksList(const int &newMaxNumBlocks);
 
@@ -119,6 +124,7 @@ private:
     // GUI dimensions //////////////////////////////
     const int componentHeight, componentWidth;
     const int controlbarSize;
+    const int maxWaveformHeight;
     Rectangle<int> waveformPaintBounds;
 
     // SampleStrip GUI ////////////////////////////////////////
@@ -159,6 +165,7 @@ private:
     int selectionStartBeforeDrag, *selectionPointToChange, *selectionPointFixed;
     ModifierKeys mouseDownMods;         // so we can track what mouse combination is used
     bool rightMouseDown;                // track RMB usage
+    int modifierBtnStatus;           // so we can draw overlays
     int selectedHitZone;                // what type of sample are we selecting
     double thumbnailScaleFactor;        // scale waveform height by volume
     const AudioSample *currentSample;   // pointer to the sample (to get waveform)
@@ -170,7 +177,7 @@ private:
     bool isReversed, isPlaying;     // play settings
     float playbackPercentage;
 
-    JUCE_LEAK_DETECTOR(SampleStripControl);  
+    JUCE_LEAK_DETECTOR(SampleStripControl);
 };
 
 

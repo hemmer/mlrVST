@@ -74,6 +74,9 @@ private:
     Label monitorInputsLbl;
     ToggleButton monitorInputsBtn;
 
+    Label setMonomeSizeLbl;
+    ComboBox selMonomeSize;
+
     void setupLabel(Label &lbl)
     {
         addAndMakeVisible(&lbl);

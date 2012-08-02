@@ -37,7 +37,10 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     oscPrefixTxtBx("mlrvst"),
 
     monitorInputsLbl("monitor inputs", "monitor inputs"),
-    monitorInputsBtn("")
+    monitorInputsBtn(""),
+
+    setMonomeSizeLbl("monome size", "monome size"),
+    selMonomeSize()
 {
     // main panel label
     addAndMakeVisible(&panelLabel);
@@ -72,7 +75,6 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     addAndMakeVisible(&selNumChannels);
     selNumChannels.addListener(this);
     for(int i = 1; i <= 8; ++i) selNumChannels.addItem(String(i), i);
-    selNumChannels.addListener(this);
     selNumChannels.setBounds(labelWidth + 2 * PAD_AMOUNT, yPos, 150, labelHeight);
     const int numChannels = *static_cast<const int*>
         (processor->getGlobalSetting(mlrVSTAudioProcessor::sNumChannels));
@@ -127,6 +129,28 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     String monitorBtnText = (monitorInputs) ? "enabled" : "disabled";
     monitorInputsBtn.setButtonText(monitorBtnText);
 
+    yPos += PAD_AMOUNT + labelHeight;
+
+    // what dimension device are we using
+    setupLabel(setMonomeSizeLbl);
+    setMonomeSizeLbl.setBounds(PAD_AMOUNT, yPos, labelWidth, labelHeight);
+
+    addAndMakeVisible(&selMonomeSize);
+
+    selMonomeSize.addListener(this);
+    selMonomeSize.addItem("8x8", mlrVSTAudioProcessor::eightByEight);
+    selMonomeSize.addItem("8x16", mlrVSTAudioProcessor::eightBySixteen);
+    selMonomeSize.addItem("16x8", mlrVSTAudioProcessor::sixteenByEight);
+    selMonomeSize.addItem("16x16", mlrVSTAudioProcessor::sixteenBySixteen);
+
+    selMonomeSize.setBounds(labelWidth + 2 * PAD_AMOUNT, yPos, labelWidth, labelHeight);
+
+    const int monomeSize = *static_cast<const int*>
+        (processor->getGlobalSetting(mlrVSTAudioProcessor::sMonomeSize));
+
+    selMonomeSize.setSelectedId(monomeSize, true);
+
+    yPos += PAD_AMOUNT + labelHeight;
 }
 
 void SettingsPanel::paint(Graphics &g)
@@ -156,11 +180,19 @@ void SettingsPanel::comboBoxChanged(ComboBox *box)
 {
     if (box == &selNumChannels)
     {
-        int numChannels = box->getSelectedId();
-        DBG("Number of channels changed to: " + String(numChannels));
+        const int newNumChannels = box->getSelectedId();
+        DBG("Number of channels changed to: " + String(newNumChannels));
 
         // Let the audio processor change the number of audio channels
-        pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sNumChannels, &numChannels);
+        pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sNumChannels, &newNumChannels);
+    }
+    else if (box == &selMonomeSize)
+    {
+        const int newMonomeSize = box->getSelectedId();
+        DBG("New size: " + String(newMonomeSize));
+
+        // Let the audio processor change the number of audio channels
+        pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sMonomeSize, &newMonomeSize);
     }
 }
 

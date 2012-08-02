@@ -418,15 +418,22 @@ void SampleStrip::handleMidiEvent (const MidiMessage& m)
        from a different strip.
     */
 
+    // find if it is a button up /down press
     const bool state = m.isNoteOn();
     const int monomeCol = m.getNoteNumber();
-
     // if (state) {DBG(sampleStripID << " note on col " << monomeCol);}
     // else {DBG(sampleStripID << " note off col " << monomeCol);}
 
+
+    // Check this button associated with this MIDI message
+    // is within the size of the specified device
+    const int numMonomeCols = *static_cast<const int *>(parent->getGlobalSetting(mlrVSTAudioProcessor::sNumMonomeCols));
+    // and if not skip this MIDI message
+    if (monomeCol >= numMonomeCols || monomeCol < 0) return;
+
+
     // if not latched, stop playing once the button is lifted
-    if (!state && !isLatched)
-        stopSamplePlaying();
+    if (!state && !isLatched) stopSamplePlaying();
 
     // if we have a sample and a button is pressed
     else if (currentSample != nullptr && state)

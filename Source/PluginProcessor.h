@@ -89,6 +89,9 @@ public:
     {
         sUseExternalTempo,
         sNumChannels,
+        sMonomeSize,
+        sNumMonomeRows,
+        sNumMonomeCols,
         sCurrentBPM,
         sQuantiseLevel,             // options None (-1), 1/1, 1/2, 1/4, etc
         sQuantiseMenuSelection,     // allows menu to be correctly selected
@@ -105,6 +108,15 @@ public:
         sPatternBank,
         sRampLength,                // length of volume envelope (in samples)
         sNumGlobalSettings
+    };
+
+    enum MonomeSizes
+    {
+        eightByEight = 1,
+        eightBySixteen,
+        sixteenByEight,
+        sixteenBySixteen,
+        numSizes
     };
 
     enum SamplePool
@@ -177,6 +189,7 @@ public:
     //
     int getMonomeMapping(const int &rowType, const int &col) const;
     void setMonomeMapping(const int &rowType, const int &col, const int &newMapping);
+    int getModifierBtnState() const { return currentStripModifier; }
 
     String getTopRowMappingName(const int &mappingID);
     String getNormalRowMappingName(const int &mappingID);
@@ -437,6 +450,10 @@ private:
 
 
     // Misc ////////////////
+
+    // what size of device are we using
+    int monomeSize;
+    int numMonomeRows, numMonomeCols;
 
     // Store which LED column is currently being used
     // for displaying playback position.

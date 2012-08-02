@@ -26,6 +26,7 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
 
     // GUI dimensions //////////////////////////////
     componentHeight(height), componentWidth(width), controlbarSize(16),
+    maxWaveformHeight(componentHeight - controlbarSize),
     waveformPaintBounds(0, controlbarSize, componentWidth, (componentHeight - controlbarSize)),
 
     // SampleStrip GUI ////////////////////////////////////////
@@ -43,7 +44,7 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     visualSelectionStart(0), visualSelectionEnd(componentWidth), visualSelectionLength(componentWidth),
     visualChunkSize(0.0), numChunks(8),
     selectionStartBeforeDrag(0), selectionPointToChange(0), selectionPointFixed(0),
-    mouseDownMods(), rightMouseDown(false), selectedHitZone(0),
+    mouseDownMods(), rightMouseDown(false), modifierBtnStatus(-1), selectedHitZone(0),
     thumbnailScaleFactor(1.0), currentSample(0),
 
     // Settings ///////////////////////
@@ -630,7 +631,7 @@ void SampleStripControl::paint(Graphics& g)
     if(currentSample)
     {
         currentSample->drawChannels(g, waveformPaintBounds,
-                                    (float) thumbnailScaleFactor);
+            (float) thumbnailScaleFactor);
     }
 
     // Indicate where we are in playback
@@ -653,8 +654,8 @@ void SampleStripControl::paint(Graphics& g)
 
 
     /* Finally we grey out the parts of the sample which aren't in
-       the selection and paint stripes to indicate what button
-       will do what.
+    the selection and paint stripes to indicate what button
+    will do what.
     */
     g.setColour(Colours::black.withAlpha(0.5f));
     g.fillRect(0, controlbarSize, visualSelectionStart, componentHeight - controlbarSize);
@@ -669,6 +670,9 @@ void SampleStripControl::paint(Graphics& g)
             (float) controlbarSize, visualChunkSize, (float)(componentHeight - controlbarSize));
     }
 
+    // find which modifier button is held (if any)
+    const int modifierStatus = processor->getModifierBtnState();
+
     // draw hit zones
     if (rightMouseDown)
     {
@@ -682,6 +686,40 @@ void SampleStripControl::paint(Graphics& g)
         g.drawFittedText("SAMPLES", 1 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
         g.drawFittedText("RECORDINGS", 2 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
         g.drawFittedText("RESAMPLINGS", 3 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
+    }
+
+    // if a modifier button is held, draw an overlay
+    else if (modifierBtnStatus != mlrVSTAudioProcessor::rmNoBtn)
+    {
+        g.setColour(Colours::black.withAlpha(0.3f));
+        g.fillRect(waveformPaintBounds);
+
+        switch (modifierStatus)
+        {
+        case mlrVSTAudioProcessor::rmNoBtn : break;
+        case mlrVSTAudioProcessor::rmNormalRowMappingBtnA :
+        case mlrVSTAudioProcessor::rmNormalRowMappingBtnB :
+            {
+                // TODO: this should NOT be hard coded!
+                const int numCols = 8;
+
+                const int rowType = modifierStatus;
+                const int spacing = componentWidth / numCols;
+
+                g.setColour(Colours::white);
+                g.setFont(fontSize);
+
+                for (int c = 0; c < numCols; ++c)
+                {
+                    int mappingID = processor->getMonomeMapping(rowType, c);
+                    String mappingName = processor->getNormalRowMappingName(mappingID);
+
+                    g.drawFittedText(mappingName, c * spacing, controlbarSize, spacing, maxWaveformHeight,
+                        Justification::horizontallyCentred, 5, 1.0f);
+                }
+                break;
+            }
+        }
     }
 }
 

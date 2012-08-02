@@ -261,12 +261,18 @@ void mlrVSTAudioProcessorEditor::timerCallback()
     // see if the host has changed the master gain
     masterGainSlider.setValue(parent->getParameter(mlrVSTAudioProcessor::pMasterGainParam));
 
+    // see if the modifier button status has changed
+    const int modifierStatus = parent->getModifierBtnState();
+
     // update the playback position
     for(int i = 0; i < sampleStripControlArray.size(); ++i)
     {
+        sampleStripControlArray[i]->setModifierBtnStatus(modifierStatus);
         sampleStripControlArray[i]->updatePlaybackStatus();
         sampleStripControlArray[i]->updateParamsIfChanged();
     }
+
+
 }
 
 // This is the callback for when the user drags a slider.

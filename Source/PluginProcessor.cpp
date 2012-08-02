@@ -68,6 +68,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     topRowMappings(), normalRowMappings(), patternMappings(),
     numModifierButtons(2), currentStripModifier(-1),
     // Misc /////////////////////////////////////////////////////////
+    monomeSize(eightByEight), numMonomeRows(8), numMonomeCols(8),
     playbackLEDPosition(), monitorInputs(false)
 {
     // compile time assertions
@@ -554,18 +555,16 @@ void mlrVSTAudioProcessor::timerCallback()
 
 void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &monomeRow, const bool &state)
 {
-
-    /* The -1 is because we are treating the second row on the device as
-       the first "effective" row, the top row being reserved for other
-       functions. Yes this is confusing.
-    */
-    const int stripID = monomeRow - 1;
+    // filter out any keypresses outside the allowed range of the device
+    if (monomeRow < 0 || monomeCol < 0) return;
+    if (monomeRow >= numMonomeRows || monomeCol >= numMonomeCols) return;
 
     // if the button is on the top row
     if (monomeRow == 0)
     {
         // find out the mapping associated with it
         const int mappingID = getMonomeMapping(rmTopRowMapping, monomeCol);
+
         // ...and act accordingly
         switch (mappingID)
         {
@@ -597,12 +596,25 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
         case tmTapeStopAll : stopAllStrips(SampleStrip::mStopTape); break;
         default : jassertfalse;
         }
+
+        // we are done now
+        return;
     }
+
+
+    /* The -1 is because we are treating the second row on the device as
+    the first "effective" row, the top row being reserved for other
+    functions. Yes this is confusing.
+    */
+    const int stripID = monomeRow - 1;
+
+    // check that we have enough SampleStrips...
+    if (stripID >= numSampleStrips) return;
 
     // if one of the normal row modifier buttons are held,
     // each strip now turns into a set of control buttons
-    else if ( (currentStripModifier == rmNormalRowMappingBtnA || currentStripModifier == rmNormalRowMappingBtnB)
-              && monomeRow <= numSampleStrips && monomeRow > 0)
+    if ( (currentStripModifier == rmNormalRowMappingBtnA
+       || currentStripModifier == rmNormalRowMappingBtnB) )
     {
         // first, find out which mapping is associated with the button
         const int mappingID = getMonomeMapping(currentStripModifier, monomeCol);
@@ -620,8 +632,7 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
 
     // if pattern modifier buttons is held, each strip now turns into
     // a set of control buttons that control the pattern recorder
-    else if ( currentStripModifier == rmPatternBtn && monomeRow <= numSampleStrips
-              && monomeRow > 0)
+    else if ( currentStripModifier == rmPatternBtn )
     {
         // first, find out which mapping is associated with the button
         const int mappingID = getMonomeMapping(rmPatternBtn, monomeCol);
@@ -636,9 +647,8 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
 
     }
 
-    else if (monomeRow <= numSampleStrips && monomeRow > 0)
+    else
     {
-
         /* Only pass on messages that are from the allowed range of columns.
            NOTE: MIDI messages may still be passed from other sources that
            are outside this range so the channelProcessor must be aware of
@@ -648,52 +658,55 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
         const int numChunks = *static_cast<const int*>
             (sampleStripArray[stripID]->getSampleStripParam(SampleStrip::pNumChunks));
 
-        if (monomeCol < numChunks)
-        {
+        // ditch anything outside this range
+        if (monomeCol >= numChunks) return;
 
-            // button pressed down
-            if (state)
+
+        // button pressed down
+        if (state)
+        {
+            if (quantisationOn)
             {
-                if (quantisationOn)
-                {
-                    // If we are quantising, create an on message and store it it the queue -
-                    // then once the quantised interval (of length quantisationGap) has
-                    // elapsed (i.e. quantisation remaining < 0) we can fire in all the messages
-                    // at once!
-                    MidiMessage quantisedMessage(MidiMessage::noteOn(monomeRow, monomeCol, 1.0f), 0.01);
-                    quantisedBuffer.addEvent(quantisedMessage, 0);
-                    // DBG("OSC quantising NOTE ON: (" << stripID << ", " << monomeCol << ")");
-                }
-                // The implicit +1 here is because midi channels start at 1 not 0!
-                else
-                {
-                    MidiMessage unquantisedMessage(MidiMessage::noteOn(monomeRow, monomeCol, 1.0f), 0.01);
-                    const double stamp = juce::Time::getMillisecondCounterHiRes() / 1000.0;
-                    unquantisedMessage.setTimeStamp(stamp);
-                    unquantisedCollector.addMessageToQueue(unquantisedMessage);
-                }
+                // If we are quantising, create an on message and store it it the queue -
+                // then once the quantised interval (of length quantisationGap) has
+                // elapsed (i.e. quantisation remaining < 0) we can fire in all the messages
+                // at once!
+
+                // NOTE: The +1 here is because midi channels start at 1 not 0!
+                MidiMessage quantisedMessage(MidiMessage::noteOn(stripID + 1, monomeCol, 1.0f), 0.01);
+                quantisedBuffer.addEvent(quantisedMessage, 0);
             }
 
-            // button released
             else
             {
-                if (quantisationOn)
-                {
-                    MidiMessage quantisedMessage(MidiMessage::noteOff(monomeRow, monomeCol), 0.01);
-                    quantisedBuffer.addEvent(quantisedMessage, 0);
-                    // DBG("OSC quantising NOTE OFF: (" << stripID << ", " << monomeCol << ")");
-                }
-                else
-                {
-                    MidiMessage unquantisedMessage(MidiMessage::noteOff(monomeRow, monomeCol), 0.01);
-                    const double stamp = juce::Time::getMillisecondCounterHiRes() / 1000.0;
-                    unquantisedMessage.setTimeStamp(stamp);
-                    unquantisedCollector.addMessageToQueue(unquantisedMessage);
-                }
-            }
+                // NOTE: The +1 here is because midi channels start at 1 not 0!
+                MidiMessage unquantisedMessage(MidiMessage::noteOn(stripID + 1, monomeCol, 1.0f), 0.01);
 
+                const double stamp = juce::Time::getMillisecondCounterHiRes() / 1000.0;
+                unquantisedMessage.setTimeStamp(stamp);
+                unquantisedCollector.addMessageToQueue(unquantisedMessage);
+            }
         }
 
+        // button released
+        else
+        {
+            if (quantisationOn)
+            {
+                // NOTE: The +1 here is because midi channels start at 1 not 0!
+                MidiMessage quantisedMessage(MidiMessage::noteOff(stripID + 1, monomeCol), 0.01);
+                quantisedBuffer.addEvent(quantisedMessage, 0);
+            }
+            else
+            {
+                // NOTE: The +1 here is because midi channels start at 1 not 0!
+                MidiMessage unquantisedMessage(MidiMessage::noteOff(stripID + 1, monomeCol), 0.01);
+
+                const double stamp = juce::Time::getMillisecondCounterHiRes() / 1000.0;
+                unquantisedMessage.setTimeStamp(stamp);
+                unquantisedCollector.addMessageToQueue(unquantisedMessage);
+            }
+        }
     }
 }
 
@@ -1226,6 +1239,24 @@ void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID, const void 
         useExternalTempo = *static_cast<const bool*>(newValue); break;
     case sNumChannels :
         numChannels = *static_cast<const int*>(newValue); break;
+
+    case sMonomeSize :
+        {
+            monomeSize = *static_cast<const int*>(newValue);
+
+            switch(monomeSize)
+            {
+            case eightByEight :     numMonomeRows = numMonomeCols = 8;
+            case sixteenByEight :   numMonomeRows = 16; numMonomeCols = 8;
+            case eightBySixteen :   numMonomeRows = 8; numMonomeCols = 16;
+            case sixteenBySixteen : numMonomeRows = numMonomeCols = 16;
+            }
+
+            break;
+        }
+
+
+
     case sOSCPrefix :
         {
             OSCPrefix = *static_cast<const String*>(newValue);
@@ -1313,6 +1344,9 @@ const void* mlrVSTAudioProcessor::getGlobalSetting(const int &settingID) const
     {
     case sUseExternalTempo : return &useExternalTempo;
     case sNumChannels : return &numChannels;
+    case sMonomeSize : return &monomeSize;
+    case sNumMonomeRows : return &numMonomeRows;
+    case sNumMonomeCols : return &numMonomeCols;
     case sOSCPrefix : return &OSCPrefix;
     case sMonitorInputs : return &monitorInputs;
     case sCurrentBPM : return &currentBPM;
@@ -1338,6 +1372,7 @@ String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID) const
     {
     case sUseExternalTempo : return "use_external_tempo";
     case sNumChannels : return "num_channels";
+    case sMonomeSize : return "monome_size";
     case sCurrentBPM : return "current_bpm";
     case sQuantiseLevel : return "quantisation_level";
     case sRampLength : return "ramp_length";
