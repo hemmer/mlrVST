@@ -97,7 +97,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
 
     setUpRecordResampleUI();
-    buildSampleStripControls();
+    buildSampleStripControls(numStrips);
 
     masterGainSlider.addListener(this);
 
@@ -124,15 +124,19 @@ mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
     DBG("GUI destructor finished.");
 }
 
-void mlrVSTAudioProcessorEditor::buildSampleStripControls()
+void mlrVSTAudioProcessorEditor::buildSampleStripControls(const int &newNumStrips)
 {
     // make sure we start from scratch
     sampleStripControlArray.clear(true);
 
-    int numStrips = parent->getNumSampleStrips();
+    // rebuild the actual audio objects
+    updateGlobalSetting(mlrVSTAudioProcessor::sNumSampleStrips, &newNumStrips);
+
+    // what size should the strips be
+    waveformControlHeight = ( (GUI_HEIGHT - newNumStrips * PAD_AMOUNT) / newNumStrips);
 
     // Add SampleStripControls, loading settings from the corresponding SampleStrip
-    for(int i = 0; i < numStrips; ++i)
+    for(int i = 0; i < newNumStrips; ++i)
     {
         // this is passed to the SampleStripControl to allow data to be stored
         SampleStrip * currentStrip = parent->getSampleStrip(i);
@@ -144,6 +148,7 @@ void mlrVSTAudioProcessorEditor::buildSampleStripControls()
         int stripY = PAD_AMOUNT + i * (waveformControlHeight + PAD_AMOUNT);
         sampleStripControlArray[i]->setBounds(stripX, stripY, waveformControlWidth, waveformControlHeight);
         addAndMakeVisible( sampleStripControlArray[i] );
+        sampleStripControlArray[i]->toBack();
 
         // Programmatically load parameters
         for(int p = SampleStrip::FirstParam; p < SampleStrip::NumGUIParams; ++p)
@@ -153,6 +158,9 @@ void mlrVSTAudioProcessorEditor::buildSampleStripControls()
         }
         DBG("params loaded for strip #" << i);
     }
+
+    numStrips = newNumStrips;
+    DBG("SampleStripControl array built, size " << numStrips);
 }
 
 void mlrVSTAudioProcessorEditor::buildSliders()
@@ -161,7 +169,7 @@ void mlrVSTAudioProcessorEditor::buildSliders()
 
     // work out the correct height width
     const int sliderWidth = (int)(270 / (float) (numChannels + 1));
-    const int sliderHeight = waveformControlHeight - 16;
+    const int sliderHeight = 66;    // TODO: no magic numbers!
 
     // clear any existing sliders
     slidersArray.clear();
@@ -219,7 +227,7 @@ void mlrVSTAudioProcessorEditor::buildSliders()
 
     // increment yPosition for the next GUI item
     xPosition = PAD_AMOUNT;
-    yPosition += waveformControlHeight + PAD_AMOUNT;
+    yPosition += sliderHeight + 3 * PAD_AMOUNT;
 }
 
 //==============================================================================

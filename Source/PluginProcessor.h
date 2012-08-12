@@ -92,6 +92,7 @@ public:
         sMonomeSize,
         sNumMonomeRows,
         sNumMonomeCols,
+        sNumSampleStrips,
         sCurrentBPM,
         sQuantiseLevel,             // options None (-1), 1/1, 1/2, 1/4, etc
         sQuantiseMenuSelection,     // allows menu to be correctly selected
@@ -250,7 +251,6 @@ public:
     void buildSampleStripArray(const int &numSampleStrips);
 
     SampleStrip* getSampleStrip(const int &index);
-    int getNumSampleStrips() const { return sampleStripArray.size(); }
 
     bool getChannelMuteStatus(const int &chan) const
     {
@@ -390,13 +390,15 @@ private:
     // this, we apply a short volume ramp at the start / end of
     // playback and at either end of a loop point:
     int rampLength;
+    // How many sample strips
+    int numSampleStrips;
 
 
     // SampleStrips ////////////////
     // These track the seperate SampleStrips (related to the GUI component
     // SampleStripControl). They control the audio for each strip
     OwnedArray<SampleStrip> sampleStripArray;
-    int numSampleStrips;
+
 
     // OSC ////////////////////////
     String OSCPrefix;           // prefix for incoming / outgoing OSC messages

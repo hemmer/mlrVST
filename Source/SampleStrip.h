@@ -23,9 +23,7 @@ class mlrVSTAudioProcessor;
 class SampleStrip : public ChangeBroadcaster
 {
 public:
-    SampleStrip(const int &newID,
-                const int &newNumSampleStrips,
-                mlrVSTAudioProcessor *owner);
+    SampleStrip(const int &newID, mlrVSTAudioProcessor *owner);
     ~SampleStrip()
     {
         buttonStatus.clear();
@@ -153,7 +151,6 @@ public:
 private:
     // metadata //////////////
     const int sampleStripID;
-    const int numSampleStrips;
 
     // communication //////////////////////////
     mlrVSTAudioProcessor * const parent;

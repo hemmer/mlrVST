@@ -77,6 +77,9 @@ private:
     Label setMonomeSizeLbl;
     ComboBox selMonomeSize;
 
+    Label setNumSampleStrips;
+    ComboBox selNumSampleStrips;
+
     void setupLabel(Label &lbl)
     {
         addAndMakeVisible(&lbl);

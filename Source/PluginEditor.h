@@ -79,6 +79,7 @@ public:
     void updateGlobalSetting(const int &parameterID, const void *newValue);
     const void* getGlobalSetting(const int &parameterID) const { return parent->getGlobalSetting(parameterID); }
 
+    void buildSampleStripControls(const int &newNumStrips);
 
 private:
 
@@ -156,9 +157,9 @@ private:
     // Store the waveform controls/strips in array, this is
     // NUM_ROWS - 1 (for the top row controls)
     OwnedArray<SampleStripControl> sampleStripControlArray;
-    const int numStrips;
-    const int waveformControlHeight, waveformControlWidth;
-    void buildSampleStripControls();
+    int numStrips;
+    int waveformControlHeight, waveformControlWidth;
+
 
     JUCE_LEAK_DETECTOR(mlrVSTAudioProcessorEditor);
 };

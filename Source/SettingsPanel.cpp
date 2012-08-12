@@ -40,7 +40,10 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     monitorInputsBtn(""),
 
     setMonomeSizeLbl("monome size", "monome size"),
-    selMonomeSize()
+    selMonomeSize(),
+
+    setNumSampleStrips("num sample strips", "num sample strips"),
+    selNumSampleStrips()
 {
     // main panel label
     addAndMakeVisible(&panelLabel);
@@ -111,8 +114,9 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     const String currentPrefix = *static_cast<const String*>
         (processor->getGlobalSetting(mlrVSTAudioProcessor::sOSCPrefix));
     DBG("settings panel: prefix " << currentPrefix);
-    // eh?
-    //oscPrefixTxtBx.setText("test", false);
+
+    // TODO: fonts freak out here
+    // oscPrefixTxtBx.setText("test", false);
     yPos += PAD_AMOUNT + labelHeight;
 
 
@@ -149,8 +153,25 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
         (processor->getGlobalSetting(mlrVSTAudioProcessor::sMonomeSize));
 
     selMonomeSize.setSelectedId(monomeSize, true);
-
     yPos += PAD_AMOUNT + labelHeight;
+
+
+    setupLabel(setNumSampleStrips);
+    setMonomeSizeLbl.setBounds(PAD_AMOUNT, yPos, labelWidth, labelHeight);
+
+    addAndMakeVisible(&selNumSampleStrips);
+    selNumSampleStrips.addListener(this);
+    const int numSampleStrips = *static_cast<const int*>
+        (processor->getGlobalSetting(mlrVSTAudioProcessor::sNumSampleStrips));
+
+    for (int s = 0; s < 15; ++s)
+        selNumSampleStrips.addItem(String(s), s+1);
+
+    selNumSampleStrips.setBounds(labelWidth + 2 * PAD_AMOUNT, yPos, labelWidth, labelHeight);
+    selNumSampleStrips.setSelectedId(numSampleStrips+1, true);
+    yPos += PAD_AMOUNT + labelHeight;
+
+
 }
 
 void SettingsPanel::paint(Graphics &g)
@@ -183,7 +204,7 @@ void SettingsPanel::comboBoxChanged(ComboBox *box)
         const int newNumChannels = box->getSelectedId();
         DBG("Number of channels changed to: " + String(newNumChannels));
 
-        // Let the audio processor change the number of audio channels
+        // update the global setting
         pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sNumChannels, &newNumChannels);
     }
     else if (box == &selMonomeSize)
@@ -191,8 +212,16 @@ void SettingsPanel::comboBoxChanged(ComboBox *box)
         const int newMonomeSize = box->getSelectedId();
         DBG("New size: " + String(newMonomeSize));
 
-        // Let the audio processor change the number of audio channels
+        // update the global setting
         pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sMonomeSize, &newMonomeSize);
+    }
+    else if (box == &selNumSampleStrips)
+    {
+        const int newNumSampleStrips = box->getSelectedId() - 1;
+        DBG("New num sample strips: " + String(newNumSampleStrips));
+
+        // let the UI repaint, it will then update the global setting
+        pluginUI->buildSampleStripControls(newNumSampleStrips);
     }
 }
 

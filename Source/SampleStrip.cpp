@@ -12,12 +12,10 @@
 #include "SampleStrip.h"
 #include "PluginProcessor.h"
 
-SampleStrip::SampleStrip(const int &newID,
-                         const int &newNumSampleStrips,
-                         mlrVSTAudioProcessor *owner) :
+SampleStrip::SampleStrip(const int &newID, mlrVSTAudioProcessor *owner) :
 
     // meta data /////////////////////////////////////////////
-    sampleStripID(newID), numSampleStrips(newNumSampleStrips),
+    sampleStripID(newID),
     // communication //////////////////////////
     parent(owner),
     // playback parameters //////////////////////////////////////

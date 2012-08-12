@@ -42,9 +42,9 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     defaultChannelGain(0.8f), channelColours(),
     // Global Settings //////////////////////////////////////////////
     numChannels(maxChannels), useExternalTempo(false),
-    currentBPM(120.0), rampLength(50),
+    currentBPM(120.0), rampLength(50), numSampleStrips(7),
     // Sample Strips //////////////////////
-    sampleStripArray(), numSampleStrips(7),
+    sampleStripArray(),
     // OSC /////////////////////////////////////////////
     OSCPrefix("mlrvst"), oscMsgHandler(OSCPrefix, this),
     // Audio / MIDI Buffers /////////////////////////////////////////
@@ -716,18 +716,31 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
 ///////////////////////
 void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
 {
+    jassert(newNumSampleStrips > 0);
+
     // make sure we're not using the sampleStripArray while (re)building it
     suspendProcessing(true);
 
-
-    sampleStripArray.clear();
-    numSampleStrips = newNumSampleStrips;
-
-    for (int i = 0; i < numSampleStrips; ++i)
+    // if we are removing rows
+    if (newNumSampleStrips < sampleStripArray.size())
     {
-        sampleStripArray.add(new SampleStrip(i, numSampleStrips, this));
+        const int numToRemove = sampleStripArray.size() - newNumSampleStrips;
+
+        for (int i = 0; i < numToRemove; ++i)
+            sampleStripArray.removeLast();
     }
 
+    // otherwise if we are adding rows
+    else if (newNumSampleStrips > sampleStripArray.size())
+    {
+        const int numToAdd = newNumSampleStrips - sampleStripArray.size();
+        const int previousNumSampleStrips = sampleStripArray.size();
+
+        for (int i = 0; i < numToAdd; ++i)
+            sampleStripArray.add(new SampleStrip(previousNumSampleStrips + i, this));
+    }
+
+    numSampleStrips = newNumSampleStrips;
     DBG("SampleStrip array built");
 
     // resume processing
@@ -1255,7 +1268,17 @@ void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID, const void 
             break;
         }
 
+    case sNumSampleStrips :
+        {
+            const int newNumSampleStrips = *static_cast<const int*>(newValue);
 
+            if (newNumSampleStrips != numSampleStrips)
+            {
+                buildSampleStripArray(newNumSampleStrips);
+                numSampleStrips = newNumSampleStrips;
+            }
+            break;
+        }
 
     case sOSCPrefix :
         {
@@ -1347,6 +1370,7 @@ const void* mlrVSTAudioProcessor::getGlobalSetting(const int &settingID) const
     case sMonomeSize : return &monomeSize;
     case sNumMonomeRows : return &numMonomeRows;
     case sNumMonomeCols : return &numMonomeCols;
+    case sNumSampleStrips : return &numSampleStrips;
     case sOSCPrefix : return &OSCPrefix;
     case sMonitorInputs : return &monitorInputs;
     case sCurrentBPM : return &currentBPM;
@@ -1373,6 +1397,7 @@ String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID) const
     case sUseExternalTempo : return "use_external_tempo";
     case sNumChannels : return "num_channels";
     case sMonomeSize : return "monome_size";
+    case sNumSampleStrips : return "num_sample_strips";
     case sCurrentBPM : return "current_bpm";
     case sQuantiseLevel : return "quantisation_level";
     case sRampLength : return "ramp_length";
