@@ -394,7 +394,7 @@ public:
 
     ~ModuleHandle()
     {
-        getActiveModules().removeValue (this);
+        getActiveModules().removeFirstMatchingValue (this);
         close();
     }
 
@@ -891,6 +891,14 @@ void VSTPluginInstance::initialise()
     if (initialised || effect == 0)
         return;
 
+   #if JUCE_WINDOWS
+    // On Windows it's highly advisable to create your plugins using the message thread,
+    // because many plugins need a chance to create HWNDs that will get their
+    // messages delivered by the main message thread, and that's not possible from
+    // a background thread.
+    jassert (MessageManager::getInstance()->isThisTheMessageThread());
+   #endif
+
     log ("Initialising VST: " + module->pluginName);
     initialised = true;
 
@@ -1145,7 +1153,7 @@ public:
         closePluginWindow();
        #endif
 
-        activeVSTWindows.removeValue (this);
+        activeVSTWindows.removeFirstMatchingValue (this);
         plugin.editorBeingDeleted (this);
     }
 
@@ -1311,7 +1319,7 @@ public:
 
     void broughtToFront()
     {
-        activeVSTWindows.removeValue (this);
+        activeVSTWindows.removeFirstMatchingValue (this);
         activeVSTWindows.add (this);
 
        #if JUCE_MAC
@@ -1711,9 +1719,7 @@ private:
         }
     }
 
-    void mouseWheelMove (const MouseEvent& e,
-                         float incrementX,
-                         float incrementY)
+    void mouseWheelMove (const MouseEvent& e, const MouseWheelDetails& wheel)
     {
         if (pluginWindow != 0)
         {
@@ -1728,7 +1734,7 @@ private:
             ev.xbutton.x_root = e.getScreenX();
             ev.xbutton.y_root = e.getScreenY();
 
-            translateJuceToXMouseWheelModifiers (e, incrementY, ev);
+            translateJuceToXMouseWheelModifiers (e, wheel.deltaY, ev);
             sendEventToChild (&ev);
 
             // TODO - put a usleep here ?

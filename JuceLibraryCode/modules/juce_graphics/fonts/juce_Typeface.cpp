@@ -23,15 +23,21 @@
   ==============================================================================
 */
 
-namespace FontStyleHelpers
+struct FontStyleHelpers
 {
     static const char* getStyleName (const bool bold,
                                      const bool italic) noexcept
     {
-        if (bold && ! italic)   return "Bold";
-        if (italic && ! bold)   return "Italic";
-        if (bold && italic)     return "Bold Italic";
+        if (bold && italic) return "Bold Italic";
+        if (bold)           return "Bold";
+        if (italic)         return "Italic";
         return "Regular";
+    }
+
+    static const char* getStyleName (const int styleFlags) noexcept
+    {
+        return getStyleName ((styleFlags & Font::bold) != 0,
+                             (styleFlags & Font::italic) != 0);
     }
 
     static bool isBold (const String& style) noexcept
@@ -65,7 +71,7 @@ namespace FontStyleHelpers
         return isPlaceholderFamilyName (family) ? getConcreteFamilyNameFromPlaceholder (family)
                                                 : family;
     }
-}
+};
 
 //==============================================================================
 Typeface::Typeface (const String& name_, const String& style_) noexcept

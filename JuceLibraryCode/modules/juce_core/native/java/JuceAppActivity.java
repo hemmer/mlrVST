@@ -30,6 +30,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.*;
@@ -70,6 +71,27 @@ public final class JuceAppActivity   extends Activity
         super.onDestroy();
     }
 
+    @Override
+    protected final void onPause()
+    {
+        suspendApp();
+        super.onPause();
+    }
+
+    @Override
+    protected final void onResume()
+    {
+        super.onResume();
+        resumeApp();
+    }
+
+    @Override
+    public void onConfigurationChanged (Configuration cfg)
+    {
+        super.onConfigurationChanged (cfg);
+        setContentView (viewHolder);
+    }
+
     private void callAppLauncher()
     {
         launchApp (getApplicationInfo().publicSourceDir,
@@ -79,6 +101,8 @@ public final class JuceAppActivity   extends Activity
     //==============================================================================
     private native void launchApp (String appFile, String appDataDir);
     private native void quitApp();
+    private native void suspendApp();
+    private native void resumeApp();
     private native void setScreenSize (int screenWidth, int screenHeight);
 
     //==============================================================================

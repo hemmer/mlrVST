@@ -86,14 +86,14 @@ public:
         The component is the one that we intend to represent, and the style flags are
         a combination of the values in the StyleFlags enum
     */
-    ComponentPeer (Component* component, int styleFlags);
+    ComponentPeer (Component& component, int styleFlags);
 
     /** Destructor. */
     virtual ~ComponentPeer();
 
     //==============================================================================
     /** Returns the component being represented by this peer. */
-    Component* getComponent() const noexcept                { return component; }
+    Component& getComponent() noexcept                      { return component; }
 
     /** Returns the set of style flags that were set when the window was created.
 
@@ -307,20 +307,24 @@ public:
 
     //==============================================================================
     void handleMouseEvent (int touchIndex, const Point<int>& positionWithinPeer, const ModifierKeys& newMods, int64 time);
-    void handleMouseWheel (int touchIndex, const Point<int>& positionWithinPeer, int64 time, float x, float y);
+    void handleMouseWheel (int touchIndex, const Point<int>& positionWithinPeer, int64 time, const MouseWheelDetails&);
 
     void handleUserClosingWindow();
 
-    bool handleFileDragMove (const StringArray& files, const Point<int>& position);
-    bool handleFileDragExit (const StringArray& files);
-    bool handleFileDragDrop (const StringArray& files, const Point<int>& position);
+    struct DragInfo
+    {
+        StringArray files;
+        String text;
+        Point<int> position;
+    };
+
+    bool handleDragMove (const DragInfo&);
+    bool handleDragExit (const DragInfo&);
+    bool handleDragDrop (const DragInfo&);
 
     //==============================================================================
     /** Resets the masking region.
-
-        The subclass should call this every time it's about to call the handlePaint
-        method.
-
+        The subclass should call this every time it's about to call the handlePaint method.
         @see addMaskedRegion
     */
     void clearMaskedRegion();
@@ -338,19 +342,16 @@ public:
 
     //==============================================================================
     /** Returns the number of currently-active peers.
-
         @see getPeer
     */
     static int getNumPeers() noexcept;
 
     /** Returns one of the currently-active peers.
-
         @see getNumPeers
     */
     static ComponentPeer* getPeer (int index) noexcept;
 
     /** Checks if this peer object is valid.
-
         @see getNumPeers
     */
     static bool isValidPeer (const ComponentPeer* peer) noexcept;
@@ -363,7 +364,7 @@ public:
 
 protected:
     //==============================================================================
-    Component* const component;
+    Component& component;
     const int styleFlags;
     RectangleList maskedRegion;
     Rectangle<int> lastNonFullscreenBounds;
@@ -381,9 +382,11 @@ private:
 
     friend class Component;
     friend class Desktop;
-    static ComponentPeer* getPeerFor (const Component* component) noexcept;
+    static ComponentPeer* getPeerFor (const Component*) noexcept;
+    Component* getTargetForKeyPress();
 
-    void setLastDragDropTarget (Component* comp);
+    void setLastDragDropTarget (Component*);
+    bool finishDrag (bool);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComponentPeer);
 };

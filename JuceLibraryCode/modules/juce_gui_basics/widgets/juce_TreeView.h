@@ -292,7 +292,13 @@ public:
         call LookAndFeel::drawTreeviewPlusMinusBox(), but you can override
         it for custom effects.
     */
-    virtual void paintOpenCloseButton (Graphics& g, int width, int height, bool isMouseOver);
+    virtual void paintOpenCloseButton (Graphics&, int width, int height, bool isMouseOver);
+
+    /** Draws the line that connects this item to the vertical line extending below its parent. */
+    virtual void paintHorizontalConnectingLine (Graphics&, const Line<float>& line);
+
+    /** Draws the line that extends vertically up towards one of its parents, or down to one of its children. */
+    virtual void paintVerticalConnectingLine (Graphics&, const Line<float>& line);
 
     /** Called when the user clicks on this item.
 
@@ -427,9 +433,13 @@ public:
         for a section of the tree.
 
         The caller is responsible for deleting the object that is returned.
+
+        Note that if all nodes of the tree are in their default state, then this may
+        return a nullptr.
+
         @see TreeView::getOpennessState, restoreOpennessState
     */
-    XmlElement* getOpennessState() const noexcept;
+    XmlElement* getOpennessState() const;
 
     /** Restores the openness of this item and all its sub-items from a saved state.
 
@@ -441,7 +451,7 @@ public:
 
         @see TreeView::restoreOpennessState, getOpennessState
     */
-    void restoreOpennessState (const XmlElement& xml) noexcept;
+    void restoreOpennessState (const XmlElement& xml);
 
     //==============================================================================
     /** Returns the index of this item in its parent's sub-items. */
@@ -508,7 +518,6 @@ private:
     unsigned int openness   : 2;
 
     friend class TreeView;
-    friend class TreeViewContentComponent;
 
     void updatePositions (int newY);
     int getIndentX() const noexcept;
@@ -524,6 +533,9 @@ private:
     TreeViewItem* getSelectedItemWithIndex (int index) noexcept;
     TreeViewItem* getNextVisibleItem (bool recurse) const noexcept;
     TreeViewItem* findItemFromIdentifierString (const String&);
+    void restoreToDefaultOpenness();
+    bool isFullyOpen() const noexcept;
+    XmlElement* getOpennessState (bool canReturnNull) const;
 
    #if JUCE_CATCH_DEPRECATED_CODE_MISUSE
     // The parameters for these methods have changed - please update your code!
@@ -791,14 +803,16 @@ public:
     void itemDropped (const SourceDetails&);
 
 private:
-    friend class TreeViewItem;
-    friend class TreeViewContentComponent;
+    class ContentComponent;
     class TreeViewport;
     class InsertPointHighlight;
     class TargetGroupHighlight;
+    friend class TreeViewItem;
+    friend class ContentComponent;
     friend class ScopedPointer<TreeViewport>;
     friend class ScopedPointer<InsertPointHighlight>;
     friend class ScopedPointer<TargetGroupHighlight>;
+
     ScopedPointer<TreeViewport> viewport;
     CriticalSection nodeAlterationLock;
     TreeViewItem* rootItem;
@@ -815,12 +829,15 @@ private:
     void recalculateIfNeeded();
     void moveSelectedRow (int delta);
     void updateButtonUnderMouse (const MouseEvent&);
-    void showDragHighlight (TreeViewItem*, int insertIndex, int x, int y) noexcept;
+    struct InsertPoint;
+    void showDragHighlight (const InsertPoint&) noexcept;
     void hideDragHighlight() noexcept;
-    void handleDrag (const StringArray& files, const SourceDetails&);
-    void handleDrop (const StringArray& files, const SourceDetails&);
-    TreeViewItem* getInsertPosition (int& x, int& y, int& insertIndex,
-                                     const StringArray& files, const SourceDetails&) const noexcept;
+    void handleDrag (const StringArray&, const SourceDetails&);
+    void handleDrop (const StringArray&, const SourceDetails&);
+    void toggleOpenSelectedItem();
+    void moveOutOfSelectedItem();
+    void moveIntoSelectedItem();
+    void moveByPages (int numPages);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TreeView);
 };

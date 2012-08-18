@@ -121,6 +121,9 @@ namespace juce
 #ifndef __JUCE_SELECTEDITEMSET_JUCEHEADER__
  #include "mouse/juce_SelectedItemSet.h"
 #endif
+#ifndef __JUCE_TEXTDRAGANDDROPTARGET_JUCEHEADER__
+ #include "mouse/juce_TextDragAndDropTarget.h"
+#endif
 #ifndef __JUCE_TOOLTIPCLIENT_JUCEHEADER__
  #include "mouse/juce_TooltipClient.h"
 #endif
@@ -249,6 +252,9 @@ namespace juce
 #endif
 #ifndef __JUCE_COMPONENTMOVEMENTWATCHER_JUCEHEADER__
  #include "layout/juce_ComponentMovementWatcher.h"
+#endif
+#ifndef __JUCE_CONCERTINAPANEL_JUCEHEADER__
+ #include "layout/juce_ConcertinaPanel.h"
 #endif
 #ifndef __JUCE_GROUPCOMPONENT_JUCEHEADER__
  #include "layout/juce_GroupComponent.h"

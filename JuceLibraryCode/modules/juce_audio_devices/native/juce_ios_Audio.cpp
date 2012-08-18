@@ -45,7 +45,7 @@ public:
 
     ~IPhoneAudioIODevice()
     {
-        getSessionHolder().activeDevices.removeValue (this);
+        getSessionHolder().activeDevices.removeFirstMatchingValue (this);
         close();
     }
 
@@ -99,8 +99,16 @@ public:
 
         AudioSessionSetActive (true);
 
-        UInt32 audioCategory = audioInputIsAvailable ? kAudioSessionCategory_PlayAndRecord
-                                                     : kAudioSessionCategory_MediaPlayback;
+        UInt32 audioCategory = kAudioSessionCategory_MediaPlayback;
+
+        if (numInputChannels > 0 && audioInputIsAvailable)
+        {
+            audioCategory = kAudioSessionCategory_PlayAndRecord;
+
+            UInt32 allowBluetoothInput = 1;
+            AudioSessionSetProperty (kAudioSessionProperty_OverrideCategoryEnableBluetoothInput,
+                                     sizeof (allowBluetoothInput), &allowBluetoothInput);
+        }
 
         AudioSessionSetProperty (kAudioSessionProperty_AudioCategory, sizeof (audioCategory), &audioCategory);
         AudioSessionAddPropertyListener (kAudioSessionProperty_AudioRouteChange, routingChangedStatic, this);

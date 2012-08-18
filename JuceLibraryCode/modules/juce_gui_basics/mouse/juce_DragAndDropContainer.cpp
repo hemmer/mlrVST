@@ -28,8 +28,8 @@ bool juce_performDragDropText (const String&, bool& shouldStop);
 
 
 //==============================================================================
-class DragImageComponent  : public Component,
-                            public Timer
+class DragAndDropContainer::DragImageComponent  : public Component,
+                                                  private Timer
 {
 public:
     DragImageComponent (const Image& im,
@@ -441,3 +441,7 @@ bool DragAndDropTarget::shouldDrawDragImageWhenOver()         { return true; }
 void FileDragAndDropTarget::fileDragEnter (const StringArray&, int, int)  {}
 void FileDragAndDropTarget::fileDragMove  (const StringArray&, int, int)  {}
 void FileDragAndDropTarget::fileDragExit  (const StringArray&)            {}
+
+void TextDragAndDropTarget::textDragEnter (const String&, int, int)  {}
+void TextDragAndDropTarget::textDragMove  (const String&, int, int)  {}
+void TextDragAndDropTarget::textDragExit  (const String&)            {}

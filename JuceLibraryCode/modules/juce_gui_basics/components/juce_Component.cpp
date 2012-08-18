@@ -114,8 +114,8 @@ public:
         }
     }
 
-    static void sendWheelEvent (Component& comp, Component::BailOutChecker& checker, const MouseEvent& e,
-                                const float wheelIncrementX, const float wheelIncrementY)
+    static void sendWheelEvent (Component& comp, Component::BailOutChecker& checker,
+                                const MouseEvent& e, const MouseWheelDetails& wheel)
     {
         {
             MouseListenerList* const list = comp.mouseListeners;
@@ -124,7 +124,7 @@ public:
             {
                 for (int i = list->listeners.size(); --i >= 0;)
                 {
-                    list->listeners.getUnchecked(i)->mouseWheelMove (e, wheelIncrementX, wheelIncrementY);
+                    list->listeners.getUnchecked(i)->mouseWheelMove (e, wheel);
 
                     if (checker.shouldBailOut())
                         return;
@@ -144,7 +144,7 @@ public:
 
                 for (int i = list->numDeepMouseListeners; --i >= 0;)
                 {
-                    list->listeners.getUnchecked(i)->mouseWheelMove (e, wheelIncrementX, wheelIncrementY);
+                    list->listeners.getUnchecked(i)->mouseWheelMove (e, wheel);
 
                     if (checker2.shouldBailOut())
                         return;
@@ -720,18 +720,18 @@ public:
 
         {
             Graphics imG (image);
-            LowLevelGraphicsContext* const lg = imG.getInternalContext();
+            LowLevelGraphicsContext& lg = imG.getInternalContext();
 
             for (RectangleList::Iterator i (validArea); i.next();)
-                lg->excludeClipRectangle (*i.getRectangle());
+                lg.excludeClipRectangle (*i.getRectangle());
 
-            if (! lg->isClipEmpty())
+            if (! lg.isClipEmpty())
             {
                 if (! owner.isOpaque())
                 {
-                    lg->setFill (Colours::transparentBlack);
-                    lg->fillRect (bounds, true);
-                    lg->setFill (Colours::black);
+                    lg.setFill (Colours::transparentBlack);
+                    lg.fillRect (bounds, true);
+                    lg.setFill (Colours::black);
                 }
 
                 owner.paintEntireComponent (imG, true);
@@ -1379,9 +1379,6 @@ void Component::addChildComponent (Component* const child, int zOrder)
     // thread, you'll need to use a MessageManagerLock object to make sure it's thread-safe.
     CHECK_MESSAGE_MANAGER_IS_LOCKED_OR_OFFSCREEN
 
-    jassert (MessageManager::getInstance()->currentThreadHasLockedMessageManager() || ! isShowing());
-
-
     if (child != nullptr && child->parentComponent != this)
     {
         if (child->parentComponent != nullptr)
@@ -1949,14 +1946,20 @@ void Component::paintEntireComponent (Graphics& g, const bool ignoreAlphaLevel)
 
     if (effect != nullptr)
     {
+        const float scale = g.getInternalContext().getTargetDeviceScaleFactor();
+
         Image effectImage (flags.opaqueFlag ? Image::RGB : Image::ARGB,
-                           getWidth(), getHeight(), ! flags.opaqueFlag);
+                           (int) (scale * getWidth()), (int) (scale * getHeight()), ! flags.opaqueFlag);
         {
             Graphics g2 (effectImage);
+            g2.addTransform (AffineTransform::scale (scale, scale));
             paintComponentAndChildren (g2);
         }
 
-        effect->applyEffect (effectImage, g, ignoreAlphaLevel ? 1.0f : getAlpha());
+        g.saveState();
+        g.addTransform (AffineTransform::scale (1.0f / scale, 1.0f / scale));
+        effect->applyEffect (effectImage, g, scale, ignoreAlphaLevel ? 1.0f : getAlpha());
+        g.restoreState();
     }
     else if (componentTransparency > 0 && ! ignoreAlphaLevel)
     {
@@ -2049,14 +2052,19 @@ void Component::sendLookAndFeelChange()
 
     if (safePointer != nullptr)
     {
-        for (int i = childComponentList.size(); --i >= 0;)
+        colourChanged();
+
+        if (safePointer != nullptr)
         {
-            childComponentList.getUnchecked (i)->sendLookAndFeelChange();
+            for (int i = childComponentList.size(); --i >= 0;)
+            {
+                childComponentList.getUnchecked (i)->sendLookAndFeelChange();
 
-            if (safePointer == nullptr)
-                return;
+                if (safePointer == nullptr)
+                    return;
 
-            i = jmin (i, childComponentList.size());
+                i = jmin (i, childComponentList.size());
+            }
         }
     }
 }
@@ -2176,12 +2184,11 @@ void Component::mouseDrag  (const MouseEvent&)          {}
 void Component::mouseMove  (const MouseEvent&)          {}
 void Component::mouseDoubleClick (const MouseEvent&)    {}
 
-void Component::mouseWheelMove (const MouseEvent& e, float wheelIncrementX, float wheelIncrementY)
+void Component::mouseWheelMove (const MouseEvent& e, const MouseWheelDetails& wheel)
 {
     // the base class just passes this event up to its parent..
     if (parentComponent != nullptr)
-        parentComponent->mouseWheelMove (e.getEventRelativeTo (parentComponent),
-                                         wheelIncrementX, wheelIncrementY);
+        parentComponent->mouseWheelMove (e.getEventRelativeTo (parentComponent), wheel);
 }
 
 
@@ -2310,9 +2317,6 @@ void Component::internalMouseEnter (MouseInputSource& source, const Point<int>& 
 
 void Component::internalMouseExit (MouseInputSource& source, const Point<int>& relativePos, const Time& time)
 {
-    if (isCurrentlyBlockedByAnotherModalComponent() && source.getComponentUnderMouse() != this)
-        return;
-
     if (flags.repaintOnMouseActivityFlag)
         repaint();
 
@@ -2395,43 +2399,44 @@ void Component::internalMouseDown (MouseInputSource& source, const Point<int>& r
 
 void Component::internalMouseUp (MouseInputSource& source, const Point<int>& relativePos, const Time& time, const ModifierKeys& oldModifiers)
 {
-    if (! isCurrentlyBlockedByAnotherModalComponent())
+    // NB: don't check whether there's a modal comp blocking this one, because if there is, it
+    // must have been created during a mouse-drag on this component, and if so, this comp will
+    // still want to get the corresponding mouse-up.
+
+    BailOutChecker checker (this);
+
+    if (flags.repaintOnMouseActivityFlag)
+        repaint();
+
+    const MouseEvent me (source, relativePos,
+                         oldModifiers, this, this, time,
+                         getLocalPoint (nullptr, source.getLastMouseDownPosition()),
+                         source.getLastMouseDownTime(),
+                         source.getNumberOfMultipleClicks(),
+                         source.hasMouseMovedSignificantlySincePressed());
+    mouseUp (me);
+
+    if (checker.shouldBailOut())
+        return;
+
+    Desktop& desktop = Desktop::getInstance();
+    desktop.getMouseListeners().callChecked (checker, &MouseListener::mouseUp, me);
+
+    MouseListenerList::sendMouseEvent (*this, checker, &MouseListener::mouseUp, me);
+
+    if (checker.shouldBailOut())
+        return;
+
+    // check for double-click
+    if (me.getNumberOfClicks() >= 2)
     {
-        BailOutChecker checker (this);
-
-        if (flags.repaintOnMouseActivityFlag)
-            repaint();
-
-        const MouseEvent me (source, relativePos,
-                             oldModifiers, this, this, time,
-                             getLocalPoint (nullptr, source.getLastMouseDownPosition()),
-                             source.getLastMouseDownTime(),
-                             source.getNumberOfMultipleClicks(),
-                             source.hasMouseMovedSignificantlySincePressed());
-        mouseUp (me);
+        mouseDoubleClick (me);
 
         if (checker.shouldBailOut())
             return;
 
-        Desktop& desktop = Desktop::getInstance();
-        desktop.getMouseListeners().callChecked (checker, &MouseListener::mouseUp, me);
-
-        MouseListenerList::sendMouseEvent (*this, checker, &MouseListener::mouseUp, me);
-
-        if (checker.shouldBailOut())
-            return;
-
-        // check for double-click
-        if (me.getNumberOfClicks() >= 2)
-        {
-            mouseDoubleClick (me);
-
-            if (checker.shouldBailOut())
-                return;
-
-            desktop.mouseListeners.callChecked (checker, &MouseListener::mouseDoubleClick, me);
-            MouseListenerList::sendMouseEvent (*this, checker, &MouseListener::mouseDoubleClick, me);
-        }
+        desktop.mouseListeners.callChecked (checker, &MouseListener::mouseDoubleClick, me);
+        MouseListenerList::sendMouseEvent (*this, checker, &MouseListener::mouseDoubleClick, me);
     }
 }
 
@@ -2485,13 +2490,10 @@ void Component::internalMouseMove (MouseInputSource& source, const Point<int>& r
 }
 
 void Component::internalMouseWheel (MouseInputSource& source, const Point<int>& relativePos,
-                                    const Time& time, const float amountX, const float amountY)
+                                    const Time& time, const MouseWheelDetails& wheel)
 {
     Desktop& desktop = Desktop::getInstance();
     BailOutChecker checker (this);
-
-    const float wheelIncrementX = amountX / 256.0f;
-    const float wheelIncrementY = amountY / 256.0f;
 
     const MouseEvent me (source, relativePos, source.getCurrentModifiers(),
                          this, this, time, relativePos, time, 0, false);
@@ -2499,19 +2501,19 @@ void Component::internalMouseWheel (MouseInputSource& source, const Point<int>& 
     if (isCurrentlyBlockedByAnotherModalComponent())
     {
         // allow blocked mouse-events to go to global listeners..
-        desktop.mouseListeners.callChecked (checker, &MouseListener::mouseWheelMove, me, wheelIncrementX, wheelIncrementY);
+        desktop.mouseListeners.callChecked (checker, &MouseListener::mouseWheelMove, me, wheel);
     }
     else
     {
-        mouseWheelMove (me, wheelIncrementX, wheelIncrementY);
+        mouseWheelMove (me, wheel);
 
         if (checker.shouldBailOut())
             return;
 
-        desktop.mouseListeners.callChecked (checker, &MouseListener::mouseWheelMove, me, wheelIncrementX, wheelIncrementY);
+        desktop.mouseListeners.callChecked (checker, &MouseListener::mouseWheelMove, me, wheel);
 
         if (! checker.shouldBailOut())
-            MouseListenerList::sendWheelEvent (*this, checker, me, wheelIncrementX, wheelIncrementY);
+            MouseListenerList::sendWheelEvent (*this, checker, me, wheel);
     }
 }
 
@@ -2909,7 +2911,7 @@ void Component::addKeyListener (KeyListener* const newListener)
 void Component::removeKeyListener (KeyListener* const listenerToRemove)
 {
     if (keyListeners != nullptr)
-        keyListeners->removeValue (listenerToRemove);
+        keyListeners->removeFirstMatchingValue (listenerToRemove);
 }
 
 bool Component::keyPressed (const KeyPress&)                { return false; }
