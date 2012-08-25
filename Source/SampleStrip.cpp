@@ -150,6 +150,30 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
     case pRampLength :
         rampLength = *static_cast<const int*>(newValue); break;
 
+    case pFractionalStart :
+        {
+            fractionalSampleStart = *static_cast<const float*>(newValue);
+            visualSelectionStart = fractionalSampleStart * (float) THUMBNAIL_WIDTH;
+            // and which sample (of the audio sample) does this refer to
+            selectionStart = (int)(fractionalSampleStart * totalSampleLength);
+            selectionLength = selectionEnd - selectionStart;
+            chunkSize = (int) (selectionLength / (float) numChunks);
+            updatePlayParams();
+            break;
+        }
+
+    case pFractionalEnd :
+        {
+            fractionalSampleEnd = *static_cast<const float*>(newValue);
+            visualSelectionEnd = fractionalSampleEnd * (float) THUMBNAIL_WIDTH;
+            // and which sample (of the audio sample) does this refer to
+            selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
+            selectionLength = selectionEnd - selectionStart;
+            chunkSize = (int) (selectionLength / (float) numChunks);
+            updatePlayParams();
+            break;
+        }
+
     // TODO when pSampleStart is changes, make sure we change fractional too!
     default :
         jassertfalse;     // we should NOT be here!
@@ -222,6 +246,11 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
     case pEndChunk :
         p = &loopEndChunk; break;
 
+    case pFractionalStart :
+        p = &fractionalSampleStart; break;
+    case pFractionalEnd : 
+        p = &fractionalSampleEnd; break;
+
     default:
         DBG("Param not found!");
         jassertfalse;
@@ -230,64 +259,7 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
 
     return p;
 }
-String SampleStrip::getParameterName(const int &parameterID) const
-{
-    switch(parameterID)
-    {
-    case pCurrentChannel : return "current_channel";
-    case pIsPlaying : return "is_playing";
-    case pNumChunks : return "num_chunks";
-    case pPlayMode : return "playmode";
-    case pIsLatched : return "is_latched";
-    case pIsReversed : return "is_reversed";
-    case pStripVolume : return "strip_volume";
-    case pPlaySpeed : return "play_speed";
-    case pIsPlaySpeedLocked : return "is_play_speed_locked";
 
-    case pChunkSize : return "chunk_size";
-    case pVisualStart : return "visual_start";
-    case pVisualEnd : return "visual_end";
-    case pAudioSample : return "audio_sample";
-    case pPlaybackPercentage : return "playback_percentage";
-    case pSampleStart : return "sample_start";
-    case pSampleEnd : return "sample_end";
-    case pStartChunk : return "sample_chunk_start";
-    case pEndChunk : return "sample_chunk_end";
-    case pRampLength : return "ramp_length";
-
-    case pIsVolInc : return "is_vol_inc";
-    case pIsVolDec : return "is_vol_dec";
-    case pIsPlaySpeedInc : return "is_playspeed_inc";
-    case pIsPlaySpeedDec : return "is_playspeed_dec";
-
-    default : jassertfalse; return "parameter_not_found_" + String(parameterID);
-    }
-}
-int SampleStrip::getParameterType(const int &parameterID) const
-{
-    switch(parameterID)
-    {
-    case pCurrentChannel : return TypeInt;
-    case pNumChunks : return TypeInt;
-    case pPlayMode : return TypeInt;
-    case pIsLatched : return TypeBool;
-    case pIsReversed : return TypeBool;
-    case pStripVolume : return TypeFloat;
-    case pPlaySpeed : return TypeDouble;
-    case pIsPlaySpeedLocked : return TypeBool;
-    case pIsPlaying : return TypeBool;
-    case pChunkSize : return TypeInt;
-    case pVisualStart : return TypeInt;
-    case pVisualEnd : return TypeInt;
-    case pAudioSample : return TypeAudioSample;
-    case pPlaybackPercentage : return TypeFloat;
-    case pSampleStart : return TypeInt;
-    case pSampleEnd : return TypeInt;
-    case pStartChunk : return TypeInt;
-    case pEndChunk : return TypeInt;
-    default : jassertfalse; return -1;
-    }
-}
 void SampleStrip::toggleSampleStripParam(const int &parameterID, const bool &sendChangeMsg)
 {
     switch (parameterID)

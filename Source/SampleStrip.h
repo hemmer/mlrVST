@@ -50,18 +50,17 @@ public:
         pChunkSize = NumGUIParams,
         pSampleStart,       // these return the key sample points
         pSampleEnd,         // (taking selection into account)
-        pStartChunk,
-        pEndChunk,
-        pIsVolInc,
-        pIsVolDec,
-        pIsPlaySpeedInc,
-        pIsPlaySpeedDec,
+        pStartChunk, pEndChunk,
+        pIsVolInc, pIsVolDec,
+        pIsPlaySpeedInc, pIsPlaySpeedDec,
+        pFractionalStart, pFractionalEnd,
         pRampLength,
         TotalNumParams
     };
 
     enum SampleStripParameterType
     {
+        TypeError = -1,
         TypeInt,
         TypeDouble,
         TypeFloat,
@@ -101,8 +100,6 @@ public:
     void setSampleStripParam(const int &parameterID, const void *newValue,
                              const bool &sendChangeMsg = true);
     const void* getSampleStripParam(const int &parameterID) const;
-    String getParameterName(const int &parameterID) const;
-    int getParameterType(const int &parameterID) const;
     void toggleSampleStripParam(const int &parameterID, const bool &sendChangeMsg = true);
 
 	void cycleChannels();
@@ -146,6 +143,130 @@ public:
             test += (buttonStatus[i]) ? "#" : "@";
         }
         DBG(test);
+    }
+
+    static String getParameterName(const int &parameterID)
+    {
+        switch(parameterID)
+        {
+        case pCurrentChannel : return "current_channel";
+        case pIsPlaying : return "is_playing";
+        case pNumChunks : return "num_chunks";
+        case pPlayMode : return "playmode";
+        case pIsLatched : return "is_latched";
+        case pIsReversed : return "is_reversed";
+        case pStripVolume : return "strip_volume";
+        case pPlaySpeed : return "play_speed";
+        case pIsPlaySpeedLocked : return "is_play_speed_locked";
+
+        case pChunkSize : return "chunk_size";
+        case pVisualStart : return "visual_start";
+        case pVisualEnd : return "visual_end";
+        case pAudioSample : return "audio_sample";
+        case pPlaybackPercentage : return "playback_percentage";
+        case pSampleStart : return "sample_start";
+        case pSampleEnd : return "sample_end";
+        case pStartChunk : return "sample_chunk_start";
+        case pEndChunk : return "sample_chunk_end";
+        case pRampLength : return "ramp_length";
+
+        case pIsVolInc : return "is_vol_inc";
+        case pIsVolDec : return "is_vol_dec";
+        case pIsPlaySpeedInc : return "is_playspeed_inc";
+        case pIsPlaySpeedDec : return "is_playspeed_dec";
+
+        case pFractionalStart : return "fractional_start";
+        case pFractionalEnd : return "fractional_end";
+
+        default : jassertfalse; return "parameter_not_found_" + String(parameterID);
+        }
+    }
+    static int getParameterType(const int &parameterID)
+    {
+        switch(parameterID)
+        {
+        case pCurrentChannel : return TypeInt;
+        case pNumChunks : return TypeInt;
+        case pPlayMode : return TypeInt;
+        case pIsLatched : return TypeBool;
+        case pIsReversed : return TypeBool;
+        case pStripVolume : return TypeFloat;
+        case pPlaySpeed : return TypeDouble;
+        case pIsPlaySpeedLocked : return TypeBool;
+        case pIsPlaying : return TypeBool;
+        case pChunkSize : return TypeInt;
+        case pVisualStart : return TypeInt;
+        case pVisualEnd : return TypeInt;
+        case pAudioSample : return TypeAudioSample;
+        case pPlaybackPercentage : return TypeFloat;
+        case pSampleStart : return TypeInt;
+        case pSampleEnd : return TypeInt;
+        case pStartChunk : return TypeInt;
+        case pEndChunk : return TypeInt;
+        case pFractionalStart : return TypeFloat;
+        case pFractionalEnd : return TypeFloat;
+        default : jassertfalse; return TypeError;
+        }
+    }
+    static int getParameterID(const String &parameterName)
+    {
+        // TODO: is this still needed 
+        if (parameterName == "current_channel") return pCurrentChannel;
+        if (parameterName == "num_chunks") return pNumChunks;
+        if (parameterName == "playmode") return pPlayMode;
+        if (parameterName == "is_latched") return pIsLatched ;
+        if (parameterName == "is_reversed") return pIsReversed;
+        if (parameterName == "strip_volume") return pStripVolume;
+        if (parameterName == "play_speed") return pPlaySpeed;
+        if (parameterName == "is_play_speed_locked") return pIsPlaySpeedLocked;
+        if (parameterName == "fractional_start") return pFractionalStart;
+        if (parameterName == "fractional_end") return pFractionalEnd;
+
+        //if (parameterName == case pChunkSize : return "chunk_size";
+        //if (parameterName == case pVisualStart : return "visual_start";
+        //if (parameterName == case pVisualEnd : return "visual_end";
+        //if (parameterName == case pAudioSample : return "audio_sample";
+        //if (parameterName == case pSampleStart : return "sample_start";
+        //if (parameterName == case pSampleEnd : return "sample_end";
+        //if (parameterName == case pStartChunk : return "sample_chunk_start";
+        //if (parameterName == case pEndChunk : return "sample_chunk_end";
+
+
+        return -1;
+        jassertfalse; return -1;
+    }
+    static bool isParamSaved(const int &parameterID)
+    {
+        // here we specify whether a parameter is loaded (or saved)
+        switch(parameterID)
+        {
+        case pCurrentChannel : return true;
+        case pNumChunks : return true;
+        case pPlayMode : return true;
+        case pIsLatched : return true;
+        case pIsReversed : return true;
+        case pStripVolume : return true;
+        case pPlaySpeed : return true;
+        case pIsPlaySpeedLocked : return true;
+        case pIsPlaying : return false;
+        case pChunkSize : return false;
+        case pVisualStart : return true;
+        case pVisualEnd : return true;
+        case pAudioSample : return true;
+        case pPlaybackPercentage : return false;
+        case pSampleStart : return false;
+        case pSampleEnd : return false;
+        case pStartChunk : return false;
+        case pEndChunk : return false;
+        case pIsVolInc : return false;
+        case pIsVolDec : return false;
+        case pIsPlaySpeedInc : return false;
+        case pIsPlaySpeedDec : return false;
+        case pFractionalStart : return true;
+        case pFractionalEnd : return true;
+        case pRampLength : return false;
+        default : jassertfalse; return false;
+        }
     }
 
 private:

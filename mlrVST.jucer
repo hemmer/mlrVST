@@ -38,6 +38,15 @@
                        targetName="mlrVST" headerPath="../../oscpack/"/>
       </CONFIGURATIONS>
     </LINUX_MAKE>
+    <VS2010 targetFolder="Builds/VisualStudio2012" libraryType="1" juceFolder="../../JuceLibraryCode"
+            vstFolder="c:/SDKs/vstsdk2.4">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
+                       isDebug="1" optimisation="1" targetName="mlrVST" headerPath="../../oscpack/"/>
+        <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
+                       isDebug="0" optimisation="2" targetName="mlrVST" headerPath="../../oscpack/"/>
+      </CONFIGURATIONS>
+    </VS2010>
   </EXPORTFORMATS>
   <MAINGROUP id="xktr81" name="mlrVST">
     <GROUP id="{4A37796A-C71C-9BD2-2C70-00AB7FBCBA7F}" name="audio">

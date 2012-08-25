@@ -41,6 +41,7 @@ private:
     Label panelLabel;
     const float fontSize;
     const Rectangle<int> &panelBounds;
+    TextButton loadSetlistBtn, saveSetlistBtn;
 
     // setlist ///////////////////////////////
     OwnedArray<ToggleButton> setListSlotArray;

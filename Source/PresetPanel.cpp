@@ -11,6 +11,8 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
     // gui setup //////////////////////////
     panelLabel("preset panel label", "Setlist Manager"),
     fontSize(7.4f), panelBounds(bounds),
+    loadSetlistBtn("load setlist", "load setlist"),
+    saveSetlistBtn("save setlist", "save setlist"),
     // setlist ///////////////////////////////
     setListSlotArray(), deleteBtnArray(), selectBtnArray(),
     addNewRowBtn("Add new"), choosePresetMenu(),
@@ -22,6 +24,13 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
     panelLabel.setColour(Label::backgroundColourId, Colours::black);
     panelLabel.setColour(Label::textColourId, Colours::white);
     panelLabel.setFont(2.0f * fontSize);
+
+    addAndMakeVisible(&loadSetlistBtn);
+    loadSetlistBtn.addListener(this);
+    loadSetlistBtn.setBounds(400, 350, 70, 25);
+    addAndMakeVisible(&saveSetlistBtn);
+    saveSetlistBtn.addListener(this);
+    saveSetlistBtn.setBounds(500, 350, 70, 25);
 
     addAndMakeVisible(&addNewRowBtn);
     addNewRowBtn.addListener(this);
@@ -37,68 +46,95 @@ void PresetPanel::paint(Graphics &g)
 
 void PresetPanel::buttonClicked(Button *btn)
 {
+    // load setlist manually using file dialog
+    // TODO: drop-n-drag for setlist?
+    if(btn == &loadSetlistBtn)
+    {
+        FileChooser myChooser ("Please choose a setlist to load:", File::getSpecialLocation(File::userDesktopDirectory), "*.xml");
 
-    if (btn == &addNewRowBtn) addRow();
+        // popup dialog to open setlist
+        if(myChooser.browseForFileToOpen())
+        {	
+            // if sucessful, try load this setlist
+            File newSetlist = myChooser.getResult();
+            processor->loadXmlSetlist(newSetlist);
+        }
+    }
+
+    else if(btn == &saveSetlistBtn)
+    {
+        FileChooser myChooser ("Save this setlist:", File::getSpecialLocation(File::userDesktopDirectory), "*.xml");
+
+        // popup dialog to open setlist
+        if(myChooser.browseForFileToSave(true))
+        {	
+            // if sucessful, try save this setlist
+            File newSetlist = myChooser.getResult();
+            processor->saveXmlSetlist(newSetlist);
+        }
+    }
+
+    else if (btn == &addNewRowBtn) addRow();
     else
     {
-    for (int b = 0; b < setListSlotArray.size(); ++b)
-    {
-        if (deleteBtnArray[b] == btn)
+        for (int b = 0; b < setListSlotArray.size(); ++b)
         {
-            deleteRow(b);
-        }
-        else if (selectBtnArray[b] == btn)
-        {
-            processor->switchPreset(b);
-        }
-        else if (setListSlotArray[b] == btn)
-        {
-
-            XmlElement currentPresetList = processor->getPresetList();
-            XmlElement currentSetlist = processor->getSetlist();
-
-            // The button clicked corresponds to this preset slot
-            XmlElement* presetToChange = currentSetlist.getChildElement(b);
-
-            // Populate the popup menu with all possible presets
-            PopupMenu presetSelectMenu = PopupMenu();
-            int index = 1;
-            presetSelectMenu.addItem(index, "None");
-
-            XmlElement* p = currentPresetList.getFirstChildElement();
-            while (p != nullptr)
+            if (deleteBtnArray[b] == btn)
             {
-                ++index;
-                String pName = p->getStringAttribute("name");
-                presetSelectMenu.addItem(index, pName);
-                p = p->getNextElement();
+                deleteRow(b);
+            }
+            else if (selectBtnArray[b] == btn)
+            {
+                processor->switchPreset(b);
+            }
+            else if (setListSlotArray[b] == btn)
+            {
+
+                XmlElement currentPresetList = processor->getPresetList();
+                XmlElement currentSetlist = processor->getSetlist();
+
+                // The button clicked corresponds to this preset slot
+                XmlElement* presetToChange = currentSetlist.getChildElement(b);
+
+                // Populate the popup menu with all possible presets
+                PopupMenu presetSelectMenu = PopupMenu();
+                int index = 1;
+                presetSelectMenu.addItem(index, "None");
+
+                XmlElement* p = currentPresetList.getFirstChildElement();
+                while (p != nullptr)
+                {
+                    ++index;
+                    String pName = p->getStringAttribute("name");
+                    presetSelectMenu.addItem(index, pName);
+                    p = p->getNextElement();
+                }
+
+
+                int presetChoice = presetSelectMenu.showMenu(PopupMenu::Options().withTargetComponent(setListSlotArray[b]));
+
+                // If "none" is selected, insert a blank preset
+                if (presetChoice == 1)
+                {
+                    String presetChoiceName = "#" + String(b) + ": None";
+                    setListSlotArray[b]->setButtonText(presetChoiceName);
+                    currentSetlist.replaceChildElement(presetToChange, new XmlElement("PRESETNONE"));
+                }
+                // otherwise insert the choosen preset
+                else if (presetChoice > 1)
+                {
+                    XmlElement chosenPreset = *(currentPresetList.getChildElement(presetChoice - 2));
+                    currentSetlist.replaceChildElement(presetToChange, new XmlElement(chosenPreset));
+
+                    String presetChoiceName = "#" + String(b) + ": " + chosenPreset.getStringAttribute("name");
+                    setListSlotArray[b]->setButtonText(presetChoiceName);
+                }
+
+                setListSlotArray[b]->setToggleState(false, false);
+                processor->setSetlist(currentSetlist);
             }
 
-
-            int presetChoice = presetSelectMenu.showMenu(PopupMenu::Options().withTargetComponent(setListSlotArray[b]));
-
-            // If "none" is selected, insert a blank preset
-            if (presetChoice == 1)
-            {
-                String presetChoiceName = "#" + String(b) + ": None";
-                setListSlotArray[b]->setButtonText(presetChoiceName);
-                currentSetlist.replaceChildElement(presetToChange, new XmlElement("PRESETNONE"));
-            }
-            // otherwise insert the choosen preset
-            else if (presetChoice > 1)
-            {
-                XmlElement chosenPreset = *(currentPresetList.getChildElement(presetChoice - 2));
-                currentSetlist.replaceChildElement(presetToChange, new XmlElement(chosenPreset));
-
-                String presetChoiceName = "#" + String(b) + ": " + chosenPreset.getStringAttribute("name");
-                setListSlotArray[b]->setButtonText(presetChoiceName);
-            }
-
-            setListSlotArray[b]->setToggleState(false, false);
-            processor->setSetlist(currentSetlist);
         }
-
-    }
     }
 }
 

@@ -108,8 +108,41 @@ public:
         sPatternLength,
         sPatternBank,
         sRampLength,                // length of volume envelope (in samples)
-        sNumGlobalSettings
+        NumGlobalSettings
     };
+    
+    enum GlobalSettingType
+    {
+        TypeError = -1,
+        TypeInt,
+        TypeDouble,
+        TypeFloat,
+        TypeBool,
+        TypeString,
+        TypeAudioSample
+    };
+
+    enum GlobalSettingScope
+    {
+        ScopeError = -1,    // there's been an error somwhere
+        ScopeNone,          // this setting is not saved
+        ScopePreset,        // this setting is saved with every preset
+        ScopeSetlist        // this setting is saved once (per setlist)
+    };
+
+    // do we save this setting once at top of setlist, with every
+    // preset, or not at all?
+    static int writeGlobalSettingToPreset(const int &settingID);
+    // get the setting name (for writing in presets etc)
+    static String getGlobalSettingName(const int &settingID);
+    static int getGlobalSettingID(const String &settingName);
+    // is this setting an int, bool, etc
+    static int getGlobalSettingType(const int &parameterID);
+    // setters / getters
+    void updateGlobalSetting(const int &settingID, const void *newVal);
+    const void* getGlobalSetting(const int &settingID) const;
+    
+
 
     enum MonomeSizes
     {
@@ -130,8 +163,7 @@ public:
 
     // Mapping stuff ////////////////////
 
-    // these are the possible options for mappings for
-    // the top row(s)
+    // these are the possible options for mappings for the top row(s)
     enum TopRowMappings
     {
         tmNoMapping,
@@ -293,15 +325,12 @@ public:
     }
 
 
-    // Global Settings stuff
-    void updateGlobalSetting(const int &settingID, const void *newVal);
-    const void* getGlobalSetting(const int &settingID) const;
-    String getGlobalSettingName(const int &settingID) const;
-
 
 
     // Preset stuff
-    void savePreset(const String &presetName);
+    void saveXmlSetlist(const File &setlistFile);
+    void loadXmlSetlist(const File &setlistFile);
+    void addPreset(const String &presetName);
     void switchPreset(const int &id);
     XmlElement getPresetList() const { return presetList; }
 
@@ -347,8 +376,16 @@ public:
         }
     }
 
+    // this should be called if the BPM changes at all
+    void changeBPM()
+    {
+        updateQuantizeSettings();
+        for (int s = 0; s < sampleStripArray.size(); ++s)
+            calcPlaySpeedForNewBPM(s);
+    }
+
     // which types of audio files can we load
-    const String getWildcardFormats() const { return "*.wav;*.flac;*.ogg;*.aif;*.aiff;*.caf"; }
+    const String getWildcardFormats() const { return "*.mp3,*.wav;*.flac;*.ogg;*.aif;*.aiff;*.caf"; }
 
 private:
 
@@ -431,10 +468,9 @@ private:
 
 
     // Preset Handling //////////////////////////////////////////
-    // this is a unique list of possible presets (used internally)
-    XmlElement presetList;
-    // this is an ordered list of consisting of a selection from presetList
-    XmlElement setlist;
+    
+    XmlElement presetList;  // this is a unique list of possible presets (used internally)
+    XmlElement setlist;     // this is an ordered list of consisting of a entries from presetList
 
     // Mapping settings ////////////////////////////////////////
     Array<int> topRowMappings;

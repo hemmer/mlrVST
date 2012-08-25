@@ -1,10 +1,20 @@
 Builds/VisualStudio2010/mlrVST.sdf
 Builds/VisualStudio2010/mlrVST.suo
+Builds/VisualStudio2010/mlrVST.v11.suo
 Builds/VisualStudio2010/mlrVST.opensdf
 
 Builds/VisualStudio2010/Debug/
 Builds/VisualStudio2010/Release/
 Builds/VisualStudio2010/ipch/
+
+Builds/VisualStudio2012/mlrVST.sdf
+Builds/VisualStudio2012/mlrVST.suo
+Builds/VisualStudio2012/mlrVST.v11.suo
+Builds/VisualStudio2012/mlrVST.opensdf
+
+Builds/VisualStudio2012/Debug/
+Builds/VisualStudio2012/Release/
+Builds/VisualStudio2012/ipch/
 
 Docs/*
 !Docs/mlrVSTDocs.tex

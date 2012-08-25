@@ -132,6 +132,7 @@ mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
     patternRecordings.clear(true);
 
     DBG("Processor destructor finished.");
+
 }
 
 // returns the index of a file if sucessfully loaded (or pre-existing)
@@ -293,9 +294,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
             if (currentBPM != lastPosInfo.bpm && lastPosInfo.bpm > 1.0)
             {
                 // If the tempo has changed, adjust the playspeeds accordingly
-                currentBPM = lastPosInfo.bpm;
-                for (int s = 0; s < sampleStripArray.size(); ++s)
-                    calcPlaySpeedForNewBPM(s);
+                changeBPM();
             }
         }
         else
@@ -816,24 +815,66 @@ void mlrVSTAudioProcessor::stopAllStrips(const int &stopMode)
 // Preset Handling //
 /////////////////////
 
-void mlrVSTAudioProcessor::savePreset(const String &presetName)
+void mlrVSTAudioProcessor::saveXmlSetlist(const File &setlistFile)
 {
-    /* TODO LIST:
+    DBG("Saving setlist to: " << setlistFile.getFullPathName());
 
-        - save global settings with each preset
-        - have button that saves current global settings to all presets
-        - have function bool isSavedToPreset
-    */
+    XmlElement globalSettings("SETTINGS");
+}
+void mlrVSTAudioProcessor::loadXmlSetlist(const File &setlistFile)
+{
+    DBG(setlistFile.getFullPathName());
+}
+
+
+void mlrVSTAudioProcessor::addPreset(const String &presetName)
+{
 
     // Create an outer XML element..
     XmlElement newPreset("PRESET");
-
     newPreset.setAttribute("name", presetName);
 
-    ///////////////////////////
-    /// TODO
-    // - make sure store fractional start not visual
+    
+    // Add the preset specific settings
+    XmlElement *settings = new XmlElement("SETTINGS");
 
+    for (int s = 0; s < NumGlobalSettings; ++s)
+    {
+        // skip if we don't save this setting with each preset
+        if (writeGlobalSettingToPreset(s) != ScopePreset) continue;
+
+        // find if the setting is a bool, int, double etc.
+        const int settingType = getGlobalSettingType(s);
+        // what description do we write into the xml for this setting
+        const String settingName = getGlobalSettingName(s);
+        // get the actual parameter value (we cast later)
+        const void *p = getGlobalSetting(s);
+
+        switch (settingType)
+        {
+        case SampleStrip::TypeBool :
+            settings->setAttribute(settingName, (int)(*static_cast<const bool*>(p))); break;
+        case SampleStrip::TypeInt :
+            settings->setAttribute(settingName, *static_cast<const int*>(p)); break;
+        case SampleStrip::TypeDouble :
+            settings->setAttribute(settingName, *static_cast<const double*>(p)); break;
+        case SampleStrip::TypeFloat :
+            settings->setAttribute(settingName, (double)(*static_cast<const float*>(p))); break;
+        default : jassertfalse;
+        }
+
+    }
+
+    // add the master and channel volumes
+    settings->setAttribute("master_vol", masterGain);
+
+    for (int c = 0; c < numChannels; ++c)
+        settings->setAttribute("chan_" + String(c) + "_vol", channelGains[c]);
+
+    // add these settings to the top of the preset
+    newPreset.addChildElement(settings);
+
+    
     // Store the SampleStrip specific settings
     for (int strip = 0; strip < sampleStripArray.size(); ++strip)
     {
@@ -841,37 +882,34 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
         stripXml->setAttribute("id", strip);
 
         // write all parameters to XML
-        for (int param = 0; param < SampleStrip::NumGUIParams; ++param)
+        for (int param = 0; param < SampleStrip::TotalNumParams; ++param)
         {
-            int paramType = sampleStripArray[strip]->getParameterType(param);
-            String paramName = sampleStripArray[strip]->getParameterName(param);
+            // check if we are supposed to save this parameter, if not, skip
+            if (!SampleStrip::isParamSaved(param)) continue;
 
+            // find if the parameter is a bool, int, double etc.
+            const int paramType = sampleStripArray[strip]->getParameterType(param);
+            // what description do we write into the xml for this parameter
+            const String paramName = sampleStripArray[strip]->getParameterName(param);
+            // get the actual parameter value (we cast later)
             const void *p = sampleStripArray[strip]->getSampleStripParam(param);
 
             switch (paramType)
             {
             case SampleStrip::TypeBool :
-                stripXml->setAttribute(paramName, (int)(*static_cast<const bool*>(p)));
-                break;
-
+                stripXml->setAttribute(paramName, (int)(*static_cast<const bool*>(p))); break;
             case SampleStrip::TypeInt :
-                stripXml->setAttribute(paramName, *static_cast<const int*>(p));
-                break;
-
+                stripXml->setAttribute(paramName, *static_cast<const int*>(p)); break;
             case SampleStrip::TypeDouble :
-                stripXml->setAttribute(paramName, *static_cast<const double*>(p));
-                break;
-
+                stripXml->setAttribute(paramName, *static_cast<const double*>(p)); break;
             case SampleStrip::TypeFloat :
-                stripXml->setAttribute(paramName, (double)(*static_cast<const float*>(p)));
-                break;
-
+                stripXml->setAttribute(paramName, (double)(*static_cast<const float*>(p))); break;
             case SampleStrip::TypeAudioSample :
                 {
                     const AudioSample * sample = static_cast<const AudioSample*>(p);
                     if (sample)
                     {
-                        String samplePath = sample->getSampleFile().getFullPathName();
+                        const String samplePath = sample->getSampleFile().getFullPathName();
                         stripXml->setAttribute(paramName, samplePath);
                     }
                     break;
@@ -880,6 +918,7 @@ void mlrVSTAudioProcessor::savePreset(const String &presetName)
             }
         }
 
+        // add this strip to the preset
         newPreset.addChildElement(stripXml);
     }
 
@@ -921,27 +960,169 @@ void mlrVSTAudioProcessor::switchPreset(const int &id)
         if (preset->getTagName() == "PRESETNONE")
         {
             // we have a blank preset
+            // loadDefaultPreset();
             DBG("blank preset loaded");
         }
-        else
+        else if (preset->getTagName() == "PRESET")
         {
+            String presetName = preset->getStringAttribute("name", "Untitled");
             // check we know the name
-            DBG("preset \"" << preset->getStringAttribute("name") << "\" loaded.");
+            DBG("preset \"" << presetName << "\" loaded.");
 
             // TODO: first load the global parameters
+            XmlElement* settings = preset->getChildByName("SETTINGS");
 
-
-            // then process each strip
-            XmlElement* strip = preset->getFirstChildElement();
-            while(strip != nullptr)
+            // try to load the preset specific settings
+            if (settings)
             {
+                for (int s = 0; s < NumGlobalSettings; ++s)
+                {
+                    // skip if we don't save this setting with each preset
+                    if (writeGlobalSettingToPreset(s) != ScopePreset) continue;
 
-                // load the next strip
-                strip = strip->getNextElement();
+                    // find if the setting is a bool, int, double etc.
+                    const int settingType = getGlobalSettingType(s);
+                    // what description do we write into the xml for this setting
+                    const String settingName = getGlobalSettingName(s);
+
+                    switch (settingType)
+                    {
+                    case SampleStrip::TypeBool :
+                        {
+                            const bool value = settings->getIntAttribute(settingName);
+                            updateGlobalSetting(s, &value); break;
+                        }
+                    case SampleStrip::TypeInt :
+                        {
+                            const int value = settings->getIntAttribute(settingName);
+                            updateGlobalSetting(s, &value); break;
+                        }
+                    case SampleStrip::TypeDouble :
+                        {
+                            const double value = settings->getDoubleAttribute(settingName);
+                            updateGlobalSetting(s, &value); break;
+                        }
+                    case SampleStrip::TypeFloat :
+                        {
+                            const float value = (float) settings->getDoubleAttribute(settingName);
+                            updateGlobalSetting(s, &value); break;
+                        }
+                    default : jassertfalse;
+                    }
+
+                }
+
+
+                const float newMasterGain = settings->getDoubleAttribute("master_vol", defaultChannelGain);
+                if (newMasterGain >= 0.0 && newMasterGain <= 1.0) masterGain = newMasterGain;
+
+                for (int c = 0; c < numChannels; ++c)
+                {
+                    const String chanVolName = "chan_" + String(c) + "_vol";
+                    const float chanGain = settings->getDoubleAttribute(chanVolName, defaultChannelGain);
+                    channelGains.set(c, (chanGain >= 0.0 && chanGain <= 1.0) ? chanGain : defaultChannelGain);
+                }
+
             }
+
+            // try to find settings for each strip *that currently exists*
+            for (int s = 0; s < sampleStripArray.size(); ++s)
+            {
+                // search the preset for the strip with matching ID
+                forEachXmlChildElement(*preset, strip)
+                {
+                    const int stripID = strip->getIntAttribute("id", -1);
+                    // check if the preset has information for this SampleStrip
+                    if (stripID != s) continue;
+
+                    SampleStrip *currentStrip = sampleStripArray[stripID];
+
+                    // if so, try to extract all the required parameters
+                    for (int param = 0; param < SampleStrip::TotalNumParams; ++param)
+                    {
+                        // check that this is a parameter that we load
+                        const bool doWeLoadParam = SampleStrip::isParamSaved(param);
+                        if (!doWeLoadParam) continue;
+
+                        // what name is this parameter?
+                        const String paramName = SampleStrip::getParameterName(param);
+
+                        // check that it can be found in the XML
+                        if (strip->hasAttribute(paramName))
+                        {
+                            // find its type
+                            const int paramType = SampleStrip::getParameterType(param);
+
+                            DBG("id: " << stripID << " " << paramName << " " << param << " " << paramType);
+
+                            // try to load it
+                            switch (paramType)
+                            {
+                            case TypeInt :
+                                {
+                                    // TODO: validate values here
+                                    const int value = strip->getIntAttribute(paramName);
+                                    currentStrip->setSampleStripParam(param, &value);
+                                    break;
+                                }
+                            case TypeFloat :
+                                {
+                                    const float value = (float) strip->getDoubleAttribute(paramName);
+                                    currentStrip->setSampleStripParam(param, &value);
+                                    break;
+                                }
+                            case TypeDouble :
+                                {
+                                    const double value = strip->getDoubleAttribute(paramName);
+                                    currentStrip->setSampleStripParam(param, &value);
+                                    break;
+                                }
+                            case TypeBool :
+                                {
+                                    const bool value = strip->getBoolAttribute(paramName);
+                                    currentStrip->setSampleStripParam(param, &value);
+                                    break;
+                                }
+                            case TypeAudioSample :
+                                {
+                                    const String filePath = strip->getStringAttribute(paramName);
+                                    File newFile = File(filePath);
+
+                                    // add the sample and get the id
+                                    const int sampleID = addNewSample(newFile);
+                                    const AudioSample * newSample = getAudioSample(sampleID, pSamplePool);
+
+                                    // if the sample loaded correctly, set it to be the strip's AudioSample
+                                    if (sampleID != -1 && newSample)
+                                        currentStrip->setSampleStripParam(SampleStrip::pAudioSample, newSample);
+                                }
+                            } // end switch statement
+
+                        } // end of if(hasAtttribute)
+                        else
+                        {
+                            DBG("Param " << paramName << " not found. Doing nothing");
+                            // TODO: load default
+                            // OR do nothing
+                        }
+
+                    } // end loop over expected parameters
+
+                    // we have loaded this strip's parameters so can stop searching
+                    break;
+
+                } // end of loop over preset entries
+
+            }// end of samplestrip loop
         }
     }
-    else jassertfalse;
+    // else the preset doesn't exist (shouldn't happen)
+    else
+    {
+        jassertfalse;
+        return;
+    }
+
 }
 
 
@@ -1244,6 +1425,107 @@ const String mlrVSTAudioProcessor::getParameterText(int index)
     return String(getParameter(index), 2);
 }
 
+// Global settings ///////////////////////
+int mlrVSTAudioProcessor::writeGlobalSettingToPreset(const int &settingID)
+{
+    // Explanation of codes:
+    //  - ScopeError: we went wrong somewhere!
+    //  - ScopeNone: don't save/load this setting
+    //  - ScopePreset: can vary with every preset
+    //  - ScopeSetlist: saved once globally
+    
+    switch (settingID)
+    {
+    case sUseExternalTempo : return ScopeSetlist;
+    case sNumChannels : return ScopePreset;
+    case sMonomeSize : return ScopeSetlist;
+    case sNumMonomeRows : return 0;
+    case sNumMonomeCols : return 0;
+    case sNumSampleStrips : return ScopeSetlist;
+    case sCurrentBPM : return ScopePreset;
+    case sQuantiseLevel : return 0;
+    case sQuantiseMenuSelection : return ScopePreset;
+    case sOSCPrefix : return ScopeSetlist;
+    case sMonitorInputs : return ScopePreset;
+    case sRecordPrecount : return ScopePreset;
+    case sRecordLength : return ScopePreset;
+    case sRecordBank : return ScopePreset;
+    case sResamplePrecount : return ScopePreset;
+    case sResampleLength : return ScopePreset;
+    case sResampleBank : return ScopePreset;
+    case sPatternPrecount : return ScopePreset;
+    case sPatternLength : return ScopePreset;
+    case sPatternBank : return ScopePreset;
+    case sRampLength : return ScopeSetlist;
+    default : jassertfalse; return ScopeError;
+    }
+}
+String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID)
+{
+    switch (settingID)
+    {
+    case sUseExternalTempo : return "use_external_tempo";
+    case sNumChannels : return "num_channels";
+    case sMonomeSize : return "monome_size";
+    case sNumSampleStrips : return "num_sample_strips";
+    case sCurrentBPM : return "current_bpm";
+    case sQuantiseLevel : return "quantisation_level";
+    case sRampLength : return "ramp_length";
+    case sQuantiseMenuSelection : return "quantize_level";
+    case sMonitorInputs : return "monitor_inputs";
+    case sRecordPrecount : return "record_length";
+    case sRecordLength : return "record_length";
+    case sRecordBank : return "record_bank";
+    case sResamplePrecount : return "resample_precount";
+    case sResampleLength : return "resample_length";
+    case sResampleBank : return "resample_bank";
+    case sPatternPrecount : return "pattern_precount";
+    case sPatternLength : return "pattern_length";
+    case sPatternBank : return "pattern_bank";
+    default : jassertfalse; return "name_not_found";
+    }
+}
+int mlrVSTAudioProcessor::getGlobalSettingID(const String &settingName)
+{
+    // TODO: is this needed?
+    if (settingName == "num_channels") return sNumChannels;
+    if (settingName == "use_external_tempo") return sUseExternalTempo;
+    if (settingName == "num_channels") return sNumChannels;
+    if (settingName == "monome_size") return sMonomeSize;
+    if (settingName == "num_sample_strips") return sNumSampleStrips;
+    if (settingName == "current_bpm") return sCurrentBPM;
+    if (settingName == "quantisation_level") return sQuantiseLevel;
+    if (settingName == "ramp_length") return sRampLength;
+
+    jassertfalse; return -1;
+
+}
+int mlrVSTAudioProcessor::getGlobalSettingType(const int &settingID)
+{
+    switch (settingID)
+    {
+    case sUseExternalTempo : return TypeBool;
+    case sNumChannels : return TypeInt;
+    case sMonomeSize : return TypeInt;
+    case sNumSampleStrips : return TypeInt;
+    case sCurrentBPM : return TypeDouble;
+    case sQuantiseLevel : return TypeDouble;
+    case sRampLength : return TypeInt;
+    case sQuantiseMenuSelection : return TypeInt;
+    case sMonitorInputs : return TypeBool;
+    case sRecordPrecount : return TypeInt;
+    case sRecordLength : return TypeInt;
+    case sRecordBank : return TypeInt;
+    case sResamplePrecount : return TypeInt;
+    case sResampleLength : return TypeInt;
+    case sResampleBank : return TypeInt;
+    case sPatternPrecount : return TypeInt;
+    case sPatternLength : return TypeInt;
+    case sPatternBank : return TypeInt;
+    default : jassertfalse; return TypeError;
+    }
+}
+
 void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID, const void *newValue)
 {
     switch (settingID)
@@ -1323,10 +1605,8 @@ void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID, const void 
     case sCurrentBPM :
         {
             currentBPM = *static_cast<const double*>(newValue);
+            changeBPM();
 
-            updateQuantizeSettings();
-            for (int s = 0; s < sampleStripArray.size(); ++s)
-                calcPlaySpeedForNewBPM(s);
             break;
         }
     case sQuantiseMenuSelection :
@@ -1390,20 +1670,8 @@ const void* mlrVSTAudioProcessor::getGlobalSetting(const int &settingID) const
     default : jassertfalse; return 0;
     }
 }
-String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID) const
-{
-    switch (settingID)
-    {
-    case sUseExternalTempo : return "use_external_tempo";
-    case sNumChannels : return "num_channels";
-    case sMonomeSize : return "monome_size";
-    case sNumSampleStrips : return "num_sample_strips";
-    case sCurrentBPM : return "current_bpm";
-    case sQuantiseLevel : return "quantisation_level";
-    case sRampLength : return "ramp_length";
-    default : jassertfalse; return "name_not_found";
-    }
-}
+
+
 
 // Mappings /////////////////////
 

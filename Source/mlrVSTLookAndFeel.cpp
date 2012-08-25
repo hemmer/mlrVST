@@ -48,11 +48,7 @@ mlrVSTLookAndFeel::mlrVSTLookAndFeel() :
     setColour (PopupMenu::highlightedTextColourId,        Colours::black);
     setColour (TextEditor::focusedOutlineColourId,  findColour (TextButton::buttonColourId));
 
-    scrollbarShadow.setShadowProperties (2.2f, 0.5f, 0, 0);
- 
-
-
-
+    //scrollbarShadow.setShadowProperties (2.2f, 0.5f, 0, 0);
 }
 
 mlrVSTLookAndFeel::~mlrVSTLookAndFeel()

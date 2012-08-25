@@ -53,7 +53,8 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     debugButton("loadfile", DrawableButton::ImageRaw),    // temporary button
 
     // Presets //////////////////////////////////////////////////
-    addPresetBtn("save preset", "Save Preset"), toggleSetlistBtn("Setlist"),
+    addPresetBtn("add preset", "Add Preset"),
+    toggleSetlistBtn("Setlist"),
     presetPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH, 725),
     presetPanel(presetPanelBounds, owner),
 
@@ -250,6 +251,11 @@ void mlrVSTAudioProcessorEditor::timerCallback()
 
         if (lastDisplayedPosition != newPos) bpmSlider.setValue(newPos.bpm);
     }
+    else
+    {
+        const double currentBPM = *static_cast<const double*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM));
+        bpmSlider.setValue(currentBPM);
+    }
 
     if (parent->areWeRecording())
         recordBtn.setPercentDone(parent->getRecordingPrecountPercent(),
@@ -268,6 +274,11 @@ void mlrVSTAudioProcessorEditor::timerCallback()
 
     // see if the host has changed the master gain
     masterGainSlider.setValue(parent->getParameter(mlrVSTAudioProcessor::pMasterGainParam));
+    for(int c = 0; c < numChannels; ++c)
+    {
+        slidersArray[c]->setValue(parent->getChannelGain(c));
+    }
+
 
     // see if the modifier button status has changed
     const int modifierStatus = parent->getModifierBtnState();
@@ -448,7 +459,7 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
             // this is the text they entered..
             String newPresetName(w.getTextEditorContents("text"));
 
-            parent->savePreset(newPresetName);
+            parent->addPreset(newPresetName);
         }
     #endif
     }
@@ -467,6 +478,7 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
     {
         parent->startPatternRecording();
     }
+
 
     // load files manually using file dialog
 	else if(btn == &loadFilesBtn)
@@ -487,6 +499,12 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
             }
 		}
 	}
+
+    else if (btn == &debugButton)
+    {
+        parent->addPreset("test");
+        DBG("Hai");
+    }
 
     else
     {
