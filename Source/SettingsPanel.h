@@ -17,7 +17,7 @@
 /* Forward declaration to set up pointer arrangement
    to allow settings panel access to the UI */
 class mlrVSTAudioProcessor;
-class mlrVSTAudioProcessorEditor;
+class mlrVSTGUI;
 
 
 class SettingsPanel : public Component,
@@ -32,7 +32,7 @@ public:
 
     SettingsPanel(const Rectangle<int> &bounds,
                   mlrVSTAudioProcessor * const processorPtr,
-                  mlrVSTAudioProcessorEditor * const editorPtr);
+                  mlrVSTGUI * const editorPtr);
 
     void buttonClicked(Button *btn);
     void comboBoxChanged(ComboBox *box);
@@ -49,7 +49,7 @@ private:
     // to the UI for updating settings (as these
     // may affect the UI, e.g. changing # of channels
     mlrVSTAudioProcessor * const processor;
-    mlrVSTAudioProcessorEditor * const pluginUI;
+    mlrVSTGUI * const pluginUI;
 
     // Layout ///////////////////////////////////////
     const float fontSize;

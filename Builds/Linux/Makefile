@@ -52,7 +52,7 @@ OBJECTS := \
   $(OBJDIR)/MappingPanel_5b8ca75f.o \
   $(OBJDIR)/timedButton_8bab4a.o \
   $(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o \
-  $(OBJDIR)/PluginEditor_94d4fb09.o \
+  $(OBJDIR)/mlrVSTGUI_eeb94ef8.o \
   $(OBJDIR)/SampleStripControl_45995bf8.o \
   $(OBJDIR)/OSCHandler_bb1eaf54.o \
   $(OBJDIR)/UdpSocket_2b50ed78.o \
@@ -135,9 +135,9 @@ $(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o: ../../Source/mlrVSTLookAndFeel.cpp
 	@echo "Compiling mlrVSTLookAndFeel.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/PluginEditor_94d4fb09.o: ../../Source/PluginEditor.cpp
+$(OBJDIR)/mlrVSTGUI_eeb94ef8.o: ../../Source/mlrVSTGUI.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling PluginEditor.cpp"
+	@echo "Compiling mlrVSTGUI.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/SampleStripControl_45995bf8.o: ../../Source/SampleStripControl.cpp

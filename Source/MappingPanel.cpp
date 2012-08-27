@@ -8,7 +8,7 @@ Author:  Hemmer
 ==============================================================================
 */
 
-#include "PluginEditor.h"
+#include "mlrVSTGUI.h"
 #include "MappingPanel.h"
 
 MappingPanel::MappingPanel(const Rectangle<int> &bounds,

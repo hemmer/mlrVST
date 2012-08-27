@@ -20,7 +20,7 @@
 
 /* Forward declaration to set up pointer arrangement
    to allow sample strips to access the UI */
-class mlrVSTAudioProcessorEditor;
+class mlrVSTGUI;
 
 class SampleStripControl :  public Component,
     public ChangeListener,

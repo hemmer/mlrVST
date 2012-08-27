@@ -12,11 +12,11 @@
 */
 
 #include "SettingsPanel.h"
-#include "PluginEditor.h"
+#include "mlrVSTGUI.h"
 
 SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
                              mlrVSTAudioProcessor * const processorPtr,
-                             mlrVSTAudioProcessorEditor * const editorPtr) :
+                             mlrVSTGUI * const editorPtr) :
     // Communication ////////////////////////////////
     processor(processorPtr), pluginUI(editorPtr),
     // Layout ///////////////////////////////////////

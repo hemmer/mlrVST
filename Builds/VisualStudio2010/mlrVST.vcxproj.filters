@@ -340,7 +340,7 @@
     <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp">
       <Filter>mlrVST\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\PluginEditor.cpp">
+    <ClCompile Include="..\..\Source\mlrVSTGUI.cpp">
       <Filter>mlrVST\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\SampleStripControl.cpp">
@@ -1506,7 +1506,7 @@
     <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h">
       <Filter>mlrVST\gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\PluginEditor.h">
+    <ClInclude Include="..\..\Source\mlrVSTGUI.h">
       <Filter>mlrVST\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\SampleStripControl.h">

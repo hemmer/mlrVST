@@ -11,7 +11,7 @@ Custom component to display a waveform (corresponding to an mlr row)
 */
 
 
-#include "PluginEditor.h"
+#include "mlrVSTGUI.h"
 #include <cstdlib>
 #include <cmath>
 

@@ -16,7 +16,7 @@
 
 /* Forward declaration to set up pointer arrangement
    to allow settings panel access to the UI */
-class mlrVSTAudioProcessorEditor;
+class mlrVSTGUI;
 
 
 class MappingPanel : public Component,

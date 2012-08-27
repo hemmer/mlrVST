@@ -84,9 +84,8 @@
             file="Source/mlrVSTLookAndFeel.cpp"/>
       <FILE id="HLQs9q" name="mlrVSTLookAndFeel.h" compile="0" resource="0"
             file="Source/mlrVSTLookAndFeel.h"/>
-      <FILE id="tp7PIf" name="PluginEditor.cpp" compile="1" resource="0"
-            file="Source/PluginEditor.cpp"/>
-      <FILE id="RWJ5Kc" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="guR4wj" name="mlrVSTGUI.cpp" compile="1" resource="0" file="Source/mlrVSTGUI.cpp"/>
+      <FILE id="RoUU79" name="mlrVSTGUI.h" compile="0" resource="0" file="Source/mlrVSTGUI.h"/>
       <FILE id="VsK1vr" name="SampleStripControl.cpp" compile="1" resource="0"
             file="Source/SampleStripControl.cpp"/>
       <FILE id="so6s66" name="SampleStripControl.h" compile="0" resource="0"

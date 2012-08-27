@@ -25,7 +25,7 @@ GLOBAL TODO:
 // #include <vld.h>
 
 #include "PluginProcessor.h"
-#include "PluginEditor.h"
+#include "mlrVSTGUI.h"
 #include "OSCHandler.h"
 #include <cmath>
 
@@ -1295,7 +1295,7 @@ void mlrVSTAudioProcessor::processRecordingBuffer(AudioSampleBuffer &buffer, con
 /////////////////////////////
 AudioProcessorEditor* mlrVSTAudioProcessor::createEditor()
 {
-    return new mlrVSTAudioProcessorEditor(this, numChannels, numSampleStrips);
+    return new mlrVSTGUI(this, numChannels, numSampleStrips);
 }
 
 void mlrVSTAudioProcessor::getStateInformation(MemoryBlock& destData)

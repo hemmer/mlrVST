@@ -1,18 +1,24 @@
 /*
   ==============================================================================
 
-    mlrVST
+    mlrVSTGUI - Contains the basis for the GUI. Note this is initially called 
+                once then destroyed as part of the initialisation process by 
+                the host.
+
+                This class loads strips for the samples as seperate GUI 
+                components. Panels for settings / setlist etc are also
+                loaded from here.
 
   ==============================================================================
 */
 
 #include "PluginProcessor.h"
-#include "PluginEditor.h"
+#include "mlrVSTGUI.h"
 
 
 
 //==============================================================================
-mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* owner,
+mlrVSTGUI::mlrVSTGUI (mlrVSTAudioProcessor* owner,
                                                         const int &newNumChannels,
                                                         const int &newNumStrips)
     : AudioProcessorEditor (owner),
@@ -127,7 +133,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
     LookAndFeel::setDefaultLookAndFeel(&myLookAndFeel);
 }
 
-mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
+mlrVSTGUI::~mlrVSTGUI()
 {
     parent->removeChangeListener(this);
     sampleStripControlArray.clear(true);
@@ -135,7 +141,7 @@ mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
     DBG("GUI destructor finished.");
 }
 
-void mlrVSTAudioProcessorEditor::buildSampleStripControls(const int &newNumStrips)
+void mlrVSTGUI::buildSampleStripControls(const int &newNumStrips)
 {
     // make sure we start from scratch
     sampleStripControlArray.clear(true);
@@ -174,7 +180,7 @@ void mlrVSTAudioProcessorEditor::buildSampleStripControls(const int &newNumStrip
     DBG("SampleStripControl array built, size " << numStrips);
 }
 
-void mlrVSTAudioProcessorEditor::buildSliders()
+void mlrVSTGUI::buildSliders()
 {
     xPosition = yPosition = PAD_AMOUNT;
 
@@ -242,12 +248,12 @@ void mlrVSTAudioProcessorEditor::buildSliders()
 }
 
 //==============================================================================
-void mlrVSTAudioProcessorEditor::paint (Graphics& g)
+void mlrVSTGUI::paint (Graphics& g)
 {
     g.fillAll(Colours::grey);      // fill with background colour
 }
 
-void mlrVSTAudioProcessorEditor::changeListenerCallback(ChangeBroadcaster * c)
+void mlrVSTGUI::changeListenerCallback(ChangeBroadcaster * c)
 {
     DBG("CHANGE");
 
@@ -304,7 +310,7 @@ void mlrVSTAudioProcessorEditor::changeListenerCallback(ChangeBroadcaster * c)
 // This timer periodically checks whether any of the filter's
 // parameters have changed. In pratical terms, this is usually
 // to see if the host has modified the parameters.
-void mlrVSTAudioProcessorEditor::timerCallback()
+void mlrVSTGUI::timerCallback()
 {
     if (parent->areWeRecording())
         recordBtn.setPercentDone(parent->getRecordingPrecountPercent(),
@@ -335,7 +341,7 @@ void mlrVSTAudioProcessorEditor::timerCallback()
 }
 
 // This is the callback for when the user drags a slider.
-void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
+void mlrVSTGUI::sliderValueChanged(Slider* slider)
 {
     if (slider == &masterGainSlider)
     {
@@ -430,7 +436,7 @@ void mlrVSTAudioProcessorEditor::sliderValueChanged(Slider* slider)
 
 }
 
-void mlrVSTAudioProcessorEditor::comboBoxChanged(ComboBox* comboBoxChanged)
+void mlrVSTGUI::comboBoxChanged(ComboBox* comboBoxChanged)
 {
     if (comboBoxChanged == &quantiseSettingsCbox)
     {
@@ -441,7 +447,7 @@ void mlrVSTAudioProcessorEditor::comboBoxChanged(ComboBox* comboBoxChanged)
     }
 }
 
-void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
+void mlrVSTGUI::buttonClicked(Button* btn)
 {
     if(btn == &toggleSetlistBtn)
     {
@@ -559,9 +565,9 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 
 
 // Setting handling stuff
-void mlrVSTAudioProcessorEditor::updateGlobalSetting(const int &parameterID, const void *newValue)
+void mlrVSTGUI::updateGlobalSetting(const int &parameterID, const void *newValue)
 {
-    /* First let the processor store the setting (as mlrVSTAudioProcessorEditor
+    /* First let the processor store the setting (as mlrVSTGUI
        will lose these on closing. We don't need to update listeners as the GUI
        is the source of the change (at that is what would be notified).
     */
@@ -599,7 +605,7 @@ void mlrVSTAudioProcessorEditor::updateGlobalSetting(const int &parameterID, con
     }
 }
 
-void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
+void mlrVSTGUI::setUpRecordResampleUI()
 {
     const int buttonWidth = 70;
     const int buttonHeight = 25;
@@ -744,7 +750,7 @@ void mlrVSTAudioProcessorEditor::setUpRecordResampleUI()
     patternBankSldr.setValue(patternBank);
 }
 
-void mlrVSTAudioProcessorEditor::setupTempoUI()
+void mlrVSTGUI::setupTempoUI()
 {
     int bpmSliderWidth = 180, bpmSliderHeight = 32;
     int bpmLabelWidth = bpmSliderWidth, bpmLabelHeight = 16;
@@ -821,7 +827,7 @@ void mlrVSTAudioProcessorEditor::setupTempoUI()
 
 }
 
-void mlrVSTAudioProcessorEditor::setupPanels()
+void mlrVSTGUI::setupPanels()
 {
     const int buttonHeight = 25;
     const int buttonWidth = 60;
@@ -858,7 +864,7 @@ void mlrVSTAudioProcessorEditor::setupPanels()
 }
 
 // Force any visible panels to close
-void mlrVSTAudioProcessorEditor::closePanels()
+void mlrVSTGUI::closePanels()
 {
     presetPanel.setVisible(false);
     toggleSetlistBtn.setToggleState(false, false);

@@ -1,7 +1,7 @@
 
 
 #include "PresetPanel.h"
-#include "PluginEditor.h"
+#include "mlrVSTGUI.h"
 
 
 PresetPanel::PresetPanel(const Rectangle<int> &bounds,

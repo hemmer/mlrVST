@@ -135,7 +135,7 @@
     <ClCompile Include="..\..\Source\MappingPanel.cpp"/>
     <ClCompile Include="..\..\Source\timedButton.cpp"/>
     <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp"/>
-    <ClCompile Include="..\..\Source\PluginEditor.cpp"/>
+    <ClCompile Include="..\..\Source\mlrVSTGUI.cpp"/>
     <ClCompile Include="..\..\Source\SampleStripControl.cpp"/>
     <ClCompile Include="..\..\Source\OSCHandler.cpp"/>
     <ClCompile Include="..\..\oscpack\ip\UdpSocket.cpp"/>
@@ -1158,7 +1158,7 @@
     <ClInclude Include="..\..\Source\MappingPanel.h"/>
     <ClInclude Include="..\..\Source\timedButton.h"/>
     <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h"/>
-    <ClInclude Include="..\..\Source\PluginEditor.h"/>
+    <ClInclude Include="..\..\Source\mlrVSTGUI.h"/>
     <ClInclude Include="..\..\Source\SampleStripControl.h"/>
     <ClInclude Include="..\..\Source\OSCHandler.h"/>
     <ClInclude Include="..\..\oscpack\ip\IpEndpointName.h"/>
