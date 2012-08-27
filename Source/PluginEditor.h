@@ -44,6 +44,7 @@ class mlrVSTAudioProcessorEditor  : public AudioProcessorEditor,
                                     public SliderListener,
 									public ButtonListener,
                                     public ComboBoxListener,
+                                    public ChangeListener,
                                     public Timer,
                                     public FileDragAndDropTarget
 {
@@ -62,6 +63,8 @@ public:
     bool isInterestedInFileDrag(const StringArray&) { return true; }
     void filesDropped(const StringArray&, int, int) { }
 
+    // for receiving messages when settings are changed
+    void changeListenerCallback(ChangeBroadcaster *);
 
     // listeners for gui components
     void comboBoxChanged (ComboBox* comboBoxThatHasChanged);
@@ -109,6 +112,8 @@ private:
     Slider bpmSlider; Label bpmLabel;                       // bpm components
     ComboBox quantiseSettingsCbox; Label quantiseLabel;     // quantise options components
     void setupTempoUI();
+
+    ComboBox presetCbox;
 
     // Buttons ////////////////////////////
     TextButton loadFilesBtn;

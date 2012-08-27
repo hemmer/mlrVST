@@ -101,13 +101,12 @@ void PresetPanel::buttonClicked(Button *btn)
                 int index = 1;
                 presetSelectMenu.addItem(index, "None");
 
-                XmlElement* p = currentPresetList.getFirstChildElement();
-                while (p != nullptr)
+                const String nameAttribute = processor->getGlobalSettingName(mlrVSTAudioProcessor::sPresetName);
+                forEachXmlChildElement(currentPresetList, p)
                 {
                     ++index;
-                    String pName = p->getStringAttribute("name");
+                    const String pName = p->getStringAttribute(nameAttribute);
                     presetSelectMenu.addItem(index, pName);
-                    p = p->getNextElement();
                 }
 
 
@@ -126,7 +125,7 @@ void PresetPanel::buttonClicked(Button *btn)
                     XmlElement chosenPreset = *(currentPresetList.getChildElement(presetChoice - 2));
                     currentSetlist.replaceChildElement(presetToChange, new XmlElement(chosenPreset));
 
-                    String presetChoiceName = "#" + String(b) + ": " + chosenPreset.getStringAttribute("name");
+                    String presetChoiceName = "#" + String(b) + ": " + chosenPreset.getStringAttribute(nameAttribute);
                     setListSlotArray[b]->setButtonText(presetChoiceName);
                 }
 
@@ -175,9 +174,8 @@ void PresetPanel::arrangeButtons()
     deleteBtnArray.clear(true);
     selectBtnArray.clear(true);
 
-    XmlElement* child = currentSetlist.getFirstChildElement();
     int index = 0;
-    while (child != nullptr)
+    forEachXmlChildElement(currentSetlist, child)
     {
         String presetName = child->getStringAttribute("name");
         String buttonLblText = "#" + String(index) + ": " + presetName;
@@ -205,7 +203,6 @@ void PresetPanel::arrangeButtons()
             50 + index * (ROW_HEIGHT + PAD_AMOUNT), 25, ROW_HEIGHT);
 
         // iterate away
-        child = child->getNextElement();
         ++index;
     }
 

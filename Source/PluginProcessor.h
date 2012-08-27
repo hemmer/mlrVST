@@ -23,6 +23,7 @@
 
 //==============================================================================
 class mlrVSTAudioProcessor : public AudioProcessor,
+                             public ChangeBroadcaster,
                              public Timer
 {
 public:
@@ -88,6 +89,7 @@ public:
     enum GlobalSettings
     {
         sUseExternalTempo,
+        sPresetName,
         sNumChannels,
         sMonomeSize,
         sNumMonomeRows,
@@ -139,7 +141,8 @@ public:
     // is this setting an int, bool, etc
     static int getGlobalSettingType(const int &parameterID);
     // setters / getters
-    void updateGlobalSetting(const int &settingID, const void *newVal);
+    void updateGlobalSetting(const int &settingID, const void *newVal, const bool &notifyListeners = true);
+    // TODO: should we have a getIntGlobalSetting etc?
     const void* getGlobalSetting(const int &settingID) const;
     
 
@@ -468,7 +471,7 @@ private:
 
 
     // Preset Handling //////////////////////////////////////////
-    
+    String presetName;
     XmlElement presetList;  // this is a unique list of possible presets (used internally)
     XmlElement setlist;     // this is an ordered list of consisting of a entries from presetList
 

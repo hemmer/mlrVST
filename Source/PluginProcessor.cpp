@@ -827,16 +827,15 @@ void mlrVSTAudioProcessor::loadXmlSetlist(const File &setlistFile)
 }
 
 
-void mlrVSTAudioProcessor::addPreset(const String &presetName)
+void mlrVSTAudioProcessor::addPreset(const String &newPresetName)
 {
+    // TODO: check name not blank
+
+    // this is now the current preset
+    updateGlobalSetting(sPresetName, &newPresetName);
 
     // Create an outer XML element..
     XmlElement newPreset("PRESET");
-    newPreset.setAttribute("name", presetName);
-
-    
-    // Add the preset specific settings
-    XmlElement *settings = new XmlElement("SETTINGS");
 
     for (int s = 0; s < NumGlobalSettings; ++s)
     {
@@ -853,26 +852,26 @@ void mlrVSTAudioProcessor::addPreset(const String &presetName)
         switch (settingType)
         {
         case SampleStrip::TypeBool :
-            settings->setAttribute(settingName, (int)(*static_cast<const bool*>(p))); break;
+            newPreset.setAttribute(settingName, (int)(*static_cast<const bool*>(p))); break;
         case SampleStrip::TypeInt :
-            settings->setAttribute(settingName, *static_cast<const int*>(p)); break;
+            newPreset.setAttribute(settingName, *static_cast<const int*>(p)); break;
         case SampleStrip::TypeDouble :
-            settings->setAttribute(settingName, *static_cast<const double*>(p)); break;
+            newPreset.setAttribute(settingName, *static_cast<const double*>(p)); break;
         case SampleStrip::TypeFloat :
-            settings->setAttribute(settingName, (double)(*static_cast<const float*>(p))); break;
+            newPreset.setAttribute(settingName, (double)(*static_cast<const float*>(p))); break;
+        case SampleStrip::TypeString :
+            newPreset.setAttribute(settingName, (*static_cast<const String*>(p))); break;
         default : jassertfalse;
         }
 
     }
 
     // add the master and channel volumes
-    settings->setAttribute("master_vol", masterGain);
+    newPreset.setAttribute("master_vol", masterGain);
 
     for (int c = 0; c < numChannels; ++c)
-        settings->setAttribute("chan_" + String(c) + "_vol", channelGains[c]);
+        newPreset.setAttribute("chan_" + String(c) + "_vol", channelGains[c]);
 
-    // add these settings to the top of the preset
-    newPreset.addChildElement(settings);
 
     
     // Store the SampleStrip specific settings
@@ -922,29 +921,26 @@ void mlrVSTAudioProcessor::addPreset(const String &presetName)
         newPreset.addChildElement(stripXml);
     }
 
-
-    // See if a preset of this name exists in the set list
-    XmlElement* p = presetList.getFirstChildElement();
+    const String nameAttribute = getGlobalSettingName(sPresetName);
     bool duplicateFound = false;
 
-    while (p != nullptr)
+    // See if a preset of this name exists in the preset list
+    forEachXmlChildElement(presetList, p)
     {
-        String pName = p->getStringAttribute("name");
+        const String pName = p->getStringAttribute(nameAttribute);
 
         // If it does, replace it
-        if (pName == presetName)
+        if (pName == newPresetName)
         {
             presetList.replaceChildElement(p, new XmlElement(newPreset));
             duplicateFound = true;
+            DBG("Replacing preset: '" << pName << "'.");
             break;
         }
-        else
-            p = p->getNextElement();
     }
 
-    // Otherwise, add the new preset
-    if (!duplicateFound)
-        presetList.addChildElement(new XmlElement(newPreset));
+    // If the name is unique, add the new preset
+    if (!duplicateFound) presetList.addChildElement(new XmlElement(newPreset));
 
     DBG(presetList.createDocument(String::empty));
 }
@@ -959,71 +955,71 @@ void mlrVSTAudioProcessor::switchPreset(const int &id)
     {
         if (preset->getTagName() == "PRESETNONE")
         {
-            // we have a blank preset
-            // loadDefaultPreset();
+            // we have a blank preset: loadDefaultPreset();
             DBG("blank preset loaded");
         }
         else if (preset->getTagName() == "PRESET")
         {
-            String presetName = preset->getStringAttribute("name", "Untitled");
+            const String newPresetName = preset->getStringAttribute("preset_name", "NOT FOUND");
             // check we know the name
-            DBG("preset \"" << presetName << "\" loaded.");
+            DBG("preset \"" << newPresetName << "\" loaded.");
 
             // TODO: first load the global parameters
-            XmlElement* settings = preset->getChildByName("SETTINGS");
 
-            // try to load the preset specific settings
-            if (settings)
+            for (int s = 0; s < NumGlobalSettings; ++s)
             {
-                for (int s = 0; s < NumGlobalSettings; ++s)
+                // skip if we don't save this setting with each preset
+                if (writeGlobalSettingToPreset(s) != ScopePreset) continue;
+
+                // find if the setting is a bool, int, double etc.
+                const int settingType = getGlobalSettingType(s);
+                // what description do we write into the xml for this setting
+                const String settingName = getGlobalSettingName(s);
+
+                switch (settingType)
                 {
-                    // skip if we don't save this setting with each preset
-                    if (writeGlobalSettingToPreset(s) != ScopePreset) continue;
-
-                    // find if the setting is a bool, int, double etc.
-                    const int settingType = getGlobalSettingType(s);
-                    // what description do we write into the xml for this setting
-                    const String settingName = getGlobalSettingName(s);
-
-                    switch (settingType)
+                case SampleStrip::TypeBool :
                     {
-                    case SampleStrip::TypeBool :
-                        {
-                            const bool value = settings->getIntAttribute(settingName);
-                            updateGlobalSetting(s, &value); break;
-                        }
-                    case SampleStrip::TypeInt :
-                        {
-                            const int value = settings->getIntAttribute(settingName);
-                            updateGlobalSetting(s, &value); break;
-                        }
-                    case SampleStrip::TypeDouble :
-                        {
-                            const double value = settings->getDoubleAttribute(settingName);
-                            updateGlobalSetting(s, &value); break;
-                        }
-                    case SampleStrip::TypeFloat :
-                        {
-                            const float value = (float) settings->getDoubleAttribute(settingName);
-                            updateGlobalSetting(s, &value); break;
-                        }
-                    default : jassertfalse;
+                        const bool value = preset->getIntAttribute(settingName);
+                        updateGlobalSetting(s, &value, false); break;
                     }
-
-                }
-
-
-                const float newMasterGain = settings->getDoubleAttribute("master_vol", defaultChannelGain);
-                if (newMasterGain >= 0.0 && newMasterGain <= 1.0) masterGain = newMasterGain;
-
-                for (int c = 0; c < numChannels; ++c)
-                {
-                    const String chanVolName = "chan_" + String(c) + "_vol";
-                    const float chanGain = settings->getDoubleAttribute(chanVolName, defaultChannelGain);
-                    channelGains.set(c, (chanGain >= 0.0 && chanGain <= 1.0) ? chanGain : defaultChannelGain);
+                case SampleStrip::TypeInt :
+                    {
+                        const int value = preset->getIntAttribute(settingName);
+                        updateGlobalSetting(s, &value, false); break;
+                    }
+                case SampleStrip::TypeDouble :
+                    {
+                        const double value = preset->getDoubleAttribute(settingName);
+                        updateGlobalSetting(s, &value, false); break;
+                    }
+                case SampleStrip::TypeFloat :
+                    {
+                        const float value = (float) preset->getDoubleAttribute(settingName);
+                        updateGlobalSetting(s, &value, false); break;
+                    }
+                case SampleStrip::TypeString :
+                    {
+                        const String value = preset->getStringAttribute(settingName);
+                        updateGlobalSetting(s, &value, false); break;
+                    }
+                default : jassertfalse;
                 }
 
             }
+
+
+            const float newMasterGain = preset->getDoubleAttribute("master_vol", defaultChannelGain);
+            if (newMasterGain >= 0.0 && newMasterGain <= 1.0) masterGain = newMasterGain;
+
+            for (int c = 0; c < numChannels; ++c)
+            {
+                const String chanVolName = "chan_" + String(c) + "_vol";
+                const float chanGain = preset->getDoubleAttribute(chanVolName, defaultChannelGain);
+                channelGains.set(c, (chanGain >= 0.0 && chanGain <= 1.0) ? chanGain : defaultChannelGain);
+            }
+
+
 
             // try to find settings for each strip *that currently exists*
             for (int s = 0; s < sampleStripArray.size(); ++s)
@@ -1114,6 +1110,9 @@ void mlrVSTAudioProcessor::switchPreset(const int &id)
                 } // end of loop over preset entries
 
             }// end of samplestrip loop
+
+            // let the GUI know that we have reloaded 
+            sendChangeMessage();
         }
     }
     // else the preset doesn't exist (shouldn't happen)
@@ -1439,6 +1438,7 @@ int mlrVSTAudioProcessor::writeGlobalSettingToPreset(const int &settingID)
     case sUseExternalTempo : return ScopeSetlist;
     case sNumChannels : return ScopePreset;
     case sMonomeSize : return ScopeSetlist;
+    case sPresetName : return ScopePreset;
     case sNumMonomeRows : return 0;
     case sNumMonomeCols : return 0;
     case sNumSampleStrips : return ScopeSetlist;
@@ -1465,6 +1465,7 @@ String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID)
     switch (settingID)
     {
     case sUseExternalTempo : return "use_external_tempo";
+    case sPresetName : return "preset_name";
     case sNumChannels : return "num_channels";
     case sMonomeSize : return "monome_size";
     case sNumSampleStrips : return "num_sample_strips";
@@ -1505,6 +1506,7 @@ int mlrVSTAudioProcessor::getGlobalSettingType(const int &settingID)
     switch (settingID)
     {
     case sUseExternalTempo : return TypeBool;
+    case sPresetName : return TypeString;
     case sNumChannels : return TypeInt;
     case sMonomeSize : return TypeInt;
     case sNumSampleStrips : return TypeInt;
@@ -1526,12 +1528,18 @@ int mlrVSTAudioProcessor::getGlobalSettingType(const int &settingID)
     }
 }
 
-void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID, const void *newValue)
+void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID,
+                                               const void *newValue, 
+                                               const bool &notifyListeners)
 {
     switch (settingID)
     {
     case sUseExternalTempo :
         useExternalTempo = *static_cast<const bool*>(newValue); break;
+
+    case sPresetName :
+        presetName = *static_cast<const String*>(newValue); break;
+
     case sNumChannels :
         numChannels = *static_cast<const int*>(newValue); break;
 
@@ -1640,12 +1648,16 @@ void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID, const void 
     default :
         jassertfalse;
     }
+
+    // if requested, let listeners know that a global setting has changed
+    if (notifyListeners) sendChangeMessage();
 }
 const void* mlrVSTAudioProcessor::getGlobalSetting(const int &settingID) const
 {
     switch (settingID)
     {
     case sUseExternalTempo : return &useExternalTempo;
+    case sPresetName : return &presetName;
     case sNumChannels : return &numChannels;
     case sMonomeSize : return &monomeSize;
     case sNumMonomeRows : return &numMonomeRows;

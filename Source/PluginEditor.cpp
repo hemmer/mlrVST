@@ -75,6 +75,8 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 {
     DBG("GUI loaded " << " strips of height " << waveformControlHeight);
 
+    parent->addChangeListener(this);
+
     // these are compile time constants
     setSize(GUI_WIDTH, GUI_HEIGHT);
 
@@ -85,6 +87,13 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
     // add the bpm slider and quantise settings
     setupTempoUI();
+
+    addAndMakeVisible(&presetCbox);
+    presetCbox.setBounds(PAD_AMOUNT, 200, 180, 32);
+    presetCbox.setEditableText(true);
+    presetCbox.addItem("test1", 1);
+    presetCbox.addItem("test2", 2);
+
 
     // useful UI debugging components
     addAndMakeVisible(&debugButton);
@@ -120,6 +129,7 @@ mlrVSTAudioProcessorEditor::mlrVSTAudioProcessorEditor (mlrVSTAudioProcessor* ow
 
 mlrVSTAudioProcessorEditor::~mlrVSTAudioProcessorEditor()
 {
+    parent->removeChangeListener(this);
     sampleStripControlArray.clear(true);
 
     DBG("GUI destructor finished.");
@@ -237,18 +247,13 @@ void mlrVSTAudioProcessorEditor::paint (Graphics& g)
     g.fillAll(Colours::grey);      // fill with background colour
 }
 
-
-//==============================================================================
-// This timer periodically checks whether any of the filter's
-// parameters have changed. In pratical terms, this is usually
-// to see if the host has modified the parameters.
-void mlrVSTAudioProcessorEditor::timerCallback()
+void mlrVSTAudioProcessorEditor::changeListenerCallback(ChangeBroadcaster * c)
 {
+    DBG("CHANGE");
 
     if (useExternalTempo)
     {
         AudioPlayHead::CurrentPositionInfo newPos(parent->lastPosInfo);
-
         if (lastDisplayedPosition != newPos) bpmSlider.setValue(newPos.bpm);
     }
     else
@@ -257,27 +262,64 @@ void mlrVSTAudioProcessorEditor::timerCallback()
         bpmSlider.setValue(currentBPM);
     }
 
-    if (parent->areWeRecording())
-        recordBtn.setPercentDone(parent->getRecordingPrecountPercent(),
-                                 parent->getRecordingPercent());
-    else recordBtn.setPercentDone(0.0, 0.0);
+    const int newNumChannels = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sNumChannels));
+    if (newNumChannels != numChannels) 
+    {
+        numChannels = newNumChannels;
+        buildSliders();
+        // let the SampleStrips add the right number of buttons
+        for(int i = 0; i < sampleStripControlArray.size(); ++i)
+            sampleStripControlArray[i]->setNumChannels(numChannels);
+    }
 
-    if (parent->areWeResampling())
-        resampleBtn.setPercentDone(parent->getResamplingPrecountPercent(),
-                                   parent->getResamplingPercent());
-    else resampleBtn.setPercentDone(0.0, 0.0);
+    const int recordLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordLength));
+    const int recordPrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordPrecount));
+    const int recordBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordBank));
+    recordLengthSldr.setValue(recordLength, false);
+    recordPrecountSldr.setValue(recordPrecount, false);
+    recordBankSldr.setValue(recordBank, false);
 
-    if (parent->areWePatternRecording())
-        patternBtn.setPercentDone(parent->getPatternPrecountPercent(),
-                                  parent->getPatternPercent());
-    else patternBtn.setPercentDone(0.0, 0.0);
+    const int resampleLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResampleLength));
+    const int resamplePrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResamplePrecount));
+    const int resampleBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResampleBank));
+    resampleLengthSldr.setValue(resampleLength, false);
+    resamplePrecountSldr.setValue(resamplePrecount, false);
+    resampleBankSldr.setValue(resampleBank, false);
+
+    const int patternLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternLength));
+    const int patternPrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternPrecount));
+    const int patternBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternBank));
+    patternLengthSldr.setValue(patternLength, false);
+    patternPrecountSldr.setValue(patternPrecount, false);
+    patternBankSldr.setValue(patternBank, false);
 
     // see if the host has changed the master gain
     masterGainSlider.setValue(parent->getParameter(mlrVSTAudioProcessor::pMasterGainParam));
     for(int c = 0; c < numChannels; ++c)
-    {
         slidersArray[c]->setValue(parent->getChannelGain(c));
-    }
+
+}
+
+//==============================================================================
+// This timer periodically checks whether any of the filter's
+// parameters have changed. In pratical terms, this is usually
+// to see if the host has modified the parameters.
+void mlrVSTAudioProcessorEditor::timerCallback()
+{
+    if (parent->areWeRecording())
+        recordBtn.setPercentDone(parent->getRecordingPrecountPercent(),
+        parent->getRecordingPercent());
+    else recordBtn.setPercentDone(0.0, 0.0);
+
+    if (parent->areWeResampling())
+        resampleBtn.setPercentDone(parent->getResamplingPrecountPercent(),
+        parent->getResamplingPercent());
+    else resampleBtn.setPercentDone(0.0, 0.0);
+
+    if (parent->areWePatternRecording())
+        patternBtn.setPercentDone(parent->getPatternPrecountPercent(),
+        parent->getPatternPercent());
+    else patternBtn.setPercentDone(0.0, 0.0);
 
 
     // see if the modifier button status has changed
@@ -290,8 +332,6 @@ void mlrVSTAudioProcessorEditor::timerCallback()
         sampleStripControlArray[i]->updatePlaybackStatus();
         sampleStripControlArray[i]->updateParamsIfChanged();
     }
-
-
 }
 
 // This is the callback for when the user drags a slider.
@@ -521,11 +561,11 @@ void mlrVSTAudioProcessorEditor::buttonClicked(Button* btn)
 // Setting handling stuff
 void mlrVSTAudioProcessorEditor::updateGlobalSetting(const int &parameterID, const void *newValue)
 {
-    /* First let the processor store the setting (as
-       mlrVSTAudioProcessorEditor will lose these on
-       closing.
+    /* First let the processor store the setting (as mlrVSTAudioProcessorEditor
+       will lose these on closing. We don't need to update listeners as the GUI
+       is the source of the change (at that is what would be notified).
     */
-    parent->updateGlobalSetting(parameterID, newValue);
+    parent->updateGlobalSetting(parameterID, newValue, false);
 
     // a few settings are of interest to the GUI
     switch (parameterID)
@@ -777,6 +817,8 @@ void mlrVSTAudioProcessorEditor::setupTempoUI()
 
     xPosition = PAD_AMOUNT;
     yPosition += bpmSliderHeight + PAD_AMOUNT;
+
+
 }
 
 void mlrVSTAudioProcessorEditor::setupPanels()
