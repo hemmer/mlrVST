@@ -47,6 +47,8 @@ OBJECTS := \
   $(OBJDIR)/PluginProcessor_a059e380.o \
   $(OBJDIR)/AudioSample_c5634f81.o \
   $(OBJDIR)/PatternRecording_c3abd24a.o \
+  $(OBJDIR)/SetlistTable_bd90937.o \
+  $(OBJDIR)/PresetListTable_856af992.o \
   $(OBJDIR)/PresetPanel_1f2c0a46.o \
   $(OBJDIR)/SettingsPanel_89b72282.o \
   $(OBJDIR)/MappingPanel_5b8ca75f.o \
@@ -108,6 +110,16 @@ $(OBJDIR)/AudioSample_c5634f81.o: ../../Source/AudioSample.cpp
 $(OBJDIR)/PatternRecording_c3abd24a.o: ../../Source/PatternRecording.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling PatternRecording.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/SetlistTable_bd90937.o: ../../Source/SetlistTable.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling SetlistTable.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/PresetListTable_856af992.o: ../../Source/PresetListTable.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling PresetListTable.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/PresetPanel_1f2c0a46.o: ../../Source/PresetPanel.cpp

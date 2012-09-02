@@ -67,6 +67,13 @@
     </GROUP>
     <GROUP id="{CFDF027A-882D-6CE9-C6EE-77934C0D4F4B}" name="gui">
       <GROUP id="{722331CC-6173-9D9D-AAF5-6C51ABA0DA97}" name="panels">
+        <FILE id="A4rmQp" name="SetlistTable.cpp" compile="1" resource="0"
+              file="Source/SetlistTable.cpp"/>
+        <FILE id="CtCN78" name="SetlistTable.h" compile="0" resource="0" file="Source/SetlistTable.h"/>
+        <FILE id="q23Ztw" name="PresetListTable.cpp" compile="1" resource="0"
+              file="Source/PresetListTable.cpp"/>
+        <FILE id="TZbqIP" name="PresetListTable.h" compile="0" resource="0"
+              file="Source/PresetListTable.h"/>
         <FILE id="eTJERZ" name="PresetPanel.cpp" compile="1" resource="0" file="Source/PresetPanel.cpp"/>
         <FILE id="YQfU8B" name="PresetPanel.h" compile="0" resource="0" file="Source/PresetPanel.h"/>
         <FILE id="OQSqUs" name="SettingsPanel.cpp" compile="1" resource="0"

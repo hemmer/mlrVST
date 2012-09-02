@@ -945,183 +945,230 @@ void mlrVSTAudioProcessor::addPreset(const String &newPresetName)
     DBG(presetList.createDocument(String::empty));
 }
 
-void mlrVSTAudioProcessor::switchPreset(const int &id)
+void mlrVSTAudioProcessor::renamePreset(const String &newName, const int & presetID)
+{
+    const int presetListLength = presetList.getNumChildElements();
+
+    if (presetID >= 0 && presetID < presetListLength)
+    {
+        XmlElement * elementToRename = presetList.getChildElement(presetID);
+        elementToRename->setAttribute(getGlobalSettingName(sPresetName), newName);
+    }
+}
+void mlrVSTAudioProcessor::removeSetlistItem(const int &id)
+{
+    const int setlistLength = setlist.getNumChildElements();
+    if (id >= 0 && id < setlistLength)
+    {
+        XmlElement * elementToRemove = setlist.getChildElement(id);
+        setlist.removeChildElement(elementToRemove, true);
+    }
+}
+void mlrVSTAudioProcessor::removePresetListItem(const int &id)
+{
+    const int presetListLength = presetList.getNumChildElements();
+    if (id >= 0 && id < presetListLength)
+    {
+        XmlElement * elementToRemove = presetList.getChildElement(id);
+        presetList.removeChildElement(elementToRemove, true);
+    }
+}
+
+
+void mlrVSTAudioProcessor::selectSetlistItem(const int &id)
 {
     // get the preset at the specified index in the setlist
-    XmlElement* preset = setlist.getChildElement(id);
+    XmlElement* setlistItemToLoad = setlist.getChildElement(id);
+    if (setlistItemToLoad != nullptr) loadPreset(setlistItemToLoad);
+}
+void mlrVSTAudioProcessor::selectPresetListItem(const int &id)
+{
+    // get the preset at the specified index in the list of presets
+    XmlElement* presetItemToLoad = presetList.getChildElement(id);
+    if (presetItemToLoad != nullptr) loadPreset(presetItemToLoad);
+}
 
-    // this *should* exist!
-    if (preset)
+void mlrVSTAudioProcessor::insetPresetIntoSetlist(const int &presetID, const int &indexToInsertAt)
+{
+    const int presetListLength = presetList.getNumChildElements();
+
+    if (presetID >= 0 && presetID < presetListLength)
     {
-        if (preset->getTagName() == "PRESETNONE")
-        {
-            // we have a blank preset: loadDefaultPreset();
-            DBG("blank preset loaded");
-        }
-        else if (preset->getTagName() == "PRESET")
-        {
-            const String newPresetName = preset->getStringAttribute("preset_name", "NOT FOUND");
-            // check we know the name
-            DBG("preset \"" << newPresetName << "\" loaded.");
-
-            // TODO: first load the global parameters
-
-            for (int s = 0; s < NumGlobalSettings; ++s)
-            {
-                // skip if we don't save this setting with each preset
-                if (writeGlobalSettingToPreset(s) != ScopePreset) continue;
-
-                // find if the setting is a bool, int, double etc.
-                const int settingType = getGlobalSettingType(s);
-                // what description do we write into the xml for this setting
-                const String settingName = getGlobalSettingName(s);
-
-                switch (settingType)
-                {
-                case SampleStrip::TypeBool :
-                    {
-                        const bool value = preset->getIntAttribute(settingName);
-                        updateGlobalSetting(s, &value, false); break;
-                    }
-                case SampleStrip::TypeInt :
-                    {
-                        const int value = preset->getIntAttribute(settingName);
-                        updateGlobalSetting(s, &value, false); break;
-                    }
-                case SampleStrip::TypeDouble :
-                    {
-                        const double value = preset->getDoubleAttribute(settingName);
-                        updateGlobalSetting(s, &value, false); break;
-                    }
-                case SampleStrip::TypeFloat :
-                    {
-                        const float value = (float) preset->getDoubleAttribute(settingName);
-                        updateGlobalSetting(s, &value, false); break;
-                    }
-                case SampleStrip::TypeString :
-                    {
-                        const String value = preset->getStringAttribute(settingName);
-                        updateGlobalSetting(s, &value, false); break;
-                    }
-                default : jassertfalse;
-                }
-
-            }
-
-
-            const float newMasterGain = preset->getDoubleAttribute("master_vol", defaultChannelGain);
-            if (newMasterGain >= 0.0 && newMasterGain <= 1.0) masterGain = newMasterGain;
-
-            for (int c = 0; c < numChannels; ++c)
-            {
-                const String chanVolName = "chan_" + String(c) + "_vol";
-                const float chanGain = preset->getDoubleAttribute(chanVolName, defaultChannelGain);
-                channelGains.set(c, (chanGain >= 0.0 && chanGain <= 1.0) ? chanGain : defaultChannelGain);
-            }
-
-
-
-            // try to find settings for each strip *that currently exists*
-            for (int s = 0; s < sampleStripArray.size(); ++s)
-            {
-                // search the preset for the strip with matching ID
-                forEachXmlChildElement(*preset, strip)
-                {
-                    const int stripID = strip->getIntAttribute("id", -1);
-                    // check if the preset has information for this SampleStrip
-                    if (stripID != s) continue;
-
-                    SampleStrip *currentStrip = sampleStripArray[stripID];
-
-                    // if so, try to extract all the required parameters
-                    for (int param = 0; param < SampleStrip::TotalNumParams; ++param)
-                    {
-                        // check that this is a parameter that we load
-                        const bool doWeLoadParam = SampleStrip::isParamSaved(param);
-                        if (!doWeLoadParam) continue;
-
-                        // what name is this parameter?
-                        const String paramName = SampleStrip::getParameterName(param);
-
-                        // check that it can be found in the XML
-                        if (strip->hasAttribute(paramName))
-                        {
-                            // find its type
-                            const int paramType = SampleStrip::getParameterType(param);
-
-                            DBG("id: " << stripID << " " << paramName << " " << param << " " << paramType);
-
-                            // try to load it
-                            switch (paramType)
-                            {
-                            case TypeInt :
-                                {
-                                    // TODO: validate values here
-                                    const int value = strip->getIntAttribute(paramName);
-                                    currentStrip->setSampleStripParam(param, &value);
-                                    break;
-                                }
-                            case TypeFloat :
-                                {
-                                    const float value = (float) strip->getDoubleAttribute(paramName);
-                                    currentStrip->setSampleStripParam(param, &value);
-                                    break;
-                                }
-                            case TypeDouble :
-                                {
-                                    const double value = strip->getDoubleAttribute(paramName);
-                                    currentStrip->setSampleStripParam(param, &value);
-                                    break;
-                                }
-                            case TypeBool :
-                                {
-                                    const bool value = strip->getBoolAttribute(paramName);
-                                    currentStrip->setSampleStripParam(param, &value);
-                                    break;
-                                }
-                            case TypeAudioSample :
-                                {
-                                    const String filePath = strip->getStringAttribute(paramName);
-                                    File newFile = File(filePath);
-
-                                    // add the sample and get the id
-                                    const int sampleID = addNewSample(newFile);
-                                    const AudioSample * newSample = getAudioSample(sampleID, pSamplePool);
-
-                                    // if the sample loaded correctly, set it to be the strip's AudioSample
-                                    if (sampleID != -1 && newSample)
-                                        currentStrip->setSampleStripParam(SampleStrip::pAudioSample, newSample);
-                                }
-                            } // end switch statement
-
-                        } // end of if(hasAtttribute)
-                        else
-                        {
-                            DBG("Param " << paramName << " not found. Doing nothing");
-                            // TODO: load default
-                            // OR do nothing
-                        }
-
-                    } // end loop over expected parameters
-
-                    // we have loaded this strip's parameters so can stop searching
-                    break;
-
-                } // end of loop over preset entries
-
-            }// end of samplestrip loop
-
-            // let the GUI know that we have reloaded 
-            sendChangeMessage();
-        }
+        setlist.insertChildElement(new XmlElement(*(presetList.getChildElement(presetID))), indexToInsertAt);
     }
-    // else the preset doesn't exist (shouldn't happen)
-    else
+}
+
+void mlrVSTAudioProcessor::loadPreset(XmlElement * presetToLoad)
+{
+    // this *should* exist, if not, return doing nothing
+    if (presetToLoad == nullptr)
     {
         jassertfalse;
         return;
     }
 
+
+    if (presetToLoad->getTagName() == "PRESETNONE")
+    {
+        // we have a blank preset: loadDefaultPreset();
+        DBG("blank preset loaded");
+    }
+    else if (presetToLoad->getTagName() == "PRESET")
+    {
+        const String newPresetName = presetToLoad->getStringAttribute("preset_name", "NOT FOUND");
+        // check we know the name
+        DBG("preset \"" << newPresetName << "\" loaded.");
+
+        // TODO: first load the global parameters
+
+        for (int s = 0; s < NumGlobalSettings; ++s)
+        {
+            // skip if we don't save this setting with each preset
+            if (writeGlobalSettingToPreset(s) != ScopePreset) continue;
+
+            // find if the setting is a bool, int, double etc.
+            const int settingType = getGlobalSettingType(s);
+            // what description do we write into the xml for this setting
+            const String settingName = getGlobalSettingName(s);
+
+            switch (settingType)
+            {
+            case SampleStrip::TypeBool :
+                {
+                    const bool value = presetToLoad->getIntAttribute(settingName);
+                    updateGlobalSetting(s, &value, false); break;
+                }
+            case SampleStrip::TypeInt :
+                {
+                    const int value = presetToLoad->getIntAttribute(settingName);
+                    updateGlobalSetting(s, &value, false); break;
+                }
+            case SampleStrip::TypeDouble :
+                {
+                    const double value = presetToLoad->getDoubleAttribute(settingName);
+                    updateGlobalSetting(s, &value, false); break;
+                }
+            case SampleStrip::TypeFloat :
+                {
+                    const float value = (float) presetToLoad->getDoubleAttribute(settingName);
+                    updateGlobalSetting(s, &value, false); break;
+                }
+            case SampleStrip::TypeString :
+                {
+                    const String value = presetToLoad->getStringAttribute(settingName);
+                    updateGlobalSetting(s, &value, false); break;
+                }
+            default : jassertfalse;
+            }
+
+        }
+
+
+        const float newMasterGain = presetToLoad->getDoubleAttribute("master_vol", defaultChannelGain);
+        if (newMasterGain >= 0.0 && newMasterGain <= 1.0) masterGain = newMasterGain;
+
+        for (int c = 0; c < numChannels; ++c)
+        {
+            const String chanVolName = "chan_" + String(c) + "_vol";
+            const float chanGain = presetToLoad->getDoubleAttribute(chanVolName, defaultChannelGain);
+            channelGains.set(c, (chanGain >= 0.0 && chanGain <= 1.0) ? chanGain : defaultChannelGain);
+        }
+
+
+
+        // try to find settings for each strip *that currently exists*
+        for (int s = 0; s < sampleStripArray.size(); ++s)
+        {
+            // search the preset for the strip with matching ID
+            forEachXmlChildElement(*presetToLoad, strip)
+            {
+                const int stripID = strip->getIntAttribute("id", -1);
+                // check if the preset has information for this SampleStrip
+                if (stripID != s) continue;
+
+                SampleStrip *currentStrip = sampleStripArray[stripID];
+
+                // if so, try to extract all the required parameters
+                for (int param = 0; param < SampleStrip::TotalNumParams; ++param)
+                {
+                    // check that this is a parameter that we load
+                    const bool doWeLoadParam = SampleStrip::isParamSaved(param);
+                    if (!doWeLoadParam) continue;
+
+                    // what name is this parameter?
+                    const String paramName = SampleStrip::getParameterName(param);
+
+                    // check that it can be found in the XML
+                    if (strip->hasAttribute(paramName))
+                    {
+                        // find its type
+                        const int paramType = SampleStrip::getParameterType(param);
+
+                        // DBG("id: " << stripID << " " << paramName << " " << param << " " << paramType);
+
+                        // try to load it
+                        switch (paramType)
+                        {
+                        case TypeInt :
+                            {
+                                // TODO: validate values here
+                                const int value = strip->getIntAttribute(paramName);
+                                currentStrip->setSampleStripParam(param, &value);
+                                break;
+                            }
+                        case TypeFloat :
+                            {
+                                const float value = (float) strip->getDoubleAttribute(paramName);
+                                currentStrip->setSampleStripParam(param, &value);
+                                break;
+                            }
+                        case TypeDouble :
+                            {
+                                const double value = strip->getDoubleAttribute(paramName);
+                                currentStrip->setSampleStripParam(param, &value);
+                                break;
+                            }
+                        case TypeBool :
+                            {
+                                const bool value = strip->getBoolAttribute(paramName);
+                                currentStrip->setSampleStripParam(param, &value);
+                                break;
+                            }
+                        case TypeAudioSample :
+                            {
+                                const String filePath = strip->getStringAttribute(paramName);
+                                File newFile = File(filePath);
+
+                                // add the sample and get the id
+                                const int sampleID = addNewSample(newFile);
+                                const AudioSample * newSample = getAudioSample(sampleID, pSamplePool);
+
+                                // if the sample loaded correctly, set it to be the strip's AudioSample
+                                if (sampleID != -1 && newSample)
+                                    currentStrip->setSampleStripParam(SampleStrip::pAudioSample, newSample);
+                            }
+                        } // end switch statement
+
+                    } // end of if(hasAtttribute)
+                    else
+                    {
+                        DBG("Param " << paramName << " not found. Doing nothing");
+                        // TODO: load default
+                        // OR do nothing
+                    }
+
+                } // end loop over expected parameters
+
+                // we have loaded this strip's parameters so can stop searching
+                break;
+
+            } // end of loop over preset entries
+
+        }// end of samplestrip loop
+
+        // let the GUI know that we have reloaded 
+        sendChangeMessage();
+    }
 }
 
 

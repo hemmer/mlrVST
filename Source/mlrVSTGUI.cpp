@@ -485,11 +485,9 @@ void mlrVSTGUI::buttonClicked(Button* btn)
     else if(btn == &addPresetBtn)
     {
 
-    #if JUCE_MODAL_LOOPS_PERMITTED
+#if JUCE_MODAL_LOOPS_PERMITTED
 
-        AlertWindow w("Save Preset",
-                      "Please enter a name for this preset",
-                      AlertWindow::NoIcon);
+        AlertWindow w("Save Preset", "Please enter a name for this preset", AlertWindow::NoIcon);
 
         w.setColour(AlertWindow::textColourId, Colours::black);
         w.setColour(AlertWindow::outlineColourId, Colours::black);
@@ -507,7 +505,10 @@ void mlrVSTGUI::buttonClicked(Button* btn)
 
             parent->addPreset(newPresetName);
         }
-    #endif
+
+        // update the preset list to show new additions
+        presetPanel.refreshPresetLists();
+#endif
     }
 
     else if(btn == &resampleBtn)
@@ -527,11 +528,11 @@ void mlrVSTGUI::buttonClicked(Button* btn)
 
 
     // load files manually using file dialog
-	else if(btn == &loadFilesBtn)
+    else if(btn == &loadFilesBtn)
     {
         FileChooser myChooser ("Please choose a file:",
-                               File::getSpecialLocation(File::userDesktopDirectory),
-                               parent->getWildcardFormats());
+            File::getSpecialLocation(File::userDesktopDirectory),
+            parent->getWildcardFormats());
 
         // ask user to load at least one file
         if(myChooser.browseForMultipleFilesToOpen())
@@ -543,8 +544,8 @@ void mlrVSTGUI::buttonClicked(Button* btn)
                 File currentFile = newFiles[i];
                 parent->addNewSample(currentFile);
             }
-		}
-	}
+        }
+    }
 
     else if (btn == &debugButton)
     {

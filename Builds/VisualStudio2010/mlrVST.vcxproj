@@ -130,6 +130,8 @@
     <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
     <ClCompile Include="..\..\Source\AudioSample.cpp"/>
     <ClCompile Include="..\..\Source\PatternRecording.cpp"/>
+    <ClCompile Include="..\..\Source\SetlistTable.cpp"/>
+    <ClCompile Include="..\..\Source\PresetListTable.cpp"/>
     <ClCompile Include="..\..\Source\PresetPanel.cpp"/>
     <ClCompile Include="..\..\Source\SettingsPanel.cpp"/>
     <ClCompile Include="..\..\Source\MappingPanel.cpp"/>
@@ -1153,6 +1155,8 @@
     <ClInclude Include="..\..\Source\PluginProcessor.h"/>
     <ClInclude Include="..\..\Source\AudioSample.h"/>
     <ClInclude Include="..\..\Source\PatternRecording.h"/>
+    <ClInclude Include="..\..\Source\SetlistTable.h"/>
+    <ClInclude Include="..\..\Source\PresetListTable.h"/>
     <ClInclude Include="..\..\Source\PresetPanel.h"/>
     <ClInclude Include="..\..\Source\SettingsPanel.h"/>
     <ClInclude Include="..\..\Source\MappingPanel.h"/>

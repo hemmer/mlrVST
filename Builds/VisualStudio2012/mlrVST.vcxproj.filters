@@ -325,6 +325,12 @@
     <ClCompile Include="..\..\Source\PatternRecording.cpp">
       <Filter>mlrVST\midi</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\SetlistTable.cpp">
+      <Filter>mlrVST\gui\panels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\PresetListTable.cpp">
+      <Filter>mlrVST\gui\panels</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\PresetPanel.cpp">
       <Filter>mlrVST\gui\panels</Filter>
     </ClCompile>
@@ -1490,6 +1496,12 @@
     </ClInclude>
     <ClInclude Include="..\..\Source\PatternRecording.h">
       <Filter>mlrVST\midi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\SetlistTable.h">
+      <Filter>mlrVST\gui\panels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\PresetListTable.h">
+      <Filter>mlrVST\gui\panels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PresetPanel.h">
       <Filter>mlrVST\gui\panels</Filter>

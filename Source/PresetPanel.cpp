@@ -10,33 +10,48 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
     processor(owner),
     // gui setup //////////////////////////
     panelLabel("preset panel label", "Setlist Manager"),
+    instructionLabel(),
     fontSize(7.4f), panelBounds(bounds),
-    loadSetlistBtn("load setlist", "load setlist"),
-    saveSetlistBtn("save setlist", "save setlist"),
-    // setlist ///////////////////////////////
-    setListSlotArray(), deleteBtnArray(), selectBtnArray(),
-    addNewRowBtn("Add new"), choosePresetMenu(),
-    selectedPreset(0), setListLength(0),
-    ROW_HEIGHT(20), ROW_WIDTH(250)
+    loadSetlistBtn("load setlist from file", "load setlist"),
+    saveSetlistBtn("save setlist to file", "save setlist"),
+    presetListTbl(owner), setlistTbl(owner, &presetListTbl)
 {
+    int xPosition = 0;
+    int yPosition = 0;
+
+    // add the header label
     addAndMakeVisible(&panelLabel);
-    panelLabel.setBounds(0, 0, panelBounds.getWidth(), 30);
+    panelLabel.setBounds(xPosition, yPosition, panelBounds.getWidth(), 30);
     panelLabel.setColour(Label::backgroundColourId, Colours::black);
     panelLabel.setColour(Label::textColourId, Colours::white);
     panelLabel.setFont(2.0f * fontSize);
+    yPosition += 30 + PAD_AMOUNT;
+    xPosition += PAD_AMOUNT;
+
+    // instructions for how to use the setlist
+    addAndMakeVisible(&instructionLabel);
+    instructionLabel.setBounds(xPosition, yPosition, 500, 60);
+    instructionLabel.setColour(Label::backgroundColourId, Colours::black);
+    instructionLabel.setColour(Label::textColourId, Colours::white);
+    instructionLabel.setFont(fontSize);
+    instructionLabel.setText("To create a setlist, drag presets from the list on the left to the setlist panel on the right...", false);
 
     addAndMakeVisible(&loadSetlistBtn);
     loadSetlistBtn.addListener(this);
-    loadSetlistBtn.setBounds(400, 350, 70, 25);
+    loadSetlistBtn.setBounds(520, yPosition, 120, 25);
+
     addAndMakeVisible(&saveSetlistBtn);
     saveSetlistBtn.addListener(this);
-    saveSetlistBtn.setBounds(500, 350, 70, 25);
+    saveSetlistBtn.setBounds(520, yPosition + 35, 120, 25);
 
-    addAndMakeVisible(&addNewRowBtn);
-    addNewRowBtn.addListener(this);
+    yPosition += 60 + PAD_AMOUNT;
 
-    // set up the initial setlist state
-    arrangeButtons();
+    addAndMakeVisible(&presetListTbl);
+    presetListTbl.setBounds(10, yPosition, 400, 400);
+
+    addAndMakeVisible(&setlistTbl);
+    setlistTbl.setBounds(420, yPosition, 282, 400);
+
 }
 
 void PresetPanel::paint(Graphics &g)
@@ -73,141 +88,11 @@ void PresetPanel::buttonClicked(Button *btn)
             processor->saveXmlSetlist(newSetlist);
         }
     }
-
-    else if (btn == &addNewRowBtn) addRow();
-    else
-    {
-        for (int b = 0; b < setListSlotArray.size(); ++b)
-        {
-            if (deleteBtnArray[b] == btn)
-            {
-                deleteRow(b);
-            }
-            else if (selectBtnArray[b] == btn)
-            {
-                processor->switchPreset(b);
-            }
-            else if (setListSlotArray[b] == btn)
-            {
-
-                XmlElement currentPresetList = processor->getPresetList();
-                XmlElement currentSetlist = processor->getSetlist();
-
-                // The button clicked corresponds to this preset slot
-                XmlElement* presetToChange = currentSetlist.getChildElement(b);
-
-                // Populate the popup menu with all possible presets
-                PopupMenu presetSelectMenu = PopupMenu();
-                int index = 1;
-                presetSelectMenu.addItem(index, "None");
-
-                const String nameAttribute = processor->getGlobalSettingName(mlrVSTAudioProcessor::sPresetName);
-                forEachXmlChildElement(currentPresetList, p)
-                {
-                    ++index;
-                    const String pName = p->getStringAttribute(nameAttribute);
-                    presetSelectMenu.addItem(index, pName);
-                }
-
-
-                int presetChoice = presetSelectMenu.showMenu(PopupMenu::Options().withTargetComponent(setListSlotArray[b]));
-
-                // If "none" is selected, insert a blank preset
-                if (presetChoice == 1)
-                {
-                    String presetChoiceName = "#" + String(b) + ": None";
-                    setListSlotArray[b]->setButtonText(presetChoiceName);
-                    currentSetlist.replaceChildElement(presetToChange, new XmlElement("PRESETNONE"));
-                }
-                // otherwise insert the choosen preset
-                else if (presetChoice > 1)
-                {
-                    XmlElement chosenPreset = *(currentPresetList.getChildElement(presetChoice - 2));
-                    currentSetlist.replaceChildElement(presetToChange, new XmlElement(chosenPreset));
-
-                    String presetChoiceName = "#" + String(b) + ": " + chosenPreset.getStringAttribute(nameAttribute);
-                    setListSlotArray[b]->setButtonText(presetChoiceName);
-                }
-
-                setListSlotArray[b]->setToggleState(false, false);
-                processor->setSetlist(currentSetlist);
-            }
-
-        }
-    }
 }
 
-void PresetPanel::addRow()
+void PresetPanel::visibilityChanged()
 {
-    XmlElement currentSetlist = processor->getSetlist();
-
-    // add a new blank preset
-    currentSetlist.createNewChildElement("PRESETNONE");
-    // let the processor know about the change
-    processor->setSetlist(currentSetlist);
-
-    // and rebuild setlist manager
-    arrangeButtons();
+    if (isVisible())
+        refreshPresetLists();
+    
 }
-
-void PresetPanel::deleteRow(const int &index)
-{
-    XmlElement currentSetlist = processor->getSetlist();
-    XmlElement* itemToRemove = currentSetlist.getChildElement(index);
-
-    // add a new blank preset
-    currentSetlist.removeChildElement(itemToRemove, true);
-    // let the processor know about the change
-    processor->setSetlist(currentSetlist);
-
-    // and rebuild setlist manager
-    arrangeButtons();
-}
-
-void PresetPanel::arrangeButtons()
-{
-    // get the current setlist
-    XmlElement currentSetlist = processor->getSetlist();
-
-    // TODO: rebuilding each time is maybe a little inefficient
-    setListSlotArray.clear(true);
-    deleteBtnArray.clear(true);
-    selectBtnArray.clear(true);
-
-    int index = 0;
-    forEachXmlChildElement(currentSetlist, child)
-    {
-        String presetName = child->getStringAttribute("name");
-        String buttonLblText = "#" + String(index) + ": " + presetName;
-
-        // these buttons are clicked to select which preset is in the slot
-        setListSlotArray.add(new ToggleButton(buttonLblText));
-        addAndMakeVisible(setListSlotArray.getLast());
-        setListSlotArray.getLast()->addListener(this);
-        setListSlotArray.getLast()->setBounds(PAD_AMOUNT,
-            50 + index * (ROW_HEIGHT + PAD_AMOUNT), ROW_WIDTH, ROW_HEIGHT);
-
-        // load the selected item in the preset list
-        selectBtnArray.add(new TextButton("SEL"));
-        addAndMakeVisible(selectBtnArray.getLast());
-        selectBtnArray.getLast()->addListener(this);
-        selectBtnArray.getLast()->setBounds(ROW_WIDTH,
-            50 + index * (ROW_HEIGHT + PAD_AMOUNT), 25, ROW_HEIGHT);
-        selectBtnArray.getLast()->setColour(TextButton::textColourOnId, Colours::grey);
-
-        // deletes the current item from the preset list
-        deleteBtnArray.add(new TextButton("DEL"));
-        addAndMakeVisible(deleteBtnArray.getLast());
-        deleteBtnArray.getLast()->addListener(this);
-        deleteBtnArray.getLast()->setBounds(ROW_WIDTH + 3*PAD_AMOUNT,
-            50 + index * (ROW_HEIGHT + PAD_AMOUNT), 25, ROW_HEIGHT);
-
-        // iterate away
-        ++index;
-    }
-
-    // Finally add the option to add a new row
-    addNewRowBtn.setBounds(PAD_AMOUNT, 50 + index * (ROW_HEIGHT + PAD_AMOUNT),
-        50, ROW_HEIGHT);
-}
-

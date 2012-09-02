@@ -3,7 +3,7 @@
 
     PresetWindow.h
     Created: 25 Sep 2011 12:16:05pm
-    Author:  Hemmer
+    Author:  Hemmr
 
   ==============================================================================
 */
@@ -12,16 +12,16 @@
 #define __PRESETWINDOW_H_F0BDFA0B__
 
 #include "../JuceLibraryCode/JuceHeader.h"
-
+#include "PresetListTable.h"
+#include "SetlistTable.h"
 
 /* Forward declaration to set up pointer arrangement
    to allow sample strips to access the UI */
 class mlrVSTAudioProcessor;
 
-
-class PresetPanel :
-    public Component,
-    public ButtonListener
+class PresetPanel : public Component,
+                    public ButtonListener, 
+                    public DragAndDropContainer
 {
 
 public:
@@ -31,6 +31,13 @@ public:
 
     void buttonClicked(Button *btn);
     void paint(Graphics& g);
+    void visibilityChanged();
+
+    void refreshPresetLists()
+    {
+        presetListTbl.loadData();
+        setlistTbl.loadData();
+    }
 
 private:
 
@@ -38,29 +45,21 @@ private:
     mlrVSTAudioProcessor * const processor;
 
     // gui setup //////////////////////////
-    Label panelLabel;
+    Label panelLabel, instructionLabel;
     const float fontSize;
     const Rectangle<int> &panelBounds;
     TextButton loadSetlistBtn, saveSetlistBtn;
 
-    // setlist ///////////////////////////////
-    OwnedArray<ToggleButton> setListSlotArray;
-    OwnedArray<TextButton> deleteBtnArray;
-    OwnedArray<TextButton> selectBtnArray;
+    PresetListTable presetListTbl;      // tables for displaying presets
+    SetlistTable setlistTbl;            // and the setlist
 
-    TextButton addNewRowBtn;
-    PopupMenu choosePresetMenu;
-
-    int selectedPreset;
-    int setListLength;
-
-    const int ROW_HEIGHT, ROW_WIDTH;
-
-    void addRow();
-    void deleteRow(const int &index);
-    void arrangeButtons();
-
+ 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PresetPanel);
 };
+
+
+
+
+
 
 #endif  // __PRESETWINDOW_H_F0BDFA0B__

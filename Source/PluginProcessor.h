@@ -334,14 +334,25 @@ public:
     void saveXmlSetlist(const File &setlistFile);
     void loadXmlSetlist(const File &setlistFile);
     void addPreset(const String &presetName);
-    void switchPreset(const int &id);
+    
+    // giving a position within the list, try to 
+    // load that preset / setlist item
+    void renamePreset(const String &newName, const int & id);
+    void removeSetlistItem(const int &id);
+    void removePresetListItem(const int &id);
+    void selectSetlistItem(const int &id);
+    void selectPresetListItem(const int &id);
+
+    void insetPresetIntoSetlist(const int &presetID, const int &indexToInsertAt);
+    // this does the "heavy lifting" of actually loading the preset
+    void loadPreset(XmlElement * presetToLoad);
+
     XmlElement getPresetList() const { return presetList; }
+    XmlElement & getPresetListP() { return presetList; }
 
     XmlElement getSetlist() const { return setlist; }
-    void setSetlist(const XmlElement &newSetlist) {
-        setlist = newSetlist;
-        DBG(setlist.createDocument(String::empty));
-    }
+    XmlElement & getSetlistP() { return setlist; }
+    void setSetlist(const XmlElement &newSetlist) { setlist = newSetlist; }
 
     // Recording / resampling stuff
     void startRecording();
