@@ -19,7 +19,7 @@ Features / Status
 Latest Screenshot
 -----------------
 
-![Latest Screenshot](/hemmer/mlrVST/raw/master/Screenshots/Latest.png)
+![Latest Screenshot](https://raw.github.com/hemmer/mlrVST/master/Screenshots/Latest.png)
 
 (Possible) Upcoming Features
 -------------------------
