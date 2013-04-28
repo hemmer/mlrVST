@@ -48,7 +48,7 @@ public:
     void refresh()
     {
         paramHasChanged = false;
-        slider.setValue (owner.getParameter (index), false);
+        slider.setValue (owner.getParameter (index), dontSendNotification);
     }
 
     void audioProcessorChanged (AudioProcessor*)  {}
@@ -92,7 +92,7 @@ private:
             const float newVal = (float) getValue();
 
             if (owner.getParameter (index) != newVal)
-                owner.setParameter (index, newVal);
+                owner.setParameterNotifyingHost (index, newVal);
         }
 
         String getTextFromValue (double /*value*/)
@@ -105,7 +105,7 @@ private:
         AudioProcessor& owner;
         const int index;
 
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParamSlider);
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParamSlider)
     };
 
     AudioProcessor& owner;
@@ -113,7 +113,7 @@ private:
     bool volatile paramHasChanged;
     ParamSlider slider;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ProcessorParameterPropertyComp);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ProcessorParameterPropertyComp)
 };
 
 

@@ -73,9 +73,9 @@ void mlrVSTLookAndFeel::drawButtonBackground (Graphics& g, Button& button,
 void mlrVSTLookAndFeel::drawButtonText (Graphics& g, TextButton& button,
                                         bool isMouseOverButton, bool isButtonDown)
 {
-    Font font(getFontForTextButton(button));
+	Font font(button.getFont());
+	font.setHeight(silkFontSizeSmall);
     g.setFont(font);
-    g.setFont(silkFontSizeSmall);
 
     if (isButtonDown)
         g.setColour(button.findColour(TextButton::textColourOnId));
@@ -152,8 +152,7 @@ void mlrVSTLookAndFeel::drawToggleButton (Graphics& g,
 void mlrVSTLookAndFeel::drawLabel(Graphics& g, Label& label)
 {
     g.fillAll (label.findColour(Label::backgroundColourId));
-
-
+	
     const float alpha = label.isEnabled() ? 1.0f : 0.5f;
 
     g.setColour (label.findColour (Label::textColourId).withMultipliedAlpha (alpha));
@@ -376,7 +375,7 @@ void mlrVSTLookAndFeel::drawComboBox (Graphics& g, int width, int height,
     }
 }
 
-const Font mlrVSTLookAndFeel::getComboBoxFont(ComboBox& box)
+Font mlrVSTLookAndFeel::getComboBoxFont(ComboBox& box)
 {
     Font f(silkFontSizeSmall);
     //f.setHorizontalScale(0.9f);
@@ -384,7 +383,7 @@ const Font mlrVSTLookAndFeel::getComboBoxFont(ComboBox& box)
 }
 
 
-const Font mlrVSTLookAndFeel::getPopupMenuFont()
+Font mlrVSTLookAndFeel::getPopupMenuFont()
 {
     Font f(silkFontSizeBig);
     return f;

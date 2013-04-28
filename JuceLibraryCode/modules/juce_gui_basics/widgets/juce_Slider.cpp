@@ -53,7 +53,7 @@ public:
         sendChangeOnlyOnRelease (false),
         popupDisplayEnabled (false),
         menuEnabled (false),
-        menuShown (false),
+        useDragEvents (false),
         scrollWheelEnabled (true),
         snapsToMousePos (true),
         parentForPopupDisplay (nullptr)
@@ -87,6 +87,7 @@ public:
     bool isVertical() const noexcept
     {
         return style == LinearVertical
+            || style == LinearBarVertical
             || style == TwoValueVertical
             || style == ThreeValueVertical;
     }
@@ -108,14 +109,10 @@ public:
     float getPositionOfValue (const double value) const
     {
         if (isHorizontal() || isVertical())
-        {
             return getLinearSliderPos (value);
-        }
-        else
-        {
-            jassertfalse; // not a valid call on a slider that doesn't work linearly!
-            return 0.0f;
-        }
+
+        jassertfalse; // not a valid call on a slider that doesn't work linearly!
+        return 0.0f;
     }
 
     void setRange (const double newMin, const double newMax, const double newInt)
@@ -144,12 +141,12 @@ public:
             // keep the current values inside the new range..
             if (style != TwoValueHorizontal && style != TwoValueVertical)
             {
-                setValue (getValue(), false, false);
+                setValue (getValue(), dontSendNotification);
             }
             else
             {
-                setMinValue (getMinValue(), false, false, false);
-                setMaxValue (getMaxValue(), false, false, false);
+                setMinValue (getMinValue(), dontSendNotification, false);
+                setMaxValue (getMaxValue(), dontSendNotification, false);
             }
 
             updateText();
@@ -165,7 +162,7 @@ public:
         return currentValue.getValue();
     }
 
-    void setValue (double newValue, const bool sendUpdateMessage, const bool sendMessageSynchronously)
+    void setValue (double newValue, const NotificationType notification)
     {
         // for a two-value style slider, you should use the setMinValue() and setMaxValue()
         // methods to set the two values.
@@ -200,13 +197,12 @@ public:
             if (popupDisplay != nullptr)
                 popupDisplay->updatePosition (owner.getTextFromValue (newValue));
 
-            if (sendUpdateMessage)
-                triggerChangeMessage (sendMessageSynchronously);
+            triggerChangeMessage (notification);
         }
     }
 
-    void setMinValue (double newValue, const bool sendUpdateMessage,
-                      const bool sendMessageSynchronously, const bool allowNudgingOfOtherValues)
+    void setMinValue (double newValue, const NotificationType notification,
+                      const bool allowNudgingOfOtherValues)
     {
         // The minimum value only applies to sliders that are in two- or three-value mode.
         jassert (style == TwoValueHorizontal || style == TwoValueVertical
@@ -217,14 +213,14 @@ public:
         if (style == TwoValueHorizontal || style == TwoValueVertical)
         {
             if (allowNudgingOfOtherValues && newValue > (double) valueMax.getValue())
-                setMaxValue (newValue, sendUpdateMessage, sendMessageSynchronously, false);
+                setMaxValue (newValue, notification, false);
 
             newValue = jmin ((double) valueMax.getValue(), newValue);
         }
         else
         {
             if (allowNudgingOfOtherValues && newValue > lastCurrentValue)
-                setValue (newValue, sendUpdateMessage, sendMessageSynchronously);
+                setValue (newValue, notification);
 
             newValue = jmin (lastCurrentValue, newValue);
         }
@@ -238,13 +234,12 @@ public:
             if (popupDisplay != nullptr)
                 popupDisplay->updatePosition (owner.getTextFromValue (newValue));
 
-            if (sendUpdateMessage)
-                triggerChangeMessage (sendMessageSynchronously);
+            triggerChangeMessage (notification);
         }
     }
 
-    void setMaxValue (double newValue, const bool sendUpdateMessage,
-                      const bool sendMessageSynchronously, const bool allowNudgingOfOtherValues)
+    void setMaxValue (double newValue, const NotificationType notification,
+                      const bool allowNudgingOfOtherValues)
     {
         // The maximum value only applies to sliders that are in two- or three-value mode.
         jassert (style == TwoValueHorizontal || style == TwoValueVertical
@@ -255,14 +250,14 @@ public:
         if (style == TwoValueHorizontal || style == TwoValueVertical)
         {
             if (allowNudgingOfOtherValues && newValue < (double) valueMin.getValue())
-                setMinValue (newValue, sendUpdateMessage, sendMessageSynchronously, false);
+                setMinValue (newValue, notification, false);
 
             newValue = jmax ((double) valueMin.getValue(), newValue);
         }
         else
         {
             if (allowNudgingOfOtherValues && newValue < lastCurrentValue)
-                setValue (newValue, sendUpdateMessage, sendMessageSynchronously);
+                setValue (newValue, notification);
 
             newValue = jmax (lastCurrentValue, newValue);
         }
@@ -276,12 +271,11 @@ public:
             if (popupDisplay != nullptr)
                 popupDisplay->updatePosition (owner.getTextFromValue (valueMax.getValue()));
 
-            if (sendUpdateMessage)
-                triggerChangeMessage (sendMessageSynchronously);
+            triggerChangeMessage (notification);
         }
     }
 
-    void setMinAndMaxValues (double newMinValue, double newMaxValue, bool sendUpdateMessage, bool sendMessageSynchronously)
+    void setMinAndMaxValues (double newMinValue, double newMaxValue, const NotificationType notification)
     {
         // The maximum value only applies to sliders that are in two- or three-value mode.
         jassert (style == TwoValueHorizontal || style == TwoValueVertical
@@ -301,8 +295,7 @@ public:
             valueMax = newMaxValue;
             owner.repaint();
 
-            if (sendUpdateMessage)
-                triggerChangeMessage (sendMessageSynchronously);
+            triggerChangeMessage (notification);
         }
     }
 
@@ -324,14 +317,17 @@ public:
         return valueMax.getValue();
     }
 
-    void triggerChangeMessage (const bool synchronous)
+    void triggerChangeMessage (const NotificationType notification)
     {
-        if (synchronous)
-            handleAsyncUpdate();
-        else
-            triggerAsyncUpdate();
+        if (notification != dontSendNotification)
+        {
+            if (notification == sendNotificationSync)
+                handleAsyncUpdate();
+            else
+                triggerAsyncUpdate();
 
-        owner.valueChanged();
+            owner.valueChanged();
+        }
     }
 
     void handleAsyncUpdate()
@@ -370,7 +366,7 @@ public:
             const double delta = (button == incButton) ? interval : -interval;
 
             sendDragStart();
-            setValue (owner.snapValue (getValue() + delta, false), true, true);
+            setValue (owner.snapValue (getValue() + delta, false), sendNotificationSync);
             sendDragEnd();
         }
     }
@@ -380,12 +376,12 @@ public:
         if (value.refersToSameSourceAs (currentValue))
         {
             if (style != TwoValueHorizontal && style != TwoValueVertical)
-                setValue (currentValue.getValue(), false, false);
+                setValue (currentValue.getValue(), dontSendNotification);
         }
         else if (value.refersToSameSourceAs (valueMin))
-            setMinValue (valueMin.getValue(), false, false, true);
+            setMinValue (valueMin.getValue(), dontSendNotification, true);
         else if (value.refersToSameSourceAs (valueMax))
-            setMaxValue (valueMax.getValue(), false, false, true);
+            setMaxValue (valueMax.getValue(), dontSendNotification, true);
     }
 
     void labelTextChanged (Label* label)
@@ -395,7 +391,7 @@ public:
         if (newValue != (double) currentValue.getValue())
         {
             sendDragStart();
-            setValue (newValue, true, true);
+            setValue (newValue, sendNotificationSync);
             sendDragEnd();
         }
 
@@ -405,7 +401,7 @@ public:
     void updateText()
     {
         if (valueBox != nullptr)
-            valueBox->setText (owner.getTextFromValue (currentValue.getValue()), false);
+            valueBox->setText (owner.getTextFromValue (currentValue.getValue()), dontSendNotification);
     }
 
     double constrainedValue (double value) const
@@ -568,17 +564,22 @@ public:
             owner.addAndMakeVisible (valueBox = lf.createSliderTextBox (owner));
 
             valueBox->setWantsKeyboardFocus (false);
-            valueBox->setText (previousTextBoxContent, false);
+            valueBox->setText (previousTextBoxContent, dontSendNotification);
 
             if (valueBox->isEditable() != editableText) // (avoid overriding the single/double click flags unless we have to)
                 valueBox->setEditable (editableText && owner.isEnabled());
 
             valueBox->addListener (this);
 
-            if (style == LinearBar)
+            if (style == LinearBar || style == LinearBarVertical)
+            {
                 valueBox->addMouseListener (&owner, false);
+                valueBox->setMouseCursor (MouseCursor::ParentCursor);
+            }
             else
+            {
                 valueBox->setTooltip (owner.getTooltip());
+            }
         }
         else
         {
@@ -625,8 +626,6 @@ public:
 
     void showPopupMenu()
     {
-        menuShown = true;
-
         PopupMenu m;
         m.setLookAndFeel (&owner.getLookAndFeel());
         m.addItem (1, TRANS ("Velocity-sensitive mode"), true, isVelocityBased);
@@ -681,7 +680,8 @@ public:
 
             if (normalPosDistance >= minPosDistance && maxPosDistance >= minPosDistance)
                 return 1;
-            else if (normalPosDistance >= maxPosDistance)
+
+            if (normalPosDistance >= maxPosDistance)
                 return 2;
         }
 
@@ -744,7 +744,7 @@ public:
         if (style == RotaryHorizontalDrag
             || style == RotaryVerticalDrag
             || style == IncDecButtons
-            || ((style == LinearHorizontal || style == LinearVertical || style == LinearBar)
+            || ((style == LinearHorizontal || style == LinearVertical || style == LinearBar || style == LinearBarVertical)
                 && ! snapsToMousePos))
         {
             const int mouseDiff = (style == RotaryHorizontalDrag
@@ -819,6 +819,7 @@ public:
     {
         mouseWasHidden = false;
         incDecDragged = false;
+        useDragEvents = false;
         mouseDragStartPos = mousePosWhenLastDragged = e.getPosition();
 
         if (owner.isEnabled())
@@ -827,9 +828,13 @@ public:
             {
                 showPopupMenu();
             }
+            else if (canDoubleClickToValue() && e.mods.isAltDown())
+            {
+                mouseDoubleClick();
+            }
             else if (maximum > minimum)
             {
-                menuShown = false;
+                useDragEvents = true;
 
                 if (valueBox != nullptr)
                     valueBox->hideEditor (true);
@@ -867,9 +872,9 @@ public:
 
     void mouseDrag (const MouseEvent& e)
     {
-        if ((! menuShown)
+        if (useDragEvents
              && maximum > minimum
-             && ! (style == LinearBar && e.mouseWasClicked() && valueBox != nullptr && valueBox->isEditable()))
+             && ! ((style == LinearBar || style == LinearBarVertical) && e.mouseWasClicked() && valueBox != nullptr && valueBox->isEditable()))
         {
             if (style == Rotary)
             {
@@ -900,25 +905,25 @@ public:
             if (sliderBeingDragged == 0)
             {
                 setValue (owner.snapValue (valueWhenLastDragged, true),
-                          ! sendChangeOnlyOnRelease, true);
+                          sendChangeOnlyOnRelease ? dontSendNotification : sendNotificationSync);
             }
             else if (sliderBeingDragged == 1)
             {
                 setMinValue (owner.snapValue (valueWhenLastDragged, true),
-                             ! sendChangeOnlyOnRelease, false, true);
+                             sendChangeOnlyOnRelease ? dontSendNotification : sendNotificationAsync, true);
 
                 if (e.mods.isShiftDown())
-                    setMaxValue (getMinValue() + minMaxDiff, false, false, true);
+                    setMaxValue (getMinValue() + minMaxDiff, dontSendNotification, true);
                 else
                     minMaxDiff = (double) valueMax.getValue() - (double) valueMin.getValue();
             }
             else if (sliderBeingDragged == 2)
             {
                 setMaxValue (owner.snapValue (valueWhenLastDragged, true),
-                             ! sendChangeOnlyOnRelease, false, true);
+                             sendChangeOnlyOnRelease ? dontSendNotification : sendNotificationAsync, true);
 
                 if (e.mods.isShiftDown())
-                    setMinValue (getMaxValue() - minMaxDiff, false, false, true);
+                    setMinValue (getMaxValue() - minMaxDiff, dontSendNotification, true);
                 else
                     minMaxDiff = (double) valueMax.getValue() - (double) valueMin.getValue();
             }
@@ -930,14 +935,14 @@ public:
     void mouseUp()
     {
         if (owner.isEnabled()
-             && (! menuShown)
+             && useDragEvents
              && (maximum > minimum)
              && (style != IncDecButtons || incDecDragged))
         {
             restoreMouseIfHidden();
 
             if (sendChangeOnlyOnRelease && valueOnMouseDown != (double) currentValue.getValue())
-                triggerChangeMessage (false);
+                triggerChangeMessage (sendNotificationAsync);
 
             sendDragEnd();
             popupDisplay = nullptr;
@@ -954,15 +959,20 @@ public:
         }
     }
 
+    bool canDoubleClickToValue() const
+    {
+        return doubleClickToValue
+                && style != IncDecButtons
+                && minimum <= doubleClickReturnValue
+                && maximum >= doubleClickReturnValue;
+    }
+
     void mouseDoubleClick()
     {
-        if (doubleClickToValue
-             && style != IncDecButtons
-             && minimum <= doubleClickReturnValue
-             && maximum >= doubleClickReturnValue)
+        if (canDoubleClickToValue())
         {
             sendDragStart();
-            setValue (doubleClickReturnValue, true, true);
+            setValue (doubleClickReturnValue, sendNotificationSync);
             sendDragEnd();
         }
     }
@@ -989,7 +999,7 @@ public:
                     delta = -delta;
 
                 sendDragStart();
-                setValue (owner.snapValue (value + delta, false), true, true);
+                setValue (owner.snapValue (value + delta, false), sendNotificationSync);
                 sendDragEnd();
             }
 
@@ -1072,7 +1082,7 @@ public:
                                      style, owner);
             }
 
-            if (style == LinearBar && valueBox == nullptr)
+            if ((style == LinearBar || style == LinearBarVertical) && valueBox == nullptr)
             {
                 g.setColour (owner.findColour (Slider::textBoxOutlineColourId));
                 g.drawRect (0, 0, owner.getWidth(), owner.getHeight(), 1);
@@ -1093,7 +1103,7 @@ public:
         const int tbw = jmax (0, jmin (textBoxWidth,  localBounds.getWidth() - minXSpace));
         const int tbh = jmax (0, jmin (textBoxHeight, localBounds.getHeight() - minYSpace));
 
-        if (style == LinearBar)
+        if (style == LinearBar || style == LinearBarVertical)
         {
             if (valueBox != nullptr)
                 valueBox->setBounds (localBounds);
@@ -1128,7 +1138,7 @@ public:
 
         const int indent = lf.getSliderThumbRadius (owner);
 
-        if (style == LinearBar)
+        if (style == LinearBar || style == LinearBarVertical)
         {
             const int barIndent = 1;
             sliderRegionStart = barIndent;
@@ -1214,20 +1224,20 @@ public:
     int textBoxWidth, textBoxHeight;
     IncDecButtonMode incDecButtonMode;
 
-    bool editableText : 1;
-    bool doubleClickToValue : 1;
-    bool isVelocityBased : 1;
-    bool userKeyOverridesVelocity : 1;
-    bool rotaryStop : 1;
-    bool incDecButtonsSideBySide : 1;
-    bool sendChangeOnlyOnRelease : 1;
-    bool popupDisplayEnabled : 1;
-    bool menuEnabled : 1;
-    bool menuShown : 1;
-    bool mouseWasHidden : 1;
-    bool incDecDragged : 1;
-    bool scrollWheelEnabled : 1;
-    bool snapsToMousePos : 1;
+    bool editableText;
+    bool doubleClickToValue;
+    bool isVelocityBased;
+    bool userKeyOverridesVelocity;
+    bool rotaryStop;
+    bool incDecButtonsSideBySide;
+    bool sendChangeOnlyOnRelease;
+    bool popupDisplayEnabled;
+    bool menuEnabled;
+    bool useDragEvents;
+    bool mouseWasHidden;
+    bool incDecDragged;
+    bool scrollWheelEnabled;
+    bool snapsToMousePos;
 
     ScopedPointer<Label> valueBox;
     ScopedPointer<Button> incButton, decButton;
@@ -1274,7 +1284,7 @@ public:
         Font font;
         String text;
 
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PopupDisplayComponent);
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PopupDisplayComponent)
     };
 
     ScopedPointer <PopupDisplayComponent> popupDisplay;
@@ -1422,27 +1432,27 @@ Value& Slider::getMaxValueObject() noexcept     { return pimpl->valueMax; }
 
 double Slider::getValue() const                 { return pimpl->getValue(); }
 
-void Slider::setValue (double newValue, bool sendUpdateMessage, bool sendMessageSynchronously)
+void Slider::setValue (double newValue, const NotificationType notification)
 {
-    pimpl->setValue (newValue, sendUpdateMessage, sendMessageSynchronously);
+    pimpl->setValue (newValue, notification);
 }
 
 double Slider::getMinValue() const      { return pimpl->getMinValue(); }
 double Slider::getMaxValue() const      { return pimpl->getMaxValue(); }
 
-void Slider::setMinValue (double newValue, bool sendUpdateMessage, bool sendMessageSynchronously, bool allowNudgingOfOtherValues)
+void Slider::setMinValue (double newValue, const NotificationType notification, bool allowNudgingOfOtherValues)
 {
-    pimpl->setMinValue (newValue, sendUpdateMessage, sendMessageSynchronously, allowNudgingOfOtherValues);
+    pimpl->setMinValue (newValue, notification, allowNudgingOfOtherValues);
 }
 
-void Slider::setMaxValue (double newValue, bool sendUpdateMessage, bool sendMessageSynchronously, bool allowNudgingOfOtherValues)
+void Slider::setMaxValue (double newValue, const NotificationType notification, bool allowNudgingOfOtherValues)
 {
-    pimpl->setMaxValue (newValue, sendUpdateMessage, sendMessageSynchronously, allowNudgingOfOtherValues);
+    pimpl->setMaxValue (newValue, notification, allowNudgingOfOtherValues);
 }
 
-void Slider::setMinAndMaxValues (double newMinValue, double newMaxValue, bool sendUpdateMessage, bool sendMessageSynchronously)
+void Slider::setMinAndMaxValues (double newMinValue, double newMaxValue, const NotificationType notification)
 {
-    pimpl->setMinAndMaxValues (newMinValue, newMaxValue, sendUpdateMessage, sendMessageSynchronously);
+    pimpl->setMinAndMaxValues (newMinValue, newMaxValue, notification);
 }
 
 void Slider::setDoubleClickReturnValue (bool isDoubleClickEnabled,  double valueToSetOnDoubleClick)
@@ -1476,8 +1486,8 @@ String Slider::getTextFromValue (double v)
 {
     if (getNumDecimalPlacesToDisplay() > 0)
         return String (v, getNumDecimalPlacesToDisplay()) + getTextValueSuffix();
-    else
-        return String (roundToInt (v)) + getTextValueSuffix();
+
+    return String (roundToInt (v)) + getTextValueSuffix();
 }
 
 double Slider::getValueFromText (const String& text)
@@ -1567,6 +1577,3 @@ void Slider::mouseWheelMove (const MouseEvent& e, const MouseWheelDetails& wheel
     if (! (isEnabled() && pimpl->mouseWheelMove (e, wheel)))
         Component::mouseWheelMove (e, wheel);
 }
-
-void SliderListener::sliderDragStarted (Slider*)  {} // (can't write Slider::Listener due to idiotic VC2005 bug)
-void SliderListener::sliderDragEnded (Slider*)    {}

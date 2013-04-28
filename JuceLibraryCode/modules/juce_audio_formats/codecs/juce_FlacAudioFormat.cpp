@@ -46,6 +46,12 @@ namespace FlacNamespace
   #define SIZE_MAX 0xffffffff
  #endif
 
+ #if JUCE_CLANG
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wconversion"
+  #pragma clang diagnostic ignored "-Wshadow"
+ #endif
+
  #define __STDC_LIMIT_MACROS 1
  #include "flac/all.h"
  #include "flac/libFLAC/bitmath.c"
@@ -67,6 +73,10 @@ namespace FlacNamespace
 #else
  #include <FLAC/all.h>
 #endif
+
+ #if JUCE_CLANG
+  #pragma clang diagnostic pop
+ #endif
 }
 
 #undef max
@@ -295,7 +305,7 @@ private:
     int reservoirStart, samplesInReservoir;
     bool ok, scanningForLength;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FlacReader);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FlacReader)
 };
 
 
@@ -381,7 +391,7 @@ public:
 
     bool writeData (const void* const data, const int size) const
     {
-        return output->write (data, size);
+        return output->write (data, (size_t) size);
     }
 
     static void packUint32 (FlacNamespace::FLAC__uint32 val, FlacNamespace::FLAC__byte* b, const int bytes)
@@ -466,7 +476,7 @@ public:
 private:
     FlacNamespace::FLAC__StreamEncoder* encoder;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FlacWriter);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FlacWriter)
 };
 
 
@@ -482,14 +492,17 @@ FlacAudioFormat::~FlacAudioFormat()
 
 Array<int> FlacAudioFormat::getPossibleSampleRates()
 {
-    const int rates[] = { 22050, 32000, 44100, 48000, 88200, 96000, 176400, 192000, 352800, 384000, 0 };
-    return Array <int> (rates);
+    const int rates[] = { 8000, 11025, 12000, 16000, 22050, 32000, 44100, 48000,
+                          88200, 96000, 176400, 192000, 352800, 384000 };
+
+    return Array<int> (rates, numElementsInArray (rates));
 }
 
 Array<int> FlacAudioFormat::getPossibleBitDepths()
 {
-    const int depths[] = { 16, 24, 0 };
-    return Array <int> (depths);
+    const int depths[] = { 16, 24 };
+
+    return Array<int> (depths, numElementsInArray (depths));
 }
 
 bool FlacAudioFormat::canDoStereo()     { return true; }

@@ -94,24 +94,24 @@ public:
     */
     virtual float getDescent() const = 0;
 
+    /** Returns the value by which you should multiply a juce font-height value to
+        convert it to the equivalent point-size.
+    */
+    virtual float getHeightToPointsFactor() const = 0;
+
     /** Measures the width of a line of text.
-
         The distance returned is based on the font having an normalised height of 1.0.
-
         You should never need to call this directly! Use Font::getStringWidth() instead!
     */
     virtual float getStringWidth (const String& text) = 0;
 
     /** Converts a line of text into its glyph numbers and their positions.
-
         The distances returned are based on the font having an normalised height of 1.0.
-
         You should never need to call this directly! Use Font::getGlyphPositions() instead!
     */
     virtual void getGlyphPositions (const String& text, Array <int>& glyphs, Array<float>& xOffsets) = 0;
 
     /** Returns the outline for a glyph.
-
         The path returned will be normalised to a font height of 1.0.
     */
     virtual bool getOutlineForGlyph (int glyphNumber, Path& path) = 0;
@@ -129,6 +129,11 @@ public:
     /** Clears any fonts that are currently cached in memory. */
     static void clearTypefaceCache();
 
+    /** On some platforms, this allows a specific path to be scanned.
+        Currently only available when using FreeType.
+    */
+    static void scanFolderForFonts (const File& folder);
+
 protected:
     //==============================================================================
     String name, style;
@@ -138,7 +143,7 @@ protected:
     static Ptr getFallbackTypeface();
 
 private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Typeface);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Typeface)
 };
 
 

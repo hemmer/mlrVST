@@ -146,9 +146,13 @@ public:
         menu bar model will be used to invoke it, and in the menuItemSelected() callback
         the topLevelMenuIndex parameter will be -1. If you pass in an extraAppleMenuItems
         object then newMenuBarModel must be non-null.
+
+        If the recentItemsMenuName parameter is non-empty, then any sub-menus with this
+        name will be replaced by OSX's special recent-files menu.
     */
     static void setMacMainMenu (MenuBarModel* newMenuBarModel,
-                                const PopupMenu* extraAppleMenuItems = nullptr);
+                                const PopupMenu* extraAppleMenuItems = nullptr,
+                                const String& recentItemsMenuName = String::empty);
 
     /** MAC ONLY - Returns the menu model that is currently being shown as
         the main menu bar.
@@ -173,7 +177,7 @@ private:
     ApplicationCommandManager* manager;
     ListenerList <Listener> listeners;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MenuBarModel);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MenuBarModel)
 };
 
 /** This typedef is just for compatibility with old code - newer code should use the MenuBarModel::Listener class directly. */

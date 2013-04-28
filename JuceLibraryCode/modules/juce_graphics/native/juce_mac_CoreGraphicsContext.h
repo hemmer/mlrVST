@@ -30,7 +30,7 @@
 class CoreGraphicsContext   : public LowLevelGraphicsContext
 {
 public:
-    CoreGraphicsContext (CGContextRef context_, const float flipHeight_, const float targetScale_);
+    CoreGraphicsContext (CGContextRef context, const float flipHeight, const float targetScale);
     ~CoreGraphicsContext();
 
     //==============================================================================
@@ -115,8 +115,9 @@ private:
     void flip() const;
     void applyTransform (const AffineTransform& transform) const;
     void drawImage (const Image& sourceImage, const AffineTransform& transform, bool fillEntireClipAsTiles);
+    bool clipToRectangleListWithoutTest (const RectangleList&);
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CoreGraphicsContext);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CoreGraphicsContext)
 };
 
 #endif   // __JUCE_MAC_COREGRAPHICSCONTEXT_JUCEHEADER__

@@ -81,7 +81,10 @@ public:
             activeMidiCollectors.addIfNotAlreadyThere (this);
 
             for (int i = 0; i < (int) numHeaders; ++i)
+            {
+                headers[i].prepare (deviceHandle);
                 headers[i].write (deviceHandle);
+            }
 
             startTime = Time::getMillisecondCounterHiRes();
             MMRESULT res = midiInStart (deviceHandle);
@@ -139,28 +142,15 @@ private:
     class MidiHeader
     {
     public:
-        MidiHeader()
+        MidiHeader() {}
+
+        void prepare (HMIDIIN deviceHandle)
         {
             zerostruct (hdr);
             hdr.lpData = data;
             hdr.dwBufferLength = (DWORD) numElementsInArray (data);
-        }
 
-        void write (HMIDIIN deviceHandle)
-        {
-            hdr.dwBytesRecorded = 0;
-            MMRESULT res = midiInPrepareHeader (deviceHandle, &hdr, sizeof (hdr));
-            res = midiInAddBuffer (deviceHandle, &hdr, sizeof (hdr));
-        }
-
-        void writeIfFinished (HMIDIIN deviceHandle)
-        {
-            if ((hdr.dwFlags & WHDR_DONE) != 0)
-            {
-                MMRESULT res = midiInUnprepareHeader (deviceHandle, &hdr, sizeof (hdr));
-                (void) res;
-                write (deviceHandle);
-            }
+            midiInPrepareHeader (deviceHandle, &hdr, sizeof (hdr));
         }
 
         void unprepare (HMIDIIN deviceHandle)
@@ -175,11 +165,23 @@ private:
             }
         }
 
+        void write (HMIDIIN deviceHandle)
+        {
+            hdr.dwBytesRecorded = 0;
+            midiInAddBuffer (deviceHandle, &hdr, sizeof (hdr));
+        }
+
+        void writeIfFinished (HMIDIIN deviceHandle)
+        {
+            if ((hdr.dwFlags & WHDR_DONE) != 0)
+                write (deviceHandle);
+        }
+
     private:
         MIDIHDR hdr;
         char data [256];
 
-        JUCE_DECLARE_NON_COPYABLE (MidiHeader);
+        JUCE_DECLARE_NON_COPYABLE (MidiHeader)
     };
 
     enum { numHeaders = 32 };
@@ -213,7 +215,7 @@ private:
         return t * 0.001;
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiInCollector);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiInCollector)
 };
 
 Array <MidiInCollector*, CriticalSection> MidiInCollector::activeMidiCollectors;
@@ -313,7 +315,7 @@ struct MidiOutHandle
     static Array<MidiOutHandle*> activeHandles;
 
 private:
-    JUCE_LEAK_DETECTOR (MidiOutHandle);
+    JUCE_LEAK_DETECTOR (MidiOutHandle)
 };
 
 Array<MidiOutHandle*> MidiOutHandle::activeHandles;

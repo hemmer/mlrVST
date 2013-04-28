@@ -99,7 +99,7 @@ private:
     float x, y, w;
     bool whitespace;
 
-    JUCE_LEAK_DETECTOR (PositionedGlyph);
+    JUCE_LEAK_DETECTOR (PositionedGlyph)
 };
 
 
@@ -308,8 +308,9 @@ private:
     int fitLineIntoSpace (int start, int numGlyphs, float x, float y, float w, float h, const Font&,
                           const Justification&, float minimumHorizontalScale);
     void spreadOutLine (int start, int numGlyphs, float targetWidth);
+    void drawGlyphUnderline (const Graphics&, const PositionedGlyph&, int, const AffineTransform&) const;
 
-    JUCE_LEAK_DETECTOR (GlyphArrangement);
+    JUCE_LEAK_DETECTOR (GlyphArrangement)
 };
 
 

@@ -79,6 +79,8 @@ public:
 
         This method is fully thread-safe when overlapping calls are made with
         addMessageToQueue().
+
+        Precondition: numSamples must be greater than 0.
     */
     void removeNextBlockOfMessages (MidiBuffer& destBuffer, int numSamples);
 
@@ -98,7 +100,7 @@ private:
     MidiBuffer incomingMessages;
     double sampleRate;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiMessageCollector);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiMessageCollector)
 };
 
 

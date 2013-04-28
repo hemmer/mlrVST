@@ -170,7 +170,7 @@ public:
                                             by your app.
         @param numOutputChannelsNeeded      a minimum number of output channels to open
         @param savedState                   either a previously-saved state that was produced
-                                            by createStateXml(), or 0 if you want the manager
+                                            by createStateXml(), or nullptr if you want the manager
                                             to choose the best device to open.
         @param selectDefaultDeviceOnFailure if true, then if the device specified in the XML
                                             fails to open, then a default device will be used
@@ -398,6 +398,11 @@ public:
     */
     virtual void createAudioDeviceTypes (OwnedArray <AudioIODeviceType>& types);
 
+    /** Adds a new device type to the list of types.
+        The manager will take ownership of the object that is passed-in.
+    */
+    void addAudioDeviceType (AudioIODeviceType* newDeviceType);
+
     //==============================================================================
     /** Plays a beep through the current audio device.
 
@@ -455,7 +460,7 @@ private:
     ScopedPointer <XmlElement> lastExplicitSettings;
     mutable bool listNeedsScanning;
     bool useInputNames;
-    int inputLevelMeasurementEnabledCount;
+    Atomic<int> inputLevelMeasurementEnabledCount;
     double inputLevel;
     ScopedPointer <AudioSampleBuffer> testSound;
     int testSoundPosition;
@@ -472,27 +477,16 @@ private:
     double cpuUsageMs, timeToCpuScale;
 
     //==============================================================================
-    class CallbackHandler  : public AudioIODeviceCallback,
-                             public MidiInputCallback,
-                             public AudioIODeviceType::Listener
-    {
-    public:
-        void audioDeviceIOCallback (const float**, int, float**, int, int);
-        void audioDeviceAboutToStart (AudioIODevice*);
-        void audioDeviceStopped();
-        void handleIncomingMidiMessage (MidiInput*, const MidiMessage&);
-        void audioDeviceListChanged();
-
-        AudioDeviceManager* owner;
-    };
-
-    CallbackHandler callbackHandler;
+    class CallbackHandler;
     friend class CallbackHandler;
+    friend class ScopedPointer<CallbackHandler>;
+    ScopedPointer<CallbackHandler> callbackHandler;
 
     void audioDeviceIOCallbackInt (const float** inputChannelData, int totalNumInputChannels,
                                    float** outputChannelData, int totalNumOutputChannels, int numSamples);
     void audioDeviceAboutToStartInt (AudioIODevice*);
     void audioDeviceStoppedInt();
+    void audioDeviceErrorInt (const String&);
     void handleIncomingMidiMessageInt (MidiInput*, const MidiMessage&);
     void audioDeviceListChanged();
 
@@ -512,7 +506,7 @@ private:
     AudioIODeviceType* findType (const String& inputName, const String& outputName);
     AudioIODeviceType* findType (const String& typeName);
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioDeviceManager);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioDeviceManager)
 };
 
 #endif   // __JUCE_AUDIODEVICEMANAGER_JUCEHEADER__

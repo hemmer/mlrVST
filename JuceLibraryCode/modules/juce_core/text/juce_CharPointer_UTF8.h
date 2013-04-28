@@ -134,18 +134,10 @@ public:
     /** Moves this pointer back to the previous character in the string. */
     CharPointer_UTF8& operator--() noexcept
     {
-        const char n = *--data;
+        int count = 0;
 
-        if ((n & 0xc0) == 0xc0)
-        {
-            int count = 3;
-
-            do
-            {
-                --data;
-            }
-            while ((*data & 0xc0) == 0xc0 && --count >= 0);
-        }
+        while ((*--data & 0xc0) == 0x80 && ++count < 4)
+        {}
 
         return *this;
     }
@@ -393,7 +385,7 @@ public:
         to the destination buffer before stopping.
     */
     template <typename CharPointer>
-    int writeWithDestByteLimit (const CharPointer& src, const int maxDestBytes) noexcept
+    size_t writeWithDestByteLimit (const CharPointer& src, const size_t maxDestBytes) noexcept
     {
         return CharacterFunctions::copyWithDestByteLimit (*this, src, maxDestBytes);
     }
@@ -516,34 +508,33 @@ public:
     {
         while (--maxBytesToRead >= 0 && *dataToTest != 0)
         {
-            const signed char byte = (signed char) *dataToTest;
+            const signed char byte = (signed char) *dataToTest++;
 
             if (byte < 0)
             {
-                uint32 n = (uint32) (uint8) byte;
-                uint32 mask = 0x7f;
-                uint32 bit = 0x40;
+                uint8 bit = 0x40;
                 int numExtraValues = 0;
 
-                while ((n & bit) != 0)
+                while ((byte & bit) != 0)
                 {
-                    if (bit <= 0x10)
+                    if (bit < 8)
                         return false;
 
-                    mask >>= 1;
                     ++numExtraValues;
                     bit >>= 1;
-                }
 
-                n &= mask;
-
-                while (--numExtraValues >= 0)
-                {
-                    const uint32 nextByte = (uint32) (uint8) *dataToTest++;
-
-                    if ((nextByte & 0xc0) != 0x80)
+                    if (bit == 8 && (numExtraValues > maxBytesToRead
+                                       || *CharPointer_UTF8 (dataToTest - 1) > 0x10ffff))
                         return false;
                 }
+
+                maxBytesToRead -= numExtraValues;
+                if (maxBytesToRead < 0)
+                    return false;
+
+                while (--numExtraValues >= 0)
+                    if ((*dataToTest++ & 0xc0) != 0x80)
+                        return false;
             }
         }
 

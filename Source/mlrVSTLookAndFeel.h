@@ -103,8 +103,8 @@ public:
                                int buttonW, int buttonH,
                                ComboBox& box);
 
-    virtual const Font getComboBoxFont(ComboBox& box);
-    virtual const Font getPopupMenuFont();
+    virtual Font getComboBoxFont(ComboBox& box);
+    virtual Font getPopupMenuFont();
 
     //==============================================================================
     virtual void drawLinearSlider (Graphics& g,

@@ -139,8 +139,8 @@ public:
         if (isPositiveAndBelow (rangeIndex, getNumRanges()))
             return Range<Type> (values.getUnchecked (rangeIndex << 1),
                                 values.getUnchecked ((rangeIndex << 1) + 1));
-        else
-            return Range<Type>();
+
+        return Range<Type>();
     }
 
     /** Returns the range between the lowest and highest values in the set.
@@ -221,13 +221,12 @@ public:
         SparseSet newItems;
         newItems.addRange (range);
 
-        int i;
-        for (i = getNumRanges(); --i >= 0;)
+        for (int i = getNumRanges(); --i >= 0;)
             newItems.removeRange (getRange (i));
 
         removeRange (range);
 
-        for (i = newItems.getNumRanges(); --i >= 0;)
+        for (int i = newItems.getNumRanges(); --i >= 0;)
             addRange (newItems.getRange(i));
     }
 

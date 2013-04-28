@@ -55,6 +55,16 @@ namespace
 }
 
 //==============================================================================
+template <typename ObjectType>
+struct NSObjectRetainer
+{
+    inline NSObjectRetainer (ObjectType* o) : object (o)  { [object retain]; }
+    inline ~NSObjectRetainer()                            { [object release]; }
+
+    ObjectType* object;
+};
+
+//==============================================================================
 template <typename SuperclassType>
 struct ObjCClass
 {
@@ -125,9 +135,9 @@ struct ObjCClass
     template <typename Type>
     static Type getIvar (id self, const char* name)
     {
-        Type v = Type();
-        object_getInstanceVariable (self, name, (void**) &v);
-        return v;
+        void* v = nullptr;
+        object_getInstanceVariable (self, name, &v);
+        return static_cast <Type> (v);
     }
 
     Class cls;
@@ -138,7 +148,7 @@ private:
         return root + String::toHexString (juce::Random::getSystemRandom().nextInt64());
     }
 
-    JUCE_DECLARE_NON_COPYABLE (ObjCClass);
+    JUCE_DECLARE_NON_COPYABLE (ObjCClass)
 };
 
 

@@ -90,7 +90,7 @@ public:
     /** Creates an XmlElement object to represent the main document node.
 
         This method will do the actual parsing of the text, and if there's a
-        parse error, it may returns 0 (and you can find out the error using
+        parse error, it may returns nullptr (and you can find out the error using
         the getLastParseError() method).
 
         See also the parse() methods, which provide a shorthand way to quickly
@@ -176,7 +176,7 @@ private:
     String expandExternalEntity (const String& entity);
     String getParameterEntity (const String& entity);
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (XmlDocument);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (XmlDocument)
 };
 
 

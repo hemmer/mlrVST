@@ -31,6 +31,12 @@
 namespace zlibNamespace
 {
  #if JUCE_INCLUDE_ZLIB_CODE
+  #if JUCE_CLANG
+   #pragma clang diagnostic push
+   #pragma clang diagnostic ignored "-Wconversion"
+   #pragma clang diagnostic ignored "-Wshadow"
+  #endif
+
   #undef OS_CODE
   #undef fdopen
   #define ZLIB_INTERNAL
@@ -55,6 +61,11 @@ namespace zlibNamespace
   #include "zlib/trees.c"
   #include "zlib/zutil.c"
   #undef Byte
+  #undef fdopen
+
+  #if JUCE_CLANG
+   #pragma clang diagnostic pop
+  #endif
  #else
   #include JUCE_ZLIB_INCLUDE_PATH
  #endif
@@ -70,7 +81,7 @@ namespace zlibNamespace
 class GZIPDecompressorInputStream::GZIPDecompressHelper
 {
 public:
-    GZIPDecompressHelper (const bool noWrap)
+    GZIPDecompressHelper (const bool dontWrap)
         : finished (true),
           needsDictionary (false),
           error (true),
@@ -80,7 +91,7 @@ public:
     {
         using namespace zlibNamespace;
         zerostruct (stream);
-        streamIsValid = (inflateInit2 (&stream, noWrap ? -MAX_WBITS : MAX_WBITS) == Z_OK);
+        streamIsValid = (inflateInit2 (&stream, dontWrap ? -MAX_WBITS : MAX_WBITS) == Z_OK);
         finished = error = ! streamIsValid;
     }
 
@@ -99,7 +110,7 @@ public:
         dataSize = size;
     }
 
-    int doNextBlock (uint8* const dest, const int destSize)
+    int doNextBlock (uint8* const dest, const unsigned int destSize)
     {
         using namespace zlibNamespace;
         if (streamIsValid && data != nullptr && ! finished)
@@ -146,7 +157,7 @@ private:
     uint8* data;
     size_t dataSize;
 
-    JUCE_DECLARE_NON_COPYABLE (GZIPDecompressHelper);
+    JUCE_DECLARE_NON_COPYABLE (GZIPDecompressHelper)
 };
 
 //==============================================================================
@@ -199,7 +210,7 @@ int GZIPDecompressorInputStream::read (void* destBuffer, int howMany)
 
         while (! helper->error)
         {
-            const int n = helper->doNextBlock (d, howMany);
+            const int n = helper->doNextBlock (d, (unsigned int) howMany);
             currentPos += n;
 
             if (n == 0)

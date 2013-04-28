@@ -23,8 +23,8 @@
   ==============================================================================
 */
 
-TimeSliceThread::TimeSliceThread (const String& threadName)
-    : Thread (threadName),
+TimeSliceThread::TimeSliceThread (const String& name)
+    : Thread (name),
       clientBeingCalled (nullptr)
 {
 }
@@ -125,8 +125,7 @@ void TimeSliceThread::run()
 
                 index = clients.size() > 0 ? ((index + 1) % clients.size()) : 0;
 
-                TimeSliceClient* const firstClient = getNextClient (index);
-                if (firstClient != nullptr)
+                if (TimeSliceClient* const firstClient = getNextClient (index))
                     nextClientTime = firstClient->nextCallTime;
             }
 

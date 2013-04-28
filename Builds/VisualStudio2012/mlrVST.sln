@@ -1,5 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+# Visual Studio 2012
 Project("{D3D0E9D9-326F-6A16-FBF0-DF01053C2429}") = "mlrVST", "mlrVST.vcxproj", "{3A828C6A-66F2-7FEF-FB57-DBBF32D25EAD}"
 EndProject
 Global

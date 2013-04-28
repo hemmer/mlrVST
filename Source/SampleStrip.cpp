@@ -11,6 +11,7 @@
 #include <cmath>
 #include "SampleStrip.h"
 #include "PluginProcessor.h"
+#include "Utilities.h"
 
 SampleStrip::SampleStrip(const int &newID, mlrVSTAudioProcessor *owner) :
 
@@ -153,7 +154,7 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
     case pFractionalStart :
         {
             fractionalSampleStart = *static_cast<const float*>(newValue);
-            visualSelectionStart = fractionalSampleStart * (float) THUMBNAIL_WIDTH;
+            visualSelectionStart = round(fractionalSampleStart * (float) THUMBNAIL_WIDTH);
             // and which sample (of the audio sample) does this refer to
             selectionStart = (int)(fractionalSampleStart * totalSampleLength);
             selectionLength = selectionEnd - selectionStart;
@@ -165,7 +166,7 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
     case pFractionalEnd :
         {
             fractionalSampleEnd = *static_cast<const float*>(newValue);
-            visualSelectionEnd = fractionalSampleEnd * (float) THUMBNAIL_WIDTH;
+            visualSelectionEnd = round(fractionalSampleEnd * (float) THUMBNAIL_WIDTH);
             // and which sample (of the audio sample) does this refer to
             selectionEnd = (int)(fractionalSampleEnd * totalSampleLength);
             selectionLength = selectionEnd - selectionStart;
@@ -887,3 +888,4 @@ void SampleStrip::updateCurrentPlaybackPercentage()
 
     setSampleStripParam(pPlaybackPercentage, &newPlaybackPercentage, false);
 }
+

@@ -49,7 +49,7 @@ public:
     //==============================================================================
     /** Returns a new InputStream to read this item.
 
-        @returns            an inputstream that the caller will delete, or 0 if
+        @returns            an inputstream that the caller will delete, or nullptr if
                             the filename isn't found.
     */
     virtual InputStream* createInputStream() = 0;
@@ -57,7 +57,7 @@ public:
     /** Returns a new InputStream to read an item, relative.
 
         @param relatedItemPath  the relative pathname of the resource that is required
-        @returns            an inputstream that the caller will delete, or 0 if
+        @returns            an inputstream that the caller will delete, or nullptr if
                             the item isn't found.
     */
     virtual InputStream* createInputStreamFor (const String& relatedItemPath) = 0;
@@ -69,7 +69,7 @@ public:
 
 private:
     //==============================================================================
-    JUCE_LEAK_DETECTOR (InputSource);
+    JUCE_LEAK_DETECTOR (InputSource)
 };
 
 

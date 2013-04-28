@@ -38,7 +38,7 @@ class GlobalRef
 {
 public:
     inline GlobalRef() noexcept                 : obj (0) {}
-    inline explicit GlobalRef (jobject obj_)    : obj (retain (obj_)) {}
+    inline explicit GlobalRef (jobject o)       : obj (retain (o)) {}
     inline GlobalRef (const GlobalRef& other)   : obj (retain (other.obj)) {}
     ~GlobalRef()                                { clear(); }
 
@@ -97,9 +97,9 @@ private:
     //==============================================================================
     jobject obj;
 
-    static inline jobject retain (jobject obj_)
+    static inline jobject retain (jobject obj)
     {
-        return obj_ == 0 ? 0 : getEnv()->NewGlobalRef (obj_);
+        return obj == 0 ? 0 : getEnv()->NewGlobalRef (obj);
     }
 };
 
@@ -108,7 +108,7 @@ template <typename JavaType>
 class LocalRef
 {
 public:
-    explicit inline LocalRef (JavaType obj_) noexcept   : obj (obj_) {}
+    explicit inline LocalRef (JavaType o) noexcept      : obj (o) {}
     inline LocalRef (const LocalRef& other) noexcept    : obj (retain (other.obj)) {}
     ~LocalRef()                                         { clear(); }
 
@@ -132,9 +132,9 @@ public:
 private:
     JavaType obj;
 
-    static JavaType retain (JavaType obj_)
+    static JavaType retain (JavaType obj)
     {
-        return obj_ == 0 ? 0 : (JavaType) getEnv()->NewLocalRef (obj_);
+        return obj == 0 ? 0 : (JavaType) getEnv()->NewLocalRef (obj);
     }
 };
 
@@ -172,7 +172,7 @@ namespace
 class JNIClassBase
 {
 public:
-    explicit JNIClassBase (const char* classPath_);
+    explicit JNIClassBase (const char* classPath);
     virtual ~JNIClassBase();
 
     inline operator jclass() const noexcept { return classRef; }
@@ -196,7 +196,7 @@ private:
     void initialise (JNIEnv*);
     void release (JNIEnv*);
 
-    JUCE_DECLARE_NON_COPYABLE (JNIClassBase);
+    JUCE_DECLARE_NON_COPYABLE (JNIClassBase)
 };
 
 //==============================================================================
@@ -360,6 +360,7 @@ extern ThreadLocalJNIEnvHolder threadLocalJNIEnvHolder;
  METHOD (showOkCancelBox,        "showOkCancelBox",      "(Ljava/lang/String;Ljava/lang/String;J)V") \
  METHOD (showYesNoCancelBox,     "showYesNoCancelBox",   "(Ljava/lang/String;Ljava/lang/String;J)V") \
  STATICMETHOD (getLocaleValue,   "getLocaleValue",       "(Z)Ljava/lang/String;") \
+ METHOD (scanFile,               "scanFile",             "(Ljava/lang/String;)V")
 
 DECLARE_JNI_CLASS (JuceAppActivity, JUCE_ANDROID_ACTIVITY_CLASSPATH);
 #undef JNI_CLASS_MEMBERS

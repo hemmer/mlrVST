@@ -28,7 +28,7 @@ ChildProcess::~ChildProcess() {}
 
 bool ChildProcess::waitForProcessToFinish (const int timeoutMs) const
 {
-    const int64 timeoutTime = Time::getMillisecondCounter() + timeoutMs;
+    const uint32 timeoutTime = Time::getMillisecondCounter() + (uint32) timeoutMs;
 
     do
     {
@@ -52,7 +52,7 @@ String ChildProcess::readAllProcessOutput()
         if (num <= 0)
             break;
 
-        result.write (buffer, num);
+        result.write (buffer, (size_t) num);
     }
 
     return result.toString();

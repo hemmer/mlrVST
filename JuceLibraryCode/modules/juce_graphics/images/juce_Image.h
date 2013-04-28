@@ -307,7 +307,7 @@ public:
         The actual format of the pixel data depends on the image's format - see Image::getFormat(),
         and the PixelRGB, PixelARGB and PixelAlpha classes for more info.
     */
-    class BitmapData
+    class JUCE_API  BitmapData
     {
     public:
         enum ReadWriteMode
@@ -368,7 +368,7 @@ public:
         ScopedPointer<BitmapDataReleaser> dataReleaser;
 
     private:
-        JUCE_DECLARE_NON_COPYABLE (BitmapData);
+        JUCE_DECLARE_NON_COPYABLE (BitmapData)
     };
 
     //==============================================================================
@@ -418,7 +418,7 @@ private:
     //==============================================================================
     ReferenceCountedObjectPtr<ImagePixelData> image;
 
-    JUCE_LEAK_DETECTOR (Image);
+    JUCE_LEAK_DETECTOR (Image)
 };
 
 
@@ -460,7 +460,7 @@ public:
     typedef ReferenceCountedObjectPtr<ImagePixelData> Ptr;
 
 private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImagePixelData);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImagePixelData)
 };
 
 //==============================================================================

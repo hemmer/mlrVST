@@ -95,6 +95,9 @@ public:
     /** Implementation of the AudioIODeviceCallback method. */
     void audioDeviceStopped();
 
+    /** An alternative method for initialising the source without an AudioIODevice. */
+    void prepareToPlay (double sampleRate, int blockSize);
+
 private:
     //==============================================================================
     CriticalSection readLock;
@@ -107,7 +110,7 @@ private:
     AudioSampleBuffer tempBuffer;
     float lastGain, gain;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioSourcePlayer);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioSourcePlayer)
 };
 
 

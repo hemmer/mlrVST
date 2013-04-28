@@ -104,7 +104,7 @@ mlrVSTGUI::mlrVSTGUI (mlrVSTAudioProcessor* owner,
     // useful UI debugging components
     addAndMakeVisible(&debugButton);
 	debugButton.addListener(this);
-	debugButton.setBackgroundColours(Colours::blue, Colours::black);
+	debugButton.setColour(DrawableButton::backgroundColourId, Colours::blue);
 	debugButton.setBounds(50, 300, 50, 25);
 
     addAndMakeVisible(&loadFilesBtn);
@@ -197,7 +197,7 @@ void mlrVSTGUI::buildSliders()
     masterGainSlider.setSliderStyle(Slider::LinearVertical);
 
     masterGainSlider.setRange(0.0, 1.0, 0.01);
-    masterGainSlider.setValue(0.0, false);
+    masterGainSlider.setValue(0.0, NotificationType::dontSendNotification);
     masterGainSlider.setBounds(xPosition, yPosition, sliderWidth, sliderHeight);
     masterGainSlider.setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
     masterGainSlider.setColour(Slider::thumbColourId, Colours::darkgrey);
@@ -208,7 +208,7 @@ void mlrVSTGUI::buildSliders()
     masterSliderLabel.setBounds(xPosition, yPosition + sliderHeight, sliderWidth, 16);
     masterSliderLabel.setColour(Label::backgroundColourId, Colours::black);
     masterSliderLabel.setColour(Label::textColourId, Colours::white);
-    masterSliderLabel.setFont(fontSize);
+
 
     xPosition += 1;
 
@@ -253,7 +253,7 @@ void mlrVSTGUI::paint (Graphics& g)
     g.fillAll(Colours::grey);      // fill with background colour
 }
 
-void mlrVSTGUI::changeListenerCallback(ChangeBroadcaster * c)
+void mlrVSTGUI::changeListenerCallback(ChangeBroadcaster *)
 {
     DBG("CHANGE");
 
@@ -281,23 +281,23 @@ void mlrVSTGUI::changeListenerCallback(ChangeBroadcaster * c)
     const int recordLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordLength));
     const int recordPrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordPrecount));
     const int recordBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordBank));
-    recordLengthSldr.setValue(recordLength, false);
-    recordPrecountSldr.setValue(recordPrecount, false);
-    recordBankSldr.setValue(recordBank, false);
+    recordLengthSldr.setValue(recordLength, NotificationType::dontSendNotification);
+    recordPrecountSldr.setValue(recordPrecount, NotificationType::dontSendNotification);
+    recordBankSldr.setValue(recordBank, NotificationType::dontSendNotification);
 
     const int resampleLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResampleLength));
     const int resamplePrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResamplePrecount));
     const int resampleBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResampleBank));
-    resampleLengthSldr.setValue(resampleLength, false);
-    resamplePrecountSldr.setValue(resamplePrecount, false);
-    resampleBankSldr.setValue(resampleBank, false);
+    resampleLengthSldr.setValue(resampleLength, NotificationType::dontSendNotification);
+    resamplePrecountSldr.setValue(resamplePrecount, NotificationType::dontSendNotification);
+    resampleBankSldr.setValue(resampleBank, NotificationType::dontSendNotification);
 
     const int patternLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternLength));
     const int patternPrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternPrecount));
     const int patternBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternBank));
-    patternLengthSldr.setValue(patternLength, false);
-    patternPrecountSldr.setValue(patternPrecount, false);
-    patternBankSldr.setValue(patternBank, false);
+    patternLengthSldr.setValue(patternLength, NotificationType::dontSendNotification);
+    patternPrecountSldr.setValue(patternPrecount, NotificationType::dontSendNotification);
+    patternBankSldr.setValue(patternBank, NotificationType::dontSendNotification);
 
     // see if the host has changed the master gain
     masterGainSlider.setValue(parent->getParameter(mlrVSTAudioProcessor::pMasterGainParam));
@@ -409,10 +409,10 @@ void mlrVSTGUI::sliderValueChanged(Slider* slider)
 
         // load the precount lengths etc associated with this bank
         const int patternLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternLength));
-        patternLengthSldr.setValue(patternLength, false);
+        patternLengthSldr.setValue(patternLength, NotificationType::dontSendNotification);
 
         const int patternPrecountLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternPrecount));
-        patternPrecountSldr.setValue(patternPrecountLength, false);
+        patternPrecountSldr.setValue(patternPrecountLength, NotificationType::dontSendNotification);
 
     }
 
@@ -584,12 +584,12 @@ void mlrVSTGUI::updateGlobalSetting(const int &parameterID, const void *newValue
             if (useExternalTempo)
             {
                 bpmSlider.setEnabled(false);
-                bpmLabel.setText("BPM (EXTERNAL)", false);
+                bpmLabel.setText("BPM (EXTERNAL)", NotificationType::dontSendNotification);
             }
             else
             {
                 bpmSlider.setEnabled(true);
-                bpmLabel.setText("BPM (INTERNAL)", false);
+                bpmLabel.setText("BPM (INTERNAL)", NotificationType::dontSendNotification);
             }
 
             break;
@@ -775,7 +775,7 @@ void mlrVSTGUI::setupTempoUI()
     quantiseLabel.setFont(fontSize);
     quantiseLabel.setColour(Label::textColourId, Colours::white);
     quantiseLabel.setColour(Label::backgroundColourId, Colours::black);
-    quantiseLabel.setText("QUANTISATION", false);
+    quantiseLabel.setText("QUANTISATION", NotificationType::dontSendNotification);
 
     xPosition = PAD_AMOUNT;
     yPosition += quantiseLabelHeight;
@@ -796,13 +796,13 @@ void mlrVSTGUI::setupTempoUI()
     if (useExternalTempo)
     {
         bpmSlider.setEnabled(false);
-        bpmLabel.setText("BPM (EXTERNAL)", false);
+        bpmLabel.setText("BPM (EXTERNAL)", NotificationType::dontSendNotification);
     }
     else
     {
         double newBPM = *static_cast<const double*>(getGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM));
         bpmSlider.setValue(newBPM);
-        bpmLabel.setText("BPM (INTERNAL)", false);
+        bpmLabel.setText("BPM (INTERNAL)", NotificationType::dontSendNotification);
     }
 
     xPosition += bpmSliderWidth + PAD_AMOUNT;

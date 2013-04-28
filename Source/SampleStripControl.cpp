@@ -34,7 +34,7 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     chanLbl("channel label", "CHAN"), channelButtonArray(),
     volLbl("volume label", "VOL"), stripVolumeSldr("volume"),
     modeLbl("mode", "MODE"), selPlayMode("select playmode"), isLatchedBtn("LATCH"),
-    playspeedLbl("playspeed label", "PLAY SPEED"), playspeedSldr("playspeed"),
+    playspeedLbl("playspeed label", "SPEED"), playspeedSldr("playspeed"),
     speedLockBtn("speed lock", DrawableButton::ImageRaw), isReversedBtn("NORM"),
     lockImg(), unlockImg(), times2("x2"), div2("/2"), selNumChunks(),
     trackNumberLbl("track number", String(sampleStripID)), filenameLbl("filename", "No File"),
@@ -201,7 +201,7 @@ void SampleStripControl::sliderValueChanged(Slider *sldr)
 void SampleStripControl::updateChannelColours(const int &newChannel)
 {
 
-    backgroundColour = channelButtonArray[newChannel]->getBackgroundColour();
+	backgroundColour = channelButtonArray[newChannel]->findColour(DrawableButton::backgroundColourId);
 
     isLatchedBtn.setColour(ToggleButton::textColourId, backgroundColour);
     isReversedBtn.setColour(ToggleButton::textColourId, backgroundColour);
@@ -222,7 +222,7 @@ void SampleStripControl::updateChannelColours(const int &newChannel)
     div2.setColour(TextButton::textColourOffId, backgroundColour);
     div2.setColour(TextButton::buttonOnColourId, backgroundColour);
 
-    speedLockBtn.setBackgroundColours(backgroundColour, backgroundColour);
+	speedLockBtn.setColour(DrawableButton::backgroundColourId, backgroundColour);
 
     repaint();
 }
@@ -264,7 +264,7 @@ void SampleStripControl::buildUI()
         channelButtonArray.getLast()->setBounds(35 + chan * controlbarSize, 0, controlbarSize, controlbarSize);
         channelButtonArray.getLast()->addListener(this);
         Colour chanColour = processor->getChannelColour(chan);
-        channelButtonArray.getLast()->setBackgroundColours(chanColour, chanColour);
+		channelButtonArray.getLast()->setColour(DrawableButton::backgroundColourId, chanColour);
     }
 
     int previousChannel = *static_cast<const int*>(dataStrip->getSampleStripParam(SampleStrip::pCurrentChannel));
@@ -313,19 +313,13 @@ void SampleStripControl::buildUI()
 
     newXposition += 86;
 
-    addAndMakeVisible(&isLatchedBtn);
-    isLatchedBtn.setBounds(newXposition, 0, 40, controlbarSize);
-    isLatchedBtn.setColour(ToggleButton::textColourId, backgroundColour);
-
-    newXposition += 40;
 
     addAndMakeVisible(&playspeedLbl);
-    playspeedLbl.setBounds(newXposition, 0, 64, controlbarSize);
+    playspeedLbl.setBounds(newXposition, 0, 40, controlbarSize);
     playspeedLbl.setColour(Label::backgroundColourId, Colours::black);
     playspeedLbl.setColour(Label::textColourId, Colours::white);
     playspeedLbl.setFont(fontSize);
-
-    newXposition += 64;
+	newXposition += 40;
 
     addAndMakeVisible(&playspeedSldr);
     playspeedSldr.setSliderStyle(Slider::LinearBar);
@@ -334,9 +328,16 @@ void SampleStripControl::buildUI()
     playspeedSldr.setRange(0.0, 4.0, 0.001);
     playspeedSldr.setTextBoxIsEditable(true);
     playspeedSldr.setLookAndFeel(&menuLF);
+	newXposition += 80;
 
 
-    newXposition += 80;
+	addAndMakeVisible(&isLatchedBtn);
+    isLatchedBtn.setBounds(newXposition, 0, 40, controlbarSize);
+    isLatchedBtn.setColour(ToggleButton::textColourId, backgroundColour);
+	newXposition += 40;
+
+
+
     addAndMakeVisible(&speedLockBtn);
     speedLockBtn.setImages(&unlockImg);
     speedLockBtn.setBounds(newXposition, 0, 16, 16);
@@ -714,8 +715,8 @@ void SampleStripControl::paint(Graphics& g)
                     int mappingID = processor->getMonomeMapping(rowType, c);
                     String mappingName = processor->getNormalRowMappingName(mappingID);
 
-                    g.drawFittedText(mappingName, c * spacing, controlbarSize, spacing, maxWaveformHeight,
-                        Justification::horizontallyCentred, 5, 1.0f);
+					g.drawFittedText(mappingName, PAD_AMOUNT + c * spacing, controlbarSize, spacing - PAD_AMOUNT, maxWaveformHeight,
+                        Justification::centredLeft, 5, 1.0f);
                 }
                 break;
             }
@@ -870,14 +871,14 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
     case SampleStrip::pStripVolume :
         {
             float newStripVolume = *static_cast<const float*>(newValue);
-            stripVolumeSldr.setValue(newStripVolume, true);
+            stripVolumeSldr.setValue(newStripVolume, NotificationType::dontSendNotification);
             break;
         }
 
     case SampleStrip::pPlaySpeed :
         {
             double newPlaySpeed = *static_cast<const double*>(newValue);
-            playspeedSldr.setValue(newPlaySpeed, false);
+			playspeedSldr.setValue(newPlaySpeed, NotificationType::dontSendNotification);
             break;
         }
 
@@ -911,11 +912,11 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
                 currentSample = newSample;
                 // If the new sample exists
                 if (currentSample)
-                    filenameLbl.setText(currentSample->getSampleName(), false);
+					filenameLbl.setText(currentSample->getSampleName(), NotificationType::dontSendNotification);
                 else
                 {
-                    filenameLbl.setText("No file", false);
-                    playspeedSldr.setValue(1.0, true);
+                    filenameLbl.setText("No file", NotificationType::dontSendNotification);
+					playspeedSldr.setValue(1.0, NotificationType::sendNotification);
                 }
             }
 

@@ -74,8 +74,8 @@ public:
         g.fillRect (width - 1, 0, 1, height);
 
         // if presets are being dragged, draw a line marking where they would be placed
-        if (rowNumber == insertAtIndex) g.drawLine(0.0f, 0.0f, width, 0.0f, 2.0f);
-        if (rowNumber == insertAtIndex-1) g.drawLine(0.0f, height, width, height, 2.0f);
+        if (rowNumber == insertAtIndex) g.drawLine(0.0f, 0.0f, (float) width, 0.0f, 2.0f);
+        if (rowNumber == insertAtIndex-1) g.drawLine(0.0f, (float) height, (float) width, (float) height, 2.0f);
     }
 
 

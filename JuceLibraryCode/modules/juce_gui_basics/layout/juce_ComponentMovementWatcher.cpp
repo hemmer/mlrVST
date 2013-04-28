@@ -23,11 +23,11 @@
   ==============================================================================
 */
 
-ComponentMovementWatcher::ComponentMovementWatcher (Component* const component_)
-    : component (component_),
+ComponentMovementWatcher::ComponentMovementWatcher (Component* const comp)
+    : component (comp),
       lastPeerID (0),
       reentrant (false),
-      wasShowing (component_->isShowing())
+      wasShowing (comp->isShowing())
 {
     jassert (component != nullptr); // can't use this with a null pointer..
 
@@ -118,13 +118,10 @@ void ComponentMovementWatcher::componentVisibilityChanged (Component&)
 
 void ComponentMovementWatcher::registerWithParentComps()
 {
-    Component* p = component->getParentComponent();
-
-    while (p != nullptr)
+    for (Component* p = component->getParentComponent(); p != nullptr; p = p->getParentComponent())
     {
         p->addComponentListener (this);
         registeredParentComps.add (p);
-        p = p->getParentComponent();
     }
 }
 

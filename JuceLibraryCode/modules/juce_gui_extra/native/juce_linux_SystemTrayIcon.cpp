@@ -88,7 +88,7 @@ public:
     Image image;
 
 private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Pimpl);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Pimpl)
 };
 
 
@@ -118,7 +118,7 @@ void SystemTrayIconComponent::paint (Graphics& g)
                            RectanglePlacement::xLeft | RectanglePlacement::yTop | RectanglePlacement::onlyReduceInSize, false);
 }
 
-void SystemTrayIconComponent::setIconTooltip (const String& tooltip)
+void SystemTrayIconComponent::setIconTooltip (const String& /* tooltip */)
 {
     // xxx not yet implemented!
 }

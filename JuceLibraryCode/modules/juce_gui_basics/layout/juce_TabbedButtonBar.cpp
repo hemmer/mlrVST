@@ -77,31 +77,31 @@ int TabBarButton::getBestTabLength (const int depth)
     return getLookAndFeel().getTabButtonBestWidth (*this, depth);
 }
 
-void TabBarButton::calcAreas (Rectangle<int>& extraComp, Rectangle<int>& text) const
+void TabBarButton::calcAreas (Rectangle<int>& extraComp, Rectangle<int>& textArea) const
 {
     LookAndFeel& lf = getLookAndFeel();
-    text = getActiveArea();
+    textArea = getActiveArea();
 
-    const int depth = owner.isVertical() ? text.getWidth() : text.getHeight();
+    const int depth = owner.isVertical() ? textArea.getWidth() : textArea.getHeight();
     const int overlap = lf.getTabButtonOverlap (depth);
 
     if (overlap > 0)
     {
         if (owner.isVertical())
-            text.reduce (0, overlap);
+            textArea.reduce (0, overlap);
         else
-            text.reduce (overlap, 0);
+            textArea.reduce (overlap, 0);
     }
 
     if (extraComponent != nullptr)
-        extraComp = lf.getTabButtonExtraComponentBounds (*this, text, *extraComponent);
+        extraComp = lf.getTabButtonExtraComponentBounds (*this, textArea, *extraComponent);
 }
 
 Rectangle<int> TabBarButton::getTextArea() const
 {
-    Rectangle<int> extraComp, text;
-    calcAreas (extraComp, text);
-    return text;
+    Rectangle<int> extraComp, textArea;
+    calcAreas (extraComp, textArea);
+    return textArea;
 }
 
 Rectangle<int> TabBarButton::getActiveArea() const
@@ -139,8 +139,8 @@ void TabBarButton::resized()
 {
     if (extraComponent != nullptr)
     {
-        Rectangle<int> extraComp, text;
-        calcAreas (extraComp, text);
+        Rectangle<int> extraComp, textArea;
+        calcAreas (extraComp, textArea);
 
         if (! extraComp.isEmpty())
             extraComponent->setBounds (extraComp);
@@ -176,7 +176,7 @@ public:
 private:
     TabbedButtonBar& owner;
 
-    JUCE_DECLARE_NON_COPYABLE (BehindFrontTabComp);
+    JUCE_DECLARE_NON_COPYABLE (BehindFrontTabComp)
 };
 
 
@@ -259,13 +259,14 @@ void TabbedButtonBar::addTab (const String& tabName,
 
 void TabbedButtonBar::setTabName (const int tabIndex, const String& newName)
 {
-    TabInfo* const tab = tabs [tabIndex];
-
-    if (tab != nullptr && tab->name != newName)
+    if (TabInfo* const tab = tabs [tabIndex])
     {
-        tab->name = newName;
-        tab->button->setButtonText (newName);
-        resized();
+        if (tab->name != newName)
+        {
+            tab->name = newName;
+            tab->button->setButtonText (newName);
+            resized();
+        }
     }
 }
 
@@ -439,9 +440,7 @@ void TabbedButtonBar::resized()
 
     for (int i = 0; i < tabs.size(); ++i)
     {
-        TabBarButton* const tb = getTabButton (i);
-
-        if (tb != nullptr)
+        if (TabBarButton* const tb = getTabButton (i))
         {
             const int bestLength = roundToInt (scale * tb->getBestTabLength (depth));
 
@@ -486,12 +485,13 @@ Colour TabbedButtonBar::getTabBackgroundColour (const int tabIndex)
 
 void TabbedButtonBar::setTabBackgroundColour (const int tabIndex, const Colour& newColour)
 {
-    TabInfo* const tab = tabs [tabIndex];
-
-    if (tab != nullptr && tab->colour != newColour)
+    if (TabInfo* const tab = tabs [tabIndex])
     {
-        tab->colour = newColour;
-        repaint();
+        if (tab->colour != newColour)
+        {
+            tab->colour = newColour;
+            repaint();
+        }
     }
 }
 

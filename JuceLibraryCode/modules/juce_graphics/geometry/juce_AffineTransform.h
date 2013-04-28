@@ -133,6 +133,10 @@ public:
     static AffineTransform translation (float deltaX,
                                         float deltaY) noexcept;
 
+    /** Returns a copy of this transform with the specified translation matrix values. */
+    AffineTransform withAbsoluteTranslation (float translationX,
+                                             float translationY) const noexcept;
+
     /** Returns a transform which is the same as this one followed by a rotation.
 
         The rotation is specified by a number of radians to rotate clockwise, centred around
@@ -172,6 +176,9 @@ public:
     /** Returns a new transform which is a re-scale about the origin. */
     static AffineTransform scale (float factorX,
                                   float factorY) noexcept;
+
+    /** Returns a new transform which is a re-scale about the origin. */
+    static AffineTransform scale (float factor) noexcept;
 
     /** Returns a new transform which is a re-scale centred around the point provided. */
     static AffineTransform scale (float factorX, float factorY,
@@ -256,7 +263,7 @@ public:
 
 private:
     //==============================================================================
-    JUCE_LEAK_DETECTOR (AffineTransform);
+    JUCE_LEAK_DETECTOR (AffineTransform)
 };
 
 #endif   // __JUCE_AFFINETRANSFORM_JUCEHEADER__

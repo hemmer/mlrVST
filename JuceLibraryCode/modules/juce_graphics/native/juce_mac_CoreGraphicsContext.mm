@@ -35,7 +35,7 @@ public:
         pixelStride = format == Image::RGB ? 3 : ((format == Image::ARGB) ? 4 : 1);
         lineStride = (pixelStride * jmax (1, width) + 3) & ~3;
 
-        imageData.allocate (lineStride * jmax (1, height), clearImage);
+        imageData.allocate ((size_t) (lineStride * jmax (1, height)), clearImage);
 
         CGColorSpaceRef colourSpace = (format == Image::SingleChannel) ? CGColorSpaceCreateDeviceGray()
                                                                        : CGColorSpaceCreateDeviceRGB();
@@ -74,8 +74,8 @@ public:
     ImageType* createType() const    { return new NativeImageType(); }
 
     //==============================================================================
-    static CGImageRef createImage (const Image& juceImage, const bool forAlpha,
-                                   CGColorSpaceRef colourSpace, const bool mustOutliveSource)
+    static CGImageRef createImage (const Image& juceImage, CGColorSpaceRef colourSpace,
+                                   const bool mustOutliveSource)
     {
         const Image::BitmapData srcData (juceImage, Image::BitmapData::readOnly);
         CGDataProviderRef provider;
@@ -115,7 +115,7 @@ private:
        #endif
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CoreGraphicsImage);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CoreGraphicsImage)
 };
 
 ImagePixelData::Ptr NativeImageType::create (Image::PixelFormat format, int width, int height, bool clearImage) const
@@ -193,11 +193,11 @@ bool CoreGraphicsContext::clipToRectangle (const Rectangle<int>& r)
     return ! isClipEmpty();
 }
 
-bool CoreGraphicsContext::clipToRectangleList (const RectangleList& clipRegion)
+bool CoreGraphicsContext::clipToRectangleListWithoutTest (const RectangleList& clipRegion)
 {
     if (clipRegion.isEmpty())
     {
-        CGContextClipToRect (context, CGRectMake (0, 0, 0, 0));
+        CGContextClipToRect (context, CGRectZero);
         lastClipRectIsValid = true;
         lastClipRect = Rectangle<int>();
         return false;
@@ -205,26 +205,28 @@ bool CoreGraphicsContext::clipToRectangleList (const RectangleList& clipRegion)
     else
     {
         const int numRects = clipRegion.getNumRectangles();
-
         HeapBlock <CGRect> rects (numRects);
-        for (int i = 0; i < numRects; ++i)
-        {
-            const Rectangle<int>& r = clipRegion.getRectangle(i);
-            rects[i] = CGRectMake (r.getX(), flipHeight - r.getBottom(), r.getWidth(), r.getHeight());
-        }
+
+        int i = 0;
+        for (const Rectangle<int>* r = clipRegion.begin(), * const e = clipRegion.end(); r != e; ++r)
+            rects[i++] = CGRectMake (r->getX(), flipHeight - r->getBottom(), r->getWidth(), r->getHeight());
 
         CGContextClipToRects (context, rects, numRects);
         lastClipRectIsValid = false;
-        return ! isClipEmpty();
+        return true;
     }
+}
+
+bool CoreGraphicsContext::clipToRectangleList (const RectangleList& clipRegion)
+{
+    return clipToRectangleListWithoutTest (clipRegion) && ! isClipEmpty();
 }
 
 void CoreGraphicsContext::excludeClipRectangle (const Rectangle<int>& r)
 {
     RectangleList remaining (getClipBounds());
     remaining.subtract (r);
-    clipToRectangleList (remaining);
-    lastClipRectIsValid = false;
+    clipToRectangleListWithoutTest (remaining);
 }
 
 void CoreGraphicsContext::clipToPath (const Path& path, const AffineTransform& transform)
@@ -243,13 +245,13 @@ void CoreGraphicsContext::clipToImageAlpha (const Image& sourceImage, const Affi
         if (sourceImage.getFormat() != Image::SingleChannel)
             singleChannelImage = sourceImage.convertedToFormat (Image::SingleChannel);
 
-        CGImageRef image = CoreGraphicsImage::createImage (singleChannelImage, true, greyColourSpace, true);
+        CGImageRef image = CoreGraphicsImage::createImage (singleChannelImage, greyColourSpace, true);
 
         flip();
         AffineTransform t (AffineTransform::verticalFlip (sourceImage.getHeight()).followedBy (transform));
         applyTransform (t);
 
-        CGRect r = CGRectMake (0, 0, sourceImage.getWidth(), sourceImage.getHeight());
+        CGRect r = convertToCGRect (sourceImage.getBounds());
         CGContextClipToMask (context, r, image);
 
         applyTransform (t.inverted());
@@ -297,9 +299,7 @@ void CoreGraphicsContext::restoreState()
 {
     CGContextRestoreGState (context);
 
-    SavedState* const top = stateStack.getLast();
-
-    if (top != nullptr)
+    if (SavedState* const top = stateStack.getLast())
     {
         state = top;
         stateStack.removeLast (1, false);
@@ -439,7 +439,7 @@ void CoreGraphicsContext::drawImage (const Image& sourceImage, const AffineTrans
 {
     const int iw = sourceImage.getWidth();
     const int ih = sourceImage.getHeight();
-    CGImageRef image = CoreGraphicsImage::createImage (sourceImage, false, rgbColourSpace, false);
+    CGImageRef image = CoreGraphicsImage::createImage (sourceImage, rgbColourSpace, false);
 
     CGContextSaveGState (context);
     CGContextSetAlpha (context, state->fillType.getOpacity());
@@ -486,7 +486,7 @@ void CoreGraphicsContext::drawImage (const Image& sourceImage, const AffineTrans
         CGContextDrawImage (context, imageRect, image);
     }
 
-    CGImageRelease (image); // (This causes a memory bug in iPhone sim 3.0 - try upgrading to a later version if you hit this)
+    CGImageRelease (image); // (This causes a memory bug in iOS sim 3.0 - try upgrading to a later version if you hit this)
     CGContextRestoreGState (context);
 }
 
@@ -557,13 +557,11 @@ void CoreGraphicsContext::setFont (const Font& newFont)
         state->fontRef = 0;
         state->font = newFont;
 
-        OSXTypeface* osxTypeface = dynamic_cast <OSXTypeface*> (state->font.getTypeface());
-
-        if (osxTypeface != nullptr)
+        if (OSXTypeface* osxTypeface = dynamic_cast <OSXTypeface*> (state->font.getTypeface()))
         {
             state->fontRef = osxTypeface->fontRef;
             CGContextSetFont (context, state->fontRef);
-            CGContextSetFontSize (context, state->font.getHeight() * osxTypeface->fontHeightToCGSizeFactor);
+            CGContextSetFontSize (context, state->font.getHeight() * osxTypeface->fontHeightToPointsFactor);
 
             state->fontTransform = osxTypeface->renderingTransform;
             state->fontTransform.a *= state->font.getHorizontalScale();
@@ -585,7 +583,7 @@ void CoreGraphicsContext::drawGlyph (int glyphNumber, const AffineTransform& tra
         {
             CGContextSetTextMatrix (context, state->fontTransform); // have to set this each time, as it's not saved as part of the state
 
-            CGGlyph g = glyphNumber;
+            CGGlyph g = (CGGlyph) glyphNumber;
             CGContextShowGlyphsAtPoint (context, transform.getTranslationX(),
                                         flipHeight - roundToInt (transform.getTranslationY()), &g, 1);
         }
@@ -599,7 +597,7 @@ void CoreGraphicsContext::drawGlyph (int glyphNumber, const AffineTransform& tra
             t.d = -t.d;
             CGContextSetTextMatrix (context, t);
 
-            CGGlyph g = glyphNumber;
+            CGGlyph g = (CGGlyph) glyphNumber;
             CGContextShowGlyphsAtPoint (context, 0, 0, &g, 1);
 
             CGContextRestoreGState (context);
@@ -666,7 +664,7 @@ CGShadingRef CoreGraphicsContext::SavedState::getShading (CoreGraphicsContext& o
         numGradientLookupEntries = g.createLookupTable (fillType.transform, gradientLookupTable) - 1;
 
         CGFunctionRef function = CGFunctionCreate (this, 1, 0, 4, 0, &(owner.gradientCallbacks));
-        CGPoint p1 (CGPointMake (g.point1.x, g.point1.y));
+        CGPoint p1 (convertToCGPoint (g.point1));
 
         if (g.isRadial)
         {
@@ -677,7 +675,7 @@ CGShadingRef CoreGraphicsContext::SavedState::getShading (CoreGraphicsContext& o
         else
         {
             shading = CGShadingCreateAxial (owner.rgbColourSpace, p1,
-                                            CGPointMake (g.point2.x, g.point2.y),
+                                            convertToCGPoint (g.point2),
                                             function, true, true);
         }
 
@@ -789,53 +787,55 @@ Image juce_loadWithCoreImage (InputStream& input)
     MemoryBlock data;
     input.readIntoMemoryBlock (data, -1);
 
-  #if JUCE_IOS
+   #if JUCE_IOS
     JUCE_AUTORELEASEPOOL
-    UIImage* uiImage = [UIImage imageWithData: [NSData dataWithBytesNoCopy: data.getData()
-                                                                    length: data.getSize()
-                                                              freeWhenDone: NO]];
-
-    if (uiImage != nil)
+   #endif
     {
-        CGImageRef loadedImage = uiImage.CGImage;
-
-  #else
-    CGDataProviderRef provider = CGDataProviderCreateWithData (0, data.getData(), data.getSize(), 0);
-    CGImageSourceRef imageSource = CGImageSourceCreateWithDataProvider (provider, 0);
-    CGDataProviderRelease (provider);
-
-    if (imageSource != 0)
-    {
-        CGImageRef loadedImage = CGImageSourceCreateImageAtIndex (imageSource, 0, 0);
-        CFRelease (imageSource);
-  #endif
-
-        if (loadedImage != 0)
+      #if JUCE_IOS
+        if (UIImage* uiImage = [UIImage imageWithData: [NSData dataWithBytesNoCopy: data.getData()
+                                                                            length: data.getSize()
+                                                                      freeWhenDone: NO]])
         {
-            CGImageAlphaInfo alphaInfo = CGImageGetAlphaInfo (loadedImage);
-            const bool hasAlphaChan = (alphaInfo != kCGImageAlphaNone
-                                         && alphaInfo != kCGImageAlphaNoneSkipLast
-                                         && alphaInfo != kCGImageAlphaNoneSkipFirst);
+            CGImageRef loadedImage = uiImage.CGImage;
 
-            Image image (NativeImageType().create (Image::ARGB, // (CoreImage doesn't work with 24-bit images)
-                                                   (int) CGImageGetWidth (loadedImage),
-                                                   (int) CGImageGetHeight (loadedImage),
-                                                   hasAlphaChan));
+      #else
+        CGDataProviderRef provider = CGDataProviderCreateWithData (0, data.getData(), data.getSize(), 0);
+        CGImageSourceRef imageSource = CGImageSourceCreateWithDataProvider (provider, 0);
+        CGDataProviderRelease (provider);
 
-            CoreGraphicsImage* const cgImage = dynamic_cast<CoreGraphicsImage*> (image.getPixelData());
-            jassert (cgImage != nullptr); // if USE_COREGRAPHICS_RENDERING is set, the CoreGraphicsImage class should have been used.
+        if (imageSource != 0)
+        {
+            CGImageRef loadedImage = CGImageSourceCreateImageAtIndex (imageSource, 0, 0);
+            CFRelease (imageSource);
+      #endif
 
-            CGContextDrawImage (cgImage->context, CGRectMake (0, 0, image.getWidth(), image.getHeight()), loadedImage);
-            CGContextFlush (cgImage->context);
+            if (loadedImage != 0)
+            {
+                CGImageAlphaInfo alphaInfo = CGImageGetAlphaInfo (loadedImage);
+                const bool hasAlphaChan = (alphaInfo != kCGImageAlphaNone
+                                             && alphaInfo != kCGImageAlphaNoneSkipLast
+                                             && alphaInfo != kCGImageAlphaNoneSkipFirst);
 
-           #if ! JUCE_IOS
-            CFRelease (loadedImage);
-           #endif
+                Image image (NativeImageType().create (Image::ARGB, // (CoreImage doesn't work with 24-bit images)
+                                                       (int) CGImageGetWidth (loadedImage),
+                                                       (int) CGImageGetHeight (loadedImage),
+                                                       hasAlphaChan));
 
-            // Because it's impossible to create a truly 24-bit CG image, this flag allows a user
-            // to find out whether the file they just loaded the image from had an alpha channel or not.
-            image.getProperties()->set ("originalImageHadAlpha", hasAlphaChan);
-            return image;
+                CoreGraphicsImage* const cgImage = dynamic_cast<CoreGraphicsImage*> (image.getPixelData());
+                jassert (cgImage != nullptr); // if USE_COREGRAPHICS_RENDERING is set, the CoreGraphicsImage class should have been used.
+
+                CGContextDrawImage (cgImage->context, convertToCGRect (image.getBounds()), loadedImage);
+                CGContextFlush (cgImage->context);
+
+               #if ! JUCE_IOS
+                CFRelease (loadedImage);
+               #endif
+
+                // Because it's impossible to create a truly 24-bit CG image, this flag allows a user
+                // to find out whether the file they just loaded the image from had an alpha channel or not.
+                image.getProperties()->set ("originalImageHadAlpha", hasAlphaChan);
+                return image;
+            }
         }
     }
 
@@ -856,17 +856,19 @@ Image juce_createImageFromCIImage (CIImage* im, int w, int h)
     return Image (cgImage);
 }
 
-CGImageRef juce_createCoreGraphicsImage (const Image& juceImage, const bool forAlpha,
-                                         CGColorSpaceRef colourSpace, const bool mustOutliveSource)
+CGImageRef juce_createCoreGraphicsImage (const Image& juceImage, CGColorSpaceRef colourSpace,
+                                         const bool mustOutliveSource)
 {
-    return CoreGraphicsImage::createImage (juceImage, forAlpha, colourSpace, mustOutliveSource);
+    return CoreGraphicsImage::createImage (juceImage, colourSpace, mustOutliveSource);
 }
 
 CGContextRef juce_getImageContext (const Image& image)
 {
-    CoreGraphicsImage* const cgi = dynamic_cast <CoreGraphicsImage*> (image.getPixelData());
-    jassert (cgi != nullptr);
-    return cgi != nullptr ? cgi->context : 0;
+    if (CoreGraphicsImage* const cgi = dynamic_cast <CoreGraphicsImage*> (image.getPixelData()))
+        return cgi->context;
+
+    jassertfalse;
+    return 0;
 }
 
 #endif

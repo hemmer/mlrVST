@@ -286,7 +286,7 @@ public:
         @see getSelectedRows
     */
     void setSelectedRows (const SparseSet<int>& setOfRowsToBeSelected,
-                          bool sendNotificationEventToModel = true);
+                          NotificationType sendNotificationEventToModel = sendNotification);
 
     /** Checks whether a row is selected.
     */
@@ -541,10 +541,6 @@ public:
     /** @internal */
     void mouseWheelMove (const MouseEvent&, const MouseWheelDetails&);
     /** @internal */
-    void mouseMove (const MouseEvent&);
-    /** @internal */
-    void mouseExit (const MouseEvent&);
-    /** @internal */
     void mouseUp (const MouseEvent&);
     /** @internal */
     void colourChanged();
@@ -553,23 +549,29 @@ public:
 
 private:
     //==============================================================================
-    class ListViewport;
-    class RowComponent;
+    JUCE_PUBLIC_IN_DLL_BUILD (class ListViewport)
+    JUCE_PUBLIC_IN_DLL_BUILD (class RowComponent)
     friend class ListViewport;
     friend class TableListBox;
     ListBoxModel* model;
     ScopedPointer<ListViewport> viewport;
     ScopedPointer<Component> headerComponent;
+    ScopedPointer<MouseListener> mouseMoveSelector;
     int totalItems, rowHeight, minimumRowWidth;
     int outlineThickness;
     int lastRowSelected;
-    bool mouseMoveSelects, multipleSelection, hasDoneInitialUpdate;
+    bool multipleSelection, hasDoneInitialUpdate;
     SparseSet <int> selected;
 
     void selectRowInternal (int rowNumber, bool dontScrollToShowThisRow,
                             bool deselectOthersFirst, bool isMouseClick);
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ListBox);
+   #if JUCE_CATCH_DEPRECATED_CODE_MISUSE
+    // This method's bool parameter has changed: see the new method signature.
+    JUCE_DEPRECATED (void setSelectedRows (const SparseSet<int>&, bool));
+   #endif
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ListBox)
 };
 
 

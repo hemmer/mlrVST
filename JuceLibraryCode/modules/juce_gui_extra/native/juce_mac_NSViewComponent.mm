@@ -27,13 +27,13 @@ class NSViewAttachment  : public ReferenceCountedObject,
                           public ComponentMovementWatcher
 {
 public:
-    NSViewAttachment (NSView* const view_, Component& owner_)
-        : ComponentMovementWatcher (&owner_),
-          view (view_),
-          owner (owner_),
+    NSViewAttachment (NSView* const v, Component& comp)
+        : ComponentMovementWatcher (&comp),
+          view (v),
+          owner (comp),
           currentPeer (nullptr)
     {
-        [view_ retain];
+        [view retain];
 
         if (owner.isShowing())
             componentPeerChanged();
@@ -109,7 +109,7 @@ private:
                                         // override the call and use it as a sign that they're being deleted, which breaks everything..
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NSViewAttachment);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NSViewAttachment)
 };
 
 //==============================================================================

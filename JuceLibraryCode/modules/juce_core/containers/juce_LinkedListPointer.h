@@ -218,7 +218,7 @@ public:
         ObjectType* const oldItem = item;
         item = newItem;
         item->nextListItem = oldItem->nextListItem.item;
-        oldItem->nextListItem = (ObjectType*) 0;
+        oldItem->nextListItem.item = nullptr;
         return oldItem;
     }
 
@@ -259,7 +259,7 @@ public:
         if (oldItem != nullptr)
         {
             item = oldItem->nextListItem;
-            oldItem->nextListItem = (ObjectType*) 0;
+            oldItem->nextListItem.item = nullptr;
         }
 
         return oldItem;
@@ -270,9 +270,7 @@ public:
     */
     void remove (ObjectType* const itemToRemove)
     {
-        LinkedListPointer* const l = findPointerTo (itemToRemove);
-
-        if (l != nullptr)
+        if (LinkedListPointer* const l = findPointerTo (itemToRemove))
             l->removeNext();
     }
 
@@ -356,14 +354,14 @@ public:
     private:
         LinkedListPointer* endOfList;
 
-        JUCE_DECLARE_NON_COPYABLE (Appender);
+        JUCE_DECLARE_NON_COPYABLE (Appender)
     };
 
 private:
     //==============================================================================
     ObjectType* item;
 
-    JUCE_DECLARE_NON_COPYABLE (LinkedListPointer);
+    JUCE_DECLARE_NON_COPYABLE (LinkedListPointer)
 };
 
 

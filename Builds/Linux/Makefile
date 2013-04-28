@@ -20,7 +20,7 @@ ifeq ($(CONFIG),Debug)
   CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -g -ggdb -fPIC -O0
   CXXFLAGS += $(CFLAGS) -DOSC_HOST_LITTLE_ENDIAN
-  LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -L/usr/X11R6/lib/ -ldl -lfreetype -lpthread -lrt -lX11 -lGL -lXinerama -lasound -lXext 
+  LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -L/usr/X11R6/lib/ -lX11 -lXext -lXinerama -lasound -ldl -lfreetype -lpthread -lrt 
   LDDEPS :=
   RESFLAGS :=  -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
   TARGET := mlrVST.so
@@ -35,7 +35,7 @@ ifeq ($(CONFIG),Release)
   CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -fPIC -Os
   CXXFLAGS += $(CFLAGS) -DOSC_HOST_LITTLE_ENDIAN
-  LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -L/usr/X11R6/lib/ -ldl -lfreetype -lpthread -lrt -lX11 -lGL -lXinerama -lasound -lXext 
+  LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -L/usr/X11R6/lib/ -lX11 -lXext -lXinerama -lasound -ldl -lfreetype -lpthread -lrt 
   LDDEPS :=
   RESFLAGS :=  -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
   TARGET := mlrVST.so
@@ -56,6 +56,7 @@ OBJECTS := \
   $(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o \
   $(OBJDIR)/mlrVSTGUI_eeb94ef8.o \
   $(OBJDIR)/SampleStripControl_45995bf8.o \
+  $(OBJDIR)/Utilities_707bb76b.o \
   $(OBJDIR)/OSCHandler_bb1eaf54.o \
   $(OBJDIR)/UdpSocket_2b50ed78.o \
   $(OBJDIR)/NetworkingUtils_921f9941.o \
@@ -75,6 +76,7 @@ OBJECTS := \
   $(OBJDIR)/juce_graphics_c8f1e7a4.o \
   $(OBJDIR)/juce_gui_basics_a630dd20.o \
   $(OBJDIR)/juce_gui_extra_7767d6a8.o \
+  $(OBJDIR)/juce_PluginUtilities_e2e19a34.o \
   $(OBJDIR)/juce_VST_Wrapper_bb62e93d.o \
 
 .PHONY: clean
@@ -91,6 +93,10 @@ clean:
 	-@rm -f $(OUTDIR)/$(TARGET)
 	-@rm -rf $(OBJDIR)/*
 	-@rm -rf $(OBJDIR)
+
+strip:
+	@echo Stripping mlrVST
+	-@strip --strip-unneeded $(OUTDIR)/$(TARGET)
 
 $(OBJDIR)/SampleStrip_9922baef.o: ../../Source/SampleStrip.cpp
 	-@mkdir -p $(OBJDIR)
@@ -155,6 +161,11 @@ $(OBJDIR)/mlrVSTGUI_eeb94ef8.o: ../../Source/mlrVSTGUI.cpp
 $(OBJDIR)/SampleStripControl_45995bf8.o: ../../Source/SampleStripControl.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling SampleStripControl.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/Utilities_707bb76b.o: ../../Source/Utilities.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling Utilities.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/OSCHandler_bb1eaf54.o: ../../Source/OSCHandler.cpp
@@ -250,6 +261,11 @@ $(OBJDIR)/juce_gui_basics_a630dd20.o: ../../JuceLibraryCode/modules/juce_gui_bas
 $(OBJDIR)/juce_gui_extra_7767d6a8.o: ../../JuceLibraryCode/modules/juce_gui_extra/juce_gui_extra.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling juce_gui_extra.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/juce_PluginUtilities_e2e19a34.o: ../../JuceLibraryCode/modules/juce_audio_plugin_client/utility/juce_PluginUtilities.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling juce_PluginUtilities.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_VST_Wrapper_bb62e93d.o: ../../JuceLibraryCode/modules/juce_audio_plugin_client/VST/juce_VST_Wrapper.cpp

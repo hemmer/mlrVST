@@ -115,7 +115,7 @@ namespace ColourHelpers
             if (h < 3.0f)   return PixelARGB (alpha, x, intV, (uint8) roundToInt (v * (1.0f - (s * (1.0f - f)))));
             if (h < 4.0f)   return PixelARGB (alpha, x,       (uint8) roundToInt (v * (1.0f - s * f)), intV);
             if (h < 5.0f)   return PixelARGB (alpha,          (uint8) roundToInt (v * (1.0f - (s * (1.0f - f)))), x, intV);
-            else            return PixelARGB (alpha, intV, x, (uint8) roundToInt (v * (1.0f - s * f)));
+                            return PixelARGB (alpha, intV, x, (uint8) roundToInt (v * (1.0f - s * f)));
         }
 
         float hue, saturation, brightness;
@@ -201,7 +201,9 @@ Colour::Colour (const uint8 red, const uint8 green, const uint8 blue, const floa
 
 Colour Colour::fromFloatRGBA (const float red, const float green, const float blue, const float alpha) noexcept
 {
-    return Colour (ColourHelpers::floatToUInt8 (red), ColourHelpers::floatToUInt8 (green), ColourHelpers::floatToUInt8 (blue), alpha);
+    return Colour (ColourHelpers::floatToUInt8 (red),
+                   ColourHelpers::floatToUInt8 (green),
+                   ColourHelpers::floatToUInt8 (blue), alpha);
 }
 
 Colour::Colour (const float hue, const float saturation, const float brightness, const float alpha) noexcept
@@ -396,12 +398,12 @@ Colour Colour::contrasting (const Colour& target, float minContrast) const noexc
     const ColourHelpers::YIQ bg (*this);
     ColourHelpers::YIQ fg (target);
 
-    if (fabs (bg.y - fg.y) >= minContrast)
+    if (std::abs (bg.y - fg.y) >= minContrast)
         return target;
 
     const float y1 = jmax (0.0f, bg.y - minContrast);
     const float y2 = jmin (1.0f, bg.y + minContrast);
-    fg.y = (fabs (y1 - bg.y) > fabs (y2 - bg.y)) ? y1 : y2;
+    fg.y = (std::abs (y1 - bg.y) > std::abs (y2 - bg.y)) ? y1 : y2;
 
     return fg.toColour();
 }

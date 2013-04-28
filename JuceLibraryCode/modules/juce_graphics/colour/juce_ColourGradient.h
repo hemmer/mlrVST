@@ -165,8 +165,8 @@ private:
     {
         ColourPoint() noexcept {}
 
-        ColourPoint (const double position_, const Colour& colour_) noexcept
-            : position (position_), colour (colour_)
+        ColourPoint (const double pos, const Colour& col) noexcept
+            : position (pos), colour (col)
         {}
 
         bool operator== (const ColourPoint& other) const noexcept;
@@ -178,7 +178,7 @@ private:
 
     Array <ColourPoint> colours;
 
-    JUCE_LEAK_DETECTOR (ColourGradient);
+    JUCE_LEAK_DETECTOR (ColourGradient)
 };
 
 

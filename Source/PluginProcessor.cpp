@@ -293,8 +293,10 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
             lastPosInfo = newTime;
             if (currentBPM != lastPosInfo.bpm && lastPosInfo.bpm > 1.0)
             {
-                // If the tempo has changed, adjust the playspeeds accordingly
-                changeBPM();
+				const double newBPM = lastPosInfo.bpm;
+
+	            // If the tempo has changed, adjust the playspeeds accordingly
+				updateGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM, &newBPM);
             }
         }
         else
@@ -1035,7 +1037,7 @@ void mlrVSTAudioProcessor::loadPreset(XmlElement * presetToLoad)
             {
             case SampleStrip::TypeBool :
                 {
-                    const bool value = presetToLoad->getIntAttribute(settingName);
+                    const bool value = presetToLoad->getIntAttribute(settingName) != 0;
                     updateGlobalSetting(s, &value, false); break;
                 }
             case SampleStrip::TypeInt :
@@ -1064,13 +1066,13 @@ void mlrVSTAudioProcessor::loadPreset(XmlElement * presetToLoad)
         }
 
 
-        const float newMasterGain = presetToLoad->getDoubleAttribute("master_vol", defaultChannelGain);
+        const float newMasterGain = (float) presetToLoad->getDoubleAttribute("master_vol", defaultChannelGain);
         if (newMasterGain >= 0.0 && newMasterGain <= 1.0) masterGain = newMasterGain;
 
         for (int c = 0; c < numChannels; ++c)
         {
             const String chanVolName = "chan_" + String(c) + "_vol";
-            const float chanGain = presetToLoad->getDoubleAttribute(chanVolName, defaultChannelGain);
+            const float chanGain = (float) presetToLoad->getDoubleAttribute(chanVolName, defaultChannelGain);
             channelGains.set(c, (chanGain >= 0.0 && chanGain <= 1.0) ? chanGain : defaultChannelGain);
         }
 
@@ -1426,6 +1428,19 @@ bool mlrVSTAudioProcessor::producesMidi() const
     return false;
 #endif
 }
+bool mlrVSTAudioProcessor::silenceInProducesSilenceOut() const
+{
+#if JucePlugin_SilenceInProducesSilenceOut
+    return true;
+#else
+    return false;
+#endif
+}
+double mlrVSTAudioProcessor::getTailLengthSeconds() const
+{
+return 0.0;
+}
+
 
 int mlrVSTAudioProcessor::getNumParameters()
 {

@@ -93,7 +93,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     addAndMakeVisible(&rampLengthSldr);
     rampLengthSldr.setBounds(2*PAD_AMOUNT + labelWidth , yPos, labelWidth, labelHeight);
     rampLengthSldr.setRange(0.0, 1000.0, 1.0);
-    rampLengthSldr.setValue(initialRampLength, false, false);
+	rampLengthSldr.setValue(initialRampLength, NotificationType::dontSendNotification);
     rampLengthSldr.setColour(Slider::textBoxTextColourId, Colours::white);
     rampLengthSldr.setColour(Slider::thumbColourId, Colours::grey);
     rampLengthSldr.setColour(Slider::backgroundColourId, Colours::grey.darker());

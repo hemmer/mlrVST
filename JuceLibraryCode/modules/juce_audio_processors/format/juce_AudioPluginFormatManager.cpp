@@ -33,16 +33,12 @@ void AudioPluginFormatManager::addDefaultFormats()
     // you should only call this method once!
     for (int i = formats.size(); --i >= 0;)
     {
-       #if JUCE_PLUGINHOST_VST && ! (JUCE_MAC && JUCE_64BIT)
+       #if JUCE_PLUGINHOST_VST
         jassert (dynamic_cast <VSTPluginFormat*> (formats[i]) == nullptr);
        #endif
 
        #if JUCE_PLUGINHOST_AU && JUCE_MAC
         jassert (dynamic_cast <AudioUnitPluginFormat*> (formats[i]) == nullptr);
-       #endif
-
-       #if JUCE_PLUGINHOST_DX && JUCE_WINDOWS
-        jassert (dynamic_cast <DirectXPluginFormat*> (formats[i]) == nullptr);
        #endif
 
        #if JUCE_PLUGINHOST_LADSPA && JUCE_LINUX
@@ -55,12 +51,8 @@ void AudioPluginFormatManager::addDefaultFormats()
     formats.add (new AudioUnitPluginFormat());
    #endif
 
-   #if JUCE_PLUGINHOST_VST && ! (JUCE_MAC && JUCE_64BIT)
+   #if JUCE_PLUGINHOST_VST
     formats.add (new VSTPluginFormat());
-   #endif
-
-   #if JUCE_PLUGINHOST_DX && JUCE_WINDOWS
-    formats.add (new DirectXPluginFormat());
    #endif
 
    #if JUCE_PLUGINHOST_LADSPA && JUCE_LINUX

@@ -45,7 +45,7 @@ public:
     /** Creates an ImageButton.
 
         Use setImage() to specify the image to use. The colours and opacities that
-        are specified here can be changed later using setDrawingOptions().
+        are specified here can be changed later using setImages().
 
         @param name                 the name to give the component
     */
@@ -147,7 +147,7 @@ private:
 
     Image getCurrentImage() const;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImageButton);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImageButton)
 };
 
 

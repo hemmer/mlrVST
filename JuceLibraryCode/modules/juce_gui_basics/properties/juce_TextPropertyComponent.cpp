@@ -23,15 +23,15 @@
   ==============================================================================
 */
 
-class TextPropertyComponent::LabelComp  : public Label
+class TextPropertyComponent::LabelComp  : public Label,
+                                          public FileDragAndDropTarget
 {
 public:
-    LabelComp (TextPropertyComponent& owner_,
-               const int maxChars_, const bool isMultiline_)
+    LabelComp (TextPropertyComponent& tpc, const int charLimit, const bool multiline)
         : Label (String::empty, String::empty),
-          owner (owner_),
-          maxChars (maxChars_),
-          isMultiline (isMultiline_)
+          owner (tpc),
+          maxChars (charLimit),
+          isMultiline (multiline)
     {
         setEditable (true, true, false);
 
@@ -40,18 +40,29 @@ public:
         setColour (textColourId,       owner.findColour (TextPropertyComponent::textColourId));
     }
 
+    bool isInterestedInFileDrag (const StringArray&)
+    {
+        return true;
+    }
+
+    void filesDropped (const StringArray& files, int, int)
+    {
+        setText (getText() + files.joinIntoString (isMultiline ? "\n" : ", "), sendNotificationSync);
+        showEditor();
+    }
+
     TextEditor* createEditorComponent()
     {
-        TextEditor* const textEditor = Label::createEditorComponent();
-        textEditor->setInputRestrictions (maxChars);
+        TextEditor* const ed = Label::createEditorComponent();
+        ed->setInputRestrictions (maxChars);
 
         if (isMultiline)
         {
-            textEditor->setMultiLine (true, true);
-            textEditor->setReturnKeyStartsNewLine (true);
+            ed->setMultiLine (true, true);
+            ed->setReturnKeyStartsNewLine (true);
         }
 
-        return textEditor;
+        return ed;
     }
 
     void textWasEdited()
@@ -91,7 +102,7 @@ TextPropertyComponent::~TextPropertyComponent()
 
 void TextPropertyComponent::setText (const String& newText)
 {
-    textEditor->setText (newText, true);
+    textEditor->setText (newText, sendNotificationSync);
 }
 
 String TextPropertyComponent::getText() const
@@ -112,7 +123,7 @@ void TextPropertyComponent::createEditor (const int maxNumChars, const bool isMu
 
 void TextPropertyComponent::refresh()
 {
-    textEditor->setText (getText(), false);
+    textEditor->setText (getText(), dontSendNotification);
 }
 
 void TextPropertyComponent::textWasEdited()

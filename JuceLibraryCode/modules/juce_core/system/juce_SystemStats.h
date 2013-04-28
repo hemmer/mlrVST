@@ -50,7 +50,7 @@ public:
 
         Linux       = 0x2000,
         Android     = 0x3000,
-        iOS         = 0x5000,
+        iOS         = 0x8000,
 
         MacOSX_10_4 = 0x1004,
         MacOSX_10_5 = 0x1005,
@@ -106,15 +106,20 @@ public:
     /** Returns the host-name of the computer. */
     static String getComputerName();
 
-    /** Returns the user's language.
+    /** Returns the language of the user's locale.
         The return value is a 2 or 3 letter language code (ISO 639-1 or ISO 639-2)
     */
     static String getUserLanguage();
 
-    /** Returns the user's region.
+    /** Returns the region of the user's locale.
         The return value is a 2 letter country code (ISO 3166-1 alpha-2).
     */
     static String getUserRegion();
+
+    /** Returns the user's display language.
+        The return value is a 2 or 3 letter language code (ISO 639-1 or ISO 639-2)
+    */
+    static String getDisplayLanguage();
 
     //==============================================================================
     // CPU and memory information..
@@ -157,6 +162,23 @@ public:
     */
     static int getPageSize();
 
+    //==============================================================================
+    /** Returns a backtrace of the current call-stack.
+        The usefulness of the result will depend on the level of debug symbols
+        that are available in the executable.
+    */
+    static String getStackBacktrace();
+
+    /** A void() function type, used by setApplicationCrashHandler(). */
+    typedef void (*CrashHandlerFunction)();
+
+    /** Sets up a global callback function that will be called if the application
+        executes some kind of illegal instruction.
+
+        You may want to call getStackBacktrace() in your handler function, to find out
+        where the problem happened and log it, etc.
+    */
+    static void setApplicationCrashHandler (CrashHandlerFunction);
 
 private:
     //==============================================================================
@@ -174,7 +196,7 @@ private:
     SystemStats();
     static const CPUFlags& getCPUFlags();
 
-    JUCE_DECLARE_NON_COPYABLE (SystemStats);
+    JUCE_DECLARE_NON_COPYABLE (SystemStats)
 };
 
 

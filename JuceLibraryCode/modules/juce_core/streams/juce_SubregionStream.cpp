@@ -24,12 +24,11 @@
 */
 
 SubregionStream::SubregionStream (InputStream* const sourceStream,
-                                  const int64 startPositionInSourceStream_,
-                                  const int64 lengthOfSourceStream_,
+                                  const int64 start, const int64 length,
                                   const bool deleteSourceWhenDestroyed)
   : source (sourceStream, deleteSourceWhenDestroyed),
-    startPositionInSourceStream (startPositionInSourceStream_),
-    lengthOfSourceStream (lengthOfSourceStream_)
+    startPositionInSourceStream (start),
+    lengthOfSourceStream (length)
 {
     SubregionStream::setPosition (0);
 }
@@ -42,8 +41,8 @@ int64 SubregionStream::getTotalLength()
 {
     const int64 srcLen = source->getTotalLength() - startPositionInSourceStream;
 
-    return (lengthOfSourceStream >= 0) ? jmin (lengthOfSourceStream, srcLen)
-                                       : srcLen;
+    return lengthOfSourceStream >= 0 ? jmin (lengthOfSourceStream, srcLen)
+                                     : srcLen;
 }
 
 int64 SubregionStream::getPosition()
@@ -61,24 +60,20 @@ int SubregionStream::read (void* destBuffer, int maxBytesToRead)
     jassert (destBuffer != nullptr && maxBytesToRead >= 0);
 
     if (lengthOfSourceStream < 0)
-    {
         return source->read (destBuffer, maxBytesToRead);
-    }
-    else
-    {
-        maxBytesToRead = (int) jmin ((int64) maxBytesToRead, lengthOfSourceStream - getPosition());
 
-        if (maxBytesToRead <= 0)
-            return 0;
+    maxBytesToRead = (int) jmin ((int64) maxBytesToRead, lengthOfSourceStream - getPosition());
 
-        return source->read (destBuffer, maxBytesToRead);
-    }
+    if (maxBytesToRead <= 0)
+        return 0;
+
+    return source->read (destBuffer, maxBytesToRead);
 }
 
 bool SubregionStream::isExhausted()
 {
-    if (lengthOfSourceStream >= 0)
-        return (getPosition() >= lengthOfSourceStream) || source->isExhausted();
-    else
-        return source->isExhausted();
+    if (lengthOfSourceStream >= 0 && getPosition() >= lengthOfSourceStream)
+        return true;
+
+    return source->isExhausted();
 }

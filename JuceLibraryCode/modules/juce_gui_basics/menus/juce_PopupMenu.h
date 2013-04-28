@@ -169,7 +169,8 @@ public:
     void addCustomItem (int itemResultID,
                         Component* customComponent,
                         int idealWidth, int idealHeight,
-                        bool triggerMenuItemAutomaticallyWhenClicked);
+                        bool triggerMenuItemAutomaticallyWhenClicked,
+                        const PopupMenu* optionalSubMenu = nullptr);
 
     /** Appends a sub-menu.
 
@@ -397,6 +398,9 @@ public:
         */
         bool next();
 
+        /** Adds an item to the target menu which has all the properties of this item. */
+        void addItemTo (PopupMenu& targetMenu);
+
         //==============================================================================
         String itemName;
         const PopupMenu* subMenu;
@@ -415,11 +419,12 @@ public:
         const PopupMenu& menu;
         int index;
 
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MenuItemIterator);
+        MenuItemIterator& operator= (const MenuItemIterator&);
+        JUCE_LEAK_DETECTOR (MenuItemIterator)
     };
 
     //==============================================================================
-    /** A user-defined copmonent that can be used as an item in a popup menu.
+    /** A user-defined component that can be used as an item in a popup menu.
         @see PopupMenu::addCustomItem
     */
     class JUCE_API  CustomComponent  : public Component,
@@ -465,7 +470,7 @@ public:
         //==============================================================================
         bool isHighlighted, triggeredAutomatically;
 
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CustomComponent);
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CustomComponent)
     };
 
     /** Appends a custom menu item.
@@ -475,7 +480,8 @@ public:
 
         @see CustomComponent
     */
-    void addCustomItem (int itemResultID, CustomComponent* customComponent);
+    void addCustomItem (int itemResultID, CustomComponent* customComponent,
+                        const PopupMenu* optionalSubMenu = nullptr);
 
 private:
     //==============================================================================
@@ -499,7 +505,7 @@ private:
     Component* createWindow (const Options&, ApplicationCommandManager**) const;
     int showWithOptionalCallback (const Options&, ModalComponentManager::Callback*, bool);
 
-    JUCE_LEAK_DETECTOR (PopupMenu);
+    JUCE_LEAK_DETECTOR (PopupMenu)
 };
 
 #endif   // __JUCE_POPUPMENU_JUCEHEADER__

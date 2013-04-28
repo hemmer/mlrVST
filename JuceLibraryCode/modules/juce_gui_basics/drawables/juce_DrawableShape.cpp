@@ -46,11 +46,11 @@ DrawableShape::~DrawableShape()
 class DrawableShape::RelativePositioner  : public RelativeCoordinatePositionerBase
 {
 public:
-    RelativePositioner (DrawableShape& component_, const DrawableShape::RelativeFillType& fill_, bool isMainFill_)
-        : RelativeCoordinatePositionerBase (component_),
-          owner (component_),
-          fill (fill_),
-          isMainFill (isMainFill_)
+    RelativePositioner (DrawableShape& comp, const DrawableShape::RelativeFillType& f, bool isMain)
+        : RelativeCoordinatePositionerBase (comp),
+          owner (comp),
+          fill (f),
+          isMainFill (isMain)
     {
     }
 
@@ -79,7 +79,7 @@ private:
     const DrawableShape::RelativeFillType fill;
     const bool isMainFill;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RelativePositioner);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RelativePositioner)
 };
 
 void DrawableShape::setFill (const FillType& newFill)
@@ -189,8 +189,8 @@ Rectangle<float> DrawableShape::getDrawableBounds() const
 {
     if (isStrokeVisible())
         return strokePath.getBounds();
-    else
-        return path.getBounds();
+
+    return path.getBounds();
 }
 
 bool DrawableShape::hitTest (int x, int y)

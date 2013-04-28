@@ -100,14 +100,14 @@ public:
                     method to find out what it was. Returns false if they cancelled instead.
         @see browseForFileToSave, browseForDirectory
     */
-    bool browseForFileToOpen (FilePreviewComponent* previewComponent = 0);
+    bool browseForFileToOpen (FilePreviewComponent* previewComponent = nullptr);
 
     /** Same as browseForFileToOpen, but allows the user to select multiple files.
 
         The files that are returned can be obtained by calling getResults(). See
         browseForFileToOpen() for more info about the behaviour of this method.
     */
-    bool browseForMultipleFilesToOpen (FilePreviewComponent* previewComponent = 0);
+    bool browseForMultipleFilesToOpen (FilePreviewComponent* previewComponent = nullptr);
 
     /** Shows a dialog box to choose a file to save.
 
@@ -141,7 +141,18 @@ public:
         The files that are returned can be obtained by calling getResults(). See
         browseForFileToOpen() for more info about the behaviour of this method.
     */
-    bool browseForMultipleFilesOrDirectories (FilePreviewComponent* previewComponent = 0);
+    bool browseForMultipleFilesOrDirectories (FilePreviewComponent* previewComponent = nullptr);
+
+    //==============================================================================
+    /** Runs a dialog box for the given set of option flags.
+        The flag values used are those in FileBrowserComponent::FileChooserFlags.
+
+        @returns    true if the user chose a directory and pressed 'ok', in which case, use
+                    the getResult() method to find out what they chose. Returns false
+                    if they cancelled instead.
+        @see FileBrowserComponent::FileChooserFlags
+    */
+    bool showDialog (int flags, FilePreviewComponent* previewComponent);
 
     //==============================================================================
     /** Returns the last file that was chosen by one of the browseFor methods.
@@ -167,18 +178,14 @@ public:
 
         @see getResult
     */
-    const Array<File>& getResults() const;
+    const Array<File>& getResults() const noexcept      { return results; }
 
 private:
     //==============================================================================
     String title, filters;
-    File startingFile;
+    const File startingFile;
     Array<File> results;
-    bool useNativeDialogBox;
-
-    bool showDialog (bool selectsDirectories, bool selectsFiles, bool isSave,
-                     bool warnAboutOverwritingExistingFiles, bool selectMultipleFiles,
-                     FilePreviewComponent* previewComponent);
+    const bool useNativeDialogBox;
 
     static void showPlatformDialog (Array<File>& results, const String& title, const File& file,
                                     const String& filters, bool selectsDirectories, bool selectsFiles,
@@ -186,7 +193,7 @@ private:
                                     FilePreviewComponent* previewComponent);
     static bool isPlatformDialogAvailable();
 
-    JUCE_LEAK_DETECTOR (FileChooser);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FileChooser)
 };
 
 

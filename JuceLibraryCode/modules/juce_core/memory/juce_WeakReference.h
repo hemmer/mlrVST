@@ -133,7 +133,7 @@ public:
     class SharedPointer   : public ReferenceCountingType
     {
     public:
-        explicit SharedPointer (ObjectType* const owner_) noexcept : owner (owner_) {}
+        explicit SharedPointer (ObjectType* const obj) noexcept : owner (obj) {}
 
         inline ObjectType* get() const noexcept     { return owner; }
         void clearPointer() noexcept                { owner = nullptr; }
@@ -141,7 +141,7 @@ public:
     private:
         ObjectType* volatile owner;
 
-        JUCE_DECLARE_NON_COPYABLE (SharedPointer);
+        JUCE_DECLARE_NON_COPYABLE (SharedPointer)
     };
 
     typedef ReferenceCountedObjectPtr<SharedPointer> SharedRef;
@@ -195,7 +195,7 @@ public:
     private:
         SharedRef sharedPointer;
 
-        JUCE_DECLARE_NON_COPYABLE (Master);
+        JUCE_DECLARE_NON_COPYABLE (Master)
     };
 
 private:

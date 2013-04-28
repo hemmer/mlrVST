@@ -49,7 +49,7 @@ MappingPanel::MappingPanel(const Rectangle<int> &bounds,
         mappingLabels.add(new Label());
         Label *latestLbl = mappingLabels.getLast();
         latestLbl->setBounds(xPosition, yPosition, labelWidth, labelHeight);
-        latestLbl->setText(((r==0) ? "Top row: " : "Modifier " + String(r) + ": "), false);
+        latestLbl->setText(((r==0) ? "Top row: " : "Modifier " + String(r) + ": "), NotificationType::dontSendNotification);
         setupNormalLabel(*latestLbl);
 
         yPosition += labelHeight;
@@ -159,7 +159,7 @@ void MappingPanel::buttonClicked(Button *btn)
 
                     btn->setButtonText(newMappingName);
                     btn->setState(Button::buttonNormal);
-                    mappingLabels[r]->setText(((r==0) ? "Top row: " : "Modifier " + String(r) + ": " + newMappingName), false);
+                    mappingLabels[r]->setText(((r==0) ? "Top row: " : "Modifier " + String(r) + ": " + newMappingName), NotificationType::dontSendNotification);
                 }
                 return;
             }
@@ -197,7 +197,7 @@ void MappingPanel::mouseEnter (const MouseEvent &e)
                 {
                     const int currentMapping = processor->getMonomeMapping(mlrVSTAudioProcessor::rmTopRowMapping, c);
                     String mappingName = processor->getTopRowMappingName(currentMapping);
-                    mappingLabels[r]->setText("Top row: " + mappingName, false);
+                    mappingLabels[r]->setText("Top row: " + mappingName, NotificationType::dontSendNotification);
                 }
                 else if (r == 1 || r == 2)
                 {
@@ -207,7 +207,7 @@ void MappingPanel::mouseEnter (const MouseEvent &e)
                     const int currentMapping = processor->getMonomeMapping(modifierBtn, c);
 
                     String mappingName = processor->getNormalRowMappingName(currentMapping);
-                    mappingLabels[r]->setText("Modifier " + String(r) + ": " + mappingName, false);
+                    mappingLabels[r]->setText("Modifier " + String(r) + ": " + mappingName, NotificationType::dontSendNotification);
                 }
                 return;
             }
@@ -230,7 +230,7 @@ void MappingPanel::mouseExit (const MouseEvent &e)
             // if so hide the mappings
             if (currentBtn == buttonMatrix.getUnchecked(index))
             {
-                mappingLabels[r]->setText(((r==0) ? "Top row: " : "Modifier " + String(r) + ": "), false);
+                mappingLabels[r]->setText(((r==0) ? "Top row: " : "Modifier " + String(r) + ": "), NotificationType::dontSendNotification);
                 return;
             }
         }

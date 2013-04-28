@@ -232,7 +232,7 @@ public:
         component->setBounds (getLocalBounds().withTop (getHeaderSize()));
     }
 
-    void mouseDown (const MouseEvent& e)
+    void mouseDown (const MouseEvent&)
     {
         mouseDownY = getY();
         dragStartSizes = getPanel().getFittedSizes();
@@ -246,7 +246,7 @@ public:
                                                         panel.getHeight()), false);
     }
 
-    void mouseDoubleClick (const MouseEvent& e)
+    void mouseDoubleClick (const MouseEvent&)
     {
         getPanel().panelHeaderDoubleClicked (component);
     }
@@ -271,7 +271,7 @@ private:
         return *panel;
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PanelHolder);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PanelHolder)
 };
 
 //==============================================================================

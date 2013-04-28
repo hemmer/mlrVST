@@ -28,7 +28,7 @@ Desktop::Desktop()
       kioskModeComponent (nullptr),
       allowedOrientations (allOrientations)
 {
-    createMouseInputSources();
+    addMouseInputSource();
 }
 
 Desktop::~Desktop()
@@ -101,12 +101,8 @@ void Desktop::setDefaultLookAndFeel (LookAndFeel* newDefaultLookAndFeel)
     currentLookAndFeel = newDefaultLookAndFeel;
 
     for (int i = getNumComponents(); --i >= 0;)
-    {
-        Component* const c = getComponent (i);
-
-        if (c != nullptr)
+        if (Component* const c = getComponent (i))
             c->sendLookAndFeelChange();
-    }
 }
 
 //==============================================================================
@@ -218,7 +214,7 @@ public:
     }
 
 private:
-    JUCE_DECLARE_NON_COPYABLE (MouseDragAutoRepeater);
+    JUCE_DECLARE_NON_COPYABLE (MouseDragAutoRepeater)
 };
 
 void Desktop::beginDragAutoRepeat (const int interval)
@@ -304,9 +300,7 @@ void Desktop::sendMouseMove()
 
         lastFakeMouseMove = getMousePosition();
 
-        Component* const target = findComponentAt (lastFakeMouseMove);
-
-        if (target != nullptr)
+        if (Component* const target = findComponentAt (lastFakeMouseMove))
         {
             Component::BailOutChecker checker (target);
             const Point<int> pos (target->getLocalPoint (nullptr, lastFakeMouseMove));
@@ -379,6 +373,7 @@ Rectangle<int> Desktop::Displays::getTotalBounds (bool userAreasOnly) const
     return getRectangleList (userAreasOnly).getBounds();
 }
 
+bool operator== (const Desktop::Displays::Display& d1, const Desktop::Displays::Display& d2) noexcept;
 bool operator== (const Desktop::Displays::Display& d1, const Desktop::Displays::Display& d2) noexcept
 {
     return d1.userArea == d2.userArea
@@ -387,6 +382,7 @@ bool operator== (const Desktop::Displays::Display& d1, const Desktop::Displays::
         && d1.isMain == d2.isMain;
 }
 
+bool operator!= (const Desktop::Displays::Display& d1, const Desktop::Displays::Display& d2) noexcept;
 bool operator!= (const Desktop::Displays::Display& d1, const Desktop::Displays::Display& d2) noexcept
 {
     return ! (d1 == d2);
@@ -403,11 +399,8 @@ void Desktop::Displays::refresh()
     if (oldDisplays != displays)
     {
         for (int i = ComponentPeer::getNumPeers(); --i >= 0;)
-        {
-            ComponentPeer* const p = ComponentPeer::getPeer (i);
-            if (p != nullptr)
-                p->handleScreenSizeChange();
-        }
+            if (ComponentPeer* const peer = ComponentPeer::getPeer (i))
+                peer->handleScreenSizeChange();
     }
 }
 

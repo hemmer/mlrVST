@@ -27,7 +27,7 @@
 #define __JUCE_THREADLOCALVALUE_JUCEHEADER__
 
 // (NB: on win32, native thread-locals aren't possible in a dynamically loaded DLL in XP).
-#if ! ((JUCE_MSVC && (defined (_WIN64) || ! defined (JucePlugin_PluginCode))) \
+#if ! ((JUCE_MSVC && (JUCE_64BIT || ! defined (JucePlugin_PluginCode))) \
        || (JUCE_MAC && JUCE_CLANG && defined (MAC_OS_X_VERSION_10_7) \
              && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_7))
  #define JUCE_NO_COMPILER_THREAD_LOCAL 1
@@ -174,22 +174,22 @@ private:
    #if JUCE_NO_COMPILER_THREAD_LOCAL
     struct ObjectHolder
     {
-        ObjectHolder (const Thread::ThreadID& threadId_)
-            : threadId (threadId_), object()
+        ObjectHolder (const Thread::ThreadID& tid)
+            : threadId (tid), object()
         {}
 
         Thread::ThreadID threadId;
         ObjectHolder* next;
         Type object;
 
-        JUCE_DECLARE_NON_COPYABLE (ObjectHolder);
+        JUCE_DECLARE_NON_COPYABLE (ObjectHolder)
     };
 
     mutable Atomic<ObjectHolder*> first;
     SpinLock lock;
    #endif
 
-    JUCE_DECLARE_NON_COPYABLE (ThreadLocalValue);
+    JUCE_DECLARE_NON_COPYABLE (ThreadLocalValue)
 };
 
 

@@ -72,6 +72,8 @@ public:
         /** Time signature denominator, e.g. the 4 of a 3/4 time sig */
         int timeSigDenominator;
 
+        /** The current play position, in samples from the start of the edit. */
+        int64 timeInSamples;
         /** The current play position, in seconds from the start of the edit. */
         double timeInSeconds;
 
@@ -131,6 +133,9 @@ public:
     //==============================================================================
     /** Fills-in the given structure with details about the transport's
         position at the start of the current processing block.
+
+        This method must ONLY be called from within your AudioProcessor::processBlock()
+        method. Calling it at any other time will probably cause a nasty crash.
     */
     virtual bool getCurrentPosition (CurrentPositionInfo& result) = 0;
 };

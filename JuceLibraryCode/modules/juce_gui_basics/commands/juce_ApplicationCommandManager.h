@@ -77,8 +77,8 @@ class Desktop;
     component hierarchy for those that also implement the ApplicationCommandTarget interface.
     If an ApplicationCommandTarget isn't interested in the command that is being invoked, then
     the next one in line will be tried (see the ApplicationCommandTarget::getNextCommandTarget()
-    method), and so on until ApplicationCommandTarget::getNextCommandTarget() returns 0. At this
-    point if the command still hasn't been performed, it will be passed to the current
+    method), and so on until ApplicationCommandTarget::getNextCommandTarget() returns nullptr.
+    At this point if the command still hasn't been performed, it will be passed to the current
     JUCEApplication object (which is itself an ApplicationCommandTarget).
 
     To exert some custom control over which ApplicationCommandTarget is chosen to invoke a command,
@@ -109,13 +109,11 @@ public:
 
     //==============================================================================
     /** Clears the current list of all commands.
-
         Note that this will also clear the contents of the KeyPressMappingSet.
     */
     void clearCommands();
 
     /** Adds a command to the list of registered commands.
-
         @see registerAllCommandsForTarget
     */
     void registerCommand (const ApplicationCommandInfo& newCommand);
@@ -131,7 +129,6 @@ public:
     void registerAllCommandsForTarget (ApplicationCommandTarget* target);
 
     /** Removes the command with a specified ID.
-
         Note that this will also remove any key mappings that are mapped to the command.
     */
     void removeCommand (CommandID commandID);
@@ -150,13 +147,11 @@ public:
 
     //==============================================================================
     /** Returns the number of commands that have been registered.
-
         @see registerCommand
     */
     int getNumCommands() const noexcept                                             { return commands.size(); }
 
     /** Returns the details about one of the registered commands.
-
         The index is between 0 and (getNumCommands() - 1).
     */
     const ApplicationCommandInfo* getCommandForIndex (int index) const noexcept     { return commands [index]; }
@@ -187,7 +182,7 @@ public:
 
     /** Returns the list of categories.
 
-        This will go through all registered commands, and return a list of all the distict
+        This will go through all registered commands, and return a list of all the distinct
         categoryName values from their ApplicationCommandInfo structure.
 
         @see getCommandsInCategory()
@@ -195,7 +190,6 @@ public:
     StringArray getCommandCategories() const;
 
     /** Returns a list of all the command UIDs in a particular category.
-
         @see getCommandCategories()
     */
     Array<CommandID> getCommandsInCategory (const String& categoryName) const;
@@ -214,7 +208,6 @@ public:
 
     //==============================================================================
     /** Invokes the given command directly, sending it to the default target.
-
         This is just an easy way to call invoke() without having to fill out the InvocationInfo
         structure.
     */
@@ -305,7 +298,7 @@ public:
     /** Examines this component and all its parents in turn, looking for the first one
         which is a ApplicationCommandTarget.
 
-        Returns the first ApplicationCommandTarget that it finds, or 0 if none of them implement
+        Returns the first ApplicationCommandTarget that it finds, or nullptr if none of them implement
         that class.
     */
     static ApplicationCommandTarget* findTargetForComponent (Component* component);
@@ -318,7 +311,7 @@ private:
     ScopedPointer <KeyPressMappingSet> keyMappings;
     ApplicationCommandTarget* firstTarget;
 
-    void sendListenerInvokeCallback (const ApplicationCommandTarget::InvocationInfo& info);
+    void sendListenerInvokeCallback (const ApplicationCommandTarget::InvocationInfo&);
     void handleAsyncUpdate();
     void globalFocusChanged (Component*);
 
@@ -328,7 +321,7 @@ private:
     virtual short getFirstCommandTarget() { return 0; }
    #endif
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ApplicationCommandManager);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ApplicationCommandManager)
 };
 
 

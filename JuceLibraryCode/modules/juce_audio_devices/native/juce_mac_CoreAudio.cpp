@@ -30,6 +30,108 @@
 #endif
 
 //==============================================================================
+struct SystemVol
+{
+    SystemVol (AudioObjectPropertySelector selector)
+        : outputDeviceID (kAudioObjectUnknown)
+    {
+        addr.mScope    = kAudioObjectPropertyScopeGlobal;
+        addr.mElement  = kAudioObjectPropertyElementMaster;
+        addr.mSelector = kAudioHardwarePropertyDefaultOutputDevice;
+
+        if (AudioHardwareServiceHasProperty (kAudioObjectSystemObject, &addr))
+        {
+            UInt32 deviceIDSize = sizeof (outputDeviceID);
+            OSStatus status = AudioHardwareServiceGetPropertyData (kAudioObjectSystemObject, &addr, 0,
+                                                                   nullptr, &deviceIDSize, &outputDeviceID);
+
+            if (status == noErr)
+            {
+                addr.mElement  = kAudioObjectPropertyElementMaster;
+                addr.mSelector = selector;
+                addr.mScope    = kAudioDevicePropertyScopeOutput;
+
+                if (! AudioHardwareServiceHasProperty (outputDeviceID, &addr))
+                    outputDeviceID = kAudioObjectUnknown;
+            }
+        }
+    }
+
+    float getGain()
+    {
+        Float32 gain = 0;
+
+        if (outputDeviceID != kAudioObjectUnknown)
+        {
+            UInt32 size = sizeof (gain);
+            AudioHardwareServiceGetPropertyData (outputDeviceID, &addr,
+                                                 0, nullptr, &size, &gain);
+        }
+
+        return (float) gain;
+    }
+
+    bool setGain (float gain)
+    {
+        if (outputDeviceID != kAudioObjectUnknown && canSetVolume())
+        {
+            Float32 newVolume = gain;
+            UInt32 size = sizeof (newVolume);
+
+            return AudioHardwareServiceSetPropertyData (outputDeviceID, &addr, 0, nullptr,
+                                                        size, &newVolume) == noErr;
+        }
+
+        return false;
+    }
+
+    bool isMuted()
+    {
+        UInt32 muted = 0;
+
+        if (outputDeviceID != kAudioObjectUnknown)
+        {
+            UInt32 size = sizeof (muted);
+            AudioHardwareServiceGetPropertyData (outputDeviceID, &addr,
+                                                 0, nullptr, &size, &muted);
+        }
+
+        return muted != 0;
+    }
+
+    bool setMuted (bool mute)
+    {
+        if (outputDeviceID != kAudioObjectUnknown && canSetVolume())
+        {
+            UInt32 newMute = mute ? 1 : 0;
+            UInt32 size = sizeof (newMute);
+
+            return AudioHardwareServiceSetPropertyData (outputDeviceID, &addr, 0, nullptr,
+                                                        size, &newMute) == noErr;
+        }
+
+        return false;
+    }
+
+private:
+    AudioDeviceID outputDeviceID;
+    AudioObjectPropertyAddress addr;
+
+    bool canSetVolume()
+    {
+        Boolean isSettable = NO;
+        return AudioHardwareServiceIsPropertySettable (outputDeviceID, &addr, &isSettable) == noErr
+                 && isSettable;
+    }
+};
+
+#define JUCE_SYSTEMAUDIOVOL_IMPLEMENTED 1
+float JUCE_CALLTYPE SystemAudioVolume::getGain()              { return SystemVol (kAudioHardwareServiceDeviceProperty_VirtualMasterVolume).getGain(); }
+bool  JUCE_CALLTYPE SystemAudioVolume::setGain (float gain)   { return SystemVol (kAudioHardwareServiceDeviceProperty_VirtualMasterVolume).setGain (gain); }
+bool  JUCE_CALLTYPE SystemAudioVolume::isMuted()              { return SystemVol (kAudioDevicePropertyMute).isMuted(); }
+bool  JUCE_CALLTYPE SystemAudioVolume::setMuted (bool mute)   { return SystemVol (kAudioDevicePropertyMute).setMuted (mute); }
+
+//==============================================================================
 class CoreAudioInternal  : private Timer
 {
 public:
@@ -214,7 +316,7 @@ public:
 
             if (OK (AudioObjectGetPropertyData (deviceID, &pa, 0, 0, &size, ranges)))
             {
-                bufferSizes.add ((int) ranges[0].mMinimum);
+                bufferSizes.add ((int) (ranges[0].mMinimum + 15) & ~15);
 
                 for (int i = 32; i < 2048; i += 32)
                 {
@@ -560,14 +662,13 @@ public:
     void audioCallback (const AudioBufferList* inInputData,
                         AudioBufferList* outOutputData)
     {
-        int i;
         const ScopedLock sl (callbackLock);
 
         if (callback != nullptr)
         {
             if (inputDevice == 0)
             {
-                for (i = numInputChans; --i >= 0;)
+                for (int i = numInputChans; --i >= 0;)
                 {
                     const CallbackDetailsForChannel& info = inputChannelInfo[i];
                     float* dest = tempInputBuffers [i];
@@ -612,7 +713,7 @@ public:
                                                      bufferSize);
                 }
 
-                for (i = numOutputChans; --i >= 0;)
+                for (int i = numOutputChans; --i >= 0;)
                 {
                     const CallbackDetailsForChannel& info = outputChannelInfo[i];
                     const float* src = tempOutputBuffers [i];
@@ -633,7 +734,7 @@ public:
         }
         else
         {
-            for (i = jmin (numOutputChans, numOutputChannelInfos); --i >= 0;)
+            for (int i = jmin (numOutputChans, numOutputChannelInfos); --i >= 0;)
             {
                 const CallbackDetailsForChannel& info = outputChannelInfo[i];
                 float* dest = ((float*) outOutputData->mBuffers[info.streamNum].mData)
@@ -829,7 +930,7 @@ private:
         return false;
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CoreAudioInternal);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CoreAudioInternal)
 };
 
 
@@ -901,8 +1002,8 @@ public:
     {
         if (internal->inputDevice != 0)
             return internal->inputDevice->inChanNames;
-        else
-            return internal->inChanNames;
+
+        return internal->inChanNames;
     }
 
     bool isOpen()    { return isOpen_; }
@@ -1044,7 +1145,7 @@ private:
         return noErr;
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CoreAudioIODevice);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CoreAudioIODevice)
 };
 
 //==============================================================================
@@ -1258,7 +1359,7 @@ private:
         return noErr;
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CoreAudioIODeviceType);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CoreAudioIODeviceType)
 };
 
 //==============================================================================

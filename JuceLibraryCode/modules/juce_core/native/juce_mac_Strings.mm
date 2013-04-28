@@ -29,7 +29,7 @@ String String::fromCFString (CFStringRef cfString)
         return String::empty;
 
     CFRange range = { 0, CFStringGetLength (cfString) };
-    HeapBlock <UniChar> u (range.length + 1);
+    HeapBlock <UniChar> u ((size_t) range.length + 1);
     CFStringGetCharacters (cfString, range, u);
     u[range.length] = 0;
 
@@ -39,14 +39,16 @@ String String::fromCFString (CFStringRef cfString)
 CFStringRef String::toCFString() const
 {
     CharPointer_UTF16 utf16 (toUTF16());
-    return CFStringCreateWithCharacters (kCFAllocatorDefault, (const UniChar*) utf16.getAddress(), utf16.length());
+    return CFStringCreateWithCharacters (kCFAllocatorDefault, (const UniChar*) utf16.getAddress(), (CFIndex) utf16.length());
 }
 
 String String::convertToPrecomposedUnicode() const
 {
    #if JUCE_IOS
     JUCE_AUTORELEASEPOOL
-    return nsStringToJuce ([juceStringToNS (*this) precomposedStringWithCanonicalMapping]);
+    {
+        return nsStringToJuce ([juceStringToNS (*this) precomposedStringWithCanonicalMapping]);
+    }
    #else
     UnicodeMapping map;
 
@@ -65,7 +67,7 @@ String String::convertToPrecomposedUnicode() const
 
     if (CreateUnicodeToTextInfo (&map, &conversionInfo) == noErr)
     {
-        const int bytesNeeded = CharPointer_UTF16::getBytesRequiredFor (getCharPointer());
+        const size_t bytesNeeded = CharPointer_UTF16::getBytesRequiredFor (getCharPointer());
 
         HeapBlock <char> tempOut;
         tempOut.calloc (bytesNeeded + 4);

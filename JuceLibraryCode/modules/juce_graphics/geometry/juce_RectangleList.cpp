@@ -169,8 +169,8 @@ void RectangleList::add (const int x, const int y, const int w, const int h)
 
 void RectangleList::add (const RectangleList& other)
 {
-    for (int i = 0; i < other.rects.size(); ++i)
-        add (other.rects.getReference (i));
+    for (const Rectangle<int>* r = other.begin(), * const e = other.end(); r != e; ++r)
+        add (*r);
 }
 
 void RectangleList::subtract (const Rectangle<int>& rect)
@@ -340,8 +340,7 @@ void RectangleList::swapWith (RectangleList& otherList) noexcept
 //==============================================================================
 void RectangleList::consolidate()
 {
-    int i;
-    for (i = 0; i < getNumRectangles() - 1; ++i)
+    for (int i = 0; i < getNumRectangles() - 1; ++i)
     {
         Rectangle<int>& r = rects.getReference (i);
         const int rx1 = r.pos.x;
@@ -394,7 +393,7 @@ void RectangleList::consolidate()
         }
     }
 
-    for (i = 0; i < rects.size() - 1; ++i)
+    for (int i = 0; i < rects.size() - 1; ++i)
     {
         Rectangle<int>& r = rects.getReference (i);
 
@@ -413,8 +412,8 @@ void RectangleList::consolidate()
 //==============================================================================
 bool RectangleList::containsPoint (const int x, const int y) const noexcept
 {
-    for (int i = getNumRectangles(); --i >= 0;)
-        if (rects.getReference (i).contains (x, y))
+    for (const Rectangle<int>* r = rects.begin(), * const e = rects.end(); r != e; ++r)
+        if (r->contains (x, y))
             return true;
 
     return false;
@@ -444,8 +443,8 @@ bool RectangleList::containsRectangle (const Rectangle<int>& rectangleToCheck) c
 
 bool RectangleList::intersectsRectangle (const Rectangle<int>& rectangleToCheck) const noexcept
 {
-    for (int i = rects.size(); --i >= 0;)
-        if (rects.getReference (i).intersects (rectangleToCheck))
+    for (const Rectangle<int>* r = rects.begin(), * const e = rects.end(); r != e; ++r)
+        if (r->intersects (rectangleToCheck))
             return true;
 
     return false;
@@ -453,8 +452,8 @@ bool RectangleList::intersectsRectangle (const Rectangle<int>& rectangleToCheck)
 
 bool RectangleList::intersects (const RectangleList& other) const noexcept
 {
-    for (int i = rects.size(); --i >= 0;)
-        if (other.intersectsRectangle (rects.getReference (i)))
+    for (const Rectangle<int>* r = rects.begin(), * const e = rects.end(); r != e; ++r)
+        if (other.intersectsRectangle (*r))
             return true;
 
     return false;
@@ -466,8 +465,8 @@ Rectangle<int> RectangleList::getBounds() const noexcept
     {
         if (rects.size() == 0)
             return Rectangle<int>();
-        else
-            return rects.getReference (0);
+
+        return rects.getReference (0);
     }
     else
     {
@@ -494,12 +493,10 @@ Rectangle<int> RectangleList::getBounds() const noexcept
 
 void RectangleList::offsetAll (const int dx, const int dy) noexcept
 {
-    for (int i = rects.size(); --i >= 0;)
+    for (Rectangle<int>* r = rects.begin(), * const e = rects.end(); r != e; ++r)
     {
-        Rectangle<int>& r = rects.getReference (i);
-
-        r.pos.x += dx;
-        r.pos.y += dy;
+        r->pos.x += dx;
+        r->pos.y += dy;
     }
 }
 

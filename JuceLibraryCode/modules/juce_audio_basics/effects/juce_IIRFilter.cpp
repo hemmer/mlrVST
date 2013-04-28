@@ -31,17 +31,15 @@
 
 //==============================================================================
 IIRFilter::IIRFilter()
-    : active (false)
+    : active (false), v1 (0), v2 (0)
 {
-    reset();
 }
 
 IIRFilter::IIRFilter (const IIRFilter& other)
-    : active (other.active)
+    : active (other.active), v1 (0), v2 (0)
 {
-    const ScopedLock sl (other.processLock);
+    const SpinLock::ScopedLockType sl (other.processLock);
     memcpy (coefficients, other.coefficients, sizeof (coefficients));
-    reset();
 }
 
 IIRFilter::~IIRFilter()
@@ -51,28 +49,18 @@ IIRFilter::~IIRFilter()
 //==============================================================================
 void IIRFilter::reset() noexcept
 {
-    const ScopedLock sl (processLock);
-
-    x1 = 0;
-    x2 = 0;
-    y1 = 0;
-    y2 = 0;
+    const SpinLock::ScopedLockType sl (processLock);
+    v1 = v2 = 0;
 }
 
 float IIRFilter::processSingleSampleRaw (const float in) noexcept
 {
-    float out = coefficients[0] * in
-                 + coefficients[1] * x1
-                 + coefficients[2] * x2
-                 - coefficients[4] * y1
-                 - coefficients[5] * y2;
+    float out = coefficients[0] * in + v1;
 
     JUCE_SNAP_TO_ZERO (out);
 
-    x2 = x1;
-    x1 = in;
-    y2 = y1;
-    y1 = out;
+    v1 = coefficients[1] * in - coefficients[3] * out + v2;
+    v2 = coefficients[2] * in - coefficients[4] * out;
 
     return out;
 }
@@ -80,29 +68,29 @@ float IIRFilter::processSingleSampleRaw (const float in) noexcept
 void IIRFilter::processSamples (float* const samples,
                                 const int numSamples) noexcept
 {
-    const ScopedLock sl (processLock);
+    const SpinLock::ScopedLockType sl (processLock);
 
     if (active)
     {
+        const float c0 = coefficients[0];
+        const float c1 = coefficients[1];
+        const float c2 = coefficients[2];
+        const float c3 = coefficients[3];
+        const float c4 = coefficients[4];
+        float lv1 = v1, lv2 = v2;
+
         for (int i = 0; i < numSamples; ++i)
         {
             const float in = samples[i];
-
-            float out = coefficients[0] * in
-                         + coefficients[1] * x1
-                         + coefficients[2] * x2
-                         - coefficients[4] * y1
-                         - coefficients[5] * y2;
-
-            JUCE_SNAP_TO_ZERO (out);
-
-            x2 = x1;
-            x1 = in;
-            y2 = y1;
-            y1 = out;
-
+            const float out = c0 * in + lv1;
             samples[i] = out;
+
+            lv1 = c1 * in - c3 * out + lv2;
+            lv2 = c2 * in - c4 * out;
         }
+
+        JUCE_SNAP_TO_ZERO (lv1);  v1 = lv1;
+        JUCE_SNAP_TO_ZERO (lv2);  v2 = lv2;
     }
 }
 
@@ -212,14 +200,14 @@ void IIRFilter::makeBandPass (const double sampleRate,
 
 void IIRFilter::makeInactive() noexcept
 {
-    const ScopedLock sl (processLock);
+    const SpinLock::ScopedLockType sl (processLock);
     active = false;
 }
 
 //==============================================================================
 void IIRFilter::copyCoefficientsFrom (const IIRFilter& other) noexcept
 {
-    const ScopedLock sl (processLock);
+    const SpinLock::ScopedLockType sl (processLock);
 
     memcpy (coefficients, other.coefficients, sizeof (coefficients));
     active = other.active;
@@ -237,14 +225,13 @@ void IIRFilter::setCoefficients (double c1, double c2, double c3,
     c5 *= a;
     c6 *= a;
 
-    const ScopedLock sl (processLock);
+    const SpinLock::ScopedLockType sl (processLock);
 
     coefficients[0] = (float) c1;
     coefficients[1] = (float) c2;
     coefficients[2] = (float) c3;
-    coefficients[3] = (float) c4;
-    coefficients[4] = (float) c5;
-    coefficients[5] = (float) c6;
+    coefficients[3] = (float) c5;
+    coefficients[4] = (float) c6;
 
     active = true;
 }

@@ -77,7 +77,7 @@ public:
 
     int64 getPosition();
     bool setPosition (int64 newPosition);
-    bool write (const void* destBuffer, int howMany);
+    bool write (const void* destBuffer, size_t howMany);
 
     /** These are preset values that can be used for the constructor's windowBits paramter.
         For more info about this, see the zlib documentation for its windowBits parameter.
@@ -96,7 +96,7 @@ private:
     friend class ScopedPointer <GZIPCompressorHelper>;
     ScopedPointer <GZIPCompressorHelper> helper;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GZIPCompressorOutputStream);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GZIPCompressorOutputStream)
 };
 
 #endif   // __JUCE_GZIPCOMPRESSOROUTPUTSTREAM_JUCEHEADER__

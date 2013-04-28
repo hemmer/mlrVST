@@ -111,21 +111,21 @@ namespace
 class ZipFile::ZipInputStream  : public InputStream
 {
 public:
-    ZipInputStream (ZipFile& file_, ZipFile::ZipEntryHolder& zei)
-        : file (file_),
+    ZipInputStream (ZipFile& zf, ZipFile::ZipEntryHolder& zei)
+        : file (zf),
           zipEntryHolder (zei),
           pos (0),
           headerSize (0),
-          inputStream (file_.inputStream)
+          inputStream (zf.inputStream)
     {
-        if (file_.inputSource != nullptr)
+        if (zf.inputSource != nullptr)
         {
             inputStream = streamToDelete = file.inputSource->createInputStream();
         }
         else
         {
            #if JUCE_DEBUG
-            file_.streamCounter.numOpenStreams++;
+            zf.streamCounter.numOpenStreams++;
            #endif
         }
 
@@ -206,7 +206,7 @@ private:
     InputStream* inputStream;
     ScopedPointer<InputStream> streamToDelete;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ZipInputStream);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ZipInputStream)
 };
 
 
@@ -233,9 +233,9 @@ ZipFile::ZipFile (const File& file)
     init();
 }
 
-ZipFile::ZipFile (InputSource* const inputSource_)
+ZipFile::ZipFile (InputSource* const source)
     : inputStream (nullptr),
-      inputSource (inputSource_)
+      inputSource (source)
 {
     init();
 }
@@ -265,8 +265,10 @@ int ZipFile::getNumEntries() const noexcept
 
 const ZipFile::ZipEntry* ZipFile::getEntry (const int index) const noexcept
 {
-    ZipEntryHolder* const zei = entries [index];
-    return zei != nullptr ? &(zei->entry) : nullptr;
+    if (ZipEntryHolder* const zei = entries [index])
+        return &(zei->entry);
+
+    return nullptr;
 }
 
 int ZipFile::getIndexOfFileName (const String& fileName) const noexcept
@@ -285,10 +287,9 @@ const ZipFile::ZipEntry* ZipFile::getEntry (const String& fileName) const noexce
 
 InputStream* ZipFile::createStreamForEntry (const int index)
 {
-    ZipEntryHolder* const zei = entries[index];
     InputStream* stream = nullptr;
 
-    if (zei != nullptr)
+    if (ZipEntryHolder* const zei = entries[index])
     {
         stream = new ZipInputStream (*this, *zei);
 
@@ -303,6 +304,15 @@ InputStream* ZipFile::createStreamForEntry (const int index)
     }
 
     return stream;
+}
+
+InputStream* ZipFile::createStreamForEntry (const ZipEntry& entry)
+{
+    for (int i = 0; i < entries.size(); ++i)
+        if (&entries.getUnchecked (i)->entry == &entry)
+            return createStreamForEntry (i);
+
+    return nullptr;
 }
 
 void ZipFile::sortEntriesByFilename()
@@ -381,9 +391,15 @@ Result ZipFile::uncompressEntry (const int index,
 {
     const ZipEntryHolder* zei = entries.getUnchecked (index);
 
-    const File targetFile (targetDirectory.getChildFile (zei->entry.filename));
+   #if JUCE_WINDOWS
+    const String entryPath (zei->entry.filename);
+   #else
+    const String entryPath (zei->entry.filename.replaceCharacter ('\\', '/'));
+   #endif
 
-    if (zei->entry.filename.endsWithChar ('/'))
+    const File targetFile (targetDirectory.getChildFile (entryPath));
+
+    if (entryPath.endsWithChar ('/') || entryPath.endsWithChar ('\\'))
         return targetFile.createDirectory(); // (entry is a directory, not a file)
 
     ScopedPointer<InputStream> in (createStreamForEntry (index));
@@ -421,15 +437,15 @@ Result ZipFile::uncompressEntry (const int index,
 
 
 //=============================================================================
-extern unsigned long juce_crc32 (unsigned long crc, const unsigned char* buf, unsigned len);
+extern unsigned long juce_crc32 (unsigned long crc, const unsigned char*, unsigned len);
 
 class ZipFile::Builder::Item
 {
 public:
-    Item (const File& file_, const int compressionLevel_, const String& storedPathName_)
-        : file (file_),
-          storedPathname (storedPathName_.isEmpty() ? file_.getFileName() : storedPathName_),
-          compressionLevel (compressionLevel_),
+    Item (const File& f, const int compression, const String& storedPath)
+        : file (f),
+          storedPathname (storedPath.isEmpty() ? f.getFileName() : storedPath),
+          compressionLevel (compression),
           compressedSize (0),
           headerStart (0)
     {
@@ -510,7 +526,7 @@ private:
                 return false;
 
             checksum = juce_crc32 (checksum, buffer, (unsigned int) bytesRead);
-            target.write (buffer, bytesRead);
+            target.write (buffer, (size_t) bytesRead);
         }
 
         return true;
@@ -529,7 +545,7 @@ private:
         target.writeShort (0); // extra field length
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Item);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Item)
 };
 
 //=============================================================================

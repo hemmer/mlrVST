@@ -82,7 +82,7 @@ public:
     */
     bool hasStopMessageBeenSent() const noexcept        { return quitMessagePosted; }
 
-   #if JUCE_MODAL_LOOPS_PERMITTED
+   #if JUCE_MODAL_LOOPS_PERMITTED || DOXYGEN
     /** Synchronously dispatches messages until a given time has elapsed.
 
         Returns false if a quit message has been posted by a call to stopDispatchLoop(),
@@ -175,7 +175,7 @@ public:
 
         typedef ReferenceCountedObjectPtr<MessageBase> Ptr;
 
-        JUCE_DECLARE_NON_COPYABLE (MessageBase);
+        JUCE_DECLARE_NON_COPYABLE (MessageBase)
     };
 
     //==============================================================================
@@ -208,7 +208,7 @@ private:
     static void doPlatformSpecificShutdown();
     static bool dispatchNextMessageOnSystemQueue (bool returnIfNoPendingMessages);
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MessageManager);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MessageManager)
 };
 
 
@@ -322,7 +322,7 @@ private:
 
     bool attemptLock (Thread*, ThreadPoolJob*);
 
-    JUCE_DECLARE_NON_COPYABLE (MessageManagerLock);
+    JUCE_DECLARE_NON_COPYABLE (MessageManagerLock)
 };
 
 

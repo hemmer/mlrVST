@@ -87,9 +87,7 @@ public:
             for (int i = propertyComps.size(); --i >= 0;)
                 propertyComps.getUnchecked(i)->setVisible (open);
 
-            PropertyPanel* const pp = findParentComponentOfClass<PropertyPanel>();
-
-            if (pp != nullptr)
+            if (PropertyPanel* const pp = findParentComponentOfClass<PropertyPanel>())
                 pp->resized();
         }
     }
@@ -127,7 +125,7 @@ private:
     int titleHeight;
     bool sectionIsOpen;
 
-    JUCE_DECLARE_NON_COPYABLE (SectionComponent);
+    JUCE_DECLARE_NON_COPYABLE (SectionComponent)
 };
 
 //==============================================================================
@@ -177,15 +175,14 @@ public:
 private:
     OwnedArray<SectionComponent> sections;
 
-    JUCE_DECLARE_NON_COPYABLE (PropertyHolderComponent);
+    JUCE_DECLARE_NON_COPYABLE (PropertyHolderComponent)
 };
 
 
 //==============================================================================
 PropertyPanel::PropertyPanel()
+    : messageWhenEmpty (TRANS("(nothing selected)"))
 {
-    messageWhenEmpty = TRANS("(nothing selected)");
-
     addAndMakeVisible (&viewport);
     viewport.setViewedComponent (propertyHolderComponent = new PropertyHolderComponent());
     viewport.setFocusContainer (true);
@@ -199,7 +196,7 @@ PropertyPanel::~PropertyPanel()
 //==============================================================================
 void PropertyPanel::paint (Graphics& g)
 {
-    if (propertyHolderComponent->getNumSections() == 0)
+    if (isEmpty())
     {
         g.setColour (Colours::black.withAlpha (0.5f));
         g.setFont (14.0f);
@@ -217,16 +214,26 @@ void PropertyPanel::resized()
 //==============================================================================
 void PropertyPanel::clear()
 {
-    if (propertyHolderComponent->getNumSections() > 0)
+    if (! isEmpty())
     {
         propertyHolderComponent->clear();
-        repaint();
+        updatePropHolderLayout();
     }
+}
+
+bool PropertyPanel::isEmpty() const
+{
+    return propertyHolderComponent->getNumSections() == 0;
+}
+
+int PropertyPanel::getTotalContentHeight() const
+{
+    return propertyHolderComponent->getHeight();
 }
 
 void PropertyPanel::addProperties (const Array <PropertyComponent*>& newProperties)
 {
-    if (propertyHolderComponent->getNumSections() == 0)
+    if (isEmpty())
         repaint();
 
     propertyHolderComponent->addSection (new SectionComponent (String::empty, newProperties, true));
@@ -239,7 +246,7 @@ void PropertyPanel::addSection (const String& sectionTitle,
 {
     jassert (sectionTitle.isNotEmpty());
 
-    if (propertyHolderComponent->getNumSections() == 0)
+    if (isEmpty())
         repaint();
 
     propertyHolderComponent->addSection (new SectionComponent (sectionTitle, newProperties, shouldBeOpen));

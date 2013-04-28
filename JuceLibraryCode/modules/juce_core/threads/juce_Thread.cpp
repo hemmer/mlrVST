@@ -57,7 +57,7 @@ struct CurrentThreadHolder   : public ReferenceCountedObject
     typedef ReferenceCountedObjectPtr <CurrentThreadHolder> Ptr;
     ThreadLocalValue<Thread*> value;
 
-    JUCE_DECLARE_NON_COPYABLE (CurrentThreadHolder);
+    JUCE_DECLARE_NON_COPYABLE (CurrentThreadHolder)
 };
 
 static char currentThreadHolderLock [sizeof (SpinLock)]; // (statically initialised to zeros).
@@ -156,7 +156,7 @@ bool Thread::waitForThreadToExit (const int timeOutMilliseconds) const
     // Doh! So how exactly do you expect this thread to wait for itself to stop??
     jassert (getThreadId() != getCurrentThreadId() || getCurrentThreadId() == 0);
 
-    const uint32 timeoutEnd = Time::getMillisecondCounter() + timeOutMilliseconds;
+    const uint32 timeoutEnd = Time::getMillisecondCounter() + (uint32) timeOutMilliseconds;
 
     while (isThreadRunning())
     {

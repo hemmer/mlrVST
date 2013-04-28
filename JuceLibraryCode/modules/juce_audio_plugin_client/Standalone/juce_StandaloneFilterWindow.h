@@ -26,14 +26,6 @@
 #ifndef __JUCE_STANDALONEFILTERWINDOW_JUCEHEADER__
 #define __JUCE_STANDALONEFILTERWINDOW_JUCEHEADER__
 
-
-//==============================================================================
-/** Somewhere in the codebase of your plugin, you need to implement this function
-    and make it create an instance of the filter subclass that you're building.
-*/
-extern AudioProcessor* JUCE_CALLTYPE createPluginFilter();
-
-
 //==============================================================================
 /**
     A class that can be used to run a simple standalone application containing your filter.
@@ -65,11 +57,7 @@ public:
         optionsButton.addListener (this);
         optionsButton.setTriggeredOnMouseDown (true);
 
-        JUCE_TRY
-        {
-            filter = createPluginFilter();
-        }
-        JUCE_CATCH_ALL
+        createFilter();
 
         if (filter == nullptr)
         {
@@ -156,12 +144,21 @@ public:
     }
 
     //==============================================================================
+    AudioProcessor* getAudioProcessor() const noexcept      { return filter; }
+    AudioDeviceManager* getDeviceManager() const noexcept   { return deviceManager; }
+
+    void createFilter()
+    {
+        AudioProcessor::setTypeOfNextNewPlugin (AudioProcessor::wrapperType_Standalone);
+        filter = createPluginFilter();
+        AudioProcessor::setTypeOfNextNewPlugin (AudioProcessor::wrapperType_Undefined);
+    }
+
     /** Deletes and re-creates the filter and its UI. */
     void resetFilter()
     {
         deleteFilter();
-
-        filter = createPluginFilter();
+        createFilter();
 
         if (filter != nullptr)
         {
@@ -223,17 +220,22 @@ public:
     /** Shows the audio properties dialog box modally. */
     virtual void showAudioSettingsDialog()
     {
-        AudioDeviceSelectorComponent selectorComp (*deviceManager,
-                                                   filter->getNumInputChannels(),
-                                                   filter->getNumInputChannels(),
-                                                   filter->getNumOutputChannels(),
-                                                   filter->getNumOutputChannels(),
-                                                   true, false, true, false);
+        DialogWindow::LaunchOptions o;
+        o.content.setOwned (new AudioDeviceSelectorComponent (*deviceManager,
+                                                              filter->getNumInputChannels(),
+                                                              filter->getNumInputChannels(),
+                                                              filter->getNumOutputChannels(),
+                                                              filter->getNumOutputChannels(),
+                                                              true, false, true, false));
+        o.content->setSize (500, 450);
 
-        selectorComp.setSize (500, 450);
+        o.dialogTitle                   = TRANS("Audio Settings");
+        o.dialogBackgroundColour        = Colours::lightgrey;
+        o.escapeKeyTriggersCloseButton  = true;
+        o.useNativeTitleBar             = true;
+        o.resizable                     = false;
 
-        DialogWindow::showModalDialog (TRANS("Audio Settings"), &selectorComp, this,
-                                       Colours::lightgrey, true, false, false);
+        o.launchAsync();
     }
 
     //==============================================================================
@@ -295,7 +297,7 @@ private:
         filter = nullptr;
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StandaloneFilterWindow);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StandaloneFilterWindow)
 };
 
 #endif   // __JUCE_STANDALONEFILTERWINDOW_JUCEHEADER__

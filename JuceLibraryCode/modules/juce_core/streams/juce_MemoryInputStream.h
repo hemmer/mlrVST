@@ -32,7 +32,7 @@
 
 //==============================================================================
 /**
-    Allows a block of data and to be accessed as a stream.
+    Allows a block of data to be accessed as a stream.
 
     This can either be used to refer to a shared block of memory, or can make its
     own internal copy of the data when the MemoryInputStream is created.
@@ -91,7 +91,7 @@ private:
 
     void createInternalCopy();
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemoryInputStream);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemoryInputStream)
 };
 
 #endif   // __JUCE_MEMORYINPUTSTREAM_JUCEHEADER__

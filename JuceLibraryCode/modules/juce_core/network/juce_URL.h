@@ -150,7 +150,7 @@ public:
     /** Returns an array of the names of all the URL's parameters.
 
         E.g. for the url "www.fish.com?type=haddock&amount=some+fish", this array would
-        contain two items: "type" and "haddock".
+        contain two items: "type" and "amount".
 
         You can call getParameterValues() to get the corresponding value of each
         parameter. Note that the list can contain multiple parameters with the same name.
@@ -340,7 +340,7 @@ private:
                                             OpenStreamProgressCallback* progressCallback,
                                             void* progressCallbackContext, const String& headers,
                                             const int timeOutMs, StringPairArray* responseHeaders);
-    JUCE_LEAK_DETECTOR (URL);
+    JUCE_LEAK_DETECTOR (URL)
 };
 
 

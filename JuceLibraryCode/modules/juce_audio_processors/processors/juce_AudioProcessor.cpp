@@ -23,8 +23,16 @@
   ==============================================================================
 */
 
+static ThreadLocalValue<AudioProcessor::WrapperType> wrapperTypeBeingCreated;
+
+void JUCE_CALLTYPE AudioProcessor::setTypeOfNextNewPlugin (AudioProcessor::WrapperType type)
+{
+    wrapperTypeBeingCreated = type;
+}
+
 AudioProcessor::AudioProcessor()
-    : playHead (nullptr),
+    : wrapperType (wrapperTypeBeingCreated.get()),
+      playHead (nullptr),
       sampleRate (0),
       blockSize (0),
       numInputChannels (0),
@@ -65,16 +73,24 @@ void AudioProcessor::removeListener (AudioProcessorListener* const listenerToRem
     listeners.removeFirstMatchingValue (listenerToRemove);
 }
 
-void AudioProcessor::setPlayConfigDetails (const int numIns,
-                                           const int numOuts,
-                                           const double sampleRate_,
-                                           const int blockSize_) noexcept
+void AudioProcessor::setPlayConfigDetails (const int newNumIns,
+                                           const int newNumOuts,
+                                           const double newSampleRate,
+                                           const int newBlockSize) noexcept
 {
-    numInputChannels = numIns;
-    numOutputChannels = numOuts;
-    sampleRate = sampleRate_;
-    blockSize = blockSize_;
+    sampleRate = newSampleRate;
+    blockSize  = newBlockSize;
+
+    if (numInputChannels != newNumIns || numOutputChannels != newNumOuts)
+    {
+        numInputChannels  = newNumIns;
+        numOutputChannels = newNumOuts;
+
+        numChannelsChanged();
+    }
 }
+
+void AudioProcessor::numChannelsChanged() {}
 
 void AudioProcessor::setSpeakerArrangement (const String& inputs, const String& outputs)
 {
@@ -82,9 +98,9 @@ void AudioProcessor::setSpeakerArrangement (const String& inputs, const String& 
     outputSpeakerArrangement = outputs;
 }
 
-void AudioProcessor::setNonRealtime (const bool nonRealtime_) noexcept
+void AudioProcessor::setNonRealtime (const bool newNonRealtime) noexcept
 {
-    nonRealtime = nonRealtime_;
+    nonRealtime = newNonRealtime;
 }
 
 void AudioProcessor::setLatencySamples (const int newLatency)
@@ -103,22 +119,19 @@ void AudioProcessor::setParameterNotifyingHost (const int parameterIndex,
     sendParamChangeMessageToListeners (parameterIndex, newValue);
 }
 
+AudioProcessorListener* AudioProcessor::getListenerLocked (const int index) const noexcept
+{
+    const ScopedLock sl (listenerLock);
+    return listeners [index];
+}
+
 void AudioProcessor::sendParamChangeMessageToListeners (const int parameterIndex, const float newValue)
 {
     jassert (isPositiveAndBelow (parameterIndex, getNumParameters()));
 
     for (int i = listeners.size(); --i >= 0;)
-    {
-        AudioProcessorListener* l;
-
-        {
-            const ScopedLock sl (listenerLock);
-            l = listeners [i];
-        }
-
-        if (l != nullptr)
+        if (AudioProcessorListener* l = getListenerLocked (i))
             l->audioProcessorParameterChanged (this, parameterIndex, newValue);
-    }
 }
 
 void AudioProcessor::beginParameterChangeGesture (int parameterIndex)
@@ -133,17 +146,8 @@ void AudioProcessor::beginParameterChangeGesture (int parameterIndex)
    #endif
 
     for (int i = listeners.size(); --i >= 0;)
-    {
-        AudioProcessorListener* l;
-
-        {
-            const ScopedLock sl (listenerLock);
-            l = listeners [i];
-        }
-
-        if (l != nullptr)
+        if (AudioProcessorListener* l = getListenerLocked (i))
             l->audioProcessorParameterChangeGestureBegin (this, parameterIndex);
-    }
 }
 
 void AudioProcessor::endParameterChangeGesture (int parameterIndex)
@@ -159,44 +163,20 @@ void AudioProcessor::endParameterChangeGesture (int parameterIndex)
    #endif
 
     for (int i = listeners.size(); --i >= 0;)
-    {
-        AudioProcessorListener* l;
-
-        {
-            const ScopedLock sl (listenerLock);
-            l = listeners [i];
-        }
-
-        if (l != nullptr)
+        if (AudioProcessorListener* l = getListenerLocked (i))
             l->audioProcessorParameterChangeGestureEnd (this, parameterIndex);
-    }
 }
 
 void AudioProcessor::updateHostDisplay()
 {
     for (int i = listeners.size(); --i >= 0;)
-    {
-        AudioProcessorListener* l;
-
-        {
-            const ScopedLock sl (listenerLock);
-            l = listeners [i];
-        }
-
-        if (l != nullptr)
+        if (AudioProcessorListener* l = getListenerLocked (i))
             l->audioProcessorChanged (this);
-    }
 }
 
-bool AudioProcessor::isParameterAutomatable (int /*parameterIndex*/) const
-{
-    return true;
-}
-
-bool AudioProcessor::isMetaParameter (int /*parameterIndex*/) const
-{
-    return false;
-}
+String AudioProcessor::getParameterLabel (int) const        { return String::empty; }
+bool AudioProcessor::isParameterAutomatable (int) const     { return true; }
+bool AudioProcessor::isMetaParameter (int) const            { return false; }
 
 void AudioProcessor::suspendProcessing (const bool shouldBeSuspended)
 {
@@ -204,9 +184,8 @@ void AudioProcessor::suspendProcessing (const bool shouldBeSuspended)
     suspended = shouldBeSuspended;
 }
 
-void AudioProcessor::reset()
-{
-}
+void AudioProcessor::reset() {}
+void AudioProcessor::processBlockBypassed (AudioSampleBuffer&, MidiBuffer&) {}
 
 //==============================================================================
 void AudioProcessor::editorBeingDeleted (AudioProcessorEditor* const editor) noexcept
@@ -257,19 +236,18 @@ const uint32 magicXmlNumber = 0x21324356;
 void AudioProcessor::copyXmlToBinary (const XmlElement& xml, juce::MemoryBlock& destData)
 {
     const String xmlString (xml.createDocument (String::empty, true, false));
-    const int stringLength = xmlString.getNumBytesAsUTF8();
+    const size_t stringLength = xmlString.getNumBytesAsUTF8();
 
-    destData.setSize ((size_t) stringLength + 10);
+    destData.setSize (stringLength + 9);
 
-    char* const d = static_cast<char*> (destData.getData());
-    *(uint32*) d = ByteOrder::swapIfBigEndian ((const uint32) magicXmlNumber);
-    *(uint32*) (d + 4) = ByteOrder::swapIfBigEndian ((const uint32) stringLength);
+    uint32* const d = static_cast<uint32*> (destData.getData());
+    d[0] = ByteOrder::swapIfBigEndian ((const uint32) magicXmlNumber);
+    d[1] = ByteOrder::swapIfBigEndian ((const uint32) stringLength);
 
-    xmlString.copyToUTF8 (d + 8, stringLength + 1);
+    xmlString.copyToUTF8 ((CharPointer_UTF8::CharType*) (d + 2), stringLength + 1);
 }
 
-XmlElement* AudioProcessor::getXmlFromBinary (const void* data,
-                                              const int sizeInBytes)
+XmlElement* AudioProcessor::getXmlFromBinary (const void* data, const int sizeInBytes)
 {
     if (sizeInBytes > 8
          && ByteOrder::littleEndianInt (data) == magicXmlNumber)
@@ -291,7 +269,7 @@ void AudioProcessorListener::audioProcessorParameterChangeGestureEnd (AudioProce
 //==============================================================================
 bool AudioPlayHead::CurrentPositionInfo::operator== (const CurrentPositionInfo& other) const noexcept
 {
-    return timeInSeconds == other.timeInSeconds
+    return timeInSamples == other.timeInSamples
         && ppqPosition == other.ppqPosition
         && editOriginTime == other.editOriginTime
         && ppqPositionOfLastBarStart == other.ppqPositionOfLastBarStart
@@ -300,7 +278,10 @@ bool AudioPlayHead::CurrentPositionInfo::operator== (const CurrentPositionInfo& 
         && isRecording == other.isRecording
         && bpm == other.bpm
         && timeSigNumerator == other.timeSigNumerator
-        && timeSigDenominator == other.timeSigDenominator;
+        && timeSigDenominator == other.timeSigDenominator
+        && ppqLoopStart == other.ppqLoopStart
+        && ppqLoopEnd == other.ppqLoopEnd
+        && isLooping == other.isLooping;
 }
 
 bool AudioPlayHead::CurrentPositionInfo::operator!= (const CurrentPositionInfo& other) const noexcept

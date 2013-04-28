@@ -56,7 +56,7 @@ Label::~Label()
 
 //==============================================================================
 void Label::setText (const String& newText,
-                     const bool broadcastChangeMessage)
+                     const NotificationType notification)
 {
     hideEditor (true);
 
@@ -71,7 +71,7 @@ void Label::setText (const String& newText,
         if (ownerComponent != nullptr)
             componentMovedOrResized (*ownerComponent, true, true);
 
-        if (broadcastChangeMessage)
+        if (notification != dontSendNotification)
             callChangeListeners();
     }
 }
@@ -86,7 +86,7 @@ String Label::getText (const bool returnActiveEditorContents) const
 void Label::valueChanged (Value&)
 {
     if (lastTextValue != textValue.toString())
-        setText (textValue.toString(), true);
+        setText (textValue.toString(), sendNotification);
 }
 
 //==============================================================================
@@ -99,7 +99,7 @@ void Label::setFont (const Font& newFont)
     }
 }
 
-const Font& Label::getFont() const noexcept
+Font Label::getFont() const noexcept
 {
     return font;
 }
@@ -161,9 +161,11 @@ void Label::attachToComponent (Component* owner, const bool onLeft)
 
 void Label::componentMovedOrResized (Component& component, bool /*wasMoved*/, bool /*wasResized*/)
 {
+    const Font f (getLookAndFeel().getLabelFont (*this));
+
     if (leftOfOwnerComp)
     {
-        setSize (jmin (getFont().getStringWidth (textValue.toString()) + 8, component.getX()),
+        setSize (jmin (f.getStringWidth (textValue.toString()) + 8, component.getX()),
                  component.getHeight());
 
         setTopRightPosition (component.getX(), component.getY());
@@ -171,7 +173,7 @@ void Label::componentMovedOrResized (Component& component, bool /*wasMoved*/, bo
     else
     {
         setSize (component.getWidth(),
-                 8 + roundToInt (getFont().getHeight()));
+                 8 + roundToInt (f.getHeight()));
 
         setTopLeftPosition (component.getX(), component.getY() - getHeight());
     }
@@ -179,8 +181,8 @@ void Label::componentMovedOrResized (Component& component, bool /*wasMoved*/, bo
 
 void Label::componentParentHierarchyChanged (Component& component)
 {
-    if (component.getParentComponent() != nullptr)
-        component.getParentComponent()->addChildComponent (this);
+    if (Component* parent = component.getParentComponent())
+        parent->addChildComponent (this);
 }
 
 void Label::componentVisibilityChanged (Component& component)
@@ -192,7 +194,12 @@ void Label::componentVisibilityChanged (Component& component)
 void Label::textWasEdited() {}
 void Label::textWasChanged() {}
 void Label::editorShown (TextEditor*) {}
-void Label::editorAboutToBeHidden (TextEditor*) {}
+
+void Label::editorAboutToBeHidden (TextEditor*)
+{
+    if (ComponentPeer* const peer = getPeer())
+        peer->dismissPendingTextInput();
+}
 
 void Label::showEditor()
 {
@@ -280,22 +287,14 @@ bool Label::isBeingEdited() const noexcept
 TextEditor* Label::createEditorComponent()
 {
     TextEditor* const ed = new TextEditor (getName());
-    ed->setFont (font);
-
-    // copy these colours from our own settings..
-    const int cols[] = { TextEditor::backgroundColourId,
-                         TextEditor::textColourId,
-                         TextEditor::highlightColourId,
-                         TextEditor::highlightedTextColourId,
-                         TextEditor::outlineColourId,
-                         TextEditor::focusedOutlineColourId,
-                         TextEditor::shadowColourId,
-                         CaretComponent::caretColourId };
-
-    for (int i = 0; i < numElementsInArray (cols); ++i)
-        ed->setColour (cols[i], findColour (cols[i]));
-
+    ed->applyFontToAllText (getLookAndFeel().getLabelFont (*this));
+    copyAllExplicitColoursTo (*ed);
     return ed;
+}
+
+TextEditor* Label::getCurrentTextEditor() const noexcept
+{
+    return editor;
 }
 
 //==============================================================================
@@ -360,16 +359,13 @@ class LabelKeyboardFocusTraverser   : public KeyboardFocusTraverser
 public:
     LabelKeyboardFocusTraverser() {}
 
-    Component* getNextComponent (Component* current)
-    {
-        return KeyboardFocusTraverser::getNextComponent (dynamic_cast <TextEditor*> (current) != nullptr
-                                                            ? current->getParentComponent() : current);
-    }
+    Component* getNextComponent (Component* c)     { return KeyboardFocusTraverser::getNextComponent (getComp (c)); }
+    Component* getPreviousComponent (Component* c) { return KeyboardFocusTraverser::getPreviousComponent (getComp (c)); }
 
-    Component* getPreviousComponent (Component* current)
+    static Component* getComp (Component* current)
     {
-        return KeyboardFocusTraverser::getPreviousComponent (dynamic_cast <TextEditor*> (current) != nullptr
-                                                                ? current->getParentComponent() : current);
+        return dynamic_cast <TextEditor*> (current) != nullptr
+                 ? current->getParentComponent() : current;
     }
 };
 

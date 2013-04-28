@@ -130,21 +130,29 @@ String File::parseAbsolutePath (const String& p)
             // expand a name of type "~dave/abc"
             const String userName (path.substring (1).upToFirstOccurrenceOf ("/", false, false));
 
-            struct passwd* const pw = getpwnam (userName.toUTF8());
-            if (pw != nullptr)
+            if (struct passwd* const pw = getpwnam (userName.toUTF8()))
                 path = addTrailingSeparator (pw->pw_dir) + path.fromFirstOccurrenceOf ("/", false, false);
         }
     }
     else if (! path.startsWithChar (separator))
     {
-        /*  When you supply a raw string to the File object constructor, it must be an absolute path.
-            If you're trying to parse a string that may be either a relative path or an absolute path,
-            you MUST provide a context against which the partial path can be evaluated - you can do
-            this by simply using File::getChildFile() instead of the File constructor. E.g. saying
-            "File::getCurrentWorkingDirectory().getChildFile (myUnknownPath)" would return an absolute
-            path if that's what was supplied, or would evaluate a partial path relative to the CWD.
-        */
-        jassert (path.startsWith ("./") || path.startsWith ("../")); // (assume that a path "./xyz" is deliberately intended to be relative to the CWD)
+       #if JUCE_DEBUG || JUCE_LOG_ASSERTIONS
+        if (! (path.startsWith ("./") || path.startsWith ("../")))
+        {
+            /*  When you supply a raw string to the File object constructor, it must be an absolute path.
+                If you're trying to parse a string that may be either a relative path or an absolute path,
+                you MUST provide a context against which the partial path can be evaluated - you can do
+                this by simply using File::getChildFile() instead of the File constructor. E.g. saying
+                "File::getCurrentWorkingDirectory().getChildFile (myUnknownPath)" would return an absolute
+                path if that's what was supplied, or would evaluate a partial path relative to the CWD.
+            */
+            jassertfalse;
+
+           #if JUCE_LOG_ASSERTIONS
+            Logger::writeToLog ("Illegal absolute path: " + path);
+           #endif
+        }
+       #endif
 
         return File::getCurrentWorkingDirectory().getChildFile (path).getFullPathName();
     }
@@ -278,10 +286,11 @@ String File::getPathUpToLastSlash() const
 
     if (lastSlash > 0)
         return fullPath.substring (0, lastSlash);
-    else if (lastSlash == 0)
+
+    if (lastSlash == 0)
         return separatorString;
-    else
-        return fullPath;
+
+    return fullPath;
 }
 
 File File::getParentDirectory() const
@@ -304,8 +313,8 @@ String File::getFileNameWithoutExtension() const
 
     if (lastDot > lastSlash)
         return fullPath.substring (lastSlash, lastDot);
-    else
-        return fullPath.substring (lastSlash);
+
+    return fullPath.substring (lastSlash);
 }
 
 bool File::isAChildOf (const File& potentialParent) const
@@ -645,8 +654,10 @@ bool File::startAsProcess (const String& parameters) const
 //==============================================================================
 FileInputStream* File::createInputStream() const
 {
-    if (existsAsFile())
-        return new FileInputStream (*this);
+    ScopedPointer<FileInputStream> fin (new FileInputStream (*this));
+
+    if (fin->openedOk())
+        return fin.release();
 
     return nullptr;
 }
@@ -661,9 +672,11 @@ FileOutputStream* File::createOutputStream (const int bufferSize) const
 
 //==============================================================================
 bool File::appendData (const void* const dataToAppend,
-                       const int numberOfBytes) const
+                       const size_t numberOfBytes) const
 {
-    if (numberOfBytes <= 0)
+    jassert (((ssize_t) numberOfBytes) >= 0);
+
+    if (numberOfBytes == 0)
         return true;
 
     FileOutputStream out (*this, 8192);
@@ -671,11 +684,9 @@ bool File::appendData (const void* const dataToAppend,
 }
 
 bool File::replaceWithData (const void* const dataToWrite,
-                            const int numberOfBytes) const
+                            const size_t numberOfBytes) const
 {
-    jassert (numberOfBytes >= 0); // a negative number of bytes??
-
-    if (numberOfBytes <= 0)
+    if (numberOfBytes == 0)
         return deleteFile();
 
     TemporaryFile tempFile (*this, TemporaryFile::useHiddenFile);
@@ -870,6 +881,19 @@ File File::createTempFile (const String& fileNameEnding)
         return createTempFile (fileNameEnding);
 
     return tempFile;
+}
+
+//==============================================================================
+MemoryMappedFile::MemoryMappedFile (const File& file, MemoryMappedFile::AccessMode mode)
+    : address (nullptr), range (0, file.getSize()), fileHandle (0)
+{
+    openInternal (file, mode);
+}
+
+MemoryMappedFile::MemoryMappedFile (const File& file, const Range<int64>& fileRange, AccessMode mode)
+    : address (nullptr), range (fileRange.getIntersectionWith (Range<int64> (0, file.getSize()))), fileHandle (0)
+{
+    openInternal (file, mode);
 }
 
 

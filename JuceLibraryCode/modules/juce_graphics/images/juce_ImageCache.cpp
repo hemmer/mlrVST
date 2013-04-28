@@ -27,8 +27,7 @@ class ImageCache::Pimpl     : private Timer,
                               private DeletedAtShutdown
 {
 public:
-    Pimpl()
-        : cacheTimeout (5000)
+    Pimpl()  : cacheTimeout (5000)
     {
     }
 
@@ -43,7 +42,7 @@ public:
 
         for (int i = images.size(); --i >= 0;)
         {
-            Item* const item = images.getUnchecked(i);
+            const Item* const item = images.getUnchecked(i);
 
             if (item->hashCode == hashCode)
                 return item->image;
@@ -94,6 +93,15 @@ public:
             stopTimer();
     }
 
+    void releaseUnusedImages()
+    {
+        const ScopedLock sl (lock);
+
+        for (int i = images.size(); --i >= 0;)
+            if (images.getUnchecked(i)->image.getReferenceCount() <= 1)
+                images.remove (i);
+    }
+
     struct Item
     {
         Image image;
@@ -101,7 +109,7 @@ public:
         uint32 lastUseTime;
     };
 
-    int cacheTimeout;
+    unsigned int cacheTimeout;
 
     juce_DeclareSingleton_SingleThreaded_Minimal (ImageCache::Pimpl);
 
@@ -109,7 +117,7 @@ private:
     OwnedArray<Item> images;
     CriticalSection lock;
 
-    JUCE_DECLARE_NON_COPYABLE (Pimpl);
+    JUCE_DECLARE_NON_COPYABLE (Pimpl)
 };
 
 juce_ImplementSingleton_SingleThreaded (ImageCache::Pimpl);
@@ -159,5 +167,11 @@ Image ImageCache::getFromMemory (const void* imageData, const int dataSize)
 
 void ImageCache::setCacheTimeout (const int millisecs)
 {
-    Pimpl::getInstance()->cacheTimeout = millisecs;
+    jassert (millisecs >= 0);
+    Pimpl::getInstance()->cacheTimeout = (unsigned int) millisecs;
+}
+
+void ImageCache::releaseUnusedImages()
+{
+    Pimpl::getInstance()->releaseUnusedImages();
 }

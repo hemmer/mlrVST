@@ -81,7 +81,11 @@
 #endif
 
 #ifndef    JUCE_USE_MP3AUDIOFORMAT
- //#define JUCE_USE_MP3AUDIOFORMAT
+ #define   JUCE_USE_MP3AUDIOFORMAT 1
+#endif
+
+#ifndef    JUCE_USE_LAME_AUDIO_FORMAT
+ #define   JUCE_USE_LAME_AUDIO_FORMAT 1
 #endif
 
 #ifndef    JUCE_USE_WINDOWS_MEDIA_FORMAT
@@ -207,11 +211,11 @@
 #ifndef  JucePlugin_SilenceInProducesSilenceOut
  #define JucePlugin_SilenceInProducesSilenceOut  0
 #endif
-#ifndef  JucePlugin_TailLengthSeconds
- #define JucePlugin_TailLengthSeconds      0
-#endif
 #ifndef  JucePlugin_EditorRequiresKeyboardFocus
  #define JucePlugin_EditorRequiresKeyboardFocus  0
+#endif
+#ifndef  JucePlugin_Version
+ #define JucePlugin_Version                1.0.0
 #endif
 #ifndef  JucePlugin_VersionCode
  #define JucePlugin_VersionCode            0x10000
@@ -226,7 +230,7 @@
  #define JucePlugin_VSTCategory            kPlugCategEffect
 #endif
 #ifndef  JucePlugin_AUMainType
- #define JucePlugin_AUMainType             kAudioUnitType_Effect
+ #define JucePlugin_AUMainType             kAudioUnitType_MusicEffect
 #endif
 #ifndef  JucePlugin_AUSubType
  #define JucePlugin_AUSubType              JucePlugin_PluginCode
@@ -243,9 +247,6 @@
 #ifndef  JucePlugin_CFBundleIdentifier
  #define JucePlugin_CFBundleIdentifier     uk.co.ewanhemingway.mlrVST
 #endif
-#ifndef  JucePlugin_AUCocoaViewClassName
- #define JucePlugin_AUCocoaViewClassName   mlrVSTAU_V1
-#endif
 #ifndef  JucePlugin_RTASCategory
  #define JucePlugin_RTASCategory           ePlugInCategory_None
 #endif
@@ -254,6 +255,12 @@
 #endif
 #ifndef  JucePlugin_RTASProductId
  #define JucePlugin_RTASProductId          JucePlugin_PluginCode
+#endif
+#ifndef  JucePlugin_RTASDisableBypass
+ #define JucePlugin_RTASDisableBypass      0
+#endif
+#ifndef  JucePlugin_RTASDisableMultiMono
+ #define JucePlugin_RTASDisableMultiMono   0
 #endif
 #ifndef  JucePlugin_AAXIdentifier
  #define JucePlugin_AAXIdentifier          com.yourcompany.mlrVST
@@ -268,7 +275,10 @@
  #define JucePlugin_AAXPluginId            JucePlugin_PluginCode
 #endif
 #ifndef  JucePlugin_AAXCategory
- #define JucePlugin_AAXCategory            AAX_ePlugInCategory_None
+ #define JucePlugin_AAXCategory            AAX_ePlugInCategory_Dynamics
+#endif
+#ifndef  JucePlugin_AAXDisableBypass
+ #define JucePlugin_AAXDisableBypass       0
 #endif
 
 #endif  // __JUCE_APPCONFIG_Y5L2JF__

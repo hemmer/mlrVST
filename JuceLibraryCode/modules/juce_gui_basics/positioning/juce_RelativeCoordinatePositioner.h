@@ -40,7 +40,7 @@ class JUCE_API  RelativeCoordinatePositionerBase  : public Component::Positioner
                                                     public MarkerList::Listener
 {
 public:
-    RelativeCoordinatePositionerBase (Component& component_);
+    RelativeCoordinatePositionerBase (Component& component);
     ~RelativeCoordinatePositionerBase();
 
     void componentMovedOrResized (Component&, bool, bool);
@@ -60,7 +60,7 @@ public:
     class ComponentScope  : public Expression::Scope
     {
     public:
-        ComponentScope (Component& component_);
+        ComponentScope (Component& component);
 
         Expression getSymbolValue (const String& symbol) const;
         void visitRelativeScope (const String& scopeName, Visitor& visitor) const;
@@ -72,7 +72,7 @@ public:
         Component* findSiblingComponent (const String& componentID) const;
 
     private:
-        JUCE_DECLARE_NON_COPYABLE (ComponentScope);
+        JUCE_DECLARE_NON_COPYABLE (ComponentScope)
     };
 
 protected:
@@ -90,7 +90,7 @@ private:
     void registerMarkerListListener (MarkerList* const list);
     void unregisterListeners();
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RelativeCoordinatePositionerBase);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RelativeCoordinatePositionerBase)
 };
 
 

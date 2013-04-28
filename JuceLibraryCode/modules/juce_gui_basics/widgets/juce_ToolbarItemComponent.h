@@ -76,7 +76,7 @@ public:
     */
     int getItemId() const noexcept                                  { return itemId; }
 
-    /** Returns the toolbar that contains this component, or 0 if it's not currently
+    /** Returns the toolbar that contains this component, or nullptr if it's not currently
         inside one.
     */
     Toolbar* getToolbar() const;
@@ -204,7 +204,7 @@ private:
     bool isActive, isBeingDragged, isBeingUsedAsAButton;
     Rectangle<int> contentArea;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ToolbarItemComponent);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ToolbarItemComponent)
 };
 
 

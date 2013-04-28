@@ -26,14 +26,14 @@
 class CodeDocumentLine
 {
 public:
-    CodeDocumentLine (const String::CharPointerType& line_,
-                      const int lineLength_,
+    CodeDocumentLine (const String::CharPointerType& l,
+                      const int lineLen,
                       const int numNewLineChars,
-                      const int lineStartInFile_)
-        : line (line_, (size_t) lineLength_),
-          lineStartInFile (lineStartInFile_),
-          lineLength (lineLength_),
-          lineLengthWithoutNewLines (lineLength_ - numNewLineChars)
+                      const int startInFile)
+        : line (l, (size_t) lineLen),
+          lineStartInFile (startInFile),
+          lineLength (lineLen),
+          lineLengthWithoutNewLines (lineLen - numNewLineChars)
     {
     }
 
@@ -123,8 +123,8 @@ public:
 };
 
 //==============================================================================
-CodeDocument::Iterator::Iterator (const CodeDocument& document_) noexcept
-    : document (&document_),
+CodeDocument::Iterator::Iterator (const CodeDocument& doc) noexcept
+    : document (&doc),
       charPointer (nullptr),
       line (0),
       position (0)
@@ -159,12 +159,10 @@ juce_wchar CodeDocument::Iterator::nextChar() noexcept
     {
         if (charPointer.getAddress() == nullptr)
         {
-            const CodeDocumentLine* const l = document->lines[line];
-
-            if (l == nullptr)
+            if (const CodeDocumentLine* const l = document->lines[line])
+                charPointer = l->line.getCharPointer();
+            else
                 return 0;
-
-            charPointer = l->line.getCharPointer();
         }
 
         const juce_wchar result = charPointer.getAndAdvance();
@@ -208,12 +206,10 @@ juce_wchar CodeDocument::Iterator::peekNextChar() const noexcept
 {
     if (charPointer.getAddress() == nullptr)
     {
-        const CodeDocumentLine* const l = document->lines[line];
-
-        if (l == nullptr)
+        if (const CodeDocumentLine* const l = document->lines[line])
+            charPointer = l->line.getCharPointer();
+        else
             return 0;
-
-        charPointer = l->line.getCharPointer();
     }
 
     const juce_wchar c = *charPointer;
@@ -221,8 +217,10 @@ juce_wchar CodeDocument::Iterator::peekNextChar() const noexcept
     if (c != 0)
         return c;
 
-    const CodeDocumentLine* const l = document->lines [line + 1];
-    return l == nullptr ? 0 : l->line[0];
+    if (const CodeDocumentLine* const l = document->lines [line + 1])
+        return l->line[0];
+
+    return 0;
 }
 
 void CodeDocument::Iterator::skipWhitespace() noexcept
@@ -426,14 +424,18 @@ CodeDocument::Position CodeDocument::Position::movedByLines (const int deltaLine
 
 juce_wchar CodeDocument::Position::getCharacter() const
 {
-    const CodeDocumentLine* const l = owner->lines [line];
-    return l == nullptr ? 0 : l->line [getIndexInLine()];
+    if (const CodeDocumentLine* const l = owner->lines [line])
+        return l->line [getIndexInLine()];
+
+    return 0;
 }
 
 String CodeDocument::Position::getLineText() const
 {
-    const CodeDocumentLine* const l = owner->lines [line];
-    return l == nullptr ? String::empty : l->line;
+    if (const CodeDocumentLine* const l = owner->lines [line])
+        return l->line;
+
+    return String::empty;
 }
 
 void CodeDocument::Position::setPositionMaintained (const bool isMaintained)
@@ -489,8 +491,10 @@ String CodeDocument::getTextBetween (const Position& start, const Position& end)
 
     if (startLine == endLine)
     {
-        CodeDocumentLine* const line = lines [startLine];
-        return (line == nullptr) ? String::empty : line->line.substring (start.getIndexInLine(), end.getIndexInLine());
+        if (CodeDocumentLine* const line = lines [startLine])
+            return line->line.substring (start.getIndexInLine(), end.getIndexInLine());
+
+        return String::empty;
     }
 
     MemoryOutputStream mo;
@@ -524,14 +528,18 @@ String CodeDocument::getTextBetween (const Position& start, const Position& end)
 
 int CodeDocument::getNumCharacters() const noexcept
 {
-    const CodeDocumentLine* const lastLine = lines.getLast();
-    return (lastLine == nullptr) ? 0 : lastLine->lineStartInFile + lastLine->lineLength;
+    if (const CodeDocumentLine* const lastLine = lines.getLast())
+        return lastLine->lineStartInFile + lastLine->lineLength;
+
+    return 0;
 }
 
 String CodeDocument::getLine (const int lineIndex) const noexcept
 {
-    const CodeDocumentLine* const line = lines [lineIndex];
-    return (line == nullptr) ? String::empty : line->line;
+    if (const CodeDocumentLine* const line = lines [lineIndex])
+        return line->line;
+
+    return String::empty;
 }
 
 int CodeDocument::getMaximumLineLength() noexcept
@@ -549,12 +557,48 @@ int CodeDocument::getMaximumLineLength() noexcept
 
 void CodeDocument::deleteSection (const Position& startPosition, const Position& endPosition)
 {
-    remove (startPosition.getPosition(), endPosition.getPosition(), true);
+    deleteSection (startPosition.getPosition(), endPosition.getPosition());
+}
+
+void CodeDocument::deleteSection (const int start, const int end)
+{
+    remove (start, end, true);
 }
 
 void CodeDocument::insertText (const Position& position, const String& text)
 {
-    insert (text, position.getPosition(), true);
+    insertText (position.getPosition(), text);
+}
+
+void CodeDocument::insertText (const int insertIndex, const String& text)
+{
+    insert (text, insertIndex, true);
+}
+
+void CodeDocument::replaceSection (const int start, const int end, const String& newText)
+{
+    insertText (start, newText);
+    const int newTextLen = newText.length();
+    deleteSection (start + newTextLen, end + newTextLen);
+}
+
+void CodeDocument::applyChanges (const String& newContent)
+{
+    StringArray correctedLines;
+    correctedLines.addLines (newContent);
+    const String corrected (correctedLines.joinIntoString (newLineChars));
+
+    TextDiff diff (getAllContent(), corrected);
+
+    for (int i = 0; i < diff.changes.size(); ++i)
+    {
+        const TextDiff::Change& c = diff.changes.getReference(i);
+
+        if (c.isDeletion())
+            remove (c.start, c.start + c.length, true);
+        else
+            insert (c.insertedText, c.start, true);
+    }
 }
 
 void CodeDocument::replaceAllContent (const String& newContent)
@@ -579,17 +623,17 @@ bool CodeDocument::writeToStream (OutputStream& stream)
         String temp (lines.getUnchecked(i)->line); // use a copy to avoid bloating the memory footprint of the stored string.
         const char* utf8 = temp.toUTF8();
 
-        if (! stream.write (utf8, (int) strlen (utf8)))
+        if (! stream.write (utf8, strlen (utf8)))
             return false;
     }
 
     return true;
 }
 
-void CodeDocument::setNewLineCharacters (const String& newLineChars_) noexcept
+void CodeDocument::setNewLineCharacters (const String& newChars) noexcept
 {
-    jassert (newLineChars_ == "\r\n" || newLineChars_ == "\n" || newLineChars_ == "\r");
-    newLineChars = newLineChars_;
+    jassert (newChars == "\r\n" || newChars == "\n" || newChars == "\r");
+    newLineChars = newChars;
 }
 
 void CodeDocument::newTransaction()
@@ -631,9 +675,14 @@ namespace CodeDocumentHelpers
         return (CharacterFunctions::isLetterOrDigit (character) || character == '_')
                     ? 2 : (CharacterFunctions::isWhitespace (character) ? 0 : 1);
     }
+
+    static bool isTokenCharacter (const juce_wchar c) noexcept
+    {
+        return CharacterFunctions::isLetterOrDigit (c) || c == '.' || c == '_';
+    }
 }
 
-const CodeDocument::Position CodeDocument::findWordBreakAfter (const Position& position) const noexcept
+CodeDocument::Position CodeDocument::findWordBreakAfter (const Position& position) const noexcept
 {
     Position p (position);
     const int maxDistance = 256;
@@ -671,7 +720,7 @@ const CodeDocument::Position CodeDocument::findWordBreakAfter (const Position& p
     return p;
 }
 
-const CodeDocument::Position CodeDocument::findWordBreakBefore (const Position& position) const noexcept
+CodeDocument::Position CodeDocument::findWordBreakBefore (const Position& position) const noexcept
 {
     Position p (position);
     const int maxDistance = 256;
@@ -711,6 +760,24 @@ const CodeDocument::Position CodeDocument::findWordBreakBefore (const Position& 
     return p;
 }
 
+void CodeDocument::findTokenContaining (const Position& pos, Position& start, Position& end) const noexcept
+{
+    end = pos;
+    while (CodeDocumentHelpers::isTokenCharacter (end.getCharacter()))
+        end.moveBy (1);
+
+    start = end;
+    while (start.getIndexInLine() > 0
+            && CodeDocumentHelpers::isTokenCharacter (start.movedBy (-1).getCharacter()))
+        start.moveBy (-1);
+}
+
+void CodeDocument::findLineContaining  (const Position& pos, Position& s, Position& e) const noexcept
+{
+    s.setLineAndIndex (pos.getLineNumber(), 0);
+    e.setLineAndIndex (pos.getLineNumber() + 1, 0);
+}
+
 void CodeDocument::checkLastLineStatus()
 {
     while (lines.size() > 0
@@ -733,14 +800,6 @@ void CodeDocument::checkLastLineStatus()
 //==============================================================================
 void CodeDocument::addListener    (CodeDocument::Listener* const l) noexcept   { listeners.add (l); }
 void CodeDocument::removeListener (CodeDocument::Listener* const l) noexcept   { listeners.remove (l); }
-
-void CodeDocument::sendListenerChangeMessage (const int startLine, const int endLine)
-{
-    Position startPos (*this, startLine, 0);
-    Position endPos (*this, endLine, 0);
-
-    listeners.call (&CodeDocument::Listener::codeDocumentChanged, startPos, endPos);
-}
 
 //==============================================================================
 class CodeDocumentInsertAction   : public UndoableAction
@@ -772,7 +831,7 @@ private:
     const String text;
     const int insertPos;
 
-    JUCE_DECLARE_NON_COPYABLE (CodeDocumentInsertAction);
+    JUCE_DECLARE_NON_COPYABLE (CodeDocumentInsertAction)
 };
 
 void CodeDocument::insert (const String& text, const int insertPos, const bool undoable)
@@ -787,7 +846,6 @@ void CodeDocument::insert (const String& text, const int insertPos, const bool u
         {
             Position pos (*this, insertPos);
             const int firstAffectedLine = pos.getLineNumber();
-            int lastAffectedLine = firstAffectedLine + 1;
 
             CodeDocumentLine* const firstLine = lines [firstAffectedLine];
             String textInsideOriginalLine (text);
@@ -810,10 +868,7 @@ void CodeDocument::insert (const String& text, const int insertPos, const bool u
             lines.set (firstAffectedLine, newFirstLine);
 
             if (newLines.size() > 1)
-            {
                 lines.insertArray (firstAffectedLine + 1, newLines.getRawDataPointer() + 1, newLines.size() - 1);
-                lastAffectedLine = lines.size();
-            }
 
             int lineStart = newFirstLine->lineStartInFile;
             for (int i = firstAffectedLine; i < lines.size(); ++i)
@@ -834,7 +889,7 @@ void CodeDocument::insert (const String& text, const int insertPos, const bool u
                     p.setPosition (p.getPosition() + newTextLength);
             }
 
-            sendListenerChangeMessage (firstAffectedLine, lastAffectedLine);
+            listeners.call (&CodeDocument::Listener::codeDocumentTextInserted, text, insertPos);
         }
     }
 }
@@ -871,7 +926,7 @@ private:
     const int startPos, endPos;
     const String removedText;
 
-    JUCE_DECLARE_NON_COPYABLE (CodeDocumentDeleteAction);
+    JUCE_DECLARE_NON_COPYABLE (CodeDocumentDeleteAction)
 };
 
 void CodeDocument::remove (const int startPos, const int endPos, const bool undoable)
@@ -891,7 +946,6 @@ void CodeDocument::remove (const int startPos, const int endPos, const bool undo
         maximumLineLength = -1;
         const int firstAffectedLine = startPosition.getLineNumber();
         const int endLine = endPosition.getLineNumber();
-        int lastAffectedLine = firstAffectedLine + 1;
         CodeDocumentLine& firstLine = *lines.getUnchecked (firstAffectedLine);
 
         if (firstAffectedLine == endLine)
@@ -902,8 +956,6 @@ void CodeDocument::remove (const int startPos, const int endPos, const bool undo
         }
         else
         {
-            lastAffectedLine = lines.size();
-
             CodeDocumentLine& lastLine = *lines.getUnchecked (endLine);
 
             firstLine.line = firstLine.line.substring (0, startPosition.getIndexInLine())
@@ -936,6 +988,6 @@ void CodeDocument::remove (const int startPos, const int endPos, const bool undo
                 p.setPosition (totalChars);
         }
 
-        sendListenerChangeMessage (firstAffectedLine, lastAffectedLine);
+        listeners.call (&CodeDocument::Listener::codeDocumentTextDeleted, startPos, endPos);
     }
 }

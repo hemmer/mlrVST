@@ -39,7 +39,8 @@ public:
         runLoop = CFRunLoopGetCurrent();
        #endif
 
-        CFRunLoopSourceContext sourceContext = { 0 };
+        CFRunLoopSourceContext sourceContext;
+        zerostruct (sourceContext); // (can't use "= { 0 }" on this object because it's typedef'ed as a C struct)
         sourceContext.info = this;
         sourceContext.perform = runLoopSourceCallback;
         runLoopSource = CFRunLoopSourceCreate (kCFAllocatorDefault, 1, &sourceContext);
@@ -74,12 +75,13 @@ private:
             return false;
 
         JUCE_AUTORELEASEPOOL
-
-        JUCE_TRY
         {
-            nextMessage->messageCallback();
+            JUCE_TRY
+            {
+                nextMessage->messageCallback();
+            }
+            JUCE_CATCH_EXCEPTION
         }
-        JUCE_CATCH_EXCEPTION
 
         return true;
     }

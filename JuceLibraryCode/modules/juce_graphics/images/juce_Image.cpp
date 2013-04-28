@@ -51,7 +51,7 @@ Image ImageType::convert (const Image& source) const
     jassert (src.pixelStride == dest.pixelStride && src.pixelFormat == dest.pixelFormat);
 
     for (int y = 0; y < dest.height; ++y)
-        memcpy (dest.getLinePointer (y), src.getLinePointer (y), dest.lineStride);
+        memcpy (dest.getLinePointer (y), src.getLinePointer (y), (size_t) dest.lineStride);
 
     return newImage;
 }
@@ -94,7 +94,7 @@ private:
     HeapBlock<uint8> imageData;
     const int pixelStride, lineStride;
 
-    JUCE_LEAK_DETECTOR (SoftwarePixelData);
+    JUCE_LEAK_DETECTOR (SoftwarePixelData)
 };
 
 SoftwareImageType::SoftwareImageType() {}
@@ -130,9 +130,9 @@ ImagePixelData::Ptr NativeImageType::create (Image::PixelFormat format, int widt
 class SubsectionPixelData  : public ImagePixelData
 {
 public:
-    SubsectionPixelData (ImagePixelData* const image_, const Rectangle<int>& area_)
-        : ImagePixelData (image_->pixelFormat, area_.getWidth(), area_.getHeight()),
-          image (image_), area (area_)
+    SubsectionPixelData (ImagePixelData* const im, const Rectangle<int>& r)
+        : ImagePixelData (im->pixelFormat, r.getWidth(), r.getHeight()),
+          image (im), area (r)
     {
     }
 
@@ -158,7 +158,7 @@ public:
 
         {
             Graphics g (newImage);
-            g.drawImageAt (Image (this), -area.getX(), -area.getY());
+            g.drawImageAt (Image (this), 0, 0);
         }
 
         newImage.getPixelData()->incReferenceCount();
@@ -171,7 +171,7 @@ private:
     const ImagePixelData::Ptr image;
     const Rectangle<int> area;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SubsectionPixelData);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SubsectionPixelData)
 };
 
 Image Image::getClippedImage (const Rectangle<int>& area) const
@@ -338,36 +338,36 @@ NamedValueSet* Image::getProperties() const
 }
 
 //==============================================================================
-Image::BitmapData::BitmapData (Image& image, const int x, const int y, const int w, const int h, BitmapData::ReadWriteMode mode)
+Image::BitmapData::BitmapData (Image& im, const int x, const int y, const int w, const int h, BitmapData::ReadWriteMode mode)
     : width (w), height (h)
 {
     // The BitmapData class must be given a valid image, and a valid rectangle within it!
-    jassert (image.image != nullptr);
-    jassert (x >= 0 && y >= 0 && w > 0 && h > 0 && x + w <= image.getWidth() && y + h <= image.getHeight());
+    jassert (im.image != nullptr);
+    jassert (x >= 0 && y >= 0 && w > 0 && h > 0 && x + w <= im.getWidth() && y + h <= im.getHeight());
 
-    image.image->initialiseBitmapData (*this, x, y, mode);
+    im.image->initialiseBitmapData (*this, x, y, mode);
     jassert (data != nullptr && pixelStride > 0 && lineStride != 0);
 }
 
-Image::BitmapData::BitmapData (const Image& image, const int x, const int y, const int w, const int h)
+Image::BitmapData::BitmapData (const Image& im, const int x, const int y, const int w, const int h)
     : width (w), height (h)
 {
     // The BitmapData class must be given a valid image, and a valid rectangle within it!
-    jassert (image.image != nullptr);
-    jassert (x >= 0 && y >= 0 && w > 0 && h > 0 && x + w <= image.getWidth() && y + h <= image.getHeight());
+    jassert (im.image != nullptr);
+    jassert (x >= 0 && y >= 0 && w > 0 && h > 0 && x + w <= im.getWidth() && y + h <= im.getHeight());
 
-    image.image->initialiseBitmapData (*this, x, y, readOnly);
+    im.image->initialiseBitmapData (*this, x, y, readOnly);
     jassert (data != nullptr && pixelStride > 0 && lineStride != 0);
 }
 
-Image::BitmapData::BitmapData (const Image& image, BitmapData::ReadWriteMode mode)
-    : width (image.getWidth()),
-      height (image.getHeight())
+Image::BitmapData::BitmapData (const Image& im, BitmapData::ReadWriteMode mode)
+    : width (im.getWidth()),
+      height (im.getHeight())
 {
     // The BitmapData class must be given a valid image!
-    jassert (image.image != nullptr);
+    jassert (im.image != nullptr);
 
-    image.image->initialiseBitmapData (*this, 0, 0, mode);
+    im.image->initialiseBitmapData (*this, 0, 0, mode);
     jassert (data != nullptr && pixelStride > 0 && lineStride != 0);
 }
 
@@ -494,7 +494,7 @@ struct AlphaMultiplyOp
         pixel.multiplyAlpha (alpha);
     }
 
-    JUCE_DECLARE_NON_COPYABLE (AlphaMultiplyOp);
+    JUCE_DECLARE_NON_COPYABLE (AlphaMultiplyOp)
 };
 
 void Image::multiplyAllAlphas (const float amountToMultiplyBy)

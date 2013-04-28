@@ -83,7 +83,7 @@ public:
                        when the app has a modal loop), so this is how long to wait before assuming the
                        message has been lost and trying again.
                     */
-                    const uint32 messageDeliveryTimeout = now + 2000;
+                    const uint32 messageDeliveryTimeout = now + 300;
 
                     while (callbackNeeded.get() != 0)
                     {
@@ -93,7 +93,10 @@ public:
                             return;
 
                         if (Time::getMillisecondCounter() > messageDeliveryTimeout)
+                        {
+                            messageToSend->post();
                             break;
+                        }
                     }
                 }
             }
@@ -201,18 +204,9 @@ private:
     void addTimer (Timer* const t) noexcept
     {
        #if JUCE_DEBUG
-        Timer* tt = firstTimer;
-
-        while (tt != nullptr)
-        {
-            // trying to add a timer that's already here - shouldn't get to this point,
-            // so if you get this assertion, let me know!
-            jassert (tt != t);
-
-            tt = tt->next;
-        }
-
-        jassert (t->previous == nullptr && t->next == nullptr);
+        // trying to add a timer that's already here - shouldn't get to this point,
+        // so if you get this assertion, let me know!
+        jassert (! timerExists (t));
        #endif
 
         Timer* i = firstTimer;
@@ -246,23 +240,9 @@ private:
     void removeTimer (Timer* const t) noexcept
     {
        #if JUCE_DEBUG
-        Timer* tt = firstTimer;
-        bool found = false;
-
-        while (tt != nullptr)
-        {
-            if (tt == t)
-            {
-                found = true;
-                break;
-            }
-
-            tt = tt->next;
-        }
-
         // trying to remove a timer that's not here - shouldn't get to this point,
         // so if you get this assertion, let me know!
-        jassert (found);
+        jassert (timerExists (t));
        #endif
 
         if (t->previous != nullptr)
@@ -298,7 +278,18 @@ private:
         startThread (7);
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TimerThread);
+   #if JUCE_DEBUG
+    bool timerExists (Timer* const t) const noexcept
+    {
+        for (Timer* tt = firstTimer; tt != nullptr; tt = tt->next)
+            if (tt == t)
+                return true;
+
+        return false;
+    }
+   #endif
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TimerThread)
 };
 
 Timer::TimerThread* Timer::TimerThread::instance = nullptr;

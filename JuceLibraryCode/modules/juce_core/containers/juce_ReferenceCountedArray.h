@@ -69,8 +69,8 @@ public:
         memcpy (data.elements, other.getRawDataPointer(), numUsed * sizeof (ObjectClass*));
 
         for (int i = numUsed; --i >= 0;)
-            if (data.elements[i] != nullptr)
-                data.elements[i]->incReferenceCount();
+            if (ObjectClass* o = data.elements[i])
+                o->incReferenceCount();
     }
 
     /** Creates a copy of another array */
@@ -83,8 +83,8 @@ public:
         memcpy (data.elements, other.getRawDataPointer(), numUsed * sizeof (ObjectClass*));
 
         for (int i = numUsed; --i >= 0;)
-            if (data.elements[i] != nullptr)
-                data.elements[i]->incReferenceCount();
+            if (ObjectClass* o = data.elements[i])
+                o->incReferenceCount();
     }
 
     /** Copies another array into this one.
@@ -126,8 +126,8 @@ public:
         const ScopedLockType lock (getLock());
 
         while (numUsed > 0)
-            if (data.elements [--numUsed] != nullptr)
-                data.elements [numUsed]->decReferenceCount();
+            if (ObjectClass* o = data.elements [--numUsed])
+                o->decReferenceCount();
 
         jassert (numUsed == 0);
         data.setAllocatedSize (0);
@@ -156,7 +156,7 @@ public:
         whether the index is in-range.
 
         This is a faster and less safe version of operator[] which doesn't check the index passed in, so
-        it can be used when you're sure the index if always going to be legal.
+        it can be used when you're sure the index is always going to be legal.
     */
     inline ObjectClassPtr getUnchecked (const int index) const noexcept
     {
@@ -248,9 +248,9 @@ public:
     {
         const ScopedLockType lock (getLock());
         ObjectClass** e = data.elements.getData();
-        ObjectClass** const end_ = e + numUsed;
+        ObjectClass** const endPointer = e + numUsed;
 
-        while (e != end_)
+        while (e != endPointer)
         {
             if (objectToLookFor == *e)
                 return static_cast <int> (e - data.elements.getData());
@@ -270,9 +270,9 @@ public:
     {
         const ScopedLockType lock (getLock());
         ObjectClass** e = data.elements.getData();
-        ObjectClass** const end_ = e + numUsed;
+        ObjectClass** const endPointer = e + numUsed;
 
-        while (e != end_)
+        while (e != endPointer)
         {
             if (objectToLookFor == *e)
                 return true;
@@ -382,8 +382,8 @@ public:
 
             if (indexToChange < numUsed)
             {
-                if (data.elements [indexToChange] != nullptr)
-                    data.elements [indexToChange]->decReferenceCount();
+                if (ObjectClass* o = data.elements [indexToChange])
+                    o->decReferenceCount();
 
                 data.elements [indexToChange] = newObject;
             }
@@ -531,8 +531,8 @@ public:
         {
             ObjectClass** const e = data.elements + indexToRemove;
 
-            if (*e != nullptr)
-                (*e)->decReferenceCount();
+            if (ObjectClass* o = *e)
+                o->decReferenceCount();
 
             --numUsed;
             const int numberToShift = numUsed - indexToRemove;
@@ -563,10 +563,10 @@ public:
         {
             ObjectClass** const e = data.elements + indexToRemove;
 
-            if (*e != nullptr)
+            if (ObjectClass* o = *e)
             {
-                removedItem = *e;
-                (*e)->decReferenceCount();
+                removedItem = o;
+                o->decReferenceCount();
             }
 
             --numUsed;
@@ -616,24 +616,24 @@ public:
     {
         const ScopedLockType lock (getLock());
 
-        const int start = jlimit (0, numUsed, startIndex);
-        const int end_   = jlimit (0, numUsed, startIndex + numberToRemove);
+        const int start    = jlimit (0, numUsed, startIndex);
+        const int endIndex = jlimit (0, numUsed, startIndex + numberToRemove);
 
-        if (end_ > start)
+        if (endIndex > start)
         {
             int i;
-            for (i = start; i < end_; ++i)
+            for (i = start; i < endIndex; ++i)
             {
-                if (data.elements[i] != nullptr)
+                if (ObjectClass* o = data.elements[i])
                 {
-                    data.elements[i]->decReferenceCount();
+                    o->decReferenceCount();
                     data.elements[i] = nullptr; // (in case one of the destructors accesses this array and hits a dangling pointer)
                 }
             }
 
-            const int rangeSize = end_ - start;
+            const int rangeSize = endIndex - start;
             ObjectClass** e = data.elements + start;
-            i = numUsed - end_;
+            i = numUsed - endIndex;
             numUsed -= rangeSize;
 
             while (--i >= 0)

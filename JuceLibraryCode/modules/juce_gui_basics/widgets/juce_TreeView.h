@@ -94,6 +94,27 @@ public:
     */
     void removeSubItem (int index, bool deleteItem = true);
 
+    /** Sorts the list of sub-items using a standard array comparator.
+
+        This will use a comparator object to sort the elements into order. The comparator
+        object must have a method of the form:
+        @code
+        int compareElements (TreeViewItem* first, TreeViewItem* second);
+        @endcode
+
+        ..and this method must return:
+          - a value of < 0 if the first comes before the second
+          - a value of 0 if the two objects are equivalent
+          - a value of > 0 if the second comes before the first
+
+        To improve performance, the compareElements() method can be declared as static or const.
+    */
+    template <class ElementComparator>
+    void sortSubItems (ElementComparator& comparator)
+    {
+        subItems.sort (comparator);
+    }
+
     //==============================================================================
     /** Returns the TreeView to which this item belongs. */
     TreeView* getOwnerView() const noexcept             { return ownerView; }
@@ -116,17 +137,17 @@ public:
     void setOpen (bool shouldBeOpen);
 
     /** True if this item is currently selected.
-
         Use this when painting the node, to decide whether to draw it as selected or not.
     */
     bool isSelected() const noexcept;
 
     /** Selects or deselects the item.
-
-        This will cause a callback to itemSelectionChanged()
+        If shouldNotify == sendNotification, then a callback will be made
+        to itemSelectionChanged()
     */
     void setSelected (bool shouldBeSelected,
-                      bool deselectOtherItemsFirst);
+                      bool deselectOtherItemsFirst,
+                      NotificationType shouldNotify = sendNotification);
 
     /** Returns the rectangle that this item occupies.
 
@@ -138,9 +159,7 @@ public:
     Rectangle<int> getItemPosition (bool relativeToTreeViewTopLeft) const noexcept;
 
     /** Sends a signal to the treeview to make it refresh itself.
-
-        Call this if your items have changed and you want the tree to update to reflect
-        this.
+        Call this if your items have changed and you want the tree to update to reflect this.
     */
     void treeHasChanged() const noexcept;
 
@@ -152,21 +171,17 @@ public:
     void repaintItem() const;
 
     /** Returns the row number of this item in the tree.
-
         The row number of an item will change according to which items are open.
-
         @see TreeView::getNumRowsInTree(), TreeView::getItemOnRow()
     */
     int getRowNumberInTree() const noexcept;
 
     /** Returns true if all the item's parent nodes are open.
-
         This is useful to check whether the item might actually be visible or not.
     */
     bool areAllParentsOpen() const noexcept;
 
     /** Changes whether lines are drawn to connect any sub-items to this item.
-
         By default, line-drawing is turned on.
     */
     void setLinesDrawnForSubItems (bool shouldDrawLines) noexcept;
@@ -244,7 +259,7 @@ public:
 
     /** Creates a component that will be used to represent this item.
 
-        You don't have to implement this method - if it returns 0 then no component
+        You don't have to implement this method - if it returns nullptr then no component
         will be used for the item, and you can just draw it using the paintItem()
         callback. But if you do return a component, it will be positioned in the
         treeview so that it can be used to represent this item.
@@ -501,7 +516,7 @@ public:
         TreeViewItem& treeViewItem;
         ScopedPointer <XmlElement> oldOpenness;
 
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OpennessRestorer);
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OpennessRestorer)
     };
 
 private:
@@ -543,7 +558,7 @@ private:
     virtual int itemDropped (const String&, Component*, int) { return 0; }
    #endif
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TreeViewItem);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TreeViewItem)
 };
 
 
@@ -590,12 +605,11 @@ public:
 
     /** Returns the tree's root item.
 
-        This will be the last object passed to setRootItem(), or 0 if none has been set.
+        This will be the last object passed to setRootItem(), or nullptr if none has been set.
     */
     TreeViewItem* getRootItem() const noexcept                      { return rootItem; }
 
     /** This will remove and delete the current root item.
-
         It's a convenient way of deleting the item and calling setRootItem (nullptr).
     */
     void deleteRootItem();
@@ -671,10 +685,12 @@ public:
     int getNumSelectedItems (int maximumDepthToSearchTo = -1) const noexcept;
 
     /** Returns one of the selected items in the tree.
-
         @param index    the index, 0 to (getNumSelectedItems() - 1)
     */
     TreeViewItem* getSelectedItem (int index) const noexcept;
+
+    /** Moves the selected row up or down by the specified number of rows. */
+    void moveSelectedRow (int deltaRows);
 
     //==============================================================================
     /** Returns the number of rows the tree is using.
@@ -827,7 +843,6 @@ private:
 
     void itemsChanged() noexcept;
     void recalculateIfNeeded();
-    void moveSelectedRow (int delta);
     void updateButtonUnderMouse (const MouseEvent&);
     struct InsertPoint;
     void showDragHighlight (const InsertPoint&) noexcept;
@@ -839,7 +854,7 @@ private:
     void moveIntoSelectedItem();
     void moveByPages (int numPages);
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TreeView);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TreeView)
 };
 
 #endif   // __JUCE_TREEVIEW_JUCEHEADER__

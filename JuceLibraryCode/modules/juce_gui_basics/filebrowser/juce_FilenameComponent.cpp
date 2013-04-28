@@ -47,7 +47,7 @@ FilenameComponent::FilenameComponent (const String& name,
 
     setBrowseButtonText ("...");
 
-    setCurrentFile (currentFile, true);
+    setCurrentFile (currentFile, true, dontSendNotification);
 }
 
 FilenameComponent::~FilenameComponent()
@@ -60,7 +60,7 @@ void FilenameComponent::paintOverChildren (Graphics& g)
     if (isFileDragOver)
     {
         g.setColour (Colours::red.withAlpha (0.2f));
-        g.drawRect (0, 0, getWidth(), getHeight(), 3);
+        g.drawRect (getLocalBounds(), 3);
     }
 }
 
@@ -100,7 +100,8 @@ void FilenameComponent::setDefaultBrowseTarget (const File& newDefaultDirectory)
 void FilenameComponent::buttonClicked (Button*)
 {
    #if JUCE_MODAL_LOOPS_PERMITTED
-    FileChooser fc (TRANS("Choose a new file"),
+    FileChooser fc (isDir ? TRANS ("Choose a new directory")
+                          : TRANS ("Choose a new file"),
                     getCurrentFile() == File::nonexistent ? defaultBrowseFile
                                                           : getCurrentFile(),
                     wildcard);
@@ -162,7 +163,7 @@ File FilenameComponent::getCurrentFile() const
 
 void FilenameComponent::setCurrentFile (File newFile,
                                         const bool addToRecentlyUsedList,
-                                        const bool sendChangeNotification)
+                                        NotificationType notification)
 {
     if (enforcedSuffix.isNotEmpty())
         newFile = newFile.withFileExtension (enforcedSuffix);
@@ -176,8 +177,13 @@ void FilenameComponent::setCurrentFile (File newFile,
 
         filenameBox.setText (lastFilename, true);
 
-        if (sendChangeNotification)
+        if (notification != dontSendNotification)
+        {
             triggerAsyncUpdate();
+
+            if (notification == sendNotificationSync)
+                handleUpdateNowIfNeeded();
+        }
     }
 }
 

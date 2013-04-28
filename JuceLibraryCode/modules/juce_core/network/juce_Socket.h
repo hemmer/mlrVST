@@ -91,6 +91,9 @@ public:
     /** True if the socket is connected to this machine rather than over the network. */
     bool isLocal() const noexcept;
 
+    /** Returns the OS's socket handle that's currently open. */
+    int getRawSocketHandle() const noexcept                     { return handle; }
+
     //==============================================================================
     /** Waits until the socket is ready for reading or writing.
 
@@ -155,7 +158,6 @@ public:
     */
     StreamingSocket* waitForNextConnection() const;
 
-
 private:
     //==============================================================================
     String hostName;
@@ -164,7 +166,7 @@ private:
 
     StreamingSocket (const String& hostname, int portNumber, int handle);
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StreamingSocket);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StreamingSocket)
 };
 
 
@@ -237,6 +239,9 @@ public:
     /** True if the socket is connected to this machine rather than over the network. */
     bool isLocal() const noexcept;
 
+    /** Returns the OS's socket handle that's currently open. */
+    int getRawSocketHandle() const noexcept                     { return handle; }
+
     //==============================================================================
     /** Waits until the socket is ready for reading or writing.
 
@@ -283,7 +288,6 @@ public:
     */
     DatagramSocket* waitForNextConnection() const;
 
-
 private:
     //==============================================================================
     String hostName;
@@ -293,7 +297,7 @@ private:
 
     DatagramSocket (const String& hostname, int portNumber, int handle, int localPortNumber);
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DatagramSocket);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DatagramSocket)
 };
 
 

@@ -38,7 +38,7 @@ public:
 private:
     DocumentWindow& owner;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ButtonListenerProxy);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ButtonListenerProxy)
 };
 
 //==============================================================================
@@ -107,11 +107,10 @@ void DocumentWindow::setTitleBarHeight (const int newHeight)
     repaintTitleBar();
 }
 
-void DocumentWindow::setTitleBarButtonsRequired (const int requiredButtons_,
-                                                 const bool positionTitleBarButtonsOnLeft_)
+void DocumentWindow::setTitleBarButtonsRequired (const int buttons, const bool onLeft)
 {
-    requiredButtons = requiredButtons_;
-    positionTitleBarButtonsOnLeft = positionTitleBarButtonsOnLeft_;
+    requiredButtons = buttons;
+    positionTitleBarButtonsOnLeft = onLeft;
     lookAndFeelChanged();
 }
 
@@ -211,12 +210,12 @@ void DocumentWindow::paint (Graphics& g)
 
     for (int i = 0; i < 3; ++i)
     {
-        if (titleBarButtons[i] != nullptr)
+        if (Button* const b = titleBarButtons[i])
         {
             if (positionTitleBarButtonsOnLeft)
-                titleSpaceX1 = jmax (titleSpaceX1, titleBarButtons[i]->getRight() + (getWidth() - titleBarButtons[i]->getRight()) / 8);
+                titleSpaceX1 = jmax (titleSpaceX1, b->getRight() + (getWidth() - b->getRight()) / 8);
             else
-                titleSpaceX2 = jmin (titleSpaceX2, titleBarButtons[i]->getX() - (titleBarButtons[i]->getX() / 8));
+                titleSpaceX2 = jmin (titleSpaceX2, b->getX() - (b->getX() / 8));
         }
     }
 
@@ -233,8 +232,8 @@ void DocumentWindow::resized()
 {
     ResizableWindow::resized();
 
-    if (titleBarButtons[1] != nullptr)
-        titleBarButtons[1]->setToggleState (isFullScreen(), false);
+    if (Button* const b = getMaximiseButton())
+        b->setToggleState (isFullScreen(), false);
 
     const Rectangle<int> titleBarArea (getTitleBarArea());
 
@@ -312,25 +311,25 @@ void DocumentWindow::lookAndFeelChanged()
 
         for (int i = 0; i < 3; ++i)
         {
-            if (titleBarButtons[i] != nullptr)
+            if (Button* const b = titleBarButtons[i])
             {
                 if (buttonListener == nullptr)
                     buttonListener = new ButtonListenerProxy (*this);
 
-                titleBarButtons[i]->addListener (buttonListener);
-                titleBarButtons[i]->setWantsKeyboardFocus (false);
+                b->addListener (buttonListener);
+                b->setWantsKeyboardFocus (false);
 
                 // (call the Component method directly to avoid the assertion in ResizableWindow)
-                Component::addAndMakeVisible (titleBarButtons[i]);
+                Component::addAndMakeVisible (b);
             }
         }
 
-        if (getCloseButton() != nullptr)
+        if (Button* const b = getCloseButton())
         {
            #if JUCE_MAC
-            getCloseButton()->addShortcut (KeyPress ('w', ModifierKeys::commandModifier, 0));
+            b->addShortcut (KeyPress ('w', ModifierKeys::commandModifier, 0));
            #else
-            getCloseButton()->addShortcut (KeyPress (KeyPress::F4Key, ModifierKeys::altModifier, 0));
+            b->addShortcut (KeyPress (KeyPress::F4Key, ModifierKeys::altModifier, 0));
            #endif
         }
     }
@@ -350,8 +349,8 @@ void DocumentWindow::activeWindowStatusChanged()
     ResizableWindow::activeWindowStatusChanged();
 
     for (int i = numElementsInArray (titleBarButtons); --i >= 0;)
-        if (titleBarButtons[i] != nullptr)
-            titleBarButtons[i]->setEnabled (isActiveWindow());
+        if (Button* const b = titleBarButtons[i])
+            b->setEnabled (isActiveWindow());
 
     if (menuBar != nullptr)
         menuBar->setEnabled (isActiveWindow());

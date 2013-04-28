@@ -62,7 +62,7 @@ public:
 
     /** Returns a pointer to one of the tracks in the file.
 
-        @returns a pointer to the track, or 0 if the index is out-of-range
+        @returns a pointer to the track, or nullptr if the index is out-of-range
         @see getNumTracks, addTrack
     */
     const MidiMessageSequence* getTrack (int index) const noexcept;
@@ -180,7 +180,7 @@ private:
     void readNextTrack (const uint8* data, int size);
     void writeTrack (OutputStream& mainOut, int trackNum);
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiFile);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiFile)
 };
 
 

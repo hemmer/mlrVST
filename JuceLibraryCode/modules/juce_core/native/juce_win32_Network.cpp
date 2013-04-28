@@ -32,48 +32,6 @@
 #endif
 
 //==============================================================================
-#ifndef WORKAROUND_TIMEOUT_BUG
- //#define WORKAROUND_TIMEOUT_BUG 1
-#endif
-
-#if WORKAROUND_TIMEOUT_BUG
-// Required because of a Microsoft bug in setting a timeout
-class InternetConnectThread  : public Thread
-{
-public:
-    InternetConnectThread (URL_COMPONENTS& uc_, HINTERNET sessionHandle_, HINTERNET& connection_, const bool isFtp_)
-        : Thread ("Internet"), uc (uc_), sessionHandle (sessionHandle_), connection (connection_), isFtp (isFtp_)
-    {
-        startThread();
-    }
-
-    ~InternetConnectThread()
-    {
-        stopThread (60000);
-    }
-
-    void run()
-    {
-        connection = InternetConnect (sessionHandle, uc.lpszHostName,
-                                      uc.nPort, _T(""), _T(""),
-                                      isFtp ? INTERNET_SERVICE_FTP
-                                            : INTERNET_SERVICE_HTTP,
-                                      0, 0);
-        notify();
-    }
-
-private:
-    URL_COMPONENTS& uc;
-    HINTERNET sessionHandle;
-    HINTERNET& connection;
-    const bool isFtp;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (InternetConnectThread);
-};
-#endif
-
-
-//==============================================================================
 class WebInputStream  : public InputStream
 {
 public:
@@ -115,7 +73,6 @@ public:
                 if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
                     break;
             }
-
         }
     }
 
@@ -255,31 +212,19 @@ private:
         else if (timeOutMs < 0)
             timeOutMs = -1;
 
-        InternetSetOption (sessionHandle, INTERNET_OPTION_CONNECT_TIMEOUT, &timeOutMs, sizeof (timeOutMs));
+        applyTimeout (sessionHandle, INTERNET_OPTION_CONNECT_TIMEOUT);
+        applyTimeout (sessionHandle, INTERNET_OPTION_RECEIVE_TIMEOUT);
+        applyTimeout (sessionHandle, INTERNET_OPTION_SEND_TIMEOUT);
+        applyTimeout (sessionHandle, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT);
+        applyTimeout (sessionHandle, INTERNET_OPTION_DATA_SEND_TIMEOUT);
 
         const bool isFtp = address.startsWithIgnoreCase ("ftp:");
 
-      #if WORKAROUND_TIMEOUT_BUG
-        connection = 0;
-
-        {
-            InternetConnectThread connectThread (uc, sessionHandle, connection, isFtp);
-            connectThread.wait (timeOutMs);
-
-            if (connection == 0)
-            {
-                InternetCloseHandle (sessionHandle);
-                sessionHandle = 0;
-            }
-        }
-      #else
         connection = InternetConnect (sessionHandle, uc.lpszHostName, uc.nPort,
                                       uc.lpszUserName, uc.lpszPassword,
                                       isFtp ? (DWORD) INTERNET_SERVICE_FTP
                                             : (DWORD) INTERNET_SERVICE_HTTP,
                                       0, 0);
-      #endif
-
         if (connection != 0)
         {
             if (isFtp)
@@ -290,10 +235,15 @@ private:
         }
     }
 
+    void applyTimeout (HINTERNET sessionHandle, const DWORD option)
+    {
+        InternetSetOption (sessionHandle, option, &timeOutMs, sizeof (timeOutMs));
+    }
+
     void openHTTPConnection (URL_COMPONENTS& uc, URL::OpenStreamProgressCallback* progressCallback,
                              void* progressCallbackContext)
     {
-        const TCHAR* mimeTypes[] = { _T("*/*"), 0 };
+        const TCHAR* mimeTypes[] = { _T("*/*"), nullptr };
 
         DWORD flags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_COOKIES;
 
@@ -349,7 +299,7 @@ private:
         close();
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WebInputStream);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WebInputStream)
 };
 
 InputStream* URL::createNativeStream (const String& address, bool isPost, const MemoryBlock& postData,
@@ -425,7 +375,8 @@ namespace MACAddressHelpers
                         NAME_BUFFER    NameBuff [30];
                     };
 
-                    ASTAT astat = { 0 };
+                    ASTAT astat;
+                    zerostruct (astat);
                     ncb.ncb_buffer = (unsigned char*) &astat;
                     ncb.ncb_length = sizeof (ASTAT);
 
@@ -457,15 +408,15 @@ bool Process::openEmailWithAttachments (const String& targetEmailAddress,
         return false;
 
     MapiMessage message = { 0 };
-    message.lpszSubject = (LPSTR) emailSubject.toUTF8().getAddress();
-    message.lpszNoteText = (LPSTR) bodyText.toUTF8().getAddress();
+    message.lpszSubject = (LPSTR) emailSubject.toRawUTF8();
+    message.lpszNoteText = (LPSTR) bodyText.toRawUTF8();
 
     MapiRecipDesc recip = { 0 };
     recip.ulRecipClass = MAPI_TO;
     String targetEmailAddress_ (targetEmailAddress);
     if (targetEmailAddress_.isEmpty())
         targetEmailAddress_ = " "; // (Windows Mail can't deal with a blank address)
-    recip.lpszName = (LPSTR) targetEmailAddress_.toUTF8().getAddress();
+    recip.lpszName = (LPSTR) targetEmailAddress_.toRawUTF8();
     message.nRecipCount = 1;
     message.lpRecips = &recip;
 
@@ -478,7 +429,7 @@ bool Process::openEmailWithAttachments (const String& targetEmailAddress,
     for (int i = 0; i < filesToAttach.size(); ++i)
     {
         files[i].nPosition = (ULONG) -1;
-        files[i].lpszPathName = (LPSTR) filesToAttach[i].toUTF8().getAddress();
+        files[i].lpszPathName = (LPSTR) filesToAttach[i].toRawUTF8();
     }
 
     return mapiSendMail (0, 0, &message, MAPI_DIALOG | MAPI_LOGON_UI, 0) == SUCCESS_SUCCESS;

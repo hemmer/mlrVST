@@ -29,9 +29,8 @@ XmlElement::XmlAttributeNode::XmlAttributeNode (const XmlAttributeNode& other) n
 {
 }
 
-XmlElement::XmlAttributeNode::XmlAttributeNode (const String& name_, const String& value_) noexcept
-    : name (name_),
-      value (value_)
+XmlElement::XmlAttributeNode::XmlAttributeNode (const String& n, const String& v) noexcept
+    : name (n), value (v)
 {
    #if JUCE_DEBUG
     // this checks whether the attribute name string contains any illegal characters..
@@ -46,14 +45,14 @@ inline bool XmlElement::XmlAttributeNode::hasName (const String& nameToMatch) co
 }
 
 //==============================================================================
-XmlElement::XmlElement (const String& tagName_) noexcept
-    : tagName (tagName_)
+XmlElement::XmlElement (const String& tag) noexcept
+    : tagName (tag)
 {
     // the tag name mustn't be empty, or it'll look like a text element!
-    jassert (tagName_.containsNonWhitespaceChars())
+    jassert (tag.containsNonWhitespaceChars())
 
     // The tag can't contain spaces or other characters that would create invalid XML!
-    jassert (! tagName_.containsAnyOf (" <>/&"));
+    jassert (! tag.containsAnyOf (" <>/&"));
 }
 
 XmlElement::XmlElement (int /*dummy*/) noexcept
@@ -254,7 +253,6 @@ void XmlElement::writeElementAsText (OutputStream& outputStream,
         {
             outputStream.writeByte ('>');
 
-
             bool lastWasTextNode = false;
 
             for (XmlElement* child = firstChildElement; child != nullptr; child = child->nextListItem)
@@ -348,42 +346,45 @@ bool XmlElement::writeToFile (const File& file,
                               const String& encodingType,
                               const int lineWrapLength) const
 {
-    if (file.hasWriteAccess())
+    TemporaryFile tempFile (file);
+
     {
-        TemporaryFile tempFile (file);
-        ScopedPointer <FileOutputStream> out (tempFile.getFile().createOutputStream());
+        FileOutputStream out (tempFile.getFile());
 
-        if (out != nullptr)
-        {
-            writeToStream (*out, dtdToUse, false, true, encodingType, lineWrapLength);
-            out = nullptr;
+        if (! out.openedOk())
+            return false;
 
-            return tempFile.overwriteTargetFileWithTemporary();
-        }
+        writeToStream (out, dtdToUse, false, true, encodingType, lineWrapLength);
     }
 
-    return false;
+    return tempFile.overwriteTargetFileWithTemporary();
 }
 
 //==============================================================================
-bool XmlElement::hasTagName (const String& tagNameWanted) const noexcept
+bool XmlElement::hasTagName (const String& possibleTagName) const noexcept
 {
-   #if JUCE_DEBUG
-    // if debugging, check that the case is actually the same, because
-    // valid xml is case-sensitive, and although this lets it pass, it's
-    // better not to..
-    if (tagName.equalsIgnoreCase (tagNameWanted))
-    {
-        jassert (tagName == tagNameWanted);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-   #else
-    return tagName.equalsIgnoreCase (tagNameWanted);
-   #endif
+    const bool matches = tagName.equalsIgnoreCase (possibleTagName);
+
+    // XML tags should be case-sensitive, so although this method allows a
+    // case-insensitive match to pass, you should try to avoid this.
+    jassert ((! matches) || tagName == possibleTagName);
+
+    return matches;
+}
+
+String XmlElement::getNamespace() const
+{
+    return tagName.upToFirstOccurrenceOf (":", false, false);
+}
+
+String XmlElement::getTagNameWithoutNamespace() const
+{
+    return tagName.fromLastOccurrenceOf (":", false, false);
+}
+
+bool XmlElement::hasTagNameIgnoringNamespace (const String& possibleTagName) const
+{
+    return hasTagName (possibleTagName) || getTagNameWithoutNamespace() == possibleTagName;
 }
 
 XmlElement* XmlElement::getNextElementWithTagName (const String& requiredTagName) const
@@ -503,22 +504,19 @@ void XmlElement::setAttribute (const String& attributeName, const String& value)
     }
     else
     {
-        XmlAttributeNode* att = attributes;
-
-        for (;;)
+        for (XmlAttributeNode* att = attributes; ; att = att->nextListItem)
         {
             if (att->hasName (attributeName))
             {
                 att->value = value;
                 break;
             }
-            else if (att->nextListItem == nullptr)
+
+            if (att->nextListItem == nullptr)
             {
                 att->nextListItem = new XmlAttributeNode (attributeName, value);
                 break;
             }
-
-            att = att->nextListItem;
         }
     }
 }
@@ -535,17 +533,15 @@ void XmlElement::setAttribute (const String& attributeName, const double number)
 
 void XmlElement::removeAttribute (const String& attributeName) noexcept
 {
-    LinkedListPointer<XmlAttributeNode>* att = &attributes;
-
-    while (att->get() != nullptr)
+    for (LinkedListPointer<XmlAttributeNode>* att = &attributes;
+         att->get() != nullptr;
+         att = &(att->get()->nextListItem))
     {
         if (att->get()->hasName (attributeName))
         {
             delete att->removeNext();
             break;
         }
-
-        att = &(att->get()->nextListItem);
     }
 }
 
@@ -602,9 +598,7 @@ bool XmlElement::replaceChildElement (XmlElement* const currentChildElement,
 {
     if (newNode != nullptr)
     {
-        LinkedListPointer<XmlElement>* const p = firstChildElement.findPointerTo (currentChildElement);
-
-        if (p != nullptr)
+        if (LinkedListPointer<XmlElement>* const p = firstChildElement.findPointerTo (currentChildElement))
         {
             if (currentChildElement != newNode)
                 delete p->replaceNext (newNode);
@@ -708,9 +702,7 @@ void XmlElement::deleteAllChildElements() noexcept
 
 void XmlElement::deleteAllChildElementsWithTagName (const String& name) noexcept
 {
-    XmlElement* child = firstChildElement;
-
-    while (child != nullptr)
+    for (XmlElement* child = firstChildElement; child != nullptr;)
     {
         XmlElement* const nextChild = child->nextListItem;
 
@@ -736,9 +728,7 @@ XmlElement* XmlElement::findParentElementOf (const XmlElement* const elementToLo
         if (elementToLookFor == child)
             return this;
 
-        XmlElement* const found = child->findParentElementOf (elementToLookFor);
-
-        if (found != nullptr)
+        if (XmlElement* const found = child->findParentElementOf (elementToLookFor))
             return found;
     }
 
@@ -804,9 +794,7 @@ String XmlElement::getAllSubText() const
 String XmlElement::getChildElementAllSubText (const String& childTagName,
                                               const String& defaultReturnValue) const
 {
-    const XmlElement* const child = getChildByName (childTagName);
-
-    if (child != nullptr)
+    if (const XmlElement* const child = getChildByName (childTagName))
         return child->getAllSubText();
 
     return defaultReturnValue;
@@ -826,9 +814,7 @@ void XmlElement::addTextElement (const String& text)
 
 void XmlElement::deleteAllTextElements() noexcept
 {
-    XmlElement* child = firstChildElement;
-
-    while (child != nullptr)
+    for (XmlElement* child = firstChildElement; child != nullptr;)
     {
         XmlElement* const next = child->nextListItem;
 

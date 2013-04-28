@@ -94,16 +94,19 @@ public:
         This is handy if you want to show the user which file is currently getting
         scanned.
     */
-    const String getNextPluginFileThatWillBeScanned() const;
+    String getNextPluginFileThatWillBeScanned() const;
 
-    /** Returns the estimated progress, between 0 and 1.
-    */
+    /** Returns the estimated progress, between 0 and 1. */
     float getProgress() const                                       { return progress; }
 
     /** This returns a list of all the filenames of things that looked like being
         a plugin file, but which failed to open for some reason.
     */
     const StringArray& getFailedFiles() const noexcept              { return failedFiles; }
+
+    /** Reads the given dead-mans-pedal file and applies its contents to the list. */
+    static void applyBlacklistingsFromDeadMansPedal (KnownPluginList& listToApplyTo,
+                                                     const File& deadMansPedalFile);
 
 private:
     //==============================================================================
@@ -115,10 +118,9 @@ private:
     int nextIndex;
     float progress;
 
-    StringArray getDeadMansPedalFile();
     void setDeadMansPedalFile (const StringArray& newContents);
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginDirectoryScanner);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginDirectoryScanner)
 };
 
 

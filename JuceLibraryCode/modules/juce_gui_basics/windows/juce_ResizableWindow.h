@@ -231,8 +231,8 @@ public:
     //==============================================================================
     /** Returns the current content component.
 
-        This will be the component set by setContentOwned() or setContentNonOwned, or 0 if none
-        has yet been specified.
+        This will be the component set by setContentOwned() or setContentNonOwned, or
+        nullptr if none has yet been specified.
 
         @see setContentOwned, setContentNonOwned
     */
@@ -386,7 +386,7 @@ private:
     JUCE_DEPRECATED (void getContentComponentBorder (int& left, int& top, int& right, int& bottom));
    #endif
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ResizableWindow);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ResizableWindow)
 };
 
 

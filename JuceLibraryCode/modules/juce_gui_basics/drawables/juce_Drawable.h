@@ -156,6 +156,9 @@ public:
     */
     static Drawable* createFromSVG (const XmlElement& svgDocument);
 
+    /** Parses an SVG path string and returns it. */
+    static Path parseSVGPath (const String& svgPath);
+
     //==============================================================================
     /** Tries to create a Drawable from a previously-saved ValueTree.
         The ValueTree must have been created by the createValueTree() method.
@@ -221,9 +224,9 @@ protected:
     class Positioner  : public RelativeCoordinatePositionerBase
     {
     public:
-        Positioner (DrawableType& component_)
-            : RelativeCoordinatePositionerBase (component_),
-              owner (component_)
+        Positioner (DrawableType& c)
+            : RelativeCoordinatePositionerBase (c),
+              owner (c)
         {}
 
         bool registerCoordinates()      { return owner.registerCoordinates (*this); }
@@ -241,7 +244,7 @@ protected:
     private:
         DrawableType& owner;
 
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Positioner);
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Positioner)
     };
 
     Drawable (const Drawable&);
@@ -251,7 +254,7 @@ private:
     void nonConstDraw (Graphics& g, float opacity, const AffineTransform& transform);
 
     Drawable& operator= (const Drawable&);
-    JUCE_LEAK_DETECTOR (Drawable);
+    JUCE_LEAK_DETECTOR (Drawable)
 };
 
 

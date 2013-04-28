@@ -42,6 +42,8 @@ class DefaultHashFunctions
 public:
     /** Generates a simple hash from an integer. */
     static int generateHash (const int key, const int upperLimit) noexcept        { return std::abs (key) % upperLimit; }
+    /** Generates a simple hash from an int64. */
+    static int generateHash (const int64 key, const int upperLimit) noexcept      { return std::abs ((int) key) % upperLimit; }
     /** Generates a simple hash from a string. */
     static int generateHash (const String& key, const int upperLimit) noexcept    { return (int) (((uint32) key.hashCode()) % (uint32) upperLimit); }
     /** Generates a simple hash from a variant. */
@@ -336,15 +338,15 @@ private:
     class HashEntry
     {
     public:
-        HashEntry (KeyTypeParameter key_, ValueTypeParameter value_, HashEntry* const nextEntry_)
-            : key (key_), value (value_), nextEntry (nextEntry_)
+        HashEntry (KeyTypeParameter k, ValueTypeParameter val, HashEntry* const next)
+            : key (k), value (val), nextEntry (next)
         {}
 
         const KeyType key;
         ValueType value;
         HashEntry* nextEntry;
 
-        JUCE_DECLARE_NON_COPYABLE (HashEntry);
+        JUCE_DECLARE_NON_COPYABLE (HashEntry)
     };
 
 public:
@@ -421,7 +423,7 @@ public:
         HashEntry* entry;
         int index;
 
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Iterator);
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Iterator)
     };
 
 private:
@@ -440,7 +442,7 @@ private:
         return hash;
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HashMap);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HashMap)
 };
 
 

@@ -241,6 +241,9 @@ public:
                     int numSamples,
                     float gain) noexcept;
 
+    /** Applies a gain multiple to all the audio data. */
+    void applyGain (float gain) noexcept;
+
     /** Applies a range of gains to a region of a channel.
 
         The gain that is applied to each sample will vary from
@@ -252,6 +255,20 @@ public:
     */
     void applyGainRamp (int channel,
                         int startSample,
+                        int numSamples,
+                        float startGain,
+                        float endGain) noexcept;
+
+    /** Applies a range of gains to a region of all channels.
+
+        The gain that is applied to each sample will vary from
+        startGain on the first sample to endGain on the last Sample,
+        so it can be used to do basic fades.
+
+        For speed, this doesn't check whether the sample numbers
+        are in-range, so be careful!
+    */
+    void applyGainRamp (int startSample,
                         int numSamples,
                         float startGain,
                         float endGain) noexcept;
@@ -423,7 +440,7 @@ private:
     void allocateData();
     void allocateChannels (float* const* dataToReferTo, int offset);
 
-    JUCE_LEAK_DETECTOR (AudioSampleBuffer);
+    JUCE_LEAK_DETECTOR (AudioSampleBuffer)
 };
 
 

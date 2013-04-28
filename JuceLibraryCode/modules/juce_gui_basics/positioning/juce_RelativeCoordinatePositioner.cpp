@@ -26,7 +26,7 @@
 class MarkerListScope  : public Expression::Scope
 {
 public:
-    MarkerListScope (Component& component_) : component (component_) {}
+    MarkerListScope (Component& comp) : component (comp) {}
 
     Expression getSymbolValue (const String& symbol) const
     {
@@ -38,9 +38,8 @@ public:
         }
 
         MarkerList* list;
-        const MarkerList::Marker* const marker = findMarker (component, symbol, list);
 
-        if (marker != nullptr)
+        if (const MarkerList::Marker* const marker = findMarker (component, symbol, list))
             return Expression (marker->position.getExpression().evaluate (*this));
 
         return Expression::Scope::getSymbolValue (symbol);
@@ -50,9 +49,7 @@ public:
     {
         if (scopeName == RelativeCoordinate::Strings::parent)
         {
-            Component* const parent = component.getParentComponent();
-
-            if (parent != nullptr)
+            if (Component* const parent = component.getParentComponent())
             {
                 visitor.visit (MarkerListScope (*parent));
                 return;
@@ -89,12 +86,12 @@ public:
 private:
     Component& component;
 
-    JUCE_DECLARE_NON_COPYABLE (MarkerListScope);
+    JUCE_DECLARE_NON_COPYABLE (MarkerListScope)
 };
 
 //==============================================================================
-RelativeCoordinatePositionerBase::ComponentScope::ComponentScope (Component& component_)
-    : component (component_)
+RelativeCoordinatePositionerBase::ComponentScope::ComponentScope (Component& comp)
+    : component (comp)
 {
 }
 
@@ -113,14 +110,11 @@ Expression RelativeCoordinatePositionerBase::ComponentScope::getSymbolValue (con
         default: break;
     }
 
-    Component* const parent = component.getParentComponent();
-
-    if (parent != nullptr)
+    if (Component* const parent = component.getParentComponent())
     {
         MarkerList* list;
-        const MarkerList::Marker* const marker = MarkerListScope::findMarker (*parent, symbol, list);
 
-        if (marker != nullptr)
+        if (const MarkerList::Marker* const marker = MarkerListScope::findMarker (*parent, symbol, list))
         {
             MarkerListScope scope (*parent);
             return Expression (marker->position.getExpression().evaluate (scope));
@@ -132,11 +126,9 @@ Expression RelativeCoordinatePositionerBase::ComponentScope::getSymbolValue (con
 
 void RelativeCoordinatePositionerBase::ComponentScope::visitRelativeScope (const String& scopeName, Visitor& visitor) const
 {
-    Component* const targetComp = (scopeName == RelativeCoordinate::Strings::parent)
-                                        ? component.getParentComponent()
-                                        : findSiblingComponent (scopeName);
-
-    if (targetComp != nullptr)
+    if (Component* const targetComp = (scopeName == RelativeCoordinate::Strings::parent)
+                                           ? component.getParentComponent()
+                                           : findSiblingComponent (scopeName))
         visitor.visit (ComponentScope (*targetComp));
     else
         Expression::Scope::visitRelativeScope (scopeName, visitor);
@@ -149,18 +141,18 @@ String RelativeCoordinatePositionerBase::ComponentScope::getScopeUID() const
 
 Component* RelativeCoordinatePositionerBase::ComponentScope::findSiblingComponent (const String& componentID) const
 {
-    Component* const parent = component.getParentComponent();
+    if (Component* const parent = component.getParentComponent())
+        return parent->findChildWithID (componentID);
 
-    return parent != nullptr ? parent->findChildWithID (componentID)
-                             : nullptr;
+    return nullptr;
 }
 
 //==============================================================================
 class RelativeCoordinatePositionerBase::DependencyFinderScope  : public ComponentScope
 {
 public:
-    DependencyFinderScope (Component& component_, RelativeCoordinatePositionerBase& positioner_, bool& ok_)
-        : ComponentScope (component_), positioner (positioner_), ok (ok_)
+    DependencyFinderScope (Component& comp, RelativeCoordinatePositionerBase& positioner_, bool& ok_)
+        : ComponentScope (comp), positioner (positioner_), ok (ok_)
     {
     }
 
@@ -180,14 +172,11 @@ public:
                 break;
 
             default:
-            {
-                Component* const parent = component.getParentComponent();
-                if (parent != nullptr)
+                if (Component* const parent = component.getParentComponent())
                 {
                     MarkerList* list;
-                    const MarkerList::Marker* marker = MarkerListScope::findMarker (*parent, symbol, list);
 
-                    if (marker != nullptr)
+                    if (MarkerListScope::findMarker (*parent, symbol, list) != nullptr)
                     {
                         positioner.registerMarkerListListener (list);
                     }
@@ -199,8 +188,7 @@ public:
                         ok = false;
                     }
                 }
-            }
-            break;
+                break;
         }
 
         return ComponentScope::getSymbolValue (symbol);
@@ -208,19 +196,16 @@ public:
 
     void visitRelativeScope (const String& scopeName, Visitor& visitor) const
     {
-        Component* const targetComp = (scopeName == RelativeCoordinate::Strings::parent)
-                                            ? component.getParentComponent()
-                                            : findSiblingComponent (scopeName);
-
-        if (targetComp != nullptr)
+        if (Component* const targetComp = (scopeName == RelativeCoordinate::Strings::parent)
+                                                ? component.getParentComponent()
+                                                : findSiblingComponent (scopeName))
         {
             visitor.visit (DependencyFinderScope (*targetComp, positioner, ok));
         }
         else
         {
             // The named component doesn't exist, so we'll watch the parent for changes in case it appears later..
-            Component* const parent = component.getParentComponent();
-            if (parent != nullptr)
+            if (Component* const parent = component.getParentComponent())
                 positioner.registerComponentListener (*parent);
 
             positioner.registerComponentListener (component);
@@ -232,12 +217,12 @@ private:
     RelativeCoordinatePositionerBase& positioner;
     bool& ok;
 
-    JUCE_DECLARE_NON_COPYABLE (DependencyFinderScope);
+    JUCE_DECLARE_NON_COPYABLE (DependencyFinderScope)
 };
 
 //==============================================================================
-RelativeCoordinatePositionerBase::RelativeCoordinatePositionerBase (Component& component_)
-    : Component::Positioner (component_), registeredOk (false)
+RelativeCoordinatePositionerBase::RelativeCoordinatePositionerBase (Component& comp)
+    : Component::Positioner (comp), registeredOk (false)
 {
 }
 
@@ -325,11 +310,10 @@ void RelativeCoordinatePositionerBase::registerMarkerListListener (MarkerList* c
 
 void RelativeCoordinatePositionerBase::unregisterListeners()
 {
-    int i;
-    for (i = sourceComponents.size(); --i >= 0;)
+    for (int i = sourceComponents.size(); --i >= 0;)
         sourceComponents.getUnchecked(i)->removeComponentListener (this);
 
-    for (i = sourceMarkerLists.size(); --i >= 0;)
+    for (int i = sourceMarkerLists.size(); --i >= 0;)
         sourceMarkerLists.getUnchecked(i)->removeListener (this);
 
     sourceComponents.clear();

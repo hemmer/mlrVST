@@ -68,7 +68,7 @@ const String PresetListTable::getAttributeNameForColumnId (const int columnId) c
 }
 
 
-void PresetListTable::cellClicked (int rowNumber, int columnId, const MouseEvent &e)
+void PresetListTable::cellClicked (int rowNumber, int columnId, const MouseEvent &)
 {
     // column 3 removes the preset
     if (columnId == 3)
@@ -110,7 +110,7 @@ void PresetListTable::cellClicked (int rowNumber, int columnId, const MouseEvent
     loadData();
 }
 
-void PresetListTable::cellDoubleClicked (int rowNumber, int columnId, const MouseEvent &e)
+void PresetListTable::cellDoubleClicked (int rowNumber, int, const MouseEvent &)
 {
     processor->selectPresetListItem(rowNumber);
 }

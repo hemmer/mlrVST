@@ -61,39 +61,40 @@ bool Process::openEmailWithAttachments (const String& targetEmailAddress,
     return false;
   #else
     JUCE_AUTORELEASEPOOL
-
-    String script;
-    script << "tell application \"Mail\"\r\n"
-              "set newMessage to make new outgoing message with properties {subject:\""
-           << emailSubject.replace ("\"", "\\\"")
-           << "\", content:\""
-           << bodyText.replace ("\"", "\\\"")
-           << "\" & return & return}\r\n"
-              "tell newMessage\r\n"
-              "set visible to true\r\n"
-              "set sender to \"sdfsdfsdfewf\"\r\n"
-              "make new to recipient at end of to recipients with properties {address:\""
-           << targetEmailAddress
-           << "\"}\r\n";
-
-    for (int i = 0; i < filesToAttach.size(); ++i)
     {
-        script << "tell content\r\n"
-                  "make new attachment with properties {file name:\""
-               << filesToAttach[i].replace ("\"", "\\\"")
-               << "\"} at after the last paragraph\r\n"
+        String script;
+        script << "tell application \"Mail\"\r\n"
+                  "set newMessage to make new outgoing message with properties {subject:\""
+               << emailSubject.replace ("\"", "\\\"")
+               << "\", content:\""
+               << bodyText.replace ("\"", "\\\"")
+               << "\" & return & return}\r\n"
+                  "tell newMessage\r\n"
+                  "set visible to true\r\n"
+                  "set sender to \"sdfsdfsdfewf\"\r\n"
+                  "make new to recipient at end of to recipients with properties {address:\""
+               << targetEmailAddress
+               << "\"}\r\n";
+
+        for (int i = 0; i < filesToAttach.size(); ++i)
+        {
+            script << "tell content\r\n"
+                      "make new attachment with properties {file name:\""
+                   << filesToAttach[i].replace ("\"", "\\\"")
+                   << "\"} at after the last paragraph\r\n"
+                      "end tell\r\n";
+        }
+
+        script << "end tell\r\n"
                   "end tell\r\n";
+
+        NSAppleScript* s = [[NSAppleScript alloc] initWithSource: juceStringToNS (script)];
+        NSDictionary* error = nil;
+        const bool ok = [s executeAndReturnError: &error] != nil;
+        [s release];
+
+        return ok;
     }
-
-    script << "end tell\r\n"
-              "end tell\r\n";
-
-    NSAppleScript* s = [[NSAppleScript alloc] initWithSource: juceStringToNS (script)];
-    NSDictionary* error = nil;
-    const bool ok = [s executeAndReturnError: &error] != nil;
-    [s release];
-
-    return ok;
   #endif
 }
 
@@ -160,8 +161,8 @@ public:
             if (available > 0)
             {
                 const ScopedLock sl (dataLock);
-                [data getBytes: dest length: available];
-                [data replaceBytesInRange: NSMakeRange (0, available) withBytes: nil length: 0];
+                [data getBytes: dest length: (NSUInteger) available];
+                [data replaceBytesInRange: NSMakeRange (0, (NSUInteger) available) withBytes: nil length: 0];
 
                 numDone += available;
                 numBytes -= available;
@@ -211,6 +212,10 @@ public:
         initialised = true;
     }
 
+    void didSendBodyData (int /*totalBytesWritten*/, int /*totalBytesExpected*/)
+    {
+    }
+
     void finishedLoading()
     {
         hasFinished = true;
@@ -225,7 +230,9 @@ public:
         while (! threadShouldExit())
         {
             JUCE_AUTORELEASEPOOL
-            [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 0.01]];
+            {
+                [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 0.01]];
+            }
         }
     }
 
@@ -249,6 +256,8 @@ private:
             addMethod (@selector (connection:didReceiveResponse:), didReceiveResponse,         "v@:@@");
             addMethod (@selector (connection:didFailWithError:),   didFailWithError,           "v@:@@");
             addMethod (@selector (connection:didReceiveData:),     didReceiveData,             "v@:@@");
+            addMethod (@selector (connection:didSendBodyData:totalBytesWritten:totalBytesExpectedToWrite:totalBytesExpectedToWrite:),
+                                                                   connectionDidSendBodyData,  "v@:@iii");
             addMethod (@selector (connectionDidFinishLoading:),    connectionDidFinishLoading, "v@:@");
 
             registerClass();
@@ -273,13 +282,18 @@ private:
             getState (self)->didReceiveData (newData);
         }
 
+        static void connectionDidSendBodyData (id self, SEL, NSURLConnection*, NSInteger, NSInteger totalBytesWritten, NSInteger totalBytesExpected)
+        {
+            getState (self)->didSendBodyData (totalBytesWritten, totalBytesExpected);
+        }
+
         static void connectionDidFinishLoading (id self, SEL, NSURLConnection*)
         {
             getState (self)->finishedLoading();
         }
     };
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (URLConnectionState);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (URLConnectionState)
 };
 
 
@@ -294,16 +308,18 @@ public:
         finished (false), isPost (isPost_), timeOutMs (timeOutMs_)
     {
         JUCE_AUTORELEASEPOOL
-        createConnection (progressCallback, progressCallbackContext);
-
-        if (responseHeaders != nullptr && connection != nullptr && connection->headers != nil)
         {
-            NSEnumerator* enumerator = [connection->headers keyEnumerator];
-            NSString* key;
+            createConnection (progressCallback, progressCallbackContext);
 
-            while ((key = [enumerator nextObject]) != nil)
-                responseHeaders->set (nsStringToJuce (key),
-                                      nsStringToJuce ((NSString*) [connection->headers objectForKey: key]));
+            if (responseHeaders != nullptr && connection != nullptr && connection->headers != nil)
+            {
+                NSEnumerator* enumerator = [connection->headers keyEnumerator];
+                NSString* key;
+
+                while ((key = [enumerator nextObject]) != nil)
+                    responseHeaders->set (nsStringToJuce (key),
+                                          nsStringToJuce ((NSString*) [connection->headers objectForKey: key]));
+            }
         }
     }
 
@@ -321,14 +337,15 @@ public:
             return 0;
 
         JUCE_AUTORELEASEPOOL
+        {
+            const int bytesRead = connection->read (static_cast <char*> (buffer), bytesToRead);
+            position += bytesRead;
 
-        const int bytesRead = connection->read (static_cast <char*> (buffer), bytesToRead);
-        position += bytesRead;
+            if (bytesRead == 0)
+                finished = true;
 
-        if (bytesRead == 0)
-            finished = true;
-
-        return bytesRead;
+            return bytesRead;
+        }
     }
 
     bool setPosition (int64 wantedPos)
@@ -397,7 +414,7 @@ private:
         }
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WebInputStream);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WebInputStream)
 };
 
 InputStream* URL::createNativeStream (const String& address, bool isPost, const MemoryBlock& postData,

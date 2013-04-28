@@ -44,7 +44,7 @@ private:
 
     // Style / layout //////////////////////////////
     Label panelLabel;           // Main header label
-    menuLookandFeel menuLF;
+	mlrVSTLookAndFeel menuLF;
     const float fontSize;
     const Rectangle<int> &panelBounds;
     int xPosition, yPosition;

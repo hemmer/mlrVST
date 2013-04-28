@@ -31,9 +31,9 @@
 
 //==============================================================================
 /**
-    A mutex class.
+    A re-entrant mutex.
 
-    A CriticalSection acts as a re-entrant mutex lock. The best way to lock and unlock
+    A CriticalSection acts as a re-entrant mutex object. The best way to lock and unlock
     one of these is by using RAII in the form of a local ScopedLock object - have a look
     through the codebase for many examples of how to do this.
 
@@ -114,7 +114,7 @@ private:
     mutable pthread_mutex_t internal;
    #endif
 
-    JUCE_DECLARE_NON_COPYABLE (CriticalSection);
+    JUCE_DECLARE_NON_COPYABLE (CriticalSection)
 };
 
 
@@ -149,7 +149,7 @@ public:
     typedef ScopedLockType ScopedUnlockType;
 
 private:
-    JUCE_DECLARE_NON_COPYABLE (DummyCriticalSection);
+    JUCE_DECLARE_NON_COPYABLE (DummyCriticalSection)
 };
 
 //==============================================================================

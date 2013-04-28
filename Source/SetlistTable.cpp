@@ -57,7 +57,7 @@ const String SetlistTable::getAttributeNameForColumnId (const int columnId) cons
     
 }
 
-void SetlistTable::cellClicked (int rowNumber, int columnId, const MouseEvent &e)
+void SetlistTable::cellClicked (int rowNumber, int columnId, const MouseEvent &)
 {
     // if we are removing this setlist item
     if (columnId == 3)
@@ -70,7 +70,7 @@ void SetlistTable::cellClicked (int rowNumber, int columnId, const MouseEvent &e
 
 }
 
-void SetlistTable::cellDoubleClicked (int rowNumber, int columnId, const MouseEvent &e)
+void SetlistTable::cellDoubleClicked (int rowNumber, int, const MouseEvent &)
 {
     processor->selectSetlistItem(rowNumber);
 }

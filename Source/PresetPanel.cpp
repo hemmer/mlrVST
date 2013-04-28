@@ -34,7 +34,7 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
     instructionLabel.setColour(Label::backgroundColourId, Colours::black);
     instructionLabel.setColour(Label::textColourId, Colours::white);
     instructionLabel.setFont(fontSize);
-    instructionLabel.setText("To create a setlist, drag presets from the list on the left to the setlist panel on the right...", false);
+	instructionLabel.setText("To create a setlist, drag presets from the list on the left to the setlist panel on the right...", NotificationType::dontSendNotification);
 
     addAndMakeVisible(&loadSetlistBtn);
     loadSetlistBtn.addListener(this);

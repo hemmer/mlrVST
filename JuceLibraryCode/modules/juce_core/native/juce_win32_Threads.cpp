@@ -204,14 +204,19 @@ void Thread::setCurrentThreadAffinityMask (const uint32 affinityMask)
 //==============================================================================
 struct SleepEvent
 {
-    SleepEvent()
-        : handle (CreateEvent (0, 0, 0,
-                    #if JUCE_DEBUG
-                       _T("Juce Sleep Event")))
-                    #else
-                       0))
-                    #endif
+    SleepEvent() noexcept
+        : handle (CreateEvent (nullptr, FALSE, FALSE,
+                              #if JUCE_DEBUG
+                               _T("JUCE Sleep Event")))
+                              #else
+                               nullptr))
+                              #endif
+    {}
+
+    ~SleepEvent() noexcept
     {
+        CloseHandle (handle);
+        handle = 0;
     }
 
     HANDLE handle;
@@ -221,7 +226,7 @@ static SleepEvent sleepEvent;
 
 void JUCE_CALLTYPE Thread::sleep (const int millisecs)
 {
-    if (millisecs >= 10)
+    if (millisecs >= 10 || sleepEvent.handle == 0)
     {
         Sleep ((DWORD) millisecs);
     }
@@ -242,7 +247,7 @@ void Thread::yield()
 //==============================================================================
 static int lastProcessPriority = -1;
 
-// called by WindowDriver because Windows does wierd things to process priority
+// called by WindowDriver because Windows does weird things to process priority
 // when you swap apps, and this forces an update when the app is brought to the front.
 void juce_repeatLastProcessPriority()
 {
@@ -287,7 +292,7 @@ static void* currentModuleHandle = nullptr;
 void* Process::getCurrentModuleInstanceHandle() noexcept
 {
     if (currentModuleHandle == nullptr)
-        currentModuleHandle = GetModuleHandle (0);
+        currentModuleHandle = GetModuleHandleA (nullptr);
 
     return currentModuleHandle;
 }
@@ -317,10 +322,10 @@ void Process::terminate()
     ExitProcess (0);
 }
 
-bool juce_IsRunningInWine()
+bool juce_isRunningInWine()
 {
-    HMODULE ntdll = GetModuleHandle (_T("ntdll.dll"));
-    return ntdll != 0 && GetProcAddress (ntdll, "wine_get_version") != 0;
+    HMODULE ntdll = GetModuleHandleA ("ntdll");
+    return ntdll != 0 && GetProcAddress (ntdll, "wine_get_version") != nullptr;
 }
 
 //==============================================================================
@@ -545,7 +550,7 @@ private:
     HANDLE readPipe, writePipe;
     PROCESS_INFORMATION processInfo;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ActiveProcess);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ActiveProcess)
 };
 
 bool ChildProcess::start (const String& command)
@@ -556,6 +561,11 @@ bool ChildProcess::start (const String& command)
         activeProcess = nullptr;
 
     return activeProcess != nullptr;
+}
+
+bool ChildProcess::start (const StringArray& args)
+{
+    return start (args.joinIntoString (" "));
 }
 
 bool ChildProcess::isRunning() const
@@ -572,3 +582,55 @@ bool ChildProcess::kill()
 {
     return activeProcess == nullptr || activeProcess->killProcess();
 }
+
+//==============================================================================
+struct HighResolutionTimer::Pimpl
+{
+    Pimpl (HighResolutionTimer& t) noexcept  : owner (t), periodMs (0)
+    {
+    }
+
+    ~Pimpl()
+    {
+        jassert (periodMs == 0);
+    }
+
+    void start (int newPeriod)
+    {
+        if (newPeriod != periodMs)
+        {
+            stop();
+            periodMs = newPeriod;
+
+            TIMECAPS tc;
+            if (timeGetDevCaps (&tc, sizeof (tc)) == TIMERR_NOERROR)
+            {
+                const int actualPeriod = jlimit ((int) tc.wPeriodMin, (int) tc.wPeriodMax, newPeriod);
+
+                timerID = timeSetEvent (actualPeriod, tc.wPeriodMin, callbackFunction, (DWORD_PTR) this,
+                                        TIME_PERIODIC | TIME_CALLBACK_FUNCTION | 0x100 /*TIME_KILL_SYNCHRONOUS*/);
+            }
+        }
+    }
+
+    void stop()
+    {
+        periodMs = 0;
+        timeKillEvent (timerID);
+    }
+
+    HighResolutionTimer& owner;
+    int periodMs;
+
+private:
+    unsigned int timerID;
+
+    static void __stdcall callbackFunction (UINT, UINT, DWORD_PTR userInfo, DWORD_PTR, DWORD_PTR)
+    {
+        if (Pimpl* const timer = reinterpret_cast<Pimpl*> (userInfo))
+            if (timer->periodMs != 0)
+                timer->owner.hiResTimerCallback();
+    }
+
+    JUCE_DECLARE_NON_COPYABLE (Pimpl)
+};

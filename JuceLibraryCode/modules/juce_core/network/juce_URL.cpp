@@ -160,8 +160,7 @@ namespace URLHelpers
 
             data << "--" << boundary;
 
-            int i;
-            for (i = 0; i < url.getParameterNames().size(); ++i)
+            for (int i = 0; i < url.getParameterNames().size(); ++i)
             {
                 data << "\r\nContent-Disposition: form-data; name=\""
                      << url.getParameterNames() [i]
@@ -171,7 +170,7 @@ namespace URLHelpers
                      << boundary;
             }
 
-            for (i = 0; i < url.getFilesToUpload().size(); ++i)
+            for (int i = 0; i < url.getFilesToUpload().size(); ++i)
             {
                 const File file (url.getFilesToUpload().getAllValues() [i]);
                 const String paramName (url.getFilesToUpload().getAllKeys() [i]);
@@ -224,8 +223,8 @@ String URL::toString (const bool includeGetParameters) const
 {
     if (includeGetParameters && parameterNames.size() > 0)
         return url + "?" + URLHelpers::getMangledParameters (*this);
-    else
-        return url;
+
+    return url;
 }
 
 bool URL::isWellFormed() const
@@ -416,7 +415,7 @@ String URL::removeEscapeChars (const String& s)
 
     // We need to operate on the string as raw UTF8 chars, and then recombine them into unicode
     // after all the replacements have been made, so that multi-byte chars are handled.
-    Array<char> utf8 (result.toUTF8().getAddress(), result.getNumBytesAsUTF8());
+    Array<char> utf8 (result.toRawUTF8(), (int) result.getNumBytesAsUTF8());
 
     for (int i = 0; i < utf8.size(); ++i)
     {
@@ -441,7 +440,7 @@ String URL::addEscapeChars (const String& s, const bool isParameter)
     const CharPointer_UTF8 legalChars (isParameter ? "_-.*!'()"
                                                    : ",$_-.*!'()");
 
-    Array<char> utf8 (s.toUTF8().getAddress(), s.getNumBytesAsUTF8());
+    Array<char> utf8 (s.toRawUTF8(), (int) s.getNumBytesAsUTF8());
 
     for (int i = 0; i < utf8.size(); ++i)
     {

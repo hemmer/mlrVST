@@ -36,10 +36,9 @@ public:
 
     void messageCallback()
     {
-        const ActionBroadcaster* const b = broadcaster;
-
-        if (b != nullptr && b->actionListeners.contains (listener))
-            listener->actionListenerCallback (message);
+        if (const ActionBroadcaster* const b = broadcaster)
+            if (b->actionListeners.contains (listener))
+                listener->actionListenerCallback (message);
     }
 
 private:
@@ -47,7 +46,7 @@ private:
     const String message;
     ActionListener* const listener;
 
-    JUCE_DECLARE_NON_COPYABLE (ActionMessage);
+    JUCE_DECLARE_NON_COPYABLE (ActionMessage)
 };
 
 //==============================================================================

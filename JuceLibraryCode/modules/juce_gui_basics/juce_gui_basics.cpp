@@ -46,11 +46,15 @@
 //==============================================================================
 #if JUCE_MAC
  #import <WebKit/WebKit.h>
- #define Point CarbonDummyPointName
- #define Component CarbonDummyCompName
- #import <Carbon/Carbon.h> // still needed for SetSystemUIMode()
- #undef Point
- #undef Component
+ #import <IOKit/pwr_mgt/IOPMLib.h>
+
+ #if JUCE_SUPPORT_CARBON
+  #define Point CarbonDummyPointName
+  #define Component CarbonDummyCompName
+  #import <Carbon/Carbon.h> // still needed for SetSystemUIMode()
+  #undef Point
+  #undef Component
+ #endif
 
 //==============================================================================
 #elif JUCE_WINDOWS
@@ -85,7 +89,7 @@
  #endif
 
  #if JUCE_MINGW
-  #include <Imm.h>
+  #include <imm.h>
  #endif
 
 //==============================================================================
@@ -129,6 +133,8 @@
 //==============================================================================
 namespace juce
 {
+    extern bool juce_areThereAnyAlwaysOnTopWindows();
+
 
 // START_AUTOINCLUDE components/*.cpp, mouse/*.cpp, keyboard/*.cpp, buttons/*.cpp,
 // drawables/*.cpp, filebrowser/*.cpp, layout/*.cpp, lookandfeel/*.cpp,

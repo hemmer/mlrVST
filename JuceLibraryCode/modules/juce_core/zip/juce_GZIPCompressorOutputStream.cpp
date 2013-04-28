@@ -46,26 +46,26 @@ public:
             zlibNamespace::deflateEnd (&stream);
     }
 
-    bool write (const uint8* data, int dataSize, OutputStream& destStream)
+    bool write (const uint8* data, size_t dataSize, OutputStream& out)
     {
         // When you call flush() on a gzip stream, the stream is closed, and you can
         // no longer continue to write data to it!
         jassert (! finished);
 
         while (dataSize > 0)
-            if (! doNextBlock (data, dataSize, destStream, Z_NO_FLUSH))
+            if (! doNextBlock (data, dataSize, out, Z_NO_FLUSH))
                 return false;
 
         return true;
     }
 
-    void finish (OutputStream& destStream)
+    void finish (OutputStream& out)
     {
         const uint8* data = nullptr;
-        int dataSize = 0;
+        size_t dataSize = 0;
 
         while (! finished)
-            doNextBlock (data, dataSize, destStream, Z_FINISH);
+            doNextBlock (data, dataSize, out, Z_FINISH);
     }
 
 private:
@@ -76,9 +76,10 @@ private:
     bool isFirstDeflate, streamIsValid, finished;
     zlibNamespace::Bytef buffer[32768];
 
-    bool doNextBlock (const uint8*& data, int& dataSize, OutputStream& destStream, const int flushMode)
+    bool doNextBlock (const uint8*& data, size_t& dataSize, OutputStream& out, const int flushMode)
     {
         using namespace zlibNamespace;
+
         if (streamIsValid)
         {
             stream.next_in   = const_cast <uint8*> (data);
@@ -98,9 +99,9 @@ private:
                 case Z_OK:
                 {
                     data += dataSize - stream.avail_in;
-                    dataSize = (int) stream.avail_in;
-                    const int bytesDone = ((int) sizeof (buffer)) - (int) stream.avail_out;
-                    return bytesDone <= 0 || destStream.write (buffer, bytesDone);
+                    dataSize = stream.avail_in;
+                    const ssize_t bytesDone = sizeof (buffer) - (ssize_t) stream.avail_out;
+                    return bytesDone <= 0 || out.write (buffer, (size_t) bytesDone);
                 }
 
                 default:
@@ -111,18 +112,18 @@ private:
         return false;
     }
 
-    JUCE_DECLARE_NON_COPYABLE (GZIPCompressorHelper);
+    JUCE_DECLARE_NON_COPYABLE (GZIPCompressorHelper)
 };
 
 //==============================================================================
-GZIPCompressorOutputStream::GZIPCompressorOutputStream (OutputStream* const destStream_,
+GZIPCompressorOutputStream::GZIPCompressorOutputStream (OutputStream* const out,
                                                         const int compressionLevel,
                                                         const bool deleteDestStream,
                                                         const int windowBits)
-    : destStream (destStream_, deleteDestStream),
+    : destStream (out, deleteDestStream),
       helper (new GZIPCompressorHelper (compressionLevel, windowBits))
 {
-    jassert (destStream_ != nullptr);
+    jassert (out != nullptr);
 }
 
 GZIPCompressorOutputStream::~GZIPCompressorOutputStream()
@@ -136,9 +137,9 @@ void GZIPCompressorOutputStream::flush()
     destStream->flush();
 }
 
-bool GZIPCompressorOutputStream::write (const void* destBuffer, int howMany)
+bool GZIPCompressorOutputStream::write (const void* destBuffer, size_t howMany)
 {
-    jassert (destBuffer != nullptr && howMany >= 0);
+    jassert (destBuffer != nullptr && (ssize_t) howMany >= 0);
 
     return helper->write (static_cast <const uint8*> (destBuffer), howMany, *destStream);
 }
@@ -176,13 +177,13 @@ public:
 
                 for (int j = rng.nextInt (100); --j >= 0;)
                 {
-                    MemoryBlock data (rng.nextInt (2000) + 1);
+                    MemoryBlock data ((unsigned int) (rng.nextInt (2000) + 1));
 
                     for (int k = (int) data.getSize(); --k >= 0;)
                         data[k] = (char) rng.nextInt (255);
 
-                    original.write (data.getData(), (int) data.getSize());
-                    zipper  .write (data.getData(), (int) data.getSize());
+                    original << data;
+                    zipper   << data;
                 }
             }
 

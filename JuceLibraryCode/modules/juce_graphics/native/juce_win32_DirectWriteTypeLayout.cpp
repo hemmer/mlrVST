@@ -27,24 +27,21 @@
 #if JUCE_USE_DIRECTWRITE
 namespace DirectWriteTypeLayout
 {
-    class CustomDirectWriteTextRenderer   : public ComBaseClassHelper <IDWriteTextRenderer>
+    class CustomDirectWriteTextRenderer   : public ComBaseClassHelper<IDWriteTextRenderer>
     {
     public:
-        CustomDirectWriteTextRenderer (IDWriteFontCollection* const fontCollection_)
-            : fontCollection (fontCollection_),
+        CustomDirectWriteTextRenderer (IDWriteFontCollection* const fonts)
+            : ComBaseClassHelper<IDWriteTextRenderer> (0),
+              fontCollection (fonts),
               currentLine (-1),
               lastOriginY (-10000.0f)
         {
-            resetReferenceCount();
         }
 
         JUCE_COMRESULT QueryInterface (REFIID refId, void** result)
         {
-           #if ! JUCE_MINGW
-            if (refId == __uuidof (IDWritePixelSnapping))   { AddRef(); *result = dynamic_cast <IDWritePixelSnapping*> (this); return S_OK; }
-           #else
-            jassertfalse; // need to find a mingw equivalent of __uuidof to make this possible
-           #endif
+            if (refId == __uuidof (IDWritePixelSnapping))
+                return castToType <IDWritePixelSnapping> (result);
 
             return ComBaseClassHelper<IDWriteTextRenderer>::QueryInterface (refId, result);
         }
@@ -160,11 +157,11 @@ namespace DirectWriteTypeLayout
             style = getFontFaceName (dwFont);
         }
 
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CustomDirectWriteTextRenderer);
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CustomDirectWriteTextRenderer)
     };
 
     //==================================================================================================
-    float getFontHeightToEmSizeFactor (IDWriteFont* const dwFont)
+    static float getFontHeightToEmSizeFactor (IDWriteFont* const dwFont)
     {
         ComSmartPtr<IDWriteFontFace> dwFontFace;
         dwFont->CreateFontFace (dwFontFace.resetAndGetPointerAddress());
@@ -223,9 +220,7 @@ namespace DirectWriteTypeLayout
         range.startPosition = attr.range.getStart();
         range.length = jmin (attr.range.getLength(), textLen - attr.range.getStart());
 
-        const Font* const font = attr.getFont();
-
-        if (font != nullptr)
+        if (const Font* const font = attr.getFont())
         {
             BOOL fontFound = false;
             uint32 fontIndex;
@@ -259,13 +254,13 @@ namespace DirectWriteTypeLayout
             textLayout->SetFontSize (font->getHeight() * fontHeightToEmSizeFactor, range);
         }
 
-        if (attr.getColour() != nullptr)
+        if (const Colour* const colour = attr.getColour())
         {
             ComSmartPtr<ID2D1SolidColorBrush> d2dBrush;
-            renderTarget->CreateSolidColorBrush (D2D1::ColorF (D2D1::ColorF (attr.getColour()->getFloatRed(),
-                                                                             attr.getColour()->getFloatGreen(),
-                                                                             attr.getColour()->getFloatBlue(),
-                                                                             attr.getColour()->getFloatAlpha())),
+            renderTarget->CreateSolidColorBrush (D2D1::ColorF (D2D1::ColorF (colour->getFloatRed(),
+                                                                             colour->getFloatGreen(),
+                                                                             colour->getFloatBlue(),
+                                                                             colour->getFloatAlpha())),
                                                  d2dBrush.resetAndGetPointerAddress());
 
             // We need to call SetDrawingEffect with a legimate brush to get DirectWrite to break text based on colours
@@ -273,7 +268,7 @@ namespace DirectWriteTypeLayout
         }
     }
 
-    void setupLayout (const AttributedString& text, const float& maxWidth, const float& maxHeight,
+    void setupLayout (const AttributedString& text, const float maxWidth, const float maxHeight,
                       ID2D1RenderTarget* const renderTarget, IDWriteFactory* const directWriteFactory,
                       IDWriteFontCollection* const fontCollection, IDWriteTextLayout** dwTextLayout)
     {
@@ -334,7 +329,7 @@ namespace DirectWriteTypeLayout
         HRESULT hr = direct2dFactory->CreateDCRenderTarget (&d2dRTProp, renderTarget.resetAndGetPointerAddress());
 
         ComSmartPtr<IDWriteTextLayout> dwTextLayout;
-        setupLayout(text, layout.getWidth(), 1.0e7f, renderTarget, directWriteFactory, fontCollection, dwTextLayout.resetAndGetPointerAddress());
+        setupLayout (text, layout.getWidth(), 1.0e7f, renderTarget, directWriteFactory, fontCollection, dwTextLayout.resetAndGetPointerAddress());
 
         UINT32 actualLineCount = 0;
         hr = dwTextLayout->GetLineMetrics (nullptr, 0, &actualLineCount);
@@ -382,6 +377,20 @@ bool TextLayout::createNativeLayout (const AttributedString& text)
 
     if (factories.d2dFactory != nullptr && factories.systemFonts != nullptr)
     {
+       #if JUCE_64BIT
+        // There's a mysterious bug in 64-bit Windows that causes garbage floating-point
+        // values to be returned to DrawGlyphRun the first time that it gets used.
+        // In lieu of a better plan, this bodge uses a dummy call to work around this.
+        static bool hasBeenCalled = false;
+        if (! hasBeenCalled)
+        {
+            hasBeenCalled = true;
+            TextLayout dummy;
+            DirectWriteTypeLayout::createLayout (dummy, text, factories.directWriteFactory,
+                                                 factories.d2dFactory, factories.systemFonts);
+        }
+       #endif
+
         DirectWriteTypeLayout::createLayout (*this, text, factories.directWriteFactory,
                                              factories.d2dFactory, factories.systemFonts);
         return true;

@@ -165,8 +165,8 @@ double AudioTransportSource::getCurrentPosition() const
 {
     if (sampleRate > 0.0)
         return getNextReadPosition() / sampleRate;
-    else
-        return 0.0;
+
+    return 0.0;
 }
 
 double AudioTransportSource::getLengthInSeconds() const
@@ -224,12 +224,11 @@ void AudioTransportSource::setGain (const float newGain) noexcept
     gain = newGain;
 }
 
-void AudioTransportSource::prepareToPlay (int samplesPerBlockExpected,
-                                          double sampleRate_)
+void AudioTransportSource::prepareToPlay (int samplesPerBlockExpected, double newSampleRate)
 {
     const ScopedLock sl (callbackLock);
 
-    sampleRate = sampleRate_;
+    sampleRate = newSampleRate;
     blockSize = samplesPerBlockExpected;
 
     if (masterSource != nullptr)

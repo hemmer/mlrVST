@@ -32,29 +32,32 @@ void MessageManager::runDispatchLoop()
 void MessageManager::stopDispatchLoop()
 {
     [[[UIApplication sharedApplication] delegate] applicationWillTerminate: [UIApplication sharedApplication]];
-    exit (0); // iPhone apps get no mercy..
+    exit (0); // iOS apps get no mercy..
 }
 
 bool MessageManager::runDispatchLoopUntil (int millisecondsToRunFor)
 {
     JUCE_AUTORELEASEPOOL
-    jassert (isThisTheMessageThread()); // must only be called by the message thread
-
-    uint32 endTime = Time::getMillisecondCounter() + millisecondsToRunFor;
-    NSDate* endDate = [NSDate dateWithTimeIntervalSinceNow: millisecondsToRunFor * 0.001];
-
-    while (! quitMessagePosted)
     {
-        JUCE_AUTORELEASEPOOL
+        jassert (isThisTheMessageThread()); // must only be called by the message thread
 
-        [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                 beforeDate: endDate];
+        uint32 endTime = Time::getMillisecondCounter() + millisecondsToRunFor;
+        NSDate* endDate = [NSDate dateWithTimeIntervalSinceNow: millisecondsToRunFor * 0.001];
 
-        if (millisecondsToRunFor >= 0 && Time::getMillisecondCounter() >= endTime)
-            break;
+        while (! quitMessagePosted)
+        {
+            JUCE_AUTORELEASEPOOL
+            {
+                [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                         beforeDate: endDate];
+
+                if (millisecondsToRunFor >= 0 && Time::getMillisecondCounter() >= endTime)
+                    break;
+            }
+        }
+
+        return ! quitMessagePosted;
     }
-
-    return ! quitMessagePosted;
 }
 
 //==============================================================================

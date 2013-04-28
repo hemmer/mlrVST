@@ -76,7 +76,7 @@ public:
 
         The caller is responsible for deleting the object that is returned.
 
-        If it can't load the plugin, it returns 0 and leaves a message in the
+        If it can't load the plugin, it returns nullptr and leaves a message in the
         errorMessage string.
     */
     AudioPluginInstance* createPluginInstance (const PluginDescription& description,
@@ -92,7 +92,7 @@ private:
     //==============================================================================
     OwnedArray <AudioPluginFormat> formats;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginFormatManager);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginFormatManager)
 };
 
 

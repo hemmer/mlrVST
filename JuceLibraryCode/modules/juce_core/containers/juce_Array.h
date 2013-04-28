@@ -56,7 +56,8 @@
     @see OwnedArray, ReferenceCountedArray, StringArray, CriticalSection
 */
 template <typename ElementType,
-          typename TypeOfCriticalSectionToUse = DummyCriticalSection>
+          typename TypeOfCriticalSectionToUse = DummyCriticalSection,
+          int minimumAllocatedSize = 0>
 class Array
 {
 private:
@@ -220,7 +221,7 @@ public:
 
     /** Returns one of the elements in the array.
         If the index passed in is beyond the range of valid elements, this
-        will return zero.
+        will return a default value.
 
         If you're certain that the index will always be a valid element, you
         can call getUnchecked() instead, which is faster.
@@ -267,7 +268,7 @@ public:
         return data.elements [index];
     }
 
-    /** Returns the first element in the array, or 0 if the array is empty.
+    /** Returns the first element in the array, or a default value if the array is empty.
 
         @see operator[], getUnchecked, getLast
     */
@@ -278,7 +279,7 @@ public:
                              : ElementType();
     }
 
-    /** Returns the last element in the array, or 0 if the array is empty.
+    /** Returns the last element in the array, or a default value if the array is empty.
 
         @see operator[], getUnchecked, getFirst
     */
@@ -571,7 +572,7 @@ public:
         const ScopedLockType lock2 (otherArray.getLock());
 
         data.swapWith (otherArray.data);
-        swapVariables (numUsed, otherArray.numUsed);
+        std::swap (numUsed, otherArray.numUsed);
     }
 
     /** Adds elements from another array to the end of this array.
@@ -717,23 +718,12 @@ public:
 
         if (isPositiveAndBelow (indexToRemove, numUsed))
         {
-            --numUsed;
-
-            ElementType* const e = data.elements + indexToRemove;
-            ElementType removed (*e);
-            e->~ElementType();
-            const int numberToShift = numUsed - indexToRemove;
-
-            if (numberToShift > 0)
-                memmove (e, e + 1, ((size_t) numberToShift) * sizeof (ElementType));
-
-            minimiseStorageAfterRemoval();
+            ElementType removed (data.elements[indexToRemove]);
+            removeInternal (indexToRemove);
             return removed;
         }
-        else
-        {
-            return ElementType();
-        }
+
+        return ElementType();
     }
 
     /** Removes an item from the array.
@@ -753,7 +743,7 @@ public:
         {
             if (valueToRemove == e[i])
             {
-                remove (i);
+                removeInternal (i);
                 break;
             }
         }
@@ -770,11 +760,10 @@ public:
     void removeAllInstancesOf (ParameterType valueToRemove)
     {
         const ScopedLockType lock (getLock());
-        ElementType* const e = data.elements;
 
         for (int i = numUsed; --i >= 0;)
-            if (valueToRemove == e[i])
-                remove (i);
+            if (valueToRemove == data.elements[i])
+                removeInternal (i);
     }
 
     /** Removes a range of elements from the array.
@@ -852,7 +841,7 @@ public:
             {
                 for (int i = numUsed; --i >= 0;)
                     if (otherArray.contains (data.elements [i]))
-                        remove (i);
+                        removeInternal (i);
             }
         }
     }
@@ -880,7 +869,7 @@ public:
             {
                 for (int i = numUsed; --i >= 0;)
                     if (! otherArray.contains (data.elements [i]))
-                        remove (i);
+                        removeInternal (i);
             }
         }
     }
@@ -901,8 +890,8 @@ public:
         if (isPositiveAndBelow (index1, numUsed)
              && isPositiveAndBelow (index2, numUsed))
         {
-            swapVariables (data.elements [index1],
-                           data.elements [index2]);
+            std::swap (data.elements [index1],
+                       data.elements [index2]);
         }
     }
 
@@ -1030,6 +1019,19 @@ private:
     ArrayAllocationBase <ElementType, TypeOfCriticalSectionToUse> data;
     int numUsed;
 
+    void removeInternal (const int indexToRemove)
+    {
+        --numUsed;
+        ElementType* const e = data.elements + indexToRemove;
+        e->~ElementType();
+        const int numberToShift = numUsed - indexToRemove;
+
+        if (numberToShift > 0)
+            memmove (e, e + 1, ((size_t) numberToShift) * sizeof (ElementType));
+
+        minimiseStorageAfterRemoval();
+    }
+
     inline void deleteAllElements() noexcept
     {
         for (int i = 0; i < numUsed; ++i)
@@ -1038,8 +1040,8 @@ private:
 
     void minimiseStorageAfterRemoval()
     {
-        if (data.numAllocated > numUsed * 2)
-            data.shrinkToNoMoreThan (jmax (numUsed, 64 / (int) sizeof (ElementType)));
+        if (data.numAllocated > jmax (minimumAllocatedSize, numUsed * 2))
+            data.shrinkToNoMoreThan (jmax (numUsed, jmax (minimumAllocatedSize, 64 / (int) sizeof (ElementType))));
     }
 };
 

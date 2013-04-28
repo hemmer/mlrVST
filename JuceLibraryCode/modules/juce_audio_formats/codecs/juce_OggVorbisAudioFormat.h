@@ -33,7 +33,7 @@
 
     @see AudioFormat,
 */
-class JUCE_API  OggVorbisAudioFormat : public AudioFormat
+class JUCE_API  OggVorbisAudioFormat  : public AudioFormat
 {
 public:
     //==============================================================================
@@ -67,6 +67,14 @@ public:
     */
     static const char* const encoderName;
 
+    static const char* const id3title;          /**< Metadata key for setting an ID3 title. */
+    static const char* const id3artist;         /**< Metadata key for setting an ID3 artist name. */
+    static const char* const id3album;          /**< Metadata key for setting an ID3 album. */
+    static const char* const id3comment;        /**< Metadata key for setting an ID3 comment. */
+    static const char* const id3date;           /**< Metadata key for setting an ID3 date. */
+    static const char* const id3genre;          /**< Metadata key for setting an ID3 genre. */
+    static const char* const id3trackNumber;    /**< Metadata key for setting an ID3 track number. */
+
     //==============================================================================
     AudioFormatReader* createReaderFor (InputStream* sourceStream,
                                         bool deleteStreamIfOpeningFails);
@@ -79,7 +87,7 @@ public:
                                         int qualityOptionIndex);
 
 private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OggVorbisAudioFormat);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OggVorbisAudioFormat)
 };
 
 

@@ -374,7 +374,7 @@ private:
         return true;
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ALSADevice);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ALSADevice)
 };
 
 //==============================================================================
@@ -662,15 +662,14 @@ private:
         getDeviceProperties (inputId, dummy, dummy, minChansIn, maxChansIn, sampleRates);
         getDeviceProperties (outputId, minChansOut, maxChansOut, dummy, dummy, sampleRates);
 
-        unsigned int i;
-        for (i = 0; i < maxChansOut; ++i)
+        for (unsigned int i = 0; i < maxChansOut; ++i)
             channelNamesOut.add ("channel " + String ((int) i + 1));
 
-        for (i = 0; i < maxChansIn; ++i)
+        for (unsigned int i = 0; i < maxChansIn; ++i)
             channelNamesIn.add ("channel " + String ((int) i + 1));
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ALSAThread);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ALSAThread)
 };
 
 
@@ -931,7 +930,7 @@ public:
         return wantInputNames ? inputNames : outputNames;
     }
 
-    int getDefaultDeviceIndex (bool forInput) const
+    int getDefaultDeviceIndex (bool /* forInput */) const
     {
         jassert (hasScanned); // need to call scanForDevices() before doing this
         return 0;
@@ -1002,7 +1001,7 @@ private:
         return s;
     }*/
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ALSAAudioIODeviceType);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ALSAAudioIODeviceType)
 };
 
 //==============================================================================

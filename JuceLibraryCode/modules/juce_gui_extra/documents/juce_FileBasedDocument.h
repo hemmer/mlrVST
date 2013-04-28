@@ -69,7 +69,7 @@ public:
     /** Returns true if the changed() method has been called since the file was
         last saved or loaded.
 
-        @see resetChangedFlag, changed
+        @see setChangedFlag, changed
     */
     bool hasChangedSinceSaved() const                           { return changedSinceSave; }
 
@@ -79,9 +79,9 @@ public:
         ChangeBroadcaster base class.
 
         After calling the method, the hasChangedSinceSaved() method will return true, until
-        it is reset either by saving to a file or using the resetChangedFlag() method.
+        it is reset either by saving to a file or using the setChangedFlag() method.
 
-        @see hasChangedSinceSaved, resetChangedFlag
+        @see hasChangedSinceSaved, setChangedFlag
     */
     virtual void changed();
 
@@ -287,7 +287,7 @@ private:
     bool changedSinceSave;
     String fileExtension, fileWildcard, openFileDialogTitle, saveFileDialogTitle;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FileBasedDocument);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FileBasedDocument)
 };
 
 

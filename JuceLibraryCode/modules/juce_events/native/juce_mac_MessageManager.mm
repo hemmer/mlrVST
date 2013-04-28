@@ -29,8 +29,8 @@ AppFocusChangeCallback appFocusChangeCallback = nullptr;
 typedef bool (*CheckEventBlockedByModalComps) (NSEvent*);
 CheckEventBlockedByModalComps isEventBlockedByModalComps = nullptr;
 
-typedef void (*MenuTrackingBeganCallback)();
-MenuTrackingBeganCallback menuTrackingBeganCallback = nullptr;
+typedef void (*MenuTrackingChangedCallback)(bool);
+MenuTrackingChangedCallback menuTrackingChangedCallback = nullptr;
 
 //==============================================================================
 struct AppDelegate
@@ -45,6 +45,8 @@ public:
 
         [center addObserver: delegate selector: @selector (mainMenuTrackingBegan:)
                        name: NSMenuDidBeginTrackingNotification object: nil];
+        [center addObserver: delegate selector: @selector (mainMenuTrackingEnded:)
+                       name: NSMenuDidEndTrackingNotification object: nil];
 
         if (JUCEApplicationBase::isStandaloneApp())
         {
@@ -94,9 +96,6 @@ public:
     id delegate;
 
 private:
-    CFRunLoopRef runLoop;
-    CFRunLoopSourceRef runLoopSource;
-
     //==============================================================================
     struct AppDelegateClass   : public ObjCClass <NSObject>
     {
@@ -111,6 +110,7 @@ private:
             addMethod (@selector (applicationWillUnhide:),        applicationWillUnhide,      "v@:@");
             addMethod (@selector (broadcastMessageCallback:),     broadcastMessageCallback,   "v@:@");
             addMethod (@selector (mainMenuTrackingBegan:),        mainMenuTrackingBegan,      "v@:@");
+            addMethod (@selector (mainMenuTrackingEnded:),        mainMenuTrackingEnded,      "v@:@");
             addMethod (@selector (dummyMethod),                   dummyMethod,                "v@:");
 
             registerClass();
@@ -119,9 +119,7 @@ private:
     private:
         static NSApplicationTerminateReply applicationShouldTerminate (id /*self*/, SEL, NSApplication*)
         {
-            JUCEApplicationBase* const app = JUCEApplicationBase::getInstance();
-
-            if (app != nullptr)
+            if (JUCEApplicationBase* const app = JUCEApplicationBase::getInstance())
             {
                 app->systemRequestedQuit();
 
@@ -139,9 +137,7 @@ private:
 
         static BOOL application_openFile (id /*self*/, SEL, NSApplication*, NSString* filename)
         {
-            JUCEApplicationBase* const app = JUCEApplicationBase::getInstance();
-
-            if (app != nullptr)
+            if (JUCEApplicationBase* const app = JUCEApplicationBase::getInstance())
             {
                 app->anotherInstanceStarted (quotedIfContainsSpaces (filename));
                 return YES;
@@ -152,9 +148,7 @@ private:
 
         static void application_openFiles (id /*self*/, SEL, NSApplication*, NSArray* filenames)
         {
-            JUCEApplicationBase* const app = JUCEApplicationBase::getInstance();
-
-            if (app != nullptr)
+            if (JUCEApplicationBase* const app = JUCEApplicationBase::getInstance())
             {
                 StringArray files;
                 for (unsigned int i = 0; i < [filenames count]; ++i)
@@ -178,8 +172,14 @@ private:
 
         static void mainMenuTrackingBegan (id /*self*/, SEL, NSNotification*)
         {
-            if (menuTrackingBeganCallback != nullptr)
-                (*menuTrackingBeganCallback)();
+            if (menuTrackingChangedCallback != nullptr)
+                (*menuTrackingChangedCallback) (true);
+        }
+
+        static void mainMenuTrackingEnded (id /*self*/, SEL, NSNotification*)
+        {
+            if (menuTrackingChangedCallback != nullptr)
+                (*menuTrackingChangedCallback) (false);
         }
 
         static void dummyMethod (id /*self*/, SEL) {}   // (used as a way of running a dummy thread)
@@ -208,36 +208,43 @@ void MessageManager::runDispatchLoop()
     if (! quitMessagePosted) // check that the quit message wasn't already posted..
     {
         JUCE_AUTORELEASEPOOL
-
-        // must only be called by the message thread!
-        jassert (isThisTheMessageThread());
-
-      #if JUCE_CATCH_UNHANDLED_EXCEPTIONS
-        @try
         {
+            // must only be called by the message thread!
+            jassert (isThisTheMessageThread());
+
+          #if JUCE_PROJUCER_LIVE_BUILD
+            runDispatchLoopUntil (std::numeric_limits<int>::max());
+          #else
+           #if JUCE_CATCH_UNHANDLED_EXCEPTIONS
+            @try
+            {
+                [NSApp run];
+            }
+            @catch (NSException* e)
+            {
+                // An AppKit exception will kill the app, but at least this provides a chance to log it.,
+                std::runtime_error ex (std::string ("NSException: ") + [[e name] UTF8String] + ", Reason:" + [[e reason] UTF8String]);
+                JUCEApplication::sendUnhandledException (&ex, __FILE__, __LINE__);
+            }
+            @finally
+            {
+            }
+           #else
             [NSApp run];
+           #endif
+          #endif
         }
-        @catch (NSException* e)
-        {
-            // An AppKit exception will kill the app, but at least this provides a chance to log it.,
-            std::runtime_error ex (std::string ("NSException: ") + [[e name] UTF8String] + ", Reason:" + [[e reason] UTF8String]);
-            JUCEApplication::sendUnhandledException (&ex, __FILE__, __LINE__);
-        }
-        @finally
-        {
-        }
-       #else
-        [NSApp run];
-       #endif
     }
 }
 
 void MessageManager::stopDispatchLoop()
 {
     quitMessagePosted = true;
+   #if ! JUCE_PROJUCER_LIVE_BUILD
     [NSApp stop: nil];
     [NSApp activateIgnoringOtherApps: YES]; // (if the app is inactive, it sits there and ignores the quit request until the next time it gets activated)
     [NSEvent startPeriodicEventsAfterDelay: 0 withPeriod: 0.1];
+   #endif
 }
 
 #if JUCE_MODAL_LOOPS_PERMITTED
@@ -251,19 +258,20 @@ bool MessageManager::runDispatchLoopUntil (int millisecondsToRunFor)
     while (! quitMessagePosted)
     {
         JUCE_AUTORELEASEPOOL
+        {
+            CFRunLoopRunInMode (kCFRunLoopDefaultMode, 0.001, true);
 
-        CFRunLoopRunInMode (kCFRunLoopDefaultMode, 0.001, true);
+            NSEvent* e = [NSApp nextEventMatchingMask: NSAnyEventMask
+                                            untilDate: [NSDate dateWithTimeIntervalSinceNow: 0.001]
+                                               inMode: NSDefaultRunLoopMode
+                                              dequeue: YES];
 
-        NSEvent* e = [NSApp nextEventMatchingMask: NSAnyEventMask
-                                        untilDate: [NSDate dateWithTimeIntervalSinceNow: 0.001]
-                                           inMode: NSDefaultRunLoopMode
-                                          dequeue: YES];
+            if (e != nil && (isEventBlockedByModalComps == nullptr || ! (*isEventBlockedByModalComps) (e)))
+                [NSApp sendEvent: e];
 
-        if (e != nil && (isEventBlockedByModalComps == nullptr || ! (*isEventBlockedByModalComps) (e)))
-            [NSApp sendEvent: e];
-
-        if (Time::getMillisecondCounter() >= endTime)
-            break;
+            if (Time::getMillisecondCounter() >= endTime)
+                break;
+        }
     }
 
     return ! quitMessagePosted;
@@ -275,7 +283,9 @@ void initialiseNSApplication();
 void initialiseNSApplication()
 {
     JUCE_AUTORELEASEPOOL
-    [NSApplication sharedApplication];
+    {
+        [NSApplication sharedApplication];
+    }
 }
 
 static AppDelegate* appDelegate = nullptr;

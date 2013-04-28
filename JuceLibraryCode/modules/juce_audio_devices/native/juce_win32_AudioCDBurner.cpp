@@ -148,7 +148,7 @@ public:
     private:
         Pimpl& pimpl;
 
-        JUCE_DECLARE_NON_COPYABLE (ScopedDiscOpener);
+        JUCE_DECLARE_NON_COPYABLE (ScopedDiscOpener)
     };
 
     DiskState getDiskState()
@@ -166,8 +166,8 @@ public:
 
         if (type == 0)
             return noDisc;
-        else
-            return readOnlyDiskPresent;
+
+        return readOnlyDiskPresent;
     }
 
     int getIntProperty (const LPOLESTR name, const int defaultReturn) const

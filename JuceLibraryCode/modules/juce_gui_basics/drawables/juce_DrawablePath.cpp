@@ -78,9 +78,9 @@ void DrawablePath::applyRelativePath (const RelativePointPath& newRelativePath, 
 class DrawablePath::RelativePositioner  : public RelativeCoordinatePositionerBase
 {
 public:
-    RelativePositioner (DrawablePath& component_)
-        : RelativeCoordinatePositionerBase (component_),
-          owner (component_)
+    RelativePositioner (DrawablePath& comp)
+        : RelativeCoordinatePositionerBase (comp),
+          owner (comp)
     {
     }
 
@@ -121,7 +121,7 @@ public:
 private:
     DrawablePath& owner;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RelativePositioner);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RelativePositioner)
 };
 
 void DrawablePath::setPath (const RelativePointPath& newRelativePath)
@@ -174,20 +174,20 @@ void DrawablePath::ValueTreeWrapper::setUsesNonZeroWinding (bool b, UndoManager*
     state.setProperty (nonZeroWinding, b, undoManager);
 }
 
-void DrawablePath::ValueTreeWrapper::readFrom (const RelativePointPath& relativePath, UndoManager* undoManager)
+void DrawablePath::ValueTreeWrapper::readFrom (const RelativePointPath& p, UndoManager* undoManager)
 {
-    setUsesNonZeroWinding (relativePath.usesNonZeroWinding, undoManager);
+    setUsesNonZeroWinding (p.usesNonZeroWinding, undoManager);
 
     ValueTree pathTree (getPathState());
     pathTree.removeAllChildren (undoManager);
 
-    for (int i = 0; i < relativePath.elements.size(); ++i)
-        pathTree.addChild (relativePath.elements.getUnchecked(i)->createTree(), -1, undoManager);
+    for (int i = 0; i < p.elements.size(); ++i)
+        pathTree.addChild (p.elements.getUnchecked(i)->createTree(), -1, undoManager);
 }
 
-void DrawablePath::ValueTreeWrapper::writeTo (RelativePointPath& relativePath) const
+void DrawablePath::ValueTreeWrapper::writeTo (RelativePointPath& p) const
 {
-    relativePath.usesNonZeroWinding = usesNonZeroWinding();
+    p.usesNonZeroWinding = usesNonZeroWinding();
     RelativePoint points[3];
 
     const ValueTree pathTree (state.getChildWithName (path));
@@ -210,7 +210,7 @@ void DrawablePath::ValueTreeWrapper::writeTo (RelativePointPath& relativePath) c
         else if (t == Element::cubicToElement)       newElement = new RelativePointPath::CubicTo (points[0], points[1], points[2]);
         else                                         jassertfalse;
 
-        relativePath.addElement (newElement);
+        p.addElement (newElement);
     }
 }
 
@@ -406,10 +406,10 @@ namespace DrawablePathHelpers
 float DrawablePath::ValueTreeWrapper::Element::findProportionAlongLine (const Point<float>& targetPoint, Expression::Scope* scope) const
 {
     using namespace DrawablePathHelpers;
-    const Identifier type (state.getType());
+    const Identifier pointType (state.getType());
     float bestProp = 0;
 
-    if (type == cubicToElement)
+    if (pointType == cubicToElement)
     {
         RelativePoint rp1 (getStartPoint()), rp2 (getControlPoint (0)), rp3 (getControlPoint (1)), rp4 (getEndPoint());
 
@@ -430,7 +430,7 @@ float DrawablePath::ValueTreeWrapper::Element::findProportionAlongLine (const Po
             }
         }
     }
-    else if (type == quadraticToElement)
+    else if (pointType == quadraticToElement)
     {
         RelativePoint rp1 (getStartPoint()), rp2 (getControlPoint (0)), rp3 (getEndPoint());
         const Point<float> points[] = { rp1.resolve (scope), rp2.resolve (scope), rp3.resolve (scope) };
@@ -450,7 +450,7 @@ float DrawablePath::ValueTreeWrapper::Element::findProportionAlongLine (const Po
             }
         }
     }
-    else if (type == lineToElement)
+    else if (pointType == lineToElement)
     {
         RelativePoint rp1 (getStartPoint()), rp2 (getEndPoint());
         const Line<float> line (rp1.resolve (scope), rp2.resolve (scope));
@@ -463,9 +463,9 @@ float DrawablePath::ValueTreeWrapper::Element::findProportionAlongLine (const Po
 ValueTree DrawablePath::ValueTreeWrapper::Element::insertPoint (const Point<float>& targetPoint, Expression::Scope* scope, UndoManager* undoManager)
 {
     ValueTree newTree;
-    const Identifier type (state.getType());
+    const Identifier pointType (state.getType());
 
-    if (type == cubicToElement)
+    if (pointType == cubicToElement)
     {
         float bestProp = findProportionAlongLine (targetPoint, scope);
 
@@ -493,7 +493,7 @@ ValueTree DrawablePath::ValueTreeWrapper::Element::insertPoint (const Point<floa
 
         state.getParent().addChild (newTree, state.getParent().indexOf (state) + 1, undoManager);
     }
-    else if (type == quadraticToElement)
+    else if (pointType == quadraticToElement)
     {
         float bestProp = findProportionAlongLine (targetPoint, scope);
 
@@ -515,7 +515,7 @@ ValueTree DrawablePath::ValueTreeWrapper::Element::insertPoint (const Point<floa
 
         state.getParent().addChild (newTree, state.getParent().indexOf (state) + 1, undoManager);
     }
-    else if (type == lineToElement)
+    else if (pointType == lineToElement)
     {
         RelativePoint rp1 (getStartPoint()), rp2 (getEndPoint());
         const Line<float> line (rp1.resolve (scope), rp2.resolve (scope));
@@ -528,7 +528,7 @@ ValueTree DrawablePath::ValueTreeWrapper::Element::insertPoint (const Point<floa
 
         state.getParent().addChild (newTree, state.getParent().indexOf (state) + 1, undoManager);
     }
-    else if (type == closeSubPathElement)
+    else if (pointType == closeSubPathElement)
     {
     }
 

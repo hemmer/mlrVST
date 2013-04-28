@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <FILTERGRAPH>
-  <FILTER uid="1" x="0.5" y="0.100000001" uiLastX="" uiLastY="">
+  <FILTER uid="1" x="0.309343434" y="0.128630705" uiLastX="" uiLastY="">
     <PLUGIN name="Audio Input" descriptiveName="" format="Internal" category="I/O devices"
             manufacturer="Raw Material Software" version="1.0" file="" uid="246006c0"
             isInstrument="0" fileTime="0" numInputs="0" numOutputs="2"/>
     <STATE>0.</STATE>
   </FILTER>
-  <FILTER uid="2" x="0.25" y="0.100000001" uiLastX="" uiLastY="">
+  <FILTER uid="2" x="0.708333333" y="0.0788381743" uiLastX="" uiLastY="">
     <PLUGIN name="Midi Input" descriptiveName="" format="Internal" category="I/O devices"
             manufacturer="Raw Material Software" version="1.0" file="" uid="cb5fde0b"
             isInstrument="0" fileTime="0" numInputs="0" numOutputs="0"/>
@@ -19,12 +19,12 @@
             isInstrument="0" fileTime="0" numInputs="2" numOutputs="0"/>
     <STATE>0.</STATE>
   </FILTER>
-  <FILTER uid="4" x="0.430594901" y="0.509433962" uiLastX="" uiLastY="">
+  <FILTER uid="4" x="0.396464646" y="0.421161826" uiLastX="" uiLastY="">
     <PLUGIN name="mlrVST" format="VST" category="Effect" manufacturer="hemmer"
-            version="V1.0.0" file="C:\Users\Hemmer\Documents\C++\JUCE\mlrVST\Builds\VisualStudio2012\Debug\mlrVST.dll"
-            uid="6d6c7258" isInstrument="0" fileTime="1375c47b638" numInputs="2"
+            version="V100" file="C:\Users\hemmer\Documents\C++\JUCE\mlrVST\Builds\VisualStudio2012\Debug\mlrVST.dll"
+            uid="6d6c7258" isInstrument="0" fileTime="13e3debfbf0" numInputs="2"
             numOutputs="2"/>
-    <STATE>459.CMlaKA....fQBMDZ....AzFaxgE.A.....................................................................................................................................................................................P.qX0PxDRHA...7bDSOITPLMUQTQURNczTfzTPSQUQR80QAkjS8HBLtfCLv.CLv.SLxHBHCgTPN4TQL80QAkjSvziHv3BNv.CLv.CLwHiHfLDRA4jSEwzWGETRNESOh.iK3.CLv.CLvDiLh.xPHEjSNUDSecTPI4jL8HBLtfCLv.CLv.SLxHBHCgTPN4TQL80QAkjSyziHv3BNv.CLv.CLwHiHfLDRA4jSEwzWGETRNQSOh.iK3.CLv.CLvDiLh.xPHEjSNUDSecTPI4TM8HBLtfCLv.CLv.SLxHBHCgTPN4TQL80QAkjS1ziHv3BNv.CLv.CLwHiHfLDRA4jSEwzWGETRNcSOh.iK3.CLv.CLvDiLh.xPUIkTE4DUeAkTEMUQT0iHt8lakIxK9.Py</STATE>
+    <STATE>458.CMlaKA....fQBMDZ....AzFaxgE....Y..................................................................................................................................................................................P.pX0PxDRHA...7bDSOITPLMUQTQURNczTfzTPSQUQR80QAkjS8HBLtfCLv.CLv.SLxHBHCgTPN4TQL80QAkjSvziHv3BNv.CLv.CLwHiHfLDRA4jSEwzWGETRNESOh.iK3.CLv.CLvDiLh.xPHEjSNUDSecTPI4jL8HBLtfCLv.CLv.SLxHBHCgTPN4TQL80QAkjSyziHv3BNv.CLv.CLwHiHfLDRA4jSEwzWGETRNQSOh.iK3.CLv.CLvDiLh.xPHEjSNUDSecTPI4TM8HBLtfCLv.CLv.SLxHBHCgTPN4TQL80QAkjS1ziHv3BNv.CLv.CLwHiHfLDRA4jSEwzWGETRNcSOh.iK3.CLv.CLvDiLh.xPUIkTE4DUeAkTEMUQT0iHt8lakIxK9..</STATE>
   </FILTER>
   <CONNECTION srcFilter="1" srcChannel="0" dstFilter="4" dstChannel="0"/>
   <CONNECTION srcFilter="1" srcChannel="1" dstFilter="4" dstChannel="1"/>

@@ -131,7 +131,7 @@ public:
 private:
     const RelativeRectangle& rect;
 
-    JUCE_DECLARE_NON_COPYABLE (RelativeRectangleLocalScope);
+    JUCE_DECLARE_NON_COPYABLE (RelativeRectangleLocalScope)
 };
 
 const Rectangle<float> RelativeRectangle::resolve (const Expression::Scope* scope) const
@@ -187,9 +187,9 @@ void RelativeRectangle::renameSymbol (const Expression::Symbol& oldSymbol, const
 class RelativeRectangleComponentPositioner  : public RelativeCoordinatePositionerBase
 {
 public:
-    RelativeRectangleComponentPositioner (Component& component_, const RelativeRectangle& rectangle_)
-        : RelativeCoordinatePositionerBase (component_),
-          rectangle (rectangle_)
+    RelativeRectangleComponentPositioner (Component& comp, const RelativeRectangle& r)
+        : RelativeCoordinatePositionerBase (comp),
+          rectangle (r)
     {
     }
 
@@ -237,7 +237,7 @@ public:
 private:
     RelativeRectangle rectangle;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RelativeRectangleComponentPositioner);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RelativeRectangleComponentPositioner)
 };
 
 void RelativeRectangle::applyToComponent (Component& component) const

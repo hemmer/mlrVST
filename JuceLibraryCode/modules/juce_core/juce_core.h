@@ -34,6 +34,25 @@
 */
 namespace DummyNamespaceStatementToCatchSyntaxErrors {}
 
+#ifndef JUCE_MODULE_AVAILABLE_juce_core
+ /* If you fail to make sure that all your compile units are building JUCE with the same set of
+    option flags, then there's a risk that different compile units will treat the classes as having
+    different memory layouts, leading to very nasty memory corruption errors when they all get
+    linked together. That's why it's best to always include the Introjucer-generated AppConfig.h
+    file before any juce headers.
+
+    Note that if you do have an AppConfig.h file and hit this warning, it means that it doesn't
+    contain the JUCE_MODULE_AVAILABLE_xxx flags, which are necessary for some inter-module
+    functionality to work correctly. In that case, you should either rebuild your AppConfig.h with
+    the latest introjucer, or fix it manually to contain these flags.
+ */
+ #ifdef _MSC_VER
+  #pragma message ("Have you included your AppConfig.h file before including the JUCE headers?")
+ #else
+  #warning "Have you included your AppConfig.h file before including the JUCE headers?"
+ #endif
+#endif
+
 //==============================================================================
 #include "system/juce_TargetPlatform.h"
 
@@ -345,6 +364,9 @@ namespace juce
 #ifndef __JUCE_STRINGPOOL_JUCEHEADER__
  #include "text/juce_StringPool.h"
 #endif
+#ifndef __JUCE_TEXTDIFF_JUCEHEADER__
+ #include "text/juce_TextDiff.h"
+#endif
 #ifndef __JUCE_CHILDPROCESS_JUCEHEADER__
  #include "threads/juce_ChildProcess.h"
 #endif
@@ -353,6 +375,9 @@ namespace juce
 #endif
 #ifndef __JUCE_DYNAMICLIBRARY_JUCEHEADER__
  #include "threads/juce_DynamicLibrary.h"
+#endif
+#ifndef __JUCE_HIGHRESOLUTIONTIMER_JUCEHEADER__
+ #include "threads/juce_HighResolutionTimer.h"
 #endif
 #ifndef __JUCE_INTERPROCESSLOCK_JUCEHEADER__
  #include "threads/juce_InterProcessLock.h"

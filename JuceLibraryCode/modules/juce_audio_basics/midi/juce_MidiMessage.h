@@ -116,7 +116,7 @@ public:
 
         @see getRawDataSize
     */
-    uint8* getRawData() const noexcept                          { return data; }
+    const uint8* getRawData() const noexcept                    { return data; }
 
     /** Returns the number of bytes of data in the message.
 
@@ -846,7 +846,7 @@ public:
 
         The data passed in is wrapped with header and tail bytes of 0xf0 and 0xf7.
     */
-    static MidiMessage createSysExMessage (const uint8* sysexData,
+    static MidiMessage createSysExMessage (const void* sysexData,
                                            int dataSize);
 
 
@@ -891,7 +891,7 @@ public:
         The frequencyOfA parameter is an optional frequency for 'A', normally 440-444Hz for concert pitch.
         @see getMidiNoteName
     */
-    static const double getMidiNoteInHertz (int noteNumber, const double frequencyOfA = 440.0) noexcept;
+    static double getMidiNoteInHertz (int noteNumber, const double frequencyOfA = 440.0) noexcept;
 
     /** Returns the standard name of a GM instrument.
 

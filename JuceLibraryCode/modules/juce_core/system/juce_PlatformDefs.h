@@ -51,10 +51,8 @@
 //==============================================================================
 // Debugging and assertion macros
 
-#if JUCE_LOG_ASSERTIONS
+#if JUCE_LOG_ASSERTIONS || JUCE_DEBUG
  #define juce_LogCurrentAssertion    juce::logAssertion (__FILE__, __LINE__);
-#elif JUCE_DEBUG
- #define juce_LogCurrentAssertion    std::cerr << "JUCE Assertion failure in " << __FILE__ << ", line " << __LINE__ << std::endl;
 #else
  #define juce_LogCurrentAssertion
 #endif
@@ -160,18 +158,18 @@ namespace juce
         etc..
 
     private:
-        JUCE_DECLARE_NON_COPYABLE (MyClass);
+        JUCE_DECLARE_NON_COPYABLE (MyClass)
     };@endcode
 */
 #define JUCE_DECLARE_NON_COPYABLE(className) \
     className (const className&);\
-    className& operator= (const className&)
+    className& operator= (const className&);
 
 /** This is a shorthand way of writing both a JUCE_DECLARE_NON_COPYABLE and
     JUCE_LEAK_DETECTOR macro for a class.
 */
 #define JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(className) \
-    JUCE_DECLARE_NON_COPYABLE(className);\
+    JUCE_DECLARE_NON_COPYABLE(className) \
     JUCE_LEAK_DETECTOR(className)
 
 /** This macro can be added to class definitions to disable the use of new/delete to
@@ -272,7 +270,7 @@ namespace juce
 //==============================================================================
 #if JUCE_ANDROID && ! DOXYGEN
  #define JUCE_MODAL_LOOPS_PERMITTED 0
-#else
+#elif ! defined (JUCE_MODAL_LOOPS_PERMITTED)
  /** Some operating environments don't provide a modal loop mechanism, so this flag can be
      used to disable any functions that try to run a modal loop. */
  #define JUCE_MODAL_LOOPS_PERMITTED 1
@@ -306,6 +304,14 @@ namespace juce
  #if __has_feature (cxx_rvalue_references)
   #define JUCE_COMPILER_SUPPORTS_MOVE_SEMANTICS 1
  #endif
+
+ #ifndef JUCE_COMPILER_SUPPORTS_OVERRIDE_AND_FINAL
+  #define JUCE_COMPILER_SUPPORTS_OVERRIDE_AND_FINAL 1
+ #endif
+
+ #ifndef JUCE_COMPILER_SUPPORTS_ARC
+  #define JUCE_COMPILER_SUPPORTS_ARC 1
+ #endif
 #endif
 
 #if defined (_MSC_VER) && _MSC_VER >= 1600
@@ -313,9 +319,20 @@ namespace juce
  #define JUCE_COMPILER_SUPPORTS_MOVE_SEMANTICS 1
 #endif
 
+#if defined (_MSC_VER) && _MSC_VER >= 1700
+ #define JUCE_COMPILER_SUPPORTS_OVERRIDE_AND_FINAL 1
+#endif
+
+#if (! JUCE_CLANG) && defined (__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__) >= 40700
+ #define JUCE_COMPILER_SUPPORTS_OVERRIDE_AND_FINAL 1
+#endif
+
 //==============================================================================
 // Declare some fake versions of nullptr and noexcept, for older compilers:
 #if ! (DOXYGEN || JUCE_COMPILER_SUPPORTS_NOEXCEPT)
+ #ifdef noexcept
+  #undef noexcept
+ #endif
  #define noexcept  throw()
  #if defined (_MSC_VER) && _MSC_VER > 1600
   #define _ALLOW_KEYWORD_MACROS 1 // (to stop VC2012 complaining)
@@ -323,7 +340,17 @@ namespace juce
 #endif
 
 #if ! (DOXYGEN || JUCE_COMPILER_SUPPORTS_NULLPTR)
+ #ifdef nullptr
+  #undef nullptr
+ #endif
  #define nullptr (0)
+#endif
+
+#if ! (DOXYGEN || JUCE_COMPILER_SUPPORTS_OVERRIDE_AND_FINAL)
+ #undef  override
+ #define override
+ #undef  final
+ #define final
 #endif
 
 #endif   // __JUCE_PLATFORMDEFS_JUCEHEADER__

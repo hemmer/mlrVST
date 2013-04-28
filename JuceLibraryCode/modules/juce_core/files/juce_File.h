@@ -355,13 +355,11 @@ public:
                       bool applyRecursively = false) const;
 
     /** Returns true if this file is a hidden or system file.
-
         The criteria for deciding whether a file is hidden are platform-dependent.
     */
     bool isHidden() const;
 
     /** If this file is a link, this returns the file that it points to.
-
         If this file isn't actually link, it'll just return itself.
     */
     File getLinkedTarget() const;
@@ -573,7 +571,7 @@ public:
     /** Creates a stream to read from this file.
 
         @returns    a stream that will read from this file (initially positioned at the
-                    start of the file), or 0 if the file can't be opened for some reason
+                    start of the file), or nullptr if the file can't be opened for some reason
         @see createOutputStream, loadFileAsData
     */
     FileInputStream* createInputStream() const;
@@ -585,7 +583,7 @@ public:
         to write to an empty file.
 
         @returns    a stream that will write to this file (initially positioned at the
-                    end of the file), or 0 if the file can't be opened for some reason
+                    end of the file), or nullptr if the file can't be opened for some reason
         @see createInputStream, appendData, appendText
     */
     FileOutputStream* createOutputStream (int bufferSize = 0x8000) const;
@@ -607,8 +605,8 @@ public:
 
         Attempts to load the entire file as a zero-terminated string.
 
-        This makes use of InputStream::readEntireStreamAsString, which should
-        automatically cope with unicode/acsii file formats.
+        This makes use of InputStream::readEntireStreamAsString, which can
+        read either UTF-16 or UTF-8 file formats.
     */
     String loadFileAsString() const;
 
@@ -625,7 +623,7 @@ public:
         @returns false if it can't write to the file for some reason
     */
     bool appendData (const void* dataToAppend,
-                     int numberOfBytes) const;
+                     size_t numberOfBytes) const;
 
     /** Replaces this file's contents with a given block of data.
 
@@ -642,7 +640,7 @@ public:
         @see appendText
     */
     bool replaceWithData (const void* dataToWrite,
-                          int numberOfBytes) const;
+                          size_t numberOfBytes) const;
 
     /** Appends a string to the end of the file.
 
@@ -695,13 +693,11 @@ public:
     static void findFileSystemRoots (Array<File>& results);
 
     /** Finds the name of the drive on which this file lives.
-
         @returns the volume label of the drive, or an empty string if this isn't possible
     */
     String getVolumeLabel() const;
 
     /** Returns the serial number of the volume on which this file lives.
-
         @returns the serial number, or zero if there's a problem doing this
     */
     int getVolumeSerialNumber() const;
@@ -790,7 +786,6 @@ public:
         commonApplicationDataDirectory,
 
         /** The folder that should be used for temporary files.
-
             Always delete them when you're finished, to keep the user's computer tidy!
         */
         tempDirectory,
@@ -829,19 +824,19 @@ public:
         hostApplicationPath,
 
         /** The directory in which applications normally get installed.
-
             So on windows, this would be something like "c:\program files", on the
             Mac "/Applications", or "/usr" on linux.
         */
         globalApplicationsDirectory,
 
-        /** The most likely place where a user might store their music files.
-        */
+        /** The most likely place where a user might store their music files. */
         userMusicDirectory,
 
-        /** The most likely place where a user might store their movie files.
-        */
+        /** The most likely place where a user might store their movie files. */
         userMoviesDirectory,
+
+        /** The most likely place where a user might store their picture files. */
+        userPicturesDirectory
     };
 
     /** Finds the location of a special type of file or directory, such as a home folder or
@@ -853,9 +848,7 @@ public:
 
     //==============================================================================
     /** Returns a temporary file in the system's temp directory.
-
         This will try to return the name of a non-existent temp file.
-
         To get the temp folder, you can use getSpecialLocation (File::tempDirectory).
     */
     static File createTempFile (const String& fileNameEnding);
@@ -863,7 +856,6 @@ public:
 
     //==============================================================================
     /** Returns the current working directory.
-
         @see setAsCurrentWorkingDirectory
     */
     static File getCurrentWorkingDirectory();
@@ -879,13 +871,11 @@ public:
 
     //==============================================================================
     /** The system-specific file separator character.
-
         On Windows, this will be '\', on Mac/Linux, it'll be '/'
     */
     static const juce_wchar separator;
 
     /** The system-specific file separator character, as a string.
-
         On Windows, this will be '\', on Mac/Linux, it'll be '/'
     */
     static const String separatorString;
@@ -912,12 +902,10 @@ public:
     */
     static String createLegalPathName (const String& pathNameToFix);
 
-    /** Indicates whether filenames are case-sensitive on the current operating system.
-    */
+    /** Indicates whether filenames are case-sensitive on the current operating system. */
     static bool areFileNamesCaseSensitive();
 
-    /** Returns true if the string seems to be a fully-specified absolute path.
-    */
+    /** Returns true if the string seems to be a fully-specified absolute path. */
     static bool isAbsolutePath (const String& path);
 
     /** Creates a file that simply contains this string, without doing the sanity-checking
@@ -944,6 +932,11 @@ public:
     void addToDock() const;
    #endif
 
+   #if JUCE_WINDOWS
+    /** Windows ONLY - Creates a win32 .LNK shortcut file that links to this file. */
+    bool createLink (const String& description, const File& linkFileToCreate) const;
+   #endif
+
 private:
     //==============================================================================
     String fullPath;
@@ -954,11 +947,11 @@ private:
     Result createDirectoryInternal (const String&) const;
     bool copyInternal (const File&) const;
     bool moveInternal (const File&) const;
-    bool setFileTimesInternal (int64 modificationTime, int64 accessTime, int64 creationTime) const;
-    void getFileTimesInternal (int64& modificationTime, int64& accessTime, int64& creationTime) const;
-    bool setFileReadOnlyInternal (bool shouldBeReadOnly) const;
+    bool setFileTimesInternal (int64 m, int64 a, int64 c) const;
+    void getFileTimesInternal (int64& m, int64& a, int64& c) const;
+    bool setFileReadOnlyInternal (bool) const;
 
-    JUCE_LEAK_DETECTOR (File);
+    JUCE_LEAK_DETECTOR (File)
 };
 
 #endif   // __JUCE_FILE_JUCEHEADER__

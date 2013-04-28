@@ -109,6 +109,16 @@ public:
     TemporaryFile (const File& targetFile,
                    int optionFlags = 0);
 
+    /** Creates a temporary file using an explicit filename.
+        The other constructors are a better choice than this one, unless for some reason
+        you need to explicitly specify the temporary file you want to use.
+
+        @param targetFile    the file that you intend to overwrite
+        @param temporaryFile the temporary file to be used
+    */
+    TemporaryFile (const File& targetFile,
+                   const File& temporaryFile);
+
     /** Destructor.
 
         When this object is deleted it will make sure that its temporary file is
@@ -119,10 +129,10 @@ public:
 
     //==============================================================================
     /** Returns the temporary file. */
-    const File& getFile() const                 { return temporaryFile; }
+    const File& getFile() const noexcept                { return temporaryFile; }
 
     /** Returns the target file that was specified in the constructor. */
-    const File& getTargetFile() const           { return targetFile; }
+    const File& getTargetFile() const noexcept          { return targetFile; }
 
     /** Tries to move the temporary file to overwrite the target file that was
         specified in the constructor.
@@ -150,11 +160,9 @@ public:
 
 private:
     //==============================================================================
-    File temporaryFile, targetFile;
+    const File temporaryFile, targetFile;
 
-    void createTempFile (const File& parentDirectory, String name, const String& suffix, int optionFlags);
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TemporaryFile);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TemporaryFile)
 };
 
 #endif   // __JUCE_TEMPORARYFILE_JUCEHEADER__

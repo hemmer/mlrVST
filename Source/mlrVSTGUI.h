@@ -12,6 +12,7 @@
 #include "timedButton.h"
 #include "mlrVSTLookAndFeel.h"
 
+
 #ifndef PAD_AMOUNT
 #define PAD_AMOUNT 10
 #endif
@@ -78,7 +79,7 @@ private:
 
     // Style / positioning objects ///////////////
     mlrVSTLookAndFeel myLookAndFeel;
-    menuLookandFeel menuLF;
+    mlrVSTLookAndFeel menuLF;
     // these are just helpers for positioning
     int xPosition, yPosition;
 
