@@ -160,16 +160,21 @@ public:
 
     void drawLabel(Graphics& g, Label& label)
     {
+		Font font(label.getFont());
+		font.setHeight(silkFontSizeBig);
+		g.setFont(font);
+
         g.fillAll (label.findColour(Label::backgroundColourId));
+
 
         const float alpha = label.isEnabled() ? 1.0f : 0.5f;
 
         g.setColour (label.findColour (Label::textColourId).withMultipliedAlpha (alpha));
-        g.setFont(silkFontSizeSmall);
+		        
+
         g.drawFittedText(label.getText(), 4, 4,
             label.getWidth() - 2, label.getHeight() - 8,
-            Justification::centredLeft, 1,
-            label.getMinimumHorizontalScale());
+            Justification::centredLeft, 1, 1.0f);
 
         g.setColour (label.findColour (Label::outlineColourId).withMultipliedAlpha (alpha));
         g.drawRect (0, 0, label.getWidth(), label.getHeight());

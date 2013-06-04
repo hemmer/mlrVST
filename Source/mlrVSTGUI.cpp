@@ -202,12 +202,14 @@ void mlrVSTGUI::buildSliders()
     masterGainSlider.setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
     masterGainSlider.setColour(Slider::thumbColourId, Colours::darkgrey);
     masterGainSlider.setColour(Slider::backgroundColourId, (Colours::darkgrey).darker());
-    masterGainSlider.setLookAndFeel(&menuLF);
+
     // and its label
     addAndMakeVisible(&masterSliderLabel);
     masterSliderLabel.setBounds(xPosition, yPosition + sliderHeight, sliderWidth, 16);
     masterSliderLabel.setColour(Label::backgroundColourId, Colours::black);
     masterSliderLabel.setColour(Label::textColourId, Colours::white);
+	masterSliderLabel.setFont(fontSize);
+
 
 
     xPosition += 1;
@@ -227,7 +229,6 @@ void mlrVSTGUI::buildSliders()
 
         Colour sliderColour = parent->getChannelColour(i);
         slidersArray[i]->setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
-        slidersArray[i]->setLookAndFeel(&menuLF);
         slidersArray[i]->setColour(Slider::thumbColourId, sliderColour);
         slidersArray[i]->setColour(Slider::backgroundColourId, sliderColour.darker());
 
@@ -239,7 +240,6 @@ void mlrVSTGUI::buildSliders()
         slidersMuteBtnArray[i]->setColour(Label::textColourId, Colours::white);
         slidersMuteBtnArray[i]->addListener(this);
         slidersMuteBtnArray[i]->setToggleState(parent->getChannelMuteStatus(i), false);
-        //slidersMuteBtnArray[i]->setFont(fontSilk, fontSize);
     }
 
     // increment yPosition for the next GUI item
@@ -646,7 +646,6 @@ void mlrVSTGUI::setUpRecordResampleUI()
     addAndMakeVisible(&resamplePrecountSldr);
     resamplePrecountSldr.setBounds(xPosition, yPosition, sliderWidth, sliderHeight);
     resamplePrecountSldr.setRange(0.0, 8.0, 1.0);
-    resamplePrecountSldr.setLookAndFeel(&menuLF);
     resamplePrecountSldr.setSliderStyle(Slider::LinearBar);
     resamplePrecountSldr.addListener(this);
     const int resamplePrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResamplePrecount));
@@ -656,7 +655,6 @@ void mlrVSTGUI::setUpRecordResampleUI()
     addAndMakeVisible(&resampleLengthSldr);
     resampleLengthSldr.setBounds(xPosition, yPosition, sliderWidth, sliderHeight);
     resampleLengthSldr.setRange(1.0, 32.0, 1.0);
-    resampleLengthSldr.setLookAndFeel(&menuLF);
     resampleLengthSldr.setSliderStyle(Slider::LinearBar);
     resampleLengthSldr.addListener(this);
     const int resampleLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResampleLength));
@@ -666,7 +664,6 @@ void mlrVSTGUI::setUpRecordResampleUI()
     addAndMakeVisible(&resampleBankSldr);
     resampleBankSldr.setBounds(xPosition, yPosition, sliderWidth, sliderHeight);
     resampleBankSldr.setRange(0.0, 7.0, 1.0);
-    resampleBankSldr.setLookAndFeel(&menuLF);
     resampleBankSldr.setSliderStyle(Slider::LinearBar);
     resampleBankSldr.addListener(this);
     const int resampleBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResampleBank));
@@ -685,7 +682,6 @@ void mlrVSTGUI::setUpRecordResampleUI()
     addAndMakeVisible(&recordPrecountSldr);
     recordPrecountSldr.setBounds(xPosition, yPosition, sliderWidth, sliderHeight);
     recordPrecountSldr.setRange(0.0, 8.0, 1.0);
-    recordPrecountSldr.setLookAndFeel(&menuLF);
     recordPrecountSldr.setSliderStyle(Slider::LinearBar);
     recordPrecountSldr.addListener(this);
     const int recordPrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordPrecount));
@@ -695,7 +691,6 @@ void mlrVSTGUI::setUpRecordResampleUI()
     addAndMakeVisible(&recordLengthSldr);
     recordLengthSldr.setBounds(xPosition, yPosition, sliderWidth, sliderHeight);
     recordLengthSldr.setRange(1.0, 32.0, 1.0);
-    recordLengthSldr.setLookAndFeel(&menuLF);
     recordLengthSldr.setSliderStyle(Slider::LinearBar);
     recordLengthSldr.addListener(this);
     const int recordLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordLength));
@@ -705,7 +700,6 @@ void mlrVSTGUI::setUpRecordResampleUI()
     addAndMakeVisible(&recordBankSldr);
     recordBankSldr.setBounds(xPosition, yPosition, sliderWidth, sliderHeight);
     recordBankSldr.setRange(0.0, 7.0, 1.0);
-    recordBankSldr.setLookAndFeel(&menuLF);
     recordBankSldr.setSliderStyle(Slider::LinearBar);
     recordBankSldr.addListener(this);
     const int recordBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordBank));
@@ -724,7 +718,6 @@ void mlrVSTGUI::setUpRecordResampleUI()
     addAndMakeVisible(&patternPrecountSldr);
     patternPrecountSldr.setBounds(xPosition, yPosition, sliderWidth, sliderHeight);
     patternPrecountSldr.setRange(0.0, 8.0, 1.0);
-    patternPrecountSldr.setLookAndFeel(&menuLF);
     patternPrecountSldr.setSliderStyle(Slider::LinearBar);
     patternPrecountSldr.addListener(this);
     const int patternPrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternPrecount));
@@ -734,7 +727,6 @@ void mlrVSTGUI::setUpRecordResampleUI()
     addAndMakeVisible(&patternLengthSldr);
     patternLengthSldr.setBounds(xPosition, yPosition, sliderWidth, sliderHeight);
     patternLengthSldr.setRange(1.0, 32.0, 1.0);
-    patternLengthSldr.setLookAndFeel(&menuLF);
     patternLengthSldr.setSliderStyle(Slider::LinearBar);
     patternLengthSldr.addListener(this);
     const int patternLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternLength));
@@ -744,7 +736,6 @@ void mlrVSTGUI::setUpRecordResampleUI()
     addAndMakeVisible(&patternBankSldr);
     patternBankSldr.setBounds(xPosition, yPosition, sliderWidth, sliderHeight);
     patternBankSldr.setRange(0.0, 7.0, 1.0);
-    patternBankSldr.setLookAndFeel(&menuLF);
     patternBankSldr.setSliderStyle(Slider::LinearBar);
     patternBankSldr.addListener(this);
     const int patternBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternBank));
@@ -765,14 +756,12 @@ void mlrVSTGUI::setupTempoUI()
     // First add the labels
     addAndMakeVisible(&bpmLabel);
     bpmLabel.setBounds(xPosition, yPosition, bpmLabelWidth, bpmLabelHeight);
-    bpmLabel.setFont(fontSize);
     bpmLabel.setColour(Label::textColourId, Colours::white);
     bpmLabel.setColour(Label::backgroundColourId, Colours::black);
     xPosition += bpmLabelWidth + PAD_AMOUNT;
 
     addAndMakeVisible(&quantiseLabel);
     quantiseLabel.setBounds(xPosition, yPosition, quantiseLabelWidth, quantiseLabelHeight);
-    quantiseLabel.setFont(fontSize);
     quantiseLabel.setColour(Label::textColourId, Colours::white);
     quantiseLabel.setColour(Label::backgroundColourId, Colours::black);
     quantiseLabel.setText("QUANTISATION", NotificationType::dontSendNotification);
@@ -791,6 +780,7 @@ void mlrVSTGUI::setupTempoUI()
     bpmSlider.setRange(20.0, 300.0, 0.01);
     bpmSlider.setTextBoxIsEditable(true);
     bpmSlider.addListener(this);
+	bpmSlider.setLookAndFeel(&menuLF);
 
     useExternalTempo = *static_cast<const bool*>(getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
     if (useExternalTempo)
@@ -821,6 +811,9 @@ void mlrVSTGUI::setupTempoUI()
     const int menuSelection = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sQuantiseMenuSelection));
     if (menuSelection >= 0 && menuSelection < 8) quantiseSettingsCbox.setSelectedId(menuSelection);
     else quantiseSettingsCbox.setSelectedId(1);
+
+	quantiseSettingsCbox.setLookAndFeel(&menuLF);
+
 
     xPosition = PAD_AMOUNT;
     yPosition += bpmSliderHeight + PAD_AMOUNT;

@@ -200,8 +200,7 @@ void SampleStripControl::sliderValueChanged(Slider *sldr)
 
 void SampleStripControl::updateChannelColours(const int &newChannel)
 {
-
-	backgroundColour = channelButtonArray[newChannel]->findColour(DrawableButton::backgroundColourId);
+	backgroundColour = processor->getChannelColour(newChannel);
 
     isLatchedBtn.setColour(ToggleButton::textColourId, backgroundColour);
     isReversedBtn.setColour(ToggleButton::textColourId, backgroundColour);
@@ -263,7 +262,8 @@ void SampleStripControl::buildUI()
         addAndMakeVisible(channelButtonArray.getLast());
         channelButtonArray.getLast()->setBounds(35 + chan * controlbarSize, 0, controlbarSize, controlbarSize);
         channelButtonArray.getLast()->addListener(this);
-        Colour chanColour = processor->getChannelColour(chan);
+
+		Colour chanColour = processor->getChannelColour(chan);
 		channelButtonArray.getLast()->setColour(DrawableButton::backgroundColourId, chanColour);
     }
 
@@ -290,17 +290,15 @@ void SampleStripControl::buildUI()
     stripVolumeSldr.setBounds(newXposition, 0, 60, controlbarSize);
     stripVolumeSldr.setRange(0.0, 2.0, 0.01);
     stripVolumeSldr.setTextBoxIsEditable(true);
-    stripVolumeSldr.setLookAndFeel(&menuLF);
-
     newXposition += 60;
+
 
     addAndMakeVisible(&modeLbl);
     modeLbl.setBounds(newXposition, 0, 33, controlbarSize);
     modeLbl.setColour(Label::backgroundColourId, Colours::black);
     modeLbl.setColour(Label::textColourId, Colours::white);
     modeLbl.setFont(fontSize);
-
-    newXposition += 33;
+	newXposition += 33;
 
     addAndMakeVisible(&selPlayMode);
     selPlayMode.clear();
@@ -310,8 +308,7 @@ void SampleStripControl::buildUI()
     }
     selPlayMode.setBounds(newXposition, 0, 86, controlbarSize);
     selPlayMode.setLookAndFeel(&menuLF);
-
-    newXposition += 86;
+	newXposition += 86;
 
 
     addAndMakeVisible(&playspeedLbl);
@@ -321,13 +318,13 @@ void SampleStripControl::buildUI()
     playspeedLbl.setFont(fontSize);
 	newXposition += 40;
 
+
     addAndMakeVisible(&playspeedSldr);
     playspeedSldr.setSliderStyle(Slider::LinearBar);
     playspeedSldr.setColour(Slider::textBoxTextColourId, Colours::white);
     playspeedSldr.setBounds(newXposition, 0, 80, controlbarSize);
     playspeedSldr.setRange(0.0, 4.0, 0.001);
     playspeedSldr.setTextBoxIsEditable(true);
-    playspeedSldr.setLookAndFeel(&menuLF);
 	newXposition += 80;
 
 
@@ -337,24 +334,23 @@ void SampleStripControl::buildUI()
 	newXposition += 40;
 
 
-
     addAndMakeVisible(&speedLockBtn);
     speedLockBtn.setImages(&unlockImg);
     speedLockBtn.setBounds(newXposition, 0, 16, 16);
-
     newXposition += 16;
+
     addAndMakeVisible(&isReversedBtn);
     isReversedBtn.setBounds(newXposition, 0, 35, controlbarSize);
-
     newXposition += 35;
+
     addAndMakeVisible(&div2);
     div2.setBounds(newXposition, 0, 20, controlbarSize);
-
     newXposition += 20;
+
     addAndMakeVisible(&times2);
     times2.setBounds(newXposition, 0, 20, controlbarSize);
-
     newXposition += 20;
+
     addAndMakeVisible(&selNumChunks);
     selNumChunks.setBounds(newXposition, 0, 32, controlbarSize);
     selNumChunks.setLookAndFeel(&menuLF);
@@ -522,10 +518,30 @@ void SampleStripControl::mouseUp(const MouseEvent& e)
 
 void SampleStripControl::mouseDrag(const MouseEvent &e)
 {
-    // while RMB is held, see which hit zone it selects
-    if (e.mods == ModifierKeys::rightButtonModifier)
+	int mouseX = e.x;
+
+	// Make sure we don't select outside the waveform
+	if (mouseX > componentWidth) mouseX = componentWidth;
+	else if (mouseX < 0) mouseX = 0;
+
+
+	// CASE: traditional drag-to-select region of sample
+    if (mouseDownMods == ModifierKeys::leftButtonModifier)
     {
-        selectedHitZone = e.x / (componentWidth / 4);
+        *selectionPointFixed = e.getMouseDownX();
+        *selectionPointToChange = mouseX;
+    }
+
+	// CASE: just moving one end of an existing selection
+    else if (mouseDownMods == (ModifierKeys::ctrlModifier + ModifierKeys::leftButtonModifier))
+    {
+        *selectionPointToChange = mouseX;
+    }
+
+	// CASE: RMB is held, see which hit zone it selects
+    else if (e.mods == ModifierKeys::rightButtonModifier)
+    {
+        selectedHitZone = mouseX / (componentWidth / 4);
     }
 
     // CASE: ctrl-shift-LMB allows us to snap to specific intervals
@@ -537,29 +553,15 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
         int eighth = componentWidth / 16;
 
         // round to the nearest snap point
-        int newSeg = (int) floor(0.5 + e.x / (float) eighth);
+        int newSeg = (int) floor(0.5 + mouseX / (float) eighth);
 
         // update the changing part of the selection to the snapped position
         *selectionPointToChange = (int)(newSeg * eighth);
     }
 
-    // CASE: traditional drag-to-select
-    else if (mouseDownMods == ModifierKeys::leftButtonModifier)
-    {
-        int mouseX = e.x;
-
-        // Make sure we don't select outside the waveform
-        if (mouseX > componentWidth) mouseX = componentWidth;
-        if (mouseX < 0) mouseX = 0;
-
-        *selectionPointFixed = e.getMouseDownX();
-        *selectionPointToChange = mouseX;
-    }
-
-    // CASE: moving the entire selection (fixed size)
+    // CASE: moving the entire selection (whilst retaining size)
     else if (mouseDownMods == ModifierKeys::middleButtonModifier)
     {
-        // Don't select outside the component!
         int newStart = selectionStartBeforeDrag + e.getDistanceFromDragStartX();
         int newEnd = newStart + visualSelectionLength;
 
@@ -578,16 +580,7 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
         visualSelectionEnd = newEnd;
     }
 
-    // CASE: just moving one end of an existing selection
-    else if (mouseDownMods == (ModifierKeys::ctrlModifier + ModifierKeys::leftButtonModifier))
-    {
-        // Don't select outside the component!
-        int newValue = e.x;
-        if (newValue < 0) newValue = 0;
-        else if (newValue > componentWidth) newValue = componentWidth;
 
-        *selectionPointToChange = newValue;
-    }
 
 
     // Swap selection positions if inverse selection is made
