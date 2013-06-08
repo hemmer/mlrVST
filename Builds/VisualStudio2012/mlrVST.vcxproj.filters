@@ -14,11 +14,11 @@
     <Filter Include="mlrVST\gui">
       <UniqueIdentifier>{897673A4-0009-B799-2E6D-1C8E7CE4EA73}</UniqueIdentifier>
     </Filter>
-    <Filter Include="mlrVST\gui\panels">
-      <UniqueIdentifier>{26AF136C-A5C5-34B1-5C05-5EC6E30CD604}</UniqueIdentifier>
-    </Filter>
     <Filter Include="mlrVST\gui\buttons">
       <UniqueIdentifier>{2C59F540-C799-4443-5757-566B955B7456}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mlrVST\gui\panels">
+      <UniqueIdentifier>{26AF136C-A5C5-34B1-5C05-5EC6E30CD604}</UniqueIdentifier>
     </Filter>
     <Filter Include="mlrVST\other">
       <UniqueIdentifier>{517E6804-3A13-968C-ACE0-2CB40309238C}</UniqueIdentifier>
@@ -313,25 +313,28 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Source\SampleStrip.cpp">
+    <ClCompile Include="..\..\Source\AudioSample.cpp">
       <Filter>mlrVST\audio</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp">
       <Filter>mlrVST\audio</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\AudioSample.cpp">
+    <ClCompile Include="..\..\Source\SampleStrip.cpp">
       <Filter>mlrVST\audio</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\PatternRecording.cpp">
       <Filter>mlrVST\midi</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\SetlistTable.cpp">
-      <Filter>mlrVST\gui\panels</Filter>
+    <ClCompile Include="..\..\Source\timedButton.cpp">
+      <Filter>mlrVST\gui\buttons</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\PresetListTable.cpp">
       <Filter>mlrVST\gui\panels</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\PresetPanel.cpp">
+      <Filter>mlrVST\gui\panels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\SetlistTable.cpp">
       <Filter>mlrVST\gui\panels</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\SettingsPanel.cpp">
@@ -340,16 +343,13 @@
     <ClCompile Include="..\..\Source\MappingPanel.cpp">
       <Filter>mlrVST\gui\panels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\timedButton.cpp">
-      <Filter>mlrVST\gui\buttons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp">
+    <ClCompile Include="..\..\Source\SampleStripControl.cpp">
       <Filter>mlrVST\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\mlrVSTGUI.cpp">
       <Filter>mlrVST\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\SampleStripControl.cpp">
+    <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp">
       <Filter>mlrVST\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Utilities.cpp">
@@ -358,13 +358,13 @@
     <ClCompile Include="..\..\Source\OSCHandler.cpp">
       <Filter>mlrVST\other</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\oscpack\ip\UdpSocket.cpp">
+    <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp">
       <Filter>mlrVST\oscpack\ip</Filter>
     </ClCompile>
     <ClCompile Include="..\..\oscpack\ip\NetworkingUtils.cpp">
       <Filter>mlrVST\oscpack\ip</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp">
+    <ClCompile Include="..\..\oscpack\ip\UdpSocket.cpp">
       <Filter>mlrVST\oscpack\ip</Filter>
     </ClCompile>
     <ClCompile Include="..\..\oscpack\osc\OscOutboundPacketStream.cpp">
@@ -1515,25 +1515,28 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Source\SampleStrip.h">
+    <ClInclude Include="..\..\Source\AudioSample.h">
       <Filter>mlrVST\audio</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PluginProcessor.h">
       <Filter>mlrVST\audio</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\AudioSample.h">
+    <ClInclude Include="..\..\Source\SampleStrip.h">
       <Filter>mlrVST\audio</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PatternRecording.h">
       <Filter>mlrVST\midi</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\SetlistTable.h">
-      <Filter>mlrVST\gui\panels</Filter>
+    <ClInclude Include="..\..\Source\timedButton.h">
+      <Filter>mlrVST\gui\buttons</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PresetListTable.h">
       <Filter>mlrVST\gui\panels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PresetPanel.h">
+      <Filter>mlrVST\gui\panels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\SetlistTable.h">
       <Filter>mlrVST\gui\panels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\SettingsPanel.h">
@@ -1542,16 +1545,13 @@
     <ClInclude Include="..\..\Source\MappingPanel.h">
       <Filter>mlrVST\gui\panels</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\timedButton.h">
-      <Filter>mlrVST\gui\buttons</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h">
+    <ClInclude Include="..\..\Source\SampleStripControl.h">
       <Filter>mlrVST\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\mlrVSTGUI.h">
       <Filter>mlrVST\gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\SampleStripControl.h">
+    <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h">
       <Filter>mlrVST\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Utilities.h">

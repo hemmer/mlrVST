@@ -12,7 +12,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{3A828C6A-66F2-7FEF-FB57-DBBF32D25EAD}</ProjectGuid>
+    <ProjectGuid>{8F6F8064-CCB7-A5E1-93A3-32186A50009B}</ProjectGuid>
     <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props"/>
@@ -133,24 +133,24 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Source\SampleStrip.cpp"/>
-    <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
     <ClCompile Include="..\..\Source\AudioSample.cpp"/>
+    <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
+    <ClCompile Include="..\..\Source\SampleStrip.cpp"/>
     <ClCompile Include="..\..\Source\PatternRecording.cpp"/>
-    <ClCompile Include="..\..\Source\SetlistTable.cpp"/>
+    <ClCompile Include="..\..\Source\timedButton.cpp"/>
     <ClCompile Include="..\..\Source\PresetListTable.cpp"/>
     <ClCompile Include="..\..\Source\PresetPanel.cpp"/>
+    <ClCompile Include="..\..\Source\SetlistTable.cpp"/>
     <ClCompile Include="..\..\Source\SettingsPanel.cpp"/>
     <ClCompile Include="..\..\Source\MappingPanel.cpp"/>
-    <ClCompile Include="..\..\Source\timedButton.cpp"/>
-    <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp"/>
-    <ClCompile Include="..\..\Source\mlrVSTGUI.cpp"/>
     <ClCompile Include="..\..\Source\SampleStripControl.cpp"/>
+    <ClCompile Include="..\..\Source\mlrVSTGUI.cpp"/>
+    <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp"/>
     <ClCompile Include="..\..\Source\Utilities.cpp"/>
     <ClCompile Include="..\..\Source\OSCHandler.cpp"/>
-    <ClCompile Include="..\..\oscpack\ip\UdpSocket.cpp"/>
-    <ClCompile Include="..\..\oscpack\ip\NetworkingUtils.cpp"/>
     <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp"/>
+    <ClCompile Include="..\..\oscpack\ip\NetworkingUtils.cpp"/>
+    <ClCompile Include="..\..\oscpack\ip\UdpSocket.cpp"/>
     <ClCompile Include="..\..\oscpack\osc\OscOutboundPacketStream.cpp"/>
     <ClCompile Include="..\..\oscpack\osc\OscPrintReceivedElements.cpp"/>
     <ClCompile Include="..\..\oscpack\osc\OscReceivedElements.cpp"/>
@@ -1182,19 +1182,19 @@
     <ClCompile Include="..\..\JuceLibraryCode\modules\juce_audio_plugin_client\VST\juce_VST_Wrapper.cpp"/>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Source\SampleStrip.h"/>
-    <ClInclude Include="..\..\Source\PluginProcessor.h"/>
     <ClInclude Include="..\..\Source\AudioSample.h"/>
+    <ClInclude Include="..\..\Source\PluginProcessor.h"/>
+    <ClInclude Include="..\..\Source\SampleStrip.h"/>
     <ClInclude Include="..\..\Source\PatternRecording.h"/>
-    <ClInclude Include="..\..\Source\SetlistTable.h"/>
+    <ClInclude Include="..\..\Source\timedButton.h"/>
     <ClInclude Include="..\..\Source\PresetListTable.h"/>
     <ClInclude Include="..\..\Source\PresetPanel.h"/>
+    <ClInclude Include="..\..\Source\SetlistTable.h"/>
     <ClInclude Include="..\..\Source\SettingsPanel.h"/>
     <ClInclude Include="..\..\Source\MappingPanel.h"/>
-    <ClInclude Include="..\..\Source\timedButton.h"/>
-    <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h"/>
-    <ClInclude Include="..\..\Source\mlrVSTGUI.h"/>
     <ClInclude Include="..\..\Source\SampleStripControl.h"/>
+    <ClInclude Include="..\..\Source\mlrVSTGUI.h"/>
+    <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h"/>
     <ClInclude Include="..\..\Source\Utilities.h"/>
     <ClInclude Include="..\..\Source\OSCHandler.h"/>
     <ClInclude Include="..\..\oscpack\ip\IpEndpointName.h"/>

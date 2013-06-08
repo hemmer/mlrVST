@@ -11,8 +11,8 @@
 
 */
 
-#ifndef __JUCE_APPCONFIG_Y5L2JF__
-#define __JUCE_APPCONFIG_Y5L2JF__
+#ifndef __JUCE_APPCONFIG_V1F708__
+#define __JUCE_APPCONFIG_V1F708__
 
 //==============================================================================
 // [BEGIN_USER_CODE_SECTION]
@@ -89,7 +89,7 @@
 #endif
 
 #ifndef    JUCE_USE_WINDOWS_MEDIA_FORMAT
- //#define JUCE_USE_WINDOWS_MEDIA_FORMAT
+ #define   JUCE_USE_WINDOWS_MEDIA_FORMAT 1
 #endif
 
 //==============================================================================
@@ -212,7 +212,7 @@
  #define JucePlugin_SilenceInProducesSilenceOut  0
 #endif
 #ifndef  JucePlugin_EditorRequiresKeyboardFocus
- #define JucePlugin_EditorRequiresKeyboardFocus  0
+ #define JucePlugin_EditorRequiresKeyboardFocus  1
 #endif
 #ifndef  JucePlugin_Version
  #define JucePlugin_Version                1.0.0
@@ -281,4 +281,4 @@
  #define JucePlugin_AAXDisableBypass       0
 #endif
 
-#endif  // __JUCE_APPCONFIG_Y5L2JF__
+#endif  // __JUCE_APPCONFIG_V1F708__

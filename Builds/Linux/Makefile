@@ -5,22 +5,20 @@ ifndef CONFIG
   CONFIG=Debug
 endif
 
-ifeq ($(TARGET_ARCH),)
-  TARGET_ARCH := -march=native
-endif
-
-# (this disables dependency generation if multiple architectures are set)
-DEPFLAGS := $(if $(word 2, $(TARGET_ARCH)), , -MMD)
-
 ifeq ($(CONFIG),Debug)
   BINDIR := build
   LIBDIR := build
   OBJDIR := build/intermediate/Debug
   OUTDIR := build
+
+  ifeq ($(TARGET_ARCH),)
+    TARGET_ARCH := -march=native
+  endif
+
   CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -g -ggdb -fPIC -O0
   CXXFLAGS += $(CFLAGS) -DOSC_HOST_LITTLE_ENDIAN
-  LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -L/usr/X11R6/lib/ -lX11 -lXext -lXinerama -lasound -ldl -lfreetype -lpthread -lrt 
+  LDFLAGS += $(TARGET_ARCH) -L$(BINDIR) -L$(LIBDIR) -shared -L/usr/X11R6/lib/ -lX11 -lXext -lXinerama -lasound -ldl -lfreetype -lpthread -lrt 
   LDDEPS :=
   RESFLAGS :=  -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
   TARGET := mlrVST.so
@@ -32,35 +30,43 @@ ifeq ($(CONFIG),Release)
   LIBDIR := build
   OBJDIR := build/intermediate/Release
   OUTDIR := build
+
+  ifeq ($(TARGET_ARCH),)
+    TARGET_ARCH := -march=native
+  endif
+
   CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -fPIC -Os
   CXXFLAGS += $(CFLAGS) -DOSC_HOST_LITTLE_ENDIAN
-  LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -L/usr/X11R6/lib/ -lX11 -lXext -lXinerama -lasound -ldl -lfreetype -lpthread -lrt 
+  LDFLAGS += $(TARGET_ARCH) -L$(BINDIR) -L$(LIBDIR) -shared -fvisibility=hidden -L/usr/X11R6/lib/ -lX11 -lXext -lXinerama -lasound -ldl -lfreetype -lpthread -lrt 
   LDDEPS :=
   RESFLAGS :=  -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
   TARGET := mlrVST.so
   BLDCMD = $(CXX) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS) $(RESOURCES) $(TARGET_ARCH)
 endif
 
+# (this disables dependency generation if multiple architectures are set)
+DEPFLAGS := $(if $(word 2, $(TARGET_ARCH)), , -MMD)
+
 OBJECTS := \
-  $(OBJDIR)/SampleStrip_9922baef.o \
-  $(OBJDIR)/PluginProcessor_a059e380.o \
   $(OBJDIR)/AudioSample_c5634f81.o \
+  $(OBJDIR)/PluginProcessor_a059e380.o \
+  $(OBJDIR)/SampleStrip_9922baef.o \
   $(OBJDIR)/PatternRecording_c3abd24a.o \
-  $(OBJDIR)/SetlistTable_bd90937.o \
+  $(OBJDIR)/timedButton_8bab4a.o \
   $(OBJDIR)/PresetListTable_856af992.o \
   $(OBJDIR)/PresetPanel_1f2c0a46.o \
+  $(OBJDIR)/SetlistTable_bd90937.o \
   $(OBJDIR)/SettingsPanel_89b72282.o \
   $(OBJDIR)/MappingPanel_5b8ca75f.o \
-  $(OBJDIR)/timedButton_8bab4a.o \
-  $(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o \
-  $(OBJDIR)/mlrVSTGUI_eeb94ef8.o \
   $(OBJDIR)/SampleStripControl_45995bf8.o \
+  $(OBJDIR)/mlrVSTGUI_eeb94ef8.o \
+  $(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o \
   $(OBJDIR)/Utilities_707bb76b.o \
   $(OBJDIR)/OSCHandler_bb1eaf54.o \
-  $(OBJDIR)/UdpSocket_2b50ed78.o \
-  $(OBJDIR)/NetworkingUtils_921f9941.o \
   $(OBJDIR)/IpEndpointName_d4cc3aed.o \
+  $(OBJDIR)/NetworkingUtils_921f9941.o \
+  $(OBJDIR)/UdpSocket_2b50ed78.o \
   $(OBJDIR)/OscOutboundPacketStream_595b04c5.o \
   $(OBJDIR)/OscPrintReceivedElements_db1e1922.o \
   $(OBJDIR)/OscReceivedElements_b8801585.o \
@@ -98,9 +104,9 @@ strip:
 	@echo Stripping mlrVST
 	-@strip --strip-unneeded $(OUTDIR)/$(TARGET)
 
-$(OBJDIR)/SampleStrip_9922baef.o: ../../Source/SampleStrip.cpp
+$(OBJDIR)/AudioSample_c5634f81.o: ../../Source/AudioSample.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling SampleStrip.cpp"
+	@echo "Compiling AudioSample.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/PluginProcessor_a059e380.o: ../../Source/PluginProcessor.cpp
@@ -108,9 +114,9 @@ $(OBJDIR)/PluginProcessor_a059e380.o: ../../Source/PluginProcessor.cpp
 	@echo "Compiling PluginProcessor.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/AudioSample_c5634f81.o: ../../Source/AudioSample.cpp
+$(OBJDIR)/SampleStrip_9922baef.o: ../../Source/SampleStrip.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling AudioSample.cpp"
+	@echo "Compiling SampleStrip.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/PatternRecording_c3abd24a.o: ../../Source/PatternRecording.cpp
@@ -118,9 +124,9 @@ $(OBJDIR)/PatternRecording_c3abd24a.o: ../../Source/PatternRecording.cpp
 	@echo "Compiling PatternRecording.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/SetlistTable_bd90937.o: ../../Source/SetlistTable.cpp
+$(OBJDIR)/timedButton_8bab4a.o: ../../Source/timedButton.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling SetlistTable.cpp"
+	@echo "Compiling timedButton.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/PresetListTable_856af992.o: ../../Source/PresetListTable.cpp
@@ -133,6 +139,11 @@ $(OBJDIR)/PresetPanel_1f2c0a46.o: ../../Source/PresetPanel.cpp
 	@echo "Compiling PresetPanel.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
+$(OBJDIR)/SetlistTable_bd90937.o: ../../Source/SetlistTable.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling SetlistTable.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
 $(OBJDIR)/SettingsPanel_89b72282.o: ../../Source/SettingsPanel.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling SettingsPanel.cpp"
@@ -143,14 +154,9 @@ $(OBJDIR)/MappingPanel_5b8ca75f.o: ../../Source/MappingPanel.cpp
 	@echo "Compiling MappingPanel.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/timedButton_8bab4a.o: ../../Source/timedButton.cpp
+$(OBJDIR)/SampleStripControl_45995bf8.o: ../../Source/SampleStripControl.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling timedButton.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o: ../../Source/mlrVSTLookAndFeel.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling mlrVSTLookAndFeel.cpp"
+	@echo "Compiling SampleStripControl.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/mlrVSTGUI_eeb94ef8.o: ../../Source/mlrVSTGUI.cpp
@@ -158,9 +164,9 @@ $(OBJDIR)/mlrVSTGUI_eeb94ef8.o: ../../Source/mlrVSTGUI.cpp
 	@echo "Compiling mlrVSTGUI.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/SampleStripControl_45995bf8.o: ../../Source/SampleStripControl.cpp
+$(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o: ../../Source/mlrVSTLookAndFeel.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling SampleStripControl.cpp"
+	@echo "Compiling mlrVSTLookAndFeel.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/Utilities_707bb76b.o: ../../Source/Utilities.cpp
@@ -173,9 +179,9 @@ $(OBJDIR)/OSCHandler_bb1eaf54.o: ../../Source/OSCHandler.cpp
 	@echo "Compiling OSCHandler.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/UdpSocket_2b50ed78.o: ../../oscpack/ip/UdpSocket.cpp
+$(OBJDIR)/IpEndpointName_d4cc3aed.o: ../../oscpack/ip/IpEndpointName.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling UdpSocket.cpp"
+	@echo "Compiling IpEndpointName.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/NetworkingUtils_921f9941.o: ../../oscpack/ip/NetworkingUtils.cpp
@@ -183,9 +189,9 @@ $(OBJDIR)/NetworkingUtils_921f9941.o: ../../oscpack/ip/NetworkingUtils.cpp
 	@echo "Compiling NetworkingUtils.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/IpEndpointName_d4cc3aed.o: ../../oscpack/ip/IpEndpointName.cpp
+$(OBJDIR)/UdpSocket_2b50ed78.o: ../../oscpack/ip/UdpSocket.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling IpEndpointName.cpp"
+	@echo "Compiling UdpSocket.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/OscOutboundPacketStream_595b04c5.o: ../../oscpack/osc/OscOutboundPacketStream.cpp
