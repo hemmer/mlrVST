@@ -33,7 +33,7 @@ Latest Screenshot
 Downloads
 ---------
 
-Both Win / Mac versions are available from [here](/hemmer/mlrVST/tree/master/Releases). Choose _release for (probably) more stable, and _bleeding for the latest build.
+Both Win / Mac versions are available from [here](https://github.com/hemmer/mlrVST/tree/master/Releases). Choose _release for (probably) more stable, and _bleeding for the latest build.
 
 Links of Interest
 -----------------

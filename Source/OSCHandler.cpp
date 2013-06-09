@@ -26,7 +26,6 @@ OSCHandler::OSCHandler(const String &prefix, mlrVSTAudioProcessor * const owner)
 {
     // setup the mask
     setPrefix(prefix);
-	DBG("OSC prefix set to: ", prefix);
 }
 
 void OSCHandler::buttonPressCallback(const int &monomeCol, const int &monomeRow, const bool &state)
