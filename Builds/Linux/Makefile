@@ -53,6 +53,8 @@ OBJECTS := \
   $(OBJDIR)/PluginProcessor_a059e380.o \
   $(OBJDIR)/SampleStrip_9922baef.o \
   $(OBJDIR)/PatternRecording_c3abd24a.o \
+  $(OBJDIR)/FreeTypeAmalgam_f9f8342c.o \
+  $(OBJDIR)/FreeTypeFaces_5f2c9c86.o \
   $(OBJDIR)/timedButton_8bab4a.o \
   $(OBJDIR)/PresetListTable_856af992.o \
   $(OBJDIR)/PresetPanel_1f2c0a46.o \
@@ -122,6 +124,16 @@ $(OBJDIR)/SampleStrip_9922baef.o: ../../Source/SampleStrip.cpp
 $(OBJDIR)/PatternRecording_c3abd24a.o: ../../Source/PatternRecording.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling PatternRecording.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/FreeTypeAmalgam_f9f8342c.o: ../../Source/Fonts/FreeTypeAmalgam.c
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling FreeTypeAmalgam.c"
+	@$(CC) $(CFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/FreeTypeFaces_5f2c9c86.o: ../../Source/Fonts/FreeTypeFaces.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling FreeTypeFaces.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/timedButton_8bab4a.o: ../../Source/timedButton.cpp

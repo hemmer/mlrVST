@@ -20,7 +20,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     // Communication ////////////////////////////////
     processor(processorPtr), pluginUI(editorPtr),
     // Layout ///////////////////////////////////////
-    fontSize(7.4f), panelBounds(bounds), menuLF(),
+    defaultFont("Verdana", 10.f, Font::plain), panelBounds(bounds), overLF(),
     // Components ///////////////////////////////////
     panelLabel("settings panel label", "Settings"),
 
@@ -50,7 +50,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     panelLabel.setBounds(0, 0, panelBounds.getWidth(), 30);
     panelLabel.setColour(Label::backgroundColourId, Colours::black);
     panelLabel.setColour(Label::textColourId, Colours::white);
-    panelLabel.setFont(2.0f * fontSize);
+    panelLabel.setFont(defaultFont);
 
     const int labelWidth = 150;
     const int labelHeight = 20;
@@ -82,7 +82,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     const int numChannels = *static_cast<const int*>
         (processor->getGlobalSetting(mlrVSTAudioProcessor::sNumChannels));
     selNumChannels.setSelectedId(numChannels, true);
-    selNumChannels.setLookAndFeel(&menuLF);
+    selNumChannels.setLookAndFeel(&overLF);
     yPos += PAD_AMOUNT + labelHeight;
 
 
@@ -98,7 +98,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     rampLengthSldr.setColour(Slider::thumbColourId, Colours::grey);
     rampLengthSldr.setColour(Slider::backgroundColourId, Colours::grey.darker());
     rampLengthSldr.addListener(this);
-    rampLengthSldr.setLookAndFeel(&menuLF);
+    rampLengthSldr.setLookAndFeel(&overLF);
     rampLengthSldr.setSliderStyle(Slider::LinearBar);
     yPos += PAD_AMOUNT + labelHeight;
 
@@ -113,10 +113,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     oscPrefixTxtBx.setEnabled(true);
     const String currentPrefix = *static_cast<const String*>
         (processor->getGlobalSetting(mlrVSTAudioProcessor::sOSCPrefix));
-    DBG("settings panel: prefix " << currentPrefix);
-
-    // TODO: fonts freak out here
-    // oscPrefixTxtBx.setText("test", false);
+    oscPrefixTxtBx.setText(currentPrefix, false);
     yPos += PAD_AMOUNT + labelHeight;
 
 

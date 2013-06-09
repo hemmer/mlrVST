@@ -14,6 +14,9 @@
     <Filter Include="mlrVST\gui">
       <UniqueIdentifier>{897673A4-0009-B799-2E6D-1C8E7CE4EA73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mlrVST\gui\Fonts">
+      <UniqueIdentifier>{69C8DBFA-D519-4CE8-6ADD-4228BEB2DE56}</UniqueIdentifier>
+    </Filter>
     <Filter Include="mlrVST\gui\buttons">
       <UniqueIdentifier>{2C59F540-C799-4443-5757-566B955B7456}</UniqueIdentifier>
     </Filter>
@@ -324,6 +327,12 @@
     </ClCompile>
     <ClCompile Include="..\..\Source\PatternRecording.cpp">
       <Filter>mlrVST\midi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Fonts\FreeTypeAmalgam.c">
+      <Filter>mlrVST\gui\Fonts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Fonts\FreeTypeFaces.cpp">
+      <Filter>mlrVST\gui\Fonts</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\timedButton.cpp">
       <Filter>mlrVST\gui\buttons</Filter>
@@ -1526,6 +1535,12 @@
     </ClInclude>
     <ClInclude Include="..\..\Source\PatternRecording.h">
       <Filter>mlrVST\midi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Fonts\FreeTypeAmalgam.h">
+      <Filter>mlrVST\gui\Fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Fonts\FreeTypeFaces.h">
+      <Filter>mlrVST\gui\Fonts</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\timedButton.h">
       <Filter>mlrVST\gui\buttons</Filter>
@@ -2816,10 +2831,13 @@
     <None Include="..\..\Resources\locked.png">
       <Filter>mlrVST\Resources</Filter>
     </None>
-    <None Include="..\..\Resources\silkfont">
+    <None Include="..\..\Resources\unlocked.png">
       <Filter>mlrVST\Resources</Filter>
     </None>
-    <None Include="..\..\Resources\unlocked.png">
+    <None Include="..\..\Resources\VERDANA.TTF">
+      <Filter>mlrVST\Resources</Filter>
+    </None>
+    <None Include="C:\Users\hemmer\AppData\Local\Temp\Rar$DRa0.803\FFF Tusj.ttf">
       <Filter>mlrVST\Resources</Filter>
     </None>
     <None Include="..\..\JuceLibraryCode\modules\juce_audio_basics\juce_module_info">

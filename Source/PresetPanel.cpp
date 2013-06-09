@@ -9,9 +9,9 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
     // communication //////////////////////
     processor(owner),
     // gui setup //////////////////////////
-    panelLabel("preset panel label", "Setlist Manager"),
+    panelLabel("preset panel label", "setlist manager"),
     instructionLabel(),
-    fontSize(7.4f), panelBounds(bounds),
+    defaultFont("Verdana", 10.f, Font::plain), panelBounds(bounds),
     loadSetlistBtn("load setlist from file", "load setlist"),
     saveSetlistBtn("save setlist to file", "save setlist"),
     presetListTbl(owner), setlistTbl(owner, &presetListTbl)
@@ -24,7 +24,7 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
     panelLabel.setBounds(xPosition, yPosition, panelBounds.getWidth(), 30);
     panelLabel.setColour(Label::backgroundColourId, Colours::black);
     panelLabel.setColour(Label::textColourId, Colours::white);
-    panelLabel.setFont(2.0f * fontSize);
+    panelLabel.setFont(defaultFont);
     yPosition += 30 + PAD_AMOUNT;
     xPosition += PAD_AMOUNT;
 
@@ -33,7 +33,7 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
     instructionLabel.setBounds(xPosition, yPosition, 500, 60);
     instructionLabel.setColour(Label::backgroundColourId, Colours::black);
     instructionLabel.setColour(Label::textColourId, Colours::white);
-    instructionLabel.setFont(fontSize);
+    instructionLabel.setFont(defaultFont);
 	instructionLabel.setText("To create a setlist, drag presets from the list on the left to the setlist panel on the right...", NotificationType::dontSendNotification);
 
     addAndMakeVisible(&loadSetlistBtn);
@@ -51,7 +51,6 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
 
     addAndMakeVisible(&setlistTbl);
     setlistTbl.setBounds(420, yPosition, 282, 400);
-
 }
 
 void PresetPanel::paint(Graphics &g)

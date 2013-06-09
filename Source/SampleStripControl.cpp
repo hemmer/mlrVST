@@ -1,4 +1,4 @@
-/*
+﻿/*
 ==============================================================================
 
 SampleStripControl.cpp
@@ -30,14 +30,14 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     waveformPaintBounds(0, controlbarSize, componentWidth, (componentHeight - controlbarSize)),
 
     // SampleStrip GUI ////////////////////////////////////////
-    menuLF(), fontSize(7.4f), backgroundColour(Colours::black),
-    chanLbl("channel label", "CHAN"), channelButtonArray(),
-    volLbl("volume label", "VOL"), stripVolumeSldr("volume"),
-    modeLbl("mode", "MODE"), selPlayMode("select playmode"), isLatchedBtn("LATCH"),
-    playspeedLbl("playspeed label", "SPEED"), playspeedSldr("playspeed"),
-    speedLockBtn("speed lock", DrawableButton::ImageRaw), isReversedBtn("NORM"),
+	overrideLF(), defaultFont("Verdana", 10.f, Font::plain), fontSize(10.f), backgroundColour(Colours::black),
+    chanLbl("channel label", "chan"), channelButtonArray(),
+    volLbl("volume label", "vol"), stripVolumeSldr("volume"),
+    modeLbl("mode", "mode"), selPlayMode("select playmode"), isLatchedBtn("latch"),
+    playspeedLbl("playspeed label", "speed"), playspeedSldr("playspeed"),
+    speedLockBtn("speed lock", DrawableButton::ImageRaw), isReversedBtn(">"),
     lockImg(), unlockImg(), times2("x2"), div2("/2"), selNumChunks(),
-    trackNumberLbl("track number", String(sampleStripID)), filenameLbl("filename", "No File"),
+    trackNumberLbl("track number", String(sampleStripID)), filenameLbl("filename", "no file"),
     popupLocators(),
 
     // Waveform control ////////////////////////
@@ -163,7 +163,7 @@ void SampleStripControl::buttonClicked(Button *btn)
     {
         isReversed = !isReversed;
         dataStrip->setSampleStripParam(SampleStrip::pIsReversed, &isReversed);
-        String newButtonText = (isReversed) ? "REV" : "NORM";
+        String newButtonText = (isReversed) ? "<" : ">";
         isReversedBtn.setButtonText(newButtonText);
     }
     else if (btn == &times2)
@@ -237,21 +237,23 @@ void SampleStripControl::buildUI()
     trackNumberLbl.setBounds(0, componentHeight - controlbarSize, controlbarSize, controlbarSize);
     trackNumberLbl.setColour(Label::backgroundColourId, Colours::black);
     trackNumberLbl.setColour(Label::textColourId, Colours::white);
-    trackNumberLbl.setFont(fontSize);
+    trackNumberLbl.setFont(defaultFont);
 
     addAndMakeVisible(&filenameLbl);
     filenameLbl.setColour(Label::backgroundColourId, Colours::white.withAlpha(0.5f));
     filenameLbl.setColour(Label::textColourId, Colours::black);
     filenameLbl.setJustificationType(Justification::right);
     filenameLbl.setBounds(controlbarSize, componentHeight - controlbarSize, 200, controlbarSize);
-    filenameLbl.setFont(fontSize);
+    filenameLbl.setFont(defaultFont);
 
 
     addAndMakeVisible(&chanLbl);
-    chanLbl.setBounds(0, 0, 35, controlbarSize);
+    chanLbl.setBounds(0, 0, 32, controlbarSize);
     chanLbl.setColour(Label::backgroundColourId, Colours::black);
     chanLbl.setColour(Label::textColourId, Colours::white);
-    chanLbl.setFont(fontSize);
+    chanLbl.setFont(defaultFont);
+
+	newXposition = 32;
 
     // clear existing buttons
     channelButtonArray.clear();
@@ -260,7 +262,7 @@ void SampleStripControl::buildUI()
     {
         channelButtonArray.add(new DrawableButton("button" + String(chan), DrawableButton::ImageRaw));
         addAndMakeVisible(channelButtonArray.getLast());
-        channelButtonArray.getLast()->setBounds(35 + chan * controlbarSize, 0, controlbarSize, controlbarSize);
+		channelButtonArray.getLast()->setBounds(newXposition + chan * controlbarSize, 0, controlbarSize, controlbarSize);
         channelButtonArray.getLast()->addListener(this);
 
 		Colour chanColour = processor->getChannelColour(chan);
@@ -274,15 +276,15 @@ void SampleStripControl::buildUI()
         processor->switchChannels(0, sampleStripID);
     }
 
-    newXposition = 35 + (numChannels) * controlbarSize;
+    newXposition += (numChannels) * controlbarSize;
 
     addAndMakeVisible(&volLbl);
-    volLbl.setBounds(newXposition, 0, 28, controlbarSize);
+    volLbl.setBounds(newXposition, 0, 32, controlbarSize);
     volLbl.setColour(Label::backgroundColourId, Colours::black);
     volLbl.setColour(Label::textColourId, Colours::white);
-    volLbl.setFont(fontSize);
+    volLbl.setFont(defaultFont);
 
-    newXposition += 28;
+    newXposition += 32;
 
     addAndMakeVisible(&stripVolumeSldr);
     stripVolumeSldr.setSliderStyle(Slider::LinearBar);
@@ -290,6 +292,7 @@ void SampleStripControl::buildUI()
     stripVolumeSldr.setBounds(newXposition, 0, 60, controlbarSize);
     stripVolumeSldr.setRange(0.0, 2.0, 0.01);
     stripVolumeSldr.setTextBoxIsEditable(true);
+	stripVolumeSldr.setLookAndFeel(&overrideLF);
     newXposition += 60;
 
 
@@ -297,7 +300,7 @@ void SampleStripControl::buildUI()
     modeLbl.setBounds(newXposition, 0, 33, controlbarSize);
     modeLbl.setColour(Label::backgroundColourId, Colours::black);
     modeLbl.setColour(Label::textColourId, Colours::white);
-    modeLbl.setFont(fontSize);
+    modeLbl.setFont(defaultFont);
 	newXposition += 33;
 
     addAndMakeVisible(&selPlayMode);
@@ -307,7 +310,7 @@ void SampleStripControl::buildUI()
         selPlayMode.addItem(dataStrip->getPlayModeName(i), i+1);
     }
     selPlayMode.setBounds(newXposition, 0, 86, controlbarSize);
-    selPlayMode.setLookAndFeel(&menuLF);
+    selPlayMode.setLookAndFeel(&overrideLF);
 	newXposition += 86;
 
 
@@ -315,7 +318,7 @@ void SampleStripControl::buildUI()
     playspeedLbl.setBounds(newXposition, 0, 40, controlbarSize);
     playspeedLbl.setColour(Label::backgroundColourId, Colours::black);
     playspeedLbl.setColour(Label::textColourId, Colours::white);
-    playspeedLbl.setFont(fontSize);
+    playspeedLbl.setFont(defaultFont);
 	newXposition += 40;
 
 
@@ -325,6 +328,7 @@ void SampleStripControl::buildUI()
     playspeedSldr.setBounds(newXposition, 0, 80, controlbarSize);
     playspeedSldr.setRange(0.0, 4.0, 0.001);
     playspeedSldr.setTextBoxIsEditable(true);
+	playspeedSldr.setLookAndFeel(&overrideLF);
 	newXposition += 80;
 
 
@@ -340,8 +344,8 @@ void SampleStripControl::buildUI()
     newXposition += 16;
 
     addAndMakeVisible(&isReversedBtn);
-    isReversedBtn.setBounds(newXposition, 0, 35, controlbarSize);
-    newXposition += 35;
+    isReversedBtn.setBounds(newXposition, 0, 16, controlbarSize);
+    newXposition += 16;
 
     addAndMakeVisible(&div2);
     div2.setBounds(newXposition, 0, 20, controlbarSize);
@@ -353,7 +357,7 @@ void SampleStripControl::buildUI()
 
     addAndMakeVisible(&selNumChunks);
     selNumChunks.setBounds(newXposition, 0, 32, controlbarSize);
-    selNumChunks.setLookAndFeel(&menuLF);
+    selNumChunks.setLookAndFeel(&overrideLF);
 }
 
 void SampleStripControl::mouseDown(const MouseEvent &e)
@@ -831,7 +835,7 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
         {
             isReversed = *static_cast<const bool*>(newValue);
             isReversedBtn.setToggleState(isReversed, false);
-            String btnText = (isReversed) ? "REV" : "NORM";
+            String btnText = (isReversed) ? "<" : ">";
             isReversedBtn.setButtonText(btnText);
             break;
         }

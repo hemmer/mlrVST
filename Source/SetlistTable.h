@@ -41,7 +41,7 @@ public:
                     bool /*rowIsSelected*/)
     {
         g.setColour (Colours::black);
-        g.setFont (font);
+        g.setFont (defaultFont);
 
         const XmlElement* rowElement = setlistData->getChildElement (rowNumber);
 
@@ -136,7 +136,7 @@ private:
 
     // gui / components /////////////
     TableListBox table;     // the table component itself
-    Font font;
+    const Font defaultFont;
     // stores which row presets would be added whilst dragged over
     // NOTE: value of -1 means no presets are currently being dragged
     int insertAtIndex;      

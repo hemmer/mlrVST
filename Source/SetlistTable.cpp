@@ -17,7 +17,7 @@ SetlistTable::SetlistTable(mlrVSTAudioProcessor * const owner,
     // communication ///////////////////////////////
     processor(owner), presetListTbl(presetListTbl_),
     // gui / components ////////////////////////////
-    table(), font (7.4f), insertAtIndex(-1),
+    table(), defaultFont("Verdana", 10.f, Font::plain), insertAtIndex(-1),
     // data ////////////////////////////////////////
     setlistData(0), numRows(0)
 {

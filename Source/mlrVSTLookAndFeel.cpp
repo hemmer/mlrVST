@@ -29,9 +29,12 @@
 
 //==============================================================================
 mlrVSTLookAndFeel::mlrVSTLookAndFeel() :
-    silkFontSizeSmall(7.4f),
-    silkFontSizeBig(11.8f)
+	defaultFont("Verdana", 10.f, Font::plain)
 {
+	FreeTypeFaces::addFaceFromMemory(7.f, 25.f, true, BinaryData::VERDANA_TTF, BinaryData::VERDANA_TTFSize);
+	FreeTypeFaces::addFaceFromMemory(7.f, 25.f, true, BinaryData::FFF_Tusj_ttf, BinaryData::FFF_Tusj_ttfSize);
+
+	
     setColour (TextButton::buttonColourId,          Colours::white);
     setColour (TextButton::textColourOnId,          Colours::white);
     setColour (TextButton::textColourOffId,         Colours::black);
@@ -73,9 +76,7 @@ void mlrVSTLookAndFeel::drawButtonBackground (Graphics& g, Button& button,
 void mlrVSTLookAndFeel::drawButtonText (Graphics& g, TextButton& button,
                                         bool isMouseOverButton, bool isButtonDown)
 {
-	Font font(button.getFont());
-	font.setHeight(silkFontSizeSmall);
-    g.setFont(font);
+    g.setFont(defaultFont);
 
     if (isButtonDown)
         g.setColour(button.findColour(TextButton::textColourOnId));
@@ -139,7 +140,7 @@ void mlrVSTLookAndFeel::drawToggleButton (Graphics& g,
         g.setColour(button.findColour(ToggleButton::textColourId));
     }
 
-    g.setFont(silkFontSizeSmall);
+    g.setFont(defaultFont);
 
     if (! button.isEnabled()) g.setOpacity (0.5f);
 
@@ -149,12 +150,15 @@ void mlrVSTLookAndFeel::drawToggleButton (Graphics& g,
 }
 
 
+
+
 void mlrVSTLookAndFeel::drawLabel(Graphics& g, Label& label)
 {
 	// set up the font with the right size
-	Font font(label.getFont());
-	font.setHeight(silkFontSizeSmall);
-	g.setFont(font);
+	// NOTE: for cases where the font can't be set
+	// (e.g. TextButtons etc) we must use a custom 
+	// LookAndFeel (see header).
+	g.setFont(label.getFont());
 
 
     g.fillAll (label.findColour(Label::backgroundColourId));
@@ -172,11 +176,18 @@ void mlrVSTLookAndFeel::drawLabel(Graphics& g, Label& label)
 
 }
 
-const Typeface::Ptr mlrVSTLookAndFeel::getTypefaceForFont(const Font &font )
+
+const Typeface::Ptr mlrVSTLookAndFeel::getTypefaceForFont (Font const& font)
 {
-    MemoryInputStream mis(BinaryData::silkfont, BinaryData::silkfontSize, false);
-    typeSilk = new CustomTypeface(mis);
-    return typeSilk;
+	Typeface::Ptr tf;
+
+	// get the hinted typeface.
+	tf = FreeTypeFaces::createTypefaceForFont (font);
+
+	// If we got here without creating a new typeface
+	// then just use the default LookAndFeel behavior.
+	if (!tf) tf = LookAndFeel::getTypefaceForFont (font);
+	return tf;
 }
 
 
@@ -381,15 +392,18 @@ void mlrVSTLookAndFeel::drawComboBox (Graphics& g, int width, int height,
 
 Font mlrVSTLookAndFeel::getComboBoxFont(ComboBox& box)
 {
-    Font f(silkFontSizeSmall);
-    return f;
+    return defaultFont;
 }
 
 
 Font mlrVSTLookAndFeel::getPopupMenuFont()
 {
-    Font f(silkFontSizeBig);
-    return f;
+    return defaultFont;
+}
+
+Font mlrVSTLookAndFeel::getTextButtonFont	(	TextButton & 	button	)	
+{
+	return Font("Verdana", 10.f, Font::plain);
 }
 
 //==============================================================================

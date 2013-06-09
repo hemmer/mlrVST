@@ -52,9 +52,9 @@ private:
     mlrVSTGUI * const pluginUI;
 
     // Layout ///////////////////////////////////////
-    const float fontSize;
+    const Font defaultFont;
     const Rectangle<int> &panelBounds;
-    mlrVSTLookAndFeel menuLF;
+	overrideLookandFeel overLF;
 
     // Components ///////////////////////////////////
     Label panelLabel;       // Main header label
@@ -85,7 +85,7 @@ private:
         addAndMakeVisible(&lbl);
         lbl.setColour(Label::backgroundColourId, Colours::white);
         lbl.setColour(Label::textColourId, Colours::black);
-        lbl.setFont(fontSize);
+        lbl.setFont(defaultFont);
     }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SettingsPanel);

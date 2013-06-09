@@ -79,15 +79,13 @@ private:
 
     // Style / positioning objects ///////////////
     mlrVSTLookAndFeel myLookAndFeel;
-    mlrVSTLookAndFeel menuLF;
+	overrideLookandFeel overrideLF;
+
     // these are just helpers for positioning
     int xPosition, yPosition;
 
     // Fonts ///////////////////////
-    float fontSize;
-    MemoryInputStream mis;
-    Typeface::Ptr typeSilk;
-    Font fontSilk;
+    float fontSize; Font defaultFont;
 
     // Volume controls //////////////////////////////
     Slider masterGainSlider; Label masterSliderLabel;
@@ -115,6 +113,8 @@ private:
     // these give visual progress of recording / resampling status
     TimedButton recordBtn, resampleBtn, patternBtn;
     void setUpRecordResampleUI();
+
+	Label vstNameLbl;
 
     // Misc /////////////////////
     // this object is used to store bpm information from the host

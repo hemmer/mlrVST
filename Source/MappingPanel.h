@@ -45,7 +45,7 @@ private:
     // Style / layout //////////////////////////////
     Label panelLabel;           // Main header label
 	mlrVSTLookAndFeel menuLF;
-    const float fontSize;
+    const Font defaultFont;
     const Rectangle<int> &panelBounds;
     int xPosition, yPosition;
 
@@ -60,14 +60,17 @@ private:
         addAndMakeVisible(&lbl);
         lbl.setColour(Label::backgroundColourId, Colours::black);
         lbl.setColour(Label::textColourId, Colours::white);
-        lbl.setFont(fontSize);
+        lbl.setFont(defaultFont);
     }
     void setupNormalLabel(Label &lbl, float factor = 1.0f)
     {
         addAndMakeVisible(&lbl);
         lbl.setColour(Label::backgroundColourId, Colours::black);
         lbl.setColour(Label::textColourId, Colours::white);
-        lbl.setFont(factor * fontSize);
+
+		String fontName = defaultFont.getTypefaceName();
+		float fontHeight = defaultFont.getHeight();
+		lbl.setFont(Font(fontName, factor*fontHeight, Font::plain ));
     }
 
     // check for leaks while in DEBUG mode!

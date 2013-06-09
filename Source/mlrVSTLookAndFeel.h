@@ -27,6 +27,7 @@
 #define __JUCE_mlrVSTLookAndFeel_JUCEHEADER__
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "Fonts/FreeTypeFaces.h"
 
 
 
@@ -64,6 +65,9 @@ public:
 
     virtual void drawLabel(Graphics& g, Label& label);
     virtual const Typeface::Ptr getTypefaceForFont(const Font &font );
+	virtual Font getTextButtonFont(TextButton & button);
+
+
 
     virtual void drawTickBox (Graphics& g, Component& component,
                               float x, float y, float w, float h,
@@ -138,31 +142,51 @@ public:
                                                 Button* closeButton,
                                                 bool positionTitleBarButtonsOnLeft);
 
-
 private:
     //==============================================================================
     DropShadowEffect scrollbarShadow;
+	const Font defaultFont;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (mlrVSTLookAndFeel);
 
     Typeface::Ptr typeSilk;
 
-protected:
-    const float silkFontSizeSmall, silkFontSizeBig;
+
 };
 
 
 
-class menuLookandFeel : public mlrVSTLookAndFeel
+class overrideLookandFeel : public mlrVSTLookAndFeel
 {
-
+	// this LookAndFeel subclasses the main mlrVSTLookAndFeel
+	// class to override the drawLabel method. This is because 
+	// some components can't manually set the font they want to 
+	// use.
 public:
 
-    void drawLabel(Graphics& g, Label& label)
+	overrideLookandFeel(){
+		FreeTypeFaces::addFaceFromMemory(7.f, 25.f, true, BinaryData::VERDANA_TTF, BinaryData::VERDANA_TTFSize);
+	}
+	
+	const Typeface::Ptr getTypefaceForFont (Font const& font)
+	{
+		Typeface::Ptr tf;
+
+		// get the hinted typeface.
+		tf = FreeTypeFaces::createTypefaceForFont (font);
+
+		// If we got here without creating a new typeface
+		// then just use the default LookAndFeel behavior.
+		if (!tf) tf = LookAndFeel::getTypefaceForFont (font);
+		return tf;
+	}
+
+	void drawLabel(Graphics& g, Label& label)
     {
-		Font font(label.getFont());
-		font.setHeight(silkFontSizeBig);
-		g.setFont(font);
+		// Here we override the with a specific font - this
+		// is for classes which don't have a specific setFont
+		// method.
+		g.setFont(Font("Verdana", 10.f, Font::plain));
 
         g.fillAll (label.findColour(Label::backgroundColourId));
 
@@ -180,7 +204,11 @@ public:
         g.drawRect (0, 0, label.getWidth(), label.getHeight());
 
     }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (overrideLookandFeel);
+
 };
+
 
 
 #endif   // __JUCE_mlrVSTLookAndFeel_JUCEHEADER__

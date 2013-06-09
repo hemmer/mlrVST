@@ -16,8 +16,8 @@ MappingPanel::MappingPanel(const Rectangle<int> &bounds,
     // Communtication ////////////////////////////////
     processor(owner),
     // Style / layout ////////////////////////////////
-    panelLabel("Mapping Setup", "Mapping Setup"),
-    menuLF(), fontSize(7.4f), panelBounds(bounds),
+    panelLabel("Mapping Setup", "mapping setup"),
+    menuLF(), defaultFont("Verdana", 10.f, Font::plain), panelBounds(bounds),
     xPosition(0), yPosition(0),
     // Button maps ///////////////////////////////////
     buttonMatrix(), monomePath(),

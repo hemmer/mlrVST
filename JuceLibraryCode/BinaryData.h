@@ -21,11 +21,14 @@ namespace BinaryData
     extern const char*   locked_png;
     const int            locked_pngSize = 1232;
 
-    extern const char*   silkfont;
-    const int            silkfontSize = 1649;
-
     extern const char*   unlocked_png;
     const int            unlocked_pngSize = 1242;
+
+    extern const char*   VERDANA_TTF;
+    const int            VERDANA_TTFSize = 139640;
+
+    extern const char*   FFF_Tusj_ttf;
+    const int            FFF_Tusj_ttfSize = 1543648;
 
     // If you provide the name of one of the binary resource variables above, this function will
     // return the corresponding data and its size (or a null pointer if the name isn't found).

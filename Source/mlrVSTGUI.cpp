@@ -25,22 +25,20 @@ mlrVSTGUI::mlrVSTGUI (mlrVSTAudioProcessor* owner,
     // Communication ////////////////////////
     parent(owner),
     // Style / positioning objects //////////
-    myLookAndFeel(), menuLF(),
+    myLookAndFeel(), overrideLF(),
     xPosition(0), yPosition(0),
 
     // Fonts //////////////////
-    fontSize(7.4f),
-    mis(BinaryData::silkfont, BinaryData::silkfontSize, false),
-    typeSilk(new CustomTypeface(mis)),
-    fontSilk( typeSilk ),
+    fontSize(10.f), defaultFont("Verdana", 10.f, Font::plain),
 
     // Volume controls //////////////////////////////
-    masterGainSlider("master gain"), masterSliderLabel("master", "MSTR"),
+    masterGainSlider("master gain"), masterSliderLabel("master", "mstr"),
     slidersArray(), slidersMuteBtnArray(),
 
     // Tempo controls ///////////////////////////////////////
     bpmSlider("bpm slider"), bpmLabel(),
-    quantiseSettingsCbox("quantise settings"), quantiseLabel(),
+    quantiseSettingsCbox("quantise settings"),
+	quantiseLabel("quantise label", "quantisation"),
 
     // Buttons ////////////////////////////
     loadFilesBtn("load files", "LOAD FILES"),
@@ -50,9 +48,12 @@ mlrVSTGUI::mlrVSTGUI (mlrVSTAudioProcessor* owner,
     recordPrecountSldr(), recordLengthSldr(), recordBankSldr(),
     resamplePrecountSldr(), resampleLengthSldr(), resampleBankSldr(),
     patternPrecountSldr(), patternLengthSldr(), patternBankSldr(),
-    recordBtn("RECORD", Colours::black, Colours::white),
-    resampleBtn("RESAMPLE", Colours::black, Colours::white),
-    patternBtn("PATTERN", Colours::black, Colours::white),
+    recordBtn("record", Colours::black, Colours::white),
+    resampleBtn("resample", Colours::black, Colours::white),
+    patternBtn("pattern", Colours::black, Colours::white),
+
+	// branding
+	vstNameLbl("vst label", "mlrVST"),
 
     // Misc ///////////////////////////////////////////
     lastDisplayedPosition(),
@@ -60,18 +61,19 @@ mlrVSTGUI::mlrVSTGUI (mlrVSTAudioProcessor* owner,
 
     // Presets //////////////////////////////////////////////////
     addPresetBtn("add preset", "Add Preset"),
-    toggleSetlistBtn("Setlist"),
+    toggleSetlistBtn("setlist"),
     presetPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH, 725),
     presetPanel(presetPanelBounds, owner),
 
     // Settings ///////////////////////////////////////
-    numChannels(newNumChannels), useExternalTempo(true), toggleSettingsBtn("Settings"),
+    numChannels(newNumChannels), useExternalTempo(true),
+	toggleSettingsBtn("settings"),
     settingsPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH, 725),
     settingsPanel(settingsPanelBounds, owner, this),
 
     // Mappings //////////////////////////////////////
     mappingPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH, 725),
-    toggleMappingBtn("Mappings"),
+    toggleMappingBtn("mappings"),
     mappingPanel(mappingPanelBounds, owner),
 
     // SampleStrip controls ///////////////////////////
@@ -128,6 +130,11 @@ mlrVSTGUI::mlrVSTGUI (mlrVSTAudioProcessor* owner,
 
     // start timer to update play positions, slider values etc.
     startTimer(50);
+
+	addAndMakeVisible(&vstNameLbl);
+	vstNameLbl.setBounds(PAD_AMOUNT, 600, 250, 50);
+	vstNameLbl.setFont(Font("FFF Tusj", 48.f, Font::plain));
+	vstNameLbl.setColour(Label::textColourId, Colours::white);
 
     // This tells the GUI to use a custom "theme"
     LookAndFeel::setDefaultLookAndFeel(&myLookAndFeel);
@@ -208,7 +215,7 @@ void mlrVSTGUI::buildSliders()
     masterSliderLabel.setBounds(xPosition, yPosition + sliderHeight, sliderWidth, 16);
     masterSliderLabel.setColour(Label::backgroundColourId, Colours::black);
     masterSliderLabel.setColour(Label::textColourId, Colours::white);
-	masterSliderLabel.setFont(fontSize);
+	masterSliderLabel.setFont(defaultFont);
 
 
 
@@ -584,12 +591,12 @@ void mlrVSTGUI::updateGlobalSetting(const int &parameterID, const void *newValue
             if (useExternalTempo)
             {
                 bpmSlider.setEnabled(false);
-                bpmLabel.setText("BPM (EXTERNAL)", NotificationType::dontSendNotification);
+                bpmLabel.setText("bpm (external)", NotificationType::dontSendNotification);
             }
             else
             {
                 bpmSlider.setEnabled(true);
-                bpmLabel.setText("BPM (INTERNAL)", NotificationType::dontSendNotification);
+                bpmLabel.setText("bpm (internal)", NotificationType::dontSendNotification);
             }
 
             break;
@@ -640,7 +647,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     addAndMakeVisible(&resampleBtn);
 	resampleBtn.addListener(this);
 	resampleBtn.setBounds(xPosition, yPosition, buttonWidth, buttonHeight);
-    resampleBtn.setFont(fontSilk, fontSize);
+	resampleBtn.setFont(defaultFont, fontSize);
     xPosition += PAD_AMOUNT + buttonWidth;
 
     addAndMakeVisible(&resamplePrecountSldr);
@@ -650,6 +657,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     resamplePrecountSldr.addListener(this);
     const int resamplePrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResamplePrecount));
     resamplePrecountSldr.setValue(resamplePrecount);
+	resamplePrecountSldr.setLookAndFeel(&overrideLF);
     xPosition += sliderWidth + PAD_AMOUNT;
 
     addAndMakeVisible(&resampleLengthSldr);
@@ -659,6 +667,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     resampleLengthSldr.addListener(this);
     const int resampleLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResampleLength));
     resampleLengthSldr.setValue(resampleLength);
+	resampleLengthSldr.setLookAndFeel(&overrideLF);
     xPosition += sliderWidth + PAD_AMOUNT;
 
     addAndMakeVisible(&resampleBankSldr);
@@ -668,6 +677,8 @@ void mlrVSTGUI::setUpRecordResampleUI()
     resampleBankSldr.addListener(this);
     const int resampleBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResampleBank));
     resampleBankSldr.setValue(resampleBank);
+	resampleBankSldr.setLookAndFeel(&overrideLF);
+
     xPosition = PAD_AMOUNT;
     yPosition += sliderHeight + PAD_AMOUNT;
 
@@ -676,7 +687,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     addAndMakeVisible(&recordBtn);
 	recordBtn.addListener(this);
     recordBtn.setBounds(xPosition, yPosition, buttonWidth, buttonHeight);
-    recordBtn.setFont(fontSilk, fontSize);
+    recordBtn.setFont(defaultFont, fontSize);
     xPosition += PAD_AMOUNT + buttonWidth;
 
     addAndMakeVisible(&recordPrecountSldr);
@@ -686,6 +697,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     recordPrecountSldr.addListener(this);
     const int recordPrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordPrecount));
     recordPrecountSldr.setValue(recordPrecount);
+	recordPrecountSldr.setLookAndFeel(&overrideLF);
     xPosition += sliderWidth + PAD_AMOUNT;
 
     addAndMakeVisible(&recordLengthSldr);
@@ -695,6 +707,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     recordLengthSldr.addListener(this);
     const int recordLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordLength));
     recordLengthSldr.setValue(recordLength);
+	recordLengthSldr.setLookAndFeel(&overrideLF);
     xPosition += sliderWidth + PAD_AMOUNT;
 
     addAndMakeVisible(&recordBankSldr);
@@ -704,6 +717,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     recordBankSldr.addListener(this);
     const int recordBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordBank));
     resampleBankSldr.setValue(recordBank);
+	resampleBankSldr.setLookAndFeel(&overrideLF);
     xPosition = PAD_AMOUNT;
     yPosition += sliderHeight + PAD_AMOUNT;
 
@@ -712,7 +726,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     addAndMakeVisible(&patternBtn);
 	patternBtn.addListener(this);
     patternBtn.setBounds(xPosition, yPosition, buttonWidth, buttonHeight);
-    patternBtn.setFont(fontSilk, fontSize);
+    patternBtn.setFont(defaultFont, fontSize);
     xPosition += PAD_AMOUNT + buttonWidth;
 
     addAndMakeVisible(&patternPrecountSldr);
@@ -722,6 +736,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     patternPrecountSldr.addListener(this);
     const int patternPrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternPrecount));
     patternPrecountSldr.setValue(patternPrecount);
+	patternPrecountSldr.setLookAndFeel(&overrideLF);
     xPosition += sliderWidth + PAD_AMOUNT;
 
     addAndMakeVisible(&patternLengthSldr);
@@ -731,6 +746,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     patternLengthSldr.addListener(this);
     const int patternLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternLength));
     patternLengthSldr.setValue(patternLength);
+	patternLengthSldr.setLookAndFeel(&overrideLF);
     xPosition += sliderWidth + PAD_AMOUNT;
 
     addAndMakeVisible(&patternBankSldr);
@@ -740,6 +756,9 @@ void mlrVSTGUI::setUpRecordResampleUI()
     patternBankSldr.addListener(this);
     const int patternBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternBank));
     patternBankSldr.setValue(patternBank);
+	patternBankSldr.setLookAndFeel(&overrideLF);
+
+
 }
 
 void mlrVSTGUI::setupTempoUI()
@@ -758,13 +777,14 @@ void mlrVSTGUI::setupTempoUI()
     bpmLabel.setBounds(xPosition, yPosition, bpmLabelWidth, bpmLabelHeight);
     bpmLabel.setColour(Label::textColourId, Colours::white);
     bpmLabel.setColour(Label::backgroundColourId, Colours::black);
+	bpmLabel.setFont(defaultFont);
     xPosition += bpmLabelWidth + PAD_AMOUNT;
 
     addAndMakeVisible(&quantiseLabel);
     quantiseLabel.setBounds(xPosition, yPosition, quantiseLabelWidth, quantiseLabelHeight);
     quantiseLabel.setColour(Label::textColourId, Colours::white);
     quantiseLabel.setColour(Label::backgroundColourId, Colours::black);
-    quantiseLabel.setText("QUANTISATION", NotificationType::dontSendNotification);
+	quantiseLabel.setFont(defaultFont);
 
     xPosition = PAD_AMOUNT;
     yPosition += quantiseLabelHeight;
@@ -780,19 +800,19 @@ void mlrVSTGUI::setupTempoUI()
     bpmSlider.setRange(20.0, 300.0, 0.01);
     bpmSlider.setTextBoxIsEditable(true);
     bpmSlider.addListener(this);
-	bpmSlider.setLookAndFeel(&menuLF);
+	bpmSlider.setLookAndFeel(&overrideLF);
 
     useExternalTempo = *static_cast<const bool*>(getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
     if (useExternalTempo)
     {
         bpmSlider.setEnabled(false);
-        bpmLabel.setText("BPM (EXTERNAL)", NotificationType::dontSendNotification);
+        bpmLabel.setText("bpm (external)", NotificationType::dontSendNotification);
     }
     else
     {
         double newBPM = *static_cast<const double*>(getGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM));
         bpmSlider.setValue(newBPM);
-        bpmLabel.setText("BPM (INTERNAL)", NotificationType::dontSendNotification);
+        bpmLabel.setText("bpm (internal)", NotificationType::dontSendNotification);
     }
 
     xPosition += bpmSliderWidth + PAD_AMOUNT;
@@ -812,7 +832,7 @@ void mlrVSTGUI::setupTempoUI()
     if (menuSelection >= 0 && menuSelection < 8) quantiseSettingsCbox.setSelectedId(menuSelection);
     else quantiseSettingsCbox.setSelectedId(1);
 
-	quantiseSettingsCbox.setLookAndFeel(&menuLF);
+	quantiseSettingsCbox.setLookAndFeel(&overrideLF);
 
 
     xPosition = PAD_AMOUNT;

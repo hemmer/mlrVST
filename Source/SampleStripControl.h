@@ -16,6 +16,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AudioSample.h"
 #include "SampleStripControl.h"
+#include "mlrVSTLookAndFeel.h"
 
 /* Forward declaration to set up pointer arrangement
    to allow sample strips to access the UI */
@@ -127,7 +128,8 @@ private:
     Rectangle<int> waveformPaintBounds;
 
     // SampleStrip GUI ////////////////////////////////////////
-    OldSchoolLookAndFeel menuLF;
+	overrideLookandFeel overrideLF;
+	Font defaultFont;
     const float fontSize;
     Colour backgroundColour;
     // channel selector

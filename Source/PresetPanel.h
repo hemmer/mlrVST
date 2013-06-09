@@ -46,7 +46,7 @@ private:
 
     // gui setup //////////////////////////
     Label panelLabel, instructionLabel;
-    const float fontSize;
+    const Font defaultFont;
     const Rectangle<int> &panelBounds;
     TextButton loadSetlistBtn, saveSetlistBtn;
 

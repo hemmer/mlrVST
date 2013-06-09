@@ -140,6 +140,12 @@
         <File RelativePath="..\..\Source\PatternRecording.h"/>
       </Filter>
       <Filter Name="gui">
+        <Filter Name="Fonts">
+          <File RelativePath="..\..\Source\Fonts\FreeTypeAmalgam.c"/>
+          <File RelativePath="..\..\Source\Fonts\FreeTypeAmalgam.h"/>
+          <File RelativePath="..\..\Source\Fonts\FreeTypeFaces.cpp"/>
+          <File RelativePath="..\..\Source\Fonts\FreeTypeFaces.h"/>
+        </Filter>
         <Filter Name="buttons">
           <File RelativePath="..\..\Source\timedButton.cpp"/>
           <File RelativePath="..\..\Source\timedButton.h"/>
@@ -246,7 +252,7 @@
             <Tool Name="VCCLCompilerTool"/>
           </FileConfiguration>
         </File>
-        <File RelativePath="..\..\Resources\silkfont">
+        <File RelativePath="..\..\Resources\unlocked.png">
           <FileConfiguration Name="Debug|Win32"
                              ExcludedFromBuild="true">
             <Tool Name="VCCLCompilerTool"/>
@@ -256,7 +262,17 @@
             <Tool Name="VCCLCompilerTool"/>
           </FileConfiguration>
         </File>
-        <File RelativePath="..\..\Resources\unlocked.png">
+        <File RelativePath="..\..\Resources\VERDANA.TTF">
+          <FileConfiguration Name="Debug|Win32"
+                             ExcludedFromBuild="true">
+            <Tool Name="VCCLCompilerTool"/>
+          </FileConfiguration>
+          <FileConfiguration Name="Release|Win32"
+                             ExcludedFromBuild="true">
+            <Tool Name="VCCLCompilerTool"/>
+          </FileConfiguration>
+        </File>
+        <File RelativePath="C:\Users\hemmer\AppData\Local\Temp\Rar$DRa0.803\FFF Tusj.ttf">
           <FileConfiguration Name="Debug|Win32"
                              ExcludedFromBuild="true">
             <Tool Name="VCCLCompilerTool"/>

@@ -26,6 +26,15 @@
             file="Source/PatternRecording.h"/>
     </GROUP>
     <GROUP id="{97C22212-60AA-6F95-FA14-E9A7447C7753}" name="gui">
+      <GROUP id="{07B82C21-45DD-8B6D-2164-7EA9B21B659C}" name="Fonts">
+        <FILE id="an0Igc" name="FreeTypeAmalgam.c" compile="1" resource="0"
+              file="Source/Fonts/FreeTypeAmalgam.c"/>
+        <FILE id="pvqcie" name="FreeTypeAmalgam.h" compile="0" resource="0"
+              file="Source/Fonts/FreeTypeAmalgam.h"/>
+        <FILE id="adFhlD" name="FreeTypeFaces.cpp" compile="1" resource="0"
+              file="Source/Fonts/FreeTypeFaces.cpp"/>
+        <FILE id="O0icBM" name="FreeTypeFaces.h" compile="0" resource="0" file="Source/Fonts/FreeTypeFaces.h"/>
+      </GROUP>
       <GROUP id="{F593CB7E-770C-F39C-E866-8FB55A66E604}" name="buttons">
         <FILE id="DqLjsk" name="timedButton.cpp" compile="1" resource="0" file="Source/timedButton.cpp"/>
         <FILE id="IaoqCf" name="timedButton.h" compile="0" resource="0" file="Source/timedButton.h"/>
@@ -110,8 +119,9 @@
     </GROUP>
     <GROUP id="{976ABE17-20BF-66CE-B2ED-6DEA99C08584}" name="Resources">
       <FILE id="gUdYEf" name="locked.png" compile="0" resource="1" file="Resources/locked.png"/>
-      <FILE id="kaYoY6" name="silkfont" compile="0" resource="1" file="Resources/silkfont"/>
       <FILE id="umq6MW" name="unlocked.png" compile="0" resource="1" file="Resources/unlocked.png"/>
+      <FILE id="OrrBWf" name="VERDANA.TTF" compile="0" resource="1" file="Resources/VERDANA.TTF"/>
+      <FILE id="SHULaZ" name="FFF Tusj.ttf" compile="0" resource="1" file="C:/Users/hemmer/AppData/Local/Temp/Rar$DRa0.803/FFF Tusj.ttf"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>
@@ -134,6 +144,14 @@
                JUCE_USE_ANDROID_OPENSLES="disabled" JUCE_USE_CDREADER="disabled"
                JUCE_USE_CDBURNER="disabled"/>
   <EXPORTFORMATS>
+    <VS2012 targetFolder="Builds/VisualStudio2012" juceFolder="" vstFolder="c:\SDKs\vstsdk2.4">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
+                       isDebug="1" optimisation="1" targetName="mlrVST" headerPath="../../oscpack/"/>
+        <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
+                       isDebug="0" optimisation="2" targetName="mlrVST" headerPath="../../oscpack/"/>
+      </CONFIGURATIONS>
+    </VS2012>
     <VS2008 targetFolder="Builds/VisualStudio2008" juceFolder="" vstFolder="c:\SDKs\vstsdk2.4">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" isDebug="1"
@@ -160,13 +178,5 @@
                        isDebug="0" optimisation="2" targetName="mlrVST" headerPath="../../oscpack/"/>
       </CONFIGURATIONS>
     </XCODE_MAC>
-    <VS2012 targetFolder="Builds/VisualStudio2012" juceFolder="" vstFolder="c:\SDKs\vstsdk2.4">
-      <CONFIGURATIONS>
-        <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
-                       isDebug="1" optimisation="1" targetName="mlrVST" headerPath="../../oscpack/"/>
-        <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
-                       isDebug="0" optimisation="2" targetName="mlrVST" headerPath="../../oscpack/"/>
-      </CONFIGURATIONS>
-    </VS2012>
   </EXPORTFORMATS>
 </JUCERPROJECT>

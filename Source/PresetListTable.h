@@ -46,7 +46,7 @@ public:
                     int width, int height, bool /*rowIsSelected*/)
     {
         g.setColour (Colours::black);
-        g.setFont (font);
+        g.setFont (defaultFont);
 
         const XmlElement* rowElement = presetData->getChildElement (rowNumber);
 
@@ -112,8 +112,8 @@ private:
     mlrVSTAudioProcessor * const processor;
 
     // gui / components /////////////////////////////////
-    TableListBox table;     // the table component itself
-    Font font;              // font size for rows
+    TableListBox table;			// the table component itself
+    const Font defaultFont;     // font size for rows
 
     // data ////////////////////////////////////////////////////////////
     XmlElement* presetData;     // pointer to the list of unique presets
