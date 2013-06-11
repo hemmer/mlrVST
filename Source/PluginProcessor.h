@@ -213,6 +213,8 @@ public:
         patmapStopRecording,
         patmapStartPlaying,
         patmapStopPlaying,
+		patmapIncLength,
+		patmapDecLength,
         patmapNumMappings
     };
 
@@ -372,8 +374,23 @@ public:
 
     void startPatternRecording() { patternRecordings[currentPatternBank]->startPatternRecording(); }
     float getPatternPrecountPercent() const { return patternRecordings[currentPatternBank]->getPatternPrecountPercent(); }
+
+	// get the percent done of the currently selected pattern
     float getPatternPercent() const { return patternRecordings[currentPatternBank]->getPatternPercent(); }
-    bool areWePatternRecording() const { return patternRecordings[currentPatternBank]->isPatternRecording; }
+	// get percent done of requested pattern
+    float getPatternPercent(const int &patternID) const { jassert(patternID < patternRecordings.size()); return patternRecordings[patternID]->getPatternPercent(); }
+
+    bool isPatternRecording() const { return patternRecordings[currentPatternBank]->isPatternRecording; }
+    bool isPatternRecording(const int &patternID) const { return patternRecordings[patternID]->isPatternRecording; }
+
+    bool isPatternPlaying() const { return patternRecordings[currentPatternBank]->isPatternPlaying; }
+    bool isPatternPlaying(const int &patternID) const { return patternRecordings[patternID]->isPatternPlaying; }
+
+	PatternRecording * getPatternRecording(const int &patternID) 
+	{
+		jassert( patternID < patternRecordings.size() );
+		return patternRecordings[patternID];
+	}
 
 
     // here rate is the level of quantisation, so for 1 / 32th

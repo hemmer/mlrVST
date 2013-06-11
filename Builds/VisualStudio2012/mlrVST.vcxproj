@@ -137,6 +137,7 @@
     <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
     <ClCompile Include="..\..\Source\SampleStrip.cpp"/>
     <ClCompile Include="..\..\Source\PatternRecording.cpp"/>
+    <ClCompile Include="..\..\Source\PatternOverlay.cpp"/>
     <ClCompile Include="..\..\Source\Fonts\FreeTypeAmalgam.c"/>
     <ClCompile Include="..\..\Source\Fonts\FreeTypeFaces.cpp"/>
     <ClCompile Include="..\..\Source\timedButton.cpp"/>
@@ -1188,6 +1189,7 @@
     <ClInclude Include="..\..\Source\PluginProcessor.h"/>
     <ClInclude Include="..\..\Source\SampleStrip.h"/>
     <ClInclude Include="..\..\Source\PatternRecording.h"/>
+    <ClInclude Include="..\..\Source\PatternOverlay.h"/>
     <ClInclude Include="..\..\Source\Fonts\FreeTypeAmalgam.h"/>
     <ClInclude Include="..\..\Source\Fonts\FreeTypeFaces.h"/>
     <ClInclude Include="..\..\Source\timedButton.h"/>
@@ -1623,7 +1625,7 @@
     <None Include="..\..\Resources\locked.png"/>
     <None Include="..\..\Resources\unlocked.png"/>
     <None Include="..\..\Resources\VERDANA.TTF"/>
-    <None Include="C:\Users\hemmer\AppData\Local\Temp\Rar$DRa0.803\FFF Tusj.ttf"/>
+    <None Include="..\..\Resources\FFF Tusj.ttf"/>
     <None Include="..\..\JuceLibraryCode\modules\juce_audio_basics\juce_module_info"/>
     <None Include="..\..\JuceLibraryCode\modules\juce_audio_devices\juce_module_info"/>
     <None Include="..\..\JuceLibraryCode\modules\juce_audio_formats\juce_module_info"/>

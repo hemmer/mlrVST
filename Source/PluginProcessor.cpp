@@ -795,8 +795,7 @@ AudioSample * mlrVSTAudioProcessor::getAudioSample(const int &samplePoolIndex, c
 SampleStrip* mlrVSTAudioProcessor::getSampleStrip(const int &index)
 {
     jassert( index < sampleStripArray.size() );
-    SampleStrip *tempStrip = sampleStripArray[index];
-    return tempStrip;
+    return sampleStripArray[index];
 }
 
 void mlrVSTAudioProcessor::switchChannels(const int &newChan, const int &stripID)
@@ -1822,7 +1821,11 @@ String mlrVSTAudioProcessor::getPatternRowMappingName(const int &mappingID)
     case patmapStopRecording : return "stop recording";
     case patmapStartPlaying : return "start playing";
     case patmapStopPlaying : return "stop playing";
+	case patmapDecLength : return "decrease length";
+	case patmapIncLength : return "increase length";
+
     default : jassertfalse; return "error: mappingID " + String(mappingID) + " not found!";
+
     }
 }
 
@@ -2006,8 +2009,19 @@ void mlrVSTAudioProcessor::executePatternRowMapping(const int &mappingID, const 
     case patmapStopRecording : patternRecordings[patternID]->stopPatternRecording(); break;
     case patmapStartPlaying : patternRecordings[patternID]->startPatternPlaying(); break;
     case patmapStopPlaying : patternRecordings[patternID]->stopPatternPlaying(); break;
-    default : jassertfalse;
-    }
+	case patmapDecLength :
+		{
+			if (patternRecordings[patternID]->patternLength > 1) (patternRecordings[patternID]->patternLength)--;
+			break;
+		}
+
+	case patmapIncLength :
+		{
+			if (patternRecordings[patternID]->patternLength < 32) (patternRecordings[patternID]->patternLength)++;
+			break;
+		}
+	default : jassertfalse;
+	}
 }
 
 
@@ -2054,8 +2068,8 @@ void mlrVSTAudioProcessor::setupDefaultRowMappings()
     patternMappings.add(patmapStopRecording);
     patternMappings.add(patmapStartPlaying);
     patternMappings.add(patmapStopPlaying);
-    patternMappings.add(patmapNoMapping);
-    patternMappings.add(patmapNoMapping);
+	patternMappings.add(patmapDecLength);
+	patternMappings.add(patmapIncLength);
     patternMappings.add(patmapNoMapping);
     patternMappings.add(patmapNoMapping);
 }

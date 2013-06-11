@@ -140,6 +140,10 @@
         <File RelativePath="..\..\Source\PatternRecording.h"/>
       </Filter>
       <Filter Name="gui">
+        <Filter Name="overlays">
+          <File RelativePath="..\..\Source\PatternOverlay.cpp"/>
+          <File RelativePath="..\..\Source\PatternOverlay.h"/>
+        </Filter>
         <Filter Name="Fonts">
           <File RelativePath="..\..\Source\Fonts\FreeTypeAmalgam.c"/>
           <File RelativePath="..\..\Source\Fonts\FreeTypeAmalgam.h"/>
@@ -272,7 +276,7 @@
             <Tool Name="VCCLCompilerTool"/>
           </FileConfiguration>
         </File>
-        <File RelativePath="C:\Users\hemmer\AppData\Local\Temp\Rar$DRa0.803\FFF Tusj.ttf">
+        <File RelativePath="..\..\Resources\FFF Tusj.ttf">
           <FileConfiguration Name="Debug|Win32"
                              ExcludedFromBuild="true">
             <Tool Name="VCCLCompilerTool"/>

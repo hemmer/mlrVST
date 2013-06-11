@@ -279,8 +279,12 @@ float PatternRecording::getPatternPrecountPercent() const
 }
 float PatternRecording::getPatternPercent() const
 {
-    if (patternPosition >= patternLengthInSamples || patternLengthInSamples <= 0 || !isPatternRecording)
-        return 0.0;
+	// only continue if the pattern is playing or recording
+	if (! isPatternPlaying && !isPatternRecording)
+		return 0.0;
+	// make sure we haven't messed up the calc
+	else if (patternPosition >= patternLengthInSamples || patternLengthInSamples <= 0)
+		return 0.0;
     else
         return (float) (patternPosition) / (float) (patternLengthInSamples);
 }

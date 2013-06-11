@@ -79,7 +79,10 @@ mlrVSTGUI::mlrVSTGUI (mlrVSTAudioProcessor* owner,
     // SampleStrip controls ///////////////////////////
     sampleStripControlArray(), numStrips(newNumStrips),
     waveformControlHeight( (GUI_HEIGHT - numStrips * PAD_AMOUNT) / numStrips),
-    waveformControlWidth(THUMBNAIL_WIDTH)
+    waveformControlWidth(THUMBNAIL_WIDTH),
+
+	// Pattern overlays //////////////////////////////
+	patternOverlayArray()
 {
     DBG("GUI loaded " << " strips of height " << waveformControlHeight);
 
@@ -116,6 +119,7 @@ mlrVSTGUI::mlrVSTGUI (mlrVSTAudioProcessor* owner,
 
     setUpRecordResampleUI();
     buildSampleStripControls(numStrips);
+	setupPatternOverlays();
 
     masterGainSlider.addListener(this);
 
@@ -185,6 +189,25 @@ void mlrVSTGUI::buildSampleStripControls(const int &newNumStrips)
 
     numStrips = newNumStrips;
     DBG("SampleStripControl array built, size " << numStrips);
+}
+
+void mlrVSTGUI::setupPatternOverlays()
+{
+	// TODO: not hard coded!
+	int numPatterns = 4;
+	for (int i = 0; i < numPatterns; ++i)
+	{
+		PatternRecording * currentRecording = parent->getPatternRecording(i);
+		patternOverlayArray.add(new PatternOverlay(i, parent, currentRecording,
+								waveformControlWidth, waveformControlHeight));
+		
+		// add the overlay (but don't make visible yet)
+		addChildComponent(patternOverlayArray[i]);
+
+		int stripX = getWidth() - waveformControlWidth - PAD_AMOUNT;
+        int stripY = PAD_AMOUNT + i * (waveformControlHeight + PAD_AMOUNT);
+        patternOverlayArray[i]->setBounds(stripX, stripY, waveformControlWidth, waveformControlHeight);
+	}
 }
 
 void mlrVSTGUI::buildSliders()
@@ -329,7 +352,7 @@ void mlrVSTGUI::timerCallback()
         parent->getResamplingPercent());
     else resampleBtn.setPercentDone(0.0, 0.0);
 
-    if (parent->areWePatternRecording())
+    if (parent->isPatternRecording())
         patternBtn.setPercentDone(parent->getPatternPrecountPercent(),
         parent->getPatternPercent());
     else patternBtn.setPercentDone(0.0, 0.0);
@@ -338,10 +361,20 @@ void mlrVSTGUI::timerCallback()
     // see if the modifier button status has changed
     const int modifierStatus = parent->getModifierBtnState();
 
+	if (modifierStatus == mlrVSTAudioProcessor::rmPatternBtn)
+	{
+		for(int i = 0; i < patternOverlayArray.size(); ++i)
+			patternOverlayArray[i]->setVisible(true);		
+	}
+	else
+	{
+		for(int i = 0; i < patternOverlayArray.size(); ++i)
+			patternOverlayArray[i]->setVisible(false);	
+	}
+
     // update the playback position
     for(int i = 0; i < sampleStripControlArray.size(); ++i)
     {
-        sampleStripControlArray[i]->setModifierBtnStatus(modifierStatus);
         sampleStripControlArray[i]->updatePlaybackStatus();
         sampleStripControlArray[i]->updateParamsIfChanged();
     }

@@ -24,7 +24,8 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
     panelLabel.setBounds(xPosition, yPosition, panelBounds.getWidth(), 30);
     panelLabel.setColour(Label::backgroundColourId, Colours::black);
     panelLabel.setColour(Label::textColourId, Colours::white);
-    panelLabel.setFont(defaultFont);
+	Font titleFont("Verdana", 20.f, Font::plain);
+	panelLabel.setFont(titleFont);
     yPosition += 30 + PAD_AMOUNT;
     xPosition += PAD_AMOUNT;
 

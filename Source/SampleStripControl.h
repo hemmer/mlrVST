@@ -106,7 +106,8 @@ public:
     void setModifierBtnStatus(const int &newStatus)
     {
         // if the situation has changed...
-        if (newStatus != modifierBtnStatus) repaint();
+        //if (newStatus != modifierBtnStatus) repaint(); // TODO: check this is ok?
+		repaint();
 
         modifierBtnStatus = newStatus;
     }

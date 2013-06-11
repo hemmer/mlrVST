@@ -26,6 +26,12 @@
             file="Source/PatternRecording.h"/>
     </GROUP>
     <GROUP id="{97C22212-60AA-6F95-FA14-E9A7447C7753}" name="gui">
+      <GROUP id="{E8A1BE8B-DC62-4228-5061-42D817C84C9E}" name="overlays">
+        <FILE id="O0E187" name="PatternOverlay.cpp" compile="1" resource="0"
+              file="Source/PatternOverlay.cpp"/>
+        <FILE id="J7i11H" name="PatternOverlay.h" compile="0" resource="0"
+              file="Source/PatternOverlay.h"/>
+      </GROUP>
       <GROUP id="{07B82C21-45DD-8B6D-2164-7EA9B21B659C}" name="Fonts">
         <FILE id="an0Igc" name="FreeTypeAmalgam.c" compile="1" resource="0"
               file="Source/Fonts/FreeTypeAmalgam.c"/>
@@ -121,7 +127,7 @@
       <FILE id="gUdYEf" name="locked.png" compile="0" resource="1" file="Resources/locked.png"/>
       <FILE id="umq6MW" name="unlocked.png" compile="0" resource="1" file="Resources/unlocked.png"/>
       <FILE id="OrrBWf" name="VERDANA.TTF" compile="0" resource="1" file="Resources/VERDANA.TTF"/>
-      <FILE id="SHULaZ" name="FFF Tusj.ttf" compile="0" resource="1" file="C:/Users/hemmer/AppData/Local/Temp/Rar$DRa0.803/FFF Tusj.ttf"/>
+      <FILE id="iyLYiA" name="FFF Tusj.ttf" compile="0" resource="1" file="Resources/FFF Tusj.ttf"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>

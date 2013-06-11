@@ -14,6 +14,9 @@
     <Filter Include="mlrVST\gui">
       <UniqueIdentifier>{897673A4-0009-B799-2E6D-1C8E7CE4EA73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mlrVST\gui\overlays">
+      <UniqueIdentifier>{2735366A-E609-8835-B320-85BAB019D41B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="mlrVST\gui\Fonts">
       <UniqueIdentifier>{69C8DBFA-D519-4CE8-6ADD-4228BEB2DE56}</UniqueIdentifier>
     </Filter>
@@ -327,6 +330,9 @@
     </ClCompile>
     <ClCompile Include="..\..\Source\PatternRecording.cpp">
       <Filter>mlrVST\midi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\PatternOverlay.cpp">
+      <Filter>mlrVST\gui\overlays</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Fonts\FreeTypeAmalgam.c">
       <Filter>mlrVST\gui\Fonts</Filter>
@@ -1535,6 +1541,9 @@
     </ClInclude>
     <ClInclude Include="..\..\Source\PatternRecording.h">
       <Filter>mlrVST\midi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\PatternOverlay.h">
+      <Filter>mlrVST\gui\overlays</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Fonts\FreeTypeAmalgam.h">
       <Filter>mlrVST\gui\Fonts</Filter>
@@ -2837,7 +2846,7 @@
     <None Include="..\..\Resources\VERDANA.TTF">
       <Filter>mlrVST\Resources</Filter>
     </None>
-    <None Include="C:\Users\hemmer\AppData\Local\Temp\Rar$DRa0.803\FFF Tusj.ttf">
+    <None Include="..\..\Resources\FFF Tusj.ttf">
       <Filter>mlrVST\Resources</Filter>
     </None>
     <None Include="..\..\JuceLibraryCode\modules\juce_audio_basics\juce_module_info">

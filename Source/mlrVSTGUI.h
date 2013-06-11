@@ -11,6 +11,7 @@
 #include "MappingPanel.h"
 #include "timedButton.h"
 #include "mlrVSTLookAndFeel.h"
+#include "PatternOverlay.h"
 
 
 #ifndef PAD_AMOUNT
@@ -27,6 +28,7 @@
 
 
 class WaveformControl;
+class PatternOverlay;
 
 class mlrVSTGUI  : public AudioProcessorEditor,
                                     public SliderListener,
@@ -153,6 +155,8 @@ private:
     int numStrips;
     int waveformControlHeight, waveformControlWidth;
 
+	OwnedArray<PatternOverlay> patternOverlayArray;
+	void setupPatternOverlays();
 
     JUCE_LEAK_DETECTOR(mlrVSTGUI);
 };

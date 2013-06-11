@@ -689,34 +689,66 @@ void SampleStripControl::paint(Graphics& g)
     // if a modifier button is held, draw an overlay
     else if (modifierBtnStatus != mlrVSTAudioProcessor::rmNoBtn)
     {
+		// paint a translucent background
         g.setColour(Colours::black.withAlpha(0.3f));
         g.fillRect(waveformPaintBounds);
 
-        switch (modifierStatus)
-        {
+		// TODO: this should NOT be hard coded!
+		const int numCols = 8;
+
+		const int rowType = modifierStatus;
+		const int spacing = componentWidth / numCols;
+
+		g.setColour(Colours::white);
+		g.setFont(defaultFont);
+
+		switch (modifierStatus)
+		{
         case mlrVSTAudioProcessor::rmNoBtn : break;
         case mlrVSTAudioProcessor::rmNormalRowMappingBtnA :
         case mlrVSTAudioProcessor::rmNormalRowMappingBtnB :
             {
-                // TODO: this should NOT be hard coded!
-                const int numCols = 8;
-
-                const int rowType = modifierStatus;
-                const int spacing = componentWidth / numCols;
-
-                g.setColour(Colours::white);
-                g.setFont(fontSize);
-
                 for (int c = 0; c < numCols; ++c)
                 {
-                    int mappingID = processor->getMonomeMapping(rowType, c);
-                    String mappingName = processor->getNormalRowMappingName(mappingID);
+                    const int mappingID = processor->getMonomeMapping(rowType, c);
+                    const String mappingName = processor->getNormalRowMappingName(mappingID);
 
 					g.drawFittedText(mappingName, PAD_AMOUNT + c * spacing, controlbarSize, spacing - PAD_AMOUNT, maxWaveformHeight,
                         Justification::centredLeft, 5, 1.0f);
                 }
                 break;
             }
+
+		case mlrVSTAudioProcessor::rmPatternBtn :
+			{
+				// Find out if the pattern associated with this channel is
+				// playing or recording and paint a progress strip along the
+				// middle of the strip based on that
+				if (processor->isPatternPlaying(sampleStripID))
+				{
+					g.setColour(backgroundColour.withAlpha(0.5f));
+					const float percentDone = processor->getPatternPercent(sampleStripID);
+					g.fillRect(0, componentHeight / 2, int (componentWidth*percentDone), controlbarSize);
+				}
+				else if (processor->isPatternRecording(sampleStripID))
+				{
+					g.setColour(backgroundColour);
+					const float percentDone = processor->getPatternPercent(sampleStripID);
+					g.fillRect(0, componentHeight / 2, int (componentWidth*percentDone), controlbarSize);
+				}
+
+				g.setColour(Colours::white);
+				for (int c = 0; c < numCols; ++c)
+				{
+					const int mappingID = processor->getMonomeMapping(rowType, c);
+					const String mappingName = processor->getPatternRowMappingName(mappingID);
+
+					g.drawFittedText(mappingName, PAD_AMOUNT + c * spacing, controlbarSize, spacing - PAD_AMOUNT, maxWaveformHeight,
+						Justification::centredLeft, 5, 1.0f);
+				}
+
+				break;
+			}
         }
     }
 }

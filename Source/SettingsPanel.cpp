@@ -22,7 +22,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     // Layout ///////////////////////////////////////
     defaultFont("Verdana", 10.f, Font::plain), panelBounds(bounds), overLF(),
     // Components ///////////////////////////////////
-    panelLabel("settings panel label", "Settings"),
+    panelLabel("settings panel label", "settings"),
 
     tempoSourceLbl("tempo source", "tempo source"),
     useExternalTempoBtn("Using external tempo"),
@@ -50,7 +50,8 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     panelLabel.setBounds(0, 0, panelBounds.getWidth(), 30);
     panelLabel.setColour(Label::backgroundColourId, Colours::black);
     panelLabel.setColour(Label::textColourId, Colours::white);
-    panelLabel.setFont(defaultFont);
+	Font titleFont("Verdana", 20.f, Font::plain);
+    panelLabel.setFont(titleFont);
 
     const int labelWidth = 150;
     const int labelHeight = 20;

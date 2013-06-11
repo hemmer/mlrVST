@@ -53,6 +53,7 @@ OBJECTS := \
   $(OBJDIR)/PluginProcessor_a059e380.o \
   $(OBJDIR)/SampleStrip_9922baef.o \
   $(OBJDIR)/PatternRecording_c3abd24a.o \
+  $(OBJDIR)/PatternOverlay_2c238a29.o \
   $(OBJDIR)/FreeTypeAmalgam_f9f8342c.o \
   $(OBJDIR)/FreeTypeFaces_5f2c9c86.o \
   $(OBJDIR)/timedButton_8bab4a.o \
@@ -124,6 +125,11 @@ $(OBJDIR)/SampleStrip_9922baef.o: ../../Source/SampleStrip.cpp
 $(OBJDIR)/PatternRecording_c3abd24a.o: ../../Source/PatternRecording.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling PatternRecording.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/PatternOverlay_2c238a29.o: ../../Source/PatternOverlay.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling PatternOverlay.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/FreeTypeAmalgam_f9f8342c.o: ../../Source/Fonts/FreeTypeAmalgam.c
