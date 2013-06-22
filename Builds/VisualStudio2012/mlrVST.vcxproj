@@ -137,7 +137,9 @@
     <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
     <ClCompile Include="..\..\Source\SampleStrip.cpp"/>
     <ClCompile Include="..\..\Source\PatternRecording.cpp"/>
-    <ClCompile Include="..\..\Source\PatternOverlay.cpp"/>
+    <ClCompile Include="..\..\Source\SampleStripControl.cpp"/>
+    <ClCompile Include="..\..\Source\PatternStripControl.cpp"/>
+    <ClCompile Include="..\..\Source\HintOverlay.cpp"/>
     <ClCompile Include="..\..\Source\Fonts\FreeTypeAmalgam.c"/>
     <ClCompile Include="..\..\Source\Fonts\FreeTypeFaces.cpp"/>
     <ClCompile Include="..\..\Source\timedButton.cpp"/>
@@ -146,7 +148,6 @@
     <ClCompile Include="..\..\Source\SetlistTable.cpp"/>
     <ClCompile Include="..\..\Source\SettingsPanel.cpp"/>
     <ClCompile Include="..\..\Source\MappingPanel.cpp"/>
-    <ClCompile Include="..\..\Source\SampleStripControl.cpp"/>
     <ClCompile Include="..\..\Source\mlrVSTGUI.cpp"/>
     <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp"/>
     <ClCompile Include="..\..\Source\Utilities.cpp"/>
@@ -1189,7 +1190,9 @@
     <ClInclude Include="..\..\Source\PluginProcessor.h"/>
     <ClInclude Include="..\..\Source\SampleStrip.h"/>
     <ClInclude Include="..\..\Source\PatternRecording.h"/>
-    <ClInclude Include="..\..\Source\PatternOverlay.h"/>
+    <ClInclude Include="..\..\Source\SampleStripControl.h"/>
+    <ClInclude Include="..\..\Source\PatternStripControl.h"/>
+    <ClInclude Include="..\..\Source\HintOverlay.h"/>
     <ClInclude Include="..\..\Source\Fonts\FreeTypeAmalgam.h"/>
     <ClInclude Include="..\..\Source\Fonts\FreeTypeFaces.h"/>
     <ClInclude Include="..\..\Source\timedButton.h"/>
@@ -1198,7 +1201,6 @@
     <ClInclude Include="..\..\Source\SetlistTable.h"/>
     <ClInclude Include="..\..\Source\SettingsPanel.h"/>
     <ClInclude Include="..\..\Source\MappingPanel.h"/>
-    <ClInclude Include="..\..\Source\SampleStripControl.h"/>
     <ClInclude Include="..\..\Source\mlrVSTGUI.h"/>
     <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h"/>
     <ClInclude Include="..\..\Source\Utilities.h"/>
@@ -1624,8 +1626,9 @@
     <None Include="..\..\oscpack\TODO"/>
     <None Include="..\..\Resources\locked.png"/>
     <None Include="..\..\Resources\unlocked.png"/>
-    <None Include="..\..\Resources\VERDANA.TTF"/>
-    <None Include="..\..\Resources\FFF Tusj.ttf"/>
+    <None Include="..\..\Resources\waveform.png"/>
+    <None Include="..\..\Resources\pattern.png"/>
+    <None Include="..\..\Resources\ProggyClean.ttf"/>
     <None Include="..\..\JuceLibraryCode\modules\juce_audio_basics\juce_module_info"/>
     <None Include="..\..\JuceLibraryCode\modules\juce_audio_devices\juce_module_info"/>
     <None Include="..\..\JuceLibraryCode\modules\juce_audio_formats\juce_module_info"/>

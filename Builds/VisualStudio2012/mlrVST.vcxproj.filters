@@ -14,6 +14,9 @@
     <Filter Include="mlrVST\gui">
       <UniqueIdentifier>{897673A4-0009-B799-2E6D-1C8E7CE4EA73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mlrVST\gui\strips">
+      <UniqueIdentifier>{76B54B1E-5218-43E2-AF8A-36368C0D54B7}</UniqueIdentifier>
+    </Filter>
     <Filter Include="mlrVST\gui\overlays">
       <UniqueIdentifier>{2735366A-E609-8835-B320-85BAB019D41B}</UniqueIdentifier>
     </Filter>
@@ -331,7 +334,13 @@
     <ClCompile Include="..\..\Source\PatternRecording.cpp">
       <Filter>mlrVST\midi</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\PatternOverlay.cpp">
+    <ClCompile Include="..\..\Source\SampleStripControl.cpp">
+      <Filter>mlrVST\gui\strips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\PatternStripControl.cpp">
+      <Filter>mlrVST\gui\strips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\HintOverlay.cpp">
       <Filter>mlrVST\gui\overlays</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Fonts\FreeTypeAmalgam.c">
@@ -357,9 +366,6 @@
     </ClCompile>
     <ClCompile Include="..\..\Source\MappingPanel.cpp">
       <Filter>mlrVST\gui\panels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\SampleStripControl.cpp">
-      <Filter>mlrVST\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\mlrVSTGUI.cpp">
       <Filter>mlrVST\gui</Filter>
@@ -1542,7 +1548,13 @@
     <ClInclude Include="..\..\Source\PatternRecording.h">
       <Filter>mlrVST\midi</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\PatternOverlay.h">
+    <ClInclude Include="..\..\Source\SampleStripControl.h">
+      <Filter>mlrVST\gui\strips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\PatternStripControl.h">
+      <Filter>mlrVST\gui\strips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\HintOverlay.h">
       <Filter>mlrVST\gui\overlays</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Fonts\FreeTypeAmalgam.h">
@@ -1568,9 +1580,6 @@
     </ClInclude>
     <ClInclude Include="..\..\Source\MappingPanel.h">
       <Filter>mlrVST\gui\panels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\SampleStripControl.h">
-      <Filter>mlrVST\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\mlrVSTGUI.h">
       <Filter>mlrVST\gui</Filter>
@@ -2843,10 +2852,13 @@
     <None Include="..\..\Resources\unlocked.png">
       <Filter>mlrVST\Resources</Filter>
     </None>
-    <None Include="..\..\Resources\VERDANA.TTF">
+    <None Include="..\..\Resources\waveform.png">
       <Filter>mlrVST\Resources</Filter>
     </None>
-    <None Include="..\..\Resources\FFF Tusj.ttf">
+    <None Include="..\..\Resources\pattern.png">
+      <Filter>mlrVST\Resources</Filter>
+    </None>
+    <None Include="..\..\Resources\ProggyClean.ttf">
       <Filter>mlrVST\Resources</Filter>
     </None>
     <None Include="..\..\JuceLibraryCode\modules\juce_audio_basics\juce_module_info">

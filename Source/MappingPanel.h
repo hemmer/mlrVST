@@ -22,7 +22,6 @@ class mlrVSTGUI;
 class MappingPanel : public Component,
                      public ButtonListener,
                      public ComboBoxListener
-                     //public MouseListener
 {
 public:
     MappingPanel(const Rectangle<int> &bounds,

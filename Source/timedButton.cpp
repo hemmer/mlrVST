@@ -36,7 +36,7 @@ void TimedButton::paintButton (Graphics& g, bool /*isMouseOverButton*/,
                                bool isButtonDown)
 {
 	// set up the font with the right size
-	g.setFont(Font("Verdana", 10.f, Font::plain));
+	g.setFont(Font("ProggyCleanTT", 18.f, Font::plain));
 
     g.setColour(isButtonDown ? primaryColour : secondaryColour);
     g.fillRect(0, 0, getWidth(), getHeight());

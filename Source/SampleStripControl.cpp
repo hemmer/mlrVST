@@ -25,12 +25,13 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     dataStrip(dataStripLink), stripChanged(true),
 
     // GUI dimensions //////////////////////////////
-    componentHeight(height), componentWidth(width), controlbarSize(16),
+    componentHeight(height), componentWidth(width), controlbarSize(18),
     maxWaveformHeight(componentHeight - controlbarSize),
     waveformPaintBounds(0, controlbarSize, componentWidth, (componentHeight - controlbarSize)),
 
     // SampleStrip GUI ////////////////////////////////////////
-	overrideLF(), defaultFont("Verdana", 10.f, Font::plain), fontSize(10.f), backgroundColour(Colours::black),
+	overrideLF(), defaultFont("ProggyCleanTT", 18.f, Font::plain),
+	backgroundColour(Colours::black),
     chanLbl("channel label", "chan"), channelButtonArray(),
     volLbl("volume label", "vol"), stripVolumeSldr("volume"),
     modeLbl("mode", "mode"), selPlayMode("select playmode"), isLatchedBtn("latch"),
@@ -42,7 +43,7 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
 
     // Waveform control ////////////////////////
     visualSelectionStart(0), visualSelectionEnd(componentWidth), visualSelectionLength(componentWidth),
-    visualChunkSize(0.0), numChunks(8),
+	visualChunkSize(0.0), numChunksLabel("divs", "divs"), numChunks(8),
     selectionStartBeforeDrag(0), selectionPointToChange(0), selectionPointFixed(0),
     mouseDownMods(), rightMouseDown(false), modifierBtnStatus(-1), selectedHitZone(0),
     thumbnailScaleFactor(1.0), currentSample(0),
@@ -248,12 +249,12 @@ void SampleStripControl::buildUI()
 
 
     addAndMakeVisible(&chanLbl);
-    chanLbl.setBounds(0, 0, 32, controlbarSize);
+    chanLbl.setBounds(0, 0, 38, controlbarSize);
     chanLbl.setColour(Label::backgroundColourId, Colours::black);
     chanLbl.setColour(Label::textColourId, Colours::white);
     chanLbl.setFont(defaultFont);
 
-	newXposition = 32;
+	newXposition = 38;
 
     // clear existing buttons
     channelButtonArray.clear();
@@ -279,12 +280,12 @@ void SampleStripControl::buildUI()
     newXposition += (numChannels) * controlbarSize;
 
     addAndMakeVisible(&volLbl);
-    volLbl.setBounds(newXposition, 0, 32, controlbarSize);
+    volLbl.setBounds(newXposition, 0, 30, controlbarSize);
     volLbl.setColour(Label::backgroundColourId, Colours::black);
     volLbl.setColour(Label::textColourId, Colours::white);
     volLbl.setFont(defaultFont);
 
-    newXposition += 32;
+    newXposition += 30;
 
     addAndMakeVisible(&stripVolumeSldr);
     stripVolumeSldr.setSliderStyle(Slider::LinearBar);
@@ -297,11 +298,11 @@ void SampleStripControl::buildUI()
 
 
     addAndMakeVisible(&modeLbl);
-    modeLbl.setBounds(newXposition, 0, 33, controlbarSize);
+    modeLbl.setBounds(newXposition, 0, 36, controlbarSize);
     modeLbl.setColour(Label::backgroundColourId, Colours::black);
     modeLbl.setColour(Label::textColourId, Colours::white);
     modeLbl.setFont(defaultFont);
-	newXposition += 33;
+	newXposition += 36;
 
     addAndMakeVisible(&selPlayMode);
     selPlayMode.clear();
@@ -309,17 +310,21 @@ void SampleStripControl::buildUI()
     {
         selPlayMode.addItem(dataStrip->getPlayModeName(i), i+1);
     }
-    selPlayMode.setBounds(newXposition, 0, 86, controlbarSize);
+    selPlayMode.setBounds(newXposition, 0, 100, controlbarSize);
     selPlayMode.setLookAndFeel(&overrideLF);
-	newXposition += 86;
+	newXposition += 100;
 
+	addAndMakeVisible(&isLatchedBtn);
+    isLatchedBtn.setBounds(newXposition, 0, 44, controlbarSize);
+    isLatchedBtn.setColour(ToggleButton::textColourId, backgroundColour);
+	newXposition += 44;
 
     addAndMakeVisible(&playspeedLbl);
-    playspeedLbl.setBounds(newXposition, 0, 40, controlbarSize);
+    playspeedLbl.setBounds(newXposition, 0, 44, controlbarSize);
     playspeedLbl.setColour(Label::backgroundColourId, Colours::black);
     playspeedLbl.setColour(Label::textColourId, Colours::white);
     playspeedLbl.setFont(defaultFont);
-	newXposition += 40;
+	newXposition += 44;
 
 
     addAndMakeVisible(&playspeedSldr);
@@ -332,20 +337,14 @@ void SampleStripControl::buildUI()
 	newXposition += 80;
 
 
-	addAndMakeVisible(&isLatchedBtn);
-    isLatchedBtn.setBounds(newXposition, 0, 40, controlbarSize);
-    isLatchedBtn.setColour(ToggleButton::textColourId, backgroundColour);
-	newXposition += 40;
-
-
     addAndMakeVisible(&speedLockBtn);
     speedLockBtn.setImages(&unlockImg);
-    speedLockBtn.setBounds(newXposition, 0, 16, 16);
-    newXposition += 16;
+    speedLockBtn.setBounds(newXposition, 0, controlbarSize, controlbarSize);
+    newXposition += controlbarSize;
 
     addAndMakeVisible(&isReversedBtn);
-    isReversedBtn.setBounds(newXposition, 0, 16, controlbarSize);
-    newXposition += 16;
+    isReversedBtn.setBounds(newXposition, 0, controlbarSize, controlbarSize);
+    newXposition += controlbarSize;
 
     addAndMakeVisible(&div2);
     div2.setBounds(newXposition, 0, 20, controlbarSize);
@@ -355,9 +354,18 @@ void SampleStripControl::buildUI()
     times2.setBounds(newXposition, 0, 20, controlbarSize);
     newXposition += 20;
 
+	addAndMakeVisible(&numChunksLabel);
+    numChunksLabel.setBounds(newXposition, 0, 36, controlbarSize);
+	numChunksLabel.setColour(Label::backgroundColourId, Colours::black);
+    numChunksLabel.setColour(Label::textColourId, Colours::white);
+    numChunksLabel.setFont(defaultFont);
+	newXposition += 36;
+
     addAndMakeVisible(&selNumChunks);
     selNumChunks.setBounds(newXposition, 0, 32, controlbarSize);
     selNumChunks.setLookAndFeel(&overrideLF);
+
+	DBG(newXposition + 32);
 }
 
 void SampleStripControl::mouseDown(const MouseEvent &e)
@@ -680,10 +688,11 @@ void SampleStripControl::paint(Graphics& g)
         g.fillRect(selectedHitZone * componentWidth / 4, controlbarSize, componentWidth / 4, waveformPaintBounds.getHeight());
 
         g.setColour(Colours::white);
-        g.drawFittedText("NONE", 0 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
-        g.drawFittedText("SAMPLES", 1 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
-        g.drawFittedText("RECORDINGS", 2 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
-        g.drawFittedText("RESAMPLINGS", 3 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
+		g.setFont(defaultFont);
+        g.drawFittedText("none", 0 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
+        g.drawFittedText("samples", 1 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
+        g.drawFittedText("recordings", 2 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
+        g.drawFittedText("resamplings", 3 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
     }
 
     // if a modifier button is held, draw an overlay

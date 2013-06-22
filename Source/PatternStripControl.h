@@ -14,18 +14,17 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "mlrVSTGUI.h"
 
-class PatternOverlay : public Component
+class PatternStripControl : public Component
 {
 
 public:
 
-	PatternOverlay(const int &patternID,
-				   mlrVSTAudioProcessor * const owner,
-				   PatternRecording * const patternLink,
-				   const int &h,
-				   const int &w);
+	PatternStripControl(const int &patternID,
+						mlrVSTAudioProcessor * const owner,
+						PatternRecording * const patternLink,
+						const int &h, const int &w);
 
-	~PatternOverlay() { }
+	~PatternStripControl() { }
 
 	void paint(Graphics& g);
 
@@ -38,8 +37,9 @@ private:
 
 	//const int height, width;
 	Rectangle<int> overlayPaintBounds;
+	Rectangle<int> upperHalf, lowerHalf;
 
-	JUCE_LEAK_DETECTOR(PatternOverlay);
+	JUCE_LEAK_DETECTOR(PatternStripControl);
 	
 };
 

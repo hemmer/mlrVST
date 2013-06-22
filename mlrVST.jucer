@@ -26,11 +26,19 @@
             file="Source/PatternRecording.h"/>
     </GROUP>
     <GROUP id="{97C22212-60AA-6F95-FA14-E9A7447C7753}" name="gui">
+      <GROUP id="{85D7F425-71B0-BF12-5E46-C12D3C9FF018}" name="strips">
+        <FILE id="FxHfNX" name="SampleStripControl.cpp" compile="1" resource="0"
+              file="Source/SampleStripControl.cpp"/>
+        <FILE id="AM48RU" name="SampleStripControl.h" compile="0" resource="0"
+              file="Source/SampleStripControl.h"/>
+        <FILE id="O0E187" name="PatternStripControl.cpp" compile="1" resource="0"
+              file="Source/PatternStripControl.cpp"/>
+        <FILE id="J7i11H" name="PatternStripControl.h" compile="0" resource="0"
+              file="Source/PatternStripControl.h"/>
+      </GROUP>
       <GROUP id="{E8A1BE8B-DC62-4228-5061-42D817C84C9E}" name="overlays">
-        <FILE id="O0E187" name="PatternOverlay.cpp" compile="1" resource="0"
-              file="Source/PatternOverlay.cpp"/>
-        <FILE id="J7i11H" name="PatternOverlay.h" compile="0" resource="0"
-              file="Source/PatternOverlay.h"/>
+        <FILE id="o2dLZa" name="HintOverlay.cpp" compile="1" resource="0" file="Source/HintOverlay.cpp"/>
+        <FILE id="JBSmSH" name="HintOverlay.h" compile="0" resource="0" file="Source/HintOverlay.h"/>
       </GROUP>
       <GROUP id="{07B82C21-45DD-8B6D-2164-7EA9B21B659C}" name="Fonts">
         <FILE id="an0Igc" name="FreeTypeAmalgam.c" compile="1" resource="0"
@@ -62,10 +70,6 @@
               file="Source/MappingPanel.cpp"/>
         <FILE id="DWNl5g" name="MappingPanel.h" compile="0" resource="0" file="Source/MappingPanel.h"/>
       </GROUP>
-      <FILE id="FxHfNX" name="SampleStripControl.cpp" compile="1" resource="0"
-            file="Source/SampleStripControl.cpp"/>
-      <FILE id="AM48RU" name="SampleStripControl.h" compile="0" resource="0"
-            file="Source/SampleStripControl.h"/>
       <FILE id="S8PBIG" name="mlrVSTGUI.cpp" compile="1" resource="0" file="Source/mlrVSTGUI.cpp"/>
       <FILE id="jhjba8" name="mlrVSTGUI.h" compile="0" resource="0" file="Source/mlrVSTGUI.h"/>
       <FILE id="B2VwwM" name="mlrVSTLookAndFeel.cpp" compile="1" resource="0"
@@ -126,8 +130,9 @@
     <GROUP id="{976ABE17-20BF-66CE-B2ED-6DEA99C08584}" name="Resources">
       <FILE id="gUdYEf" name="locked.png" compile="0" resource="1" file="Resources/locked.png"/>
       <FILE id="umq6MW" name="unlocked.png" compile="0" resource="1" file="Resources/unlocked.png"/>
-      <FILE id="OrrBWf" name="VERDANA.TTF" compile="0" resource="1" file="Resources/VERDANA.TTF"/>
-      <FILE id="iyLYiA" name="FFF Tusj.ttf" compile="0" resource="1" file="Resources/FFF Tusj.ttf"/>
+      <FILE id="AhuUpu" name="waveform.png" compile="0" resource="1" file="Resources/waveform.png"/>
+      <FILE id="mvyiMs" name="pattern.png" compile="0" resource="1" file="Resources/pattern.png"/>
+      <FILE id="pTG1LX" name="ProggyClean.ttf" compile="0" resource="1" file="Resources/ProggyClean.ttf"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>

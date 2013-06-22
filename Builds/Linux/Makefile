@@ -53,7 +53,9 @@ OBJECTS := \
   $(OBJDIR)/PluginProcessor_a059e380.o \
   $(OBJDIR)/SampleStrip_9922baef.o \
   $(OBJDIR)/PatternRecording_c3abd24a.o \
-  $(OBJDIR)/PatternOverlay_2c238a29.o \
+  $(OBJDIR)/SampleStripControl_45995bf8.o \
+  $(OBJDIR)/PatternStripControl_22fcf2b6.o \
+  $(OBJDIR)/HintOverlay_866575aa.o \
   $(OBJDIR)/FreeTypeAmalgam_f9f8342c.o \
   $(OBJDIR)/FreeTypeFaces_5f2c9c86.o \
   $(OBJDIR)/timedButton_8bab4a.o \
@@ -62,7 +64,6 @@ OBJECTS := \
   $(OBJDIR)/SetlistTable_bd90937.o \
   $(OBJDIR)/SettingsPanel_89b72282.o \
   $(OBJDIR)/MappingPanel_5b8ca75f.o \
-  $(OBJDIR)/SampleStripControl_45995bf8.o \
   $(OBJDIR)/mlrVSTGUI_eeb94ef8.o \
   $(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o \
   $(OBJDIR)/Utilities_707bb76b.o \
@@ -127,9 +128,19 @@ $(OBJDIR)/PatternRecording_c3abd24a.o: ../../Source/PatternRecording.cpp
 	@echo "Compiling PatternRecording.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/PatternOverlay_2c238a29.o: ../../Source/PatternOverlay.cpp
+$(OBJDIR)/SampleStripControl_45995bf8.o: ../../Source/SampleStripControl.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling PatternOverlay.cpp"
+	@echo "Compiling SampleStripControl.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/PatternStripControl_22fcf2b6.o: ../../Source/PatternStripControl.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling PatternStripControl.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/HintOverlay_866575aa.o: ../../Source/HintOverlay.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling HintOverlay.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/FreeTypeAmalgam_f9f8342c.o: ../../Source/Fonts/FreeTypeAmalgam.c
@@ -170,11 +181,6 @@ $(OBJDIR)/SettingsPanel_89b72282.o: ../../Source/SettingsPanel.cpp
 $(OBJDIR)/MappingPanel_5b8ca75f.o: ../../Source/MappingPanel.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling MappingPanel.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/SampleStripControl_45995bf8.o: ../../Source/SampleStripControl.cpp
-	-@mkdir -p $(OBJDIR)
-	@echo "Compiling SampleStripControl.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/mlrVSTGUI_eeb94ef8.o: ../../Source/mlrVSTGUI.cpp

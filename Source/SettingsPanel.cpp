@@ -20,7 +20,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     // Communication ////////////////////////////////
     processor(processorPtr), pluginUI(editorPtr),
     // Layout ///////////////////////////////////////
-    defaultFont("Verdana", 10.f, Font::plain), panelBounds(bounds), overLF(),
+    defaultFont("ProggyCleanTT", 18.f, Font::plain), panelBounds(bounds), overLF(),
     // Components ///////////////////////////////////
     panelLabel("settings panel label", "settings"),
 
@@ -47,14 +47,14 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
 {
     // main panel label
     addAndMakeVisible(&panelLabel);
-    panelLabel.setBounds(0, 0, panelBounds.getWidth(), 30);
+    panelLabel.setBounds(0, 0, panelBounds.getWidth(), 36);
     panelLabel.setColour(Label::backgroundColourId, Colours::black);
     panelLabel.setColour(Label::textColourId, Colours::white);
-	Font titleFont("Verdana", 20.f, Font::plain);
+	Font titleFont("ProggyCleanTT", 36.f, Font::plain);
     panelLabel.setFont(titleFont);
 
     const int labelWidth = 150;
-    const int labelHeight = 20;
+    const int labelHeight = 25;
 
     int yPos = 50;
 
@@ -115,6 +115,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     const String currentPrefix = *static_cast<const String*>
         (processor->getGlobalSetting(mlrVSTAudioProcessor::sOSCPrefix));
     oscPrefixTxtBx.setText(currentPrefix, false);
+	oscPrefixTxtBx.setFont(defaultFont);
     yPos += PAD_AMOUNT + labelHeight;
 
 

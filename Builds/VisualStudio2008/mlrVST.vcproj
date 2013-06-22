@@ -140,9 +140,15 @@
         <File RelativePath="..\..\Source\PatternRecording.h"/>
       </Filter>
       <Filter Name="gui">
+        <Filter Name="strips">
+          <File RelativePath="..\..\Source\SampleStripControl.cpp"/>
+          <File RelativePath="..\..\Source\SampleStripControl.h"/>
+          <File RelativePath="..\..\Source\PatternStripControl.cpp"/>
+          <File RelativePath="..\..\Source\PatternStripControl.h"/>
+        </Filter>
         <Filter Name="overlays">
-          <File RelativePath="..\..\Source\PatternOverlay.cpp"/>
-          <File RelativePath="..\..\Source\PatternOverlay.h"/>
+          <File RelativePath="..\..\Source\HintOverlay.cpp"/>
+          <File RelativePath="..\..\Source\HintOverlay.h"/>
         </Filter>
         <Filter Name="Fonts">
           <File RelativePath="..\..\Source\Fonts\FreeTypeAmalgam.c"/>
@@ -166,8 +172,6 @@
           <File RelativePath="..\..\Source\MappingPanel.cpp"/>
           <File RelativePath="..\..\Source\MappingPanel.h"/>
         </Filter>
-        <File RelativePath="..\..\Source\SampleStripControl.cpp"/>
-        <File RelativePath="..\..\Source\SampleStripControl.h"/>
         <File RelativePath="..\..\Source\mlrVSTGUI.cpp"/>
         <File RelativePath="..\..\Source\mlrVSTGUI.h"/>
         <File RelativePath="..\..\Source\mlrVSTLookAndFeel.cpp"/>
@@ -266,7 +270,7 @@
             <Tool Name="VCCLCompilerTool"/>
           </FileConfiguration>
         </File>
-        <File RelativePath="..\..\Resources\VERDANA.TTF">
+        <File RelativePath="..\..\Resources\waveform.png">
           <FileConfiguration Name="Debug|Win32"
                              ExcludedFromBuild="true">
             <Tool Name="VCCLCompilerTool"/>
@@ -276,7 +280,17 @@
             <Tool Name="VCCLCompilerTool"/>
           </FileConfiguration>
         </File>
-        <File RelativePath="..\..\Resources\FFF Tusj.ttf">
+        <File RelativePath="..\..\Resources\pattern.png">
+          <FileConfiguration Name="Debug|Win32"
+                             ExcludedFromBuild="true">
+            <Tool Name="VCCLCompilerTool"/>
+          </FileConfiguration>
+          <FileConfiguration Name="Release|Win32"
+                             ExcludedFromBuild="true">
+            <Tool Name="VCCLCompilerTool"/>
+          </FileConfiguration>
+        </File>
+        <File RelativePath="..\..\Resources\ProggyClean.ttf">
           <FileConfiguration Name="Debug|Win32"
                              ExcludedFromBuild="true">
             <Tool Name="VCCLCompilerTool"/>

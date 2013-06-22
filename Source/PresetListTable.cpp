@@ -18,7 +18,7 @@ PresetListTable::PresetListTable(mlrVSTAudioProcessor * const owner) :
     // communication /////////
     processor(owner), 
     // gui / components //////
-    table(), defaultFont("Verdana", 10.f, Font::plain),
+    table(), defaultFont("ProggyCleanTT", 18.f, Font::plain),
     // data //////////////////
     presetData(0), numRows(0)
 {

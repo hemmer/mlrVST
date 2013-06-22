@@ -11,7 +11,8 @@
 #include "MappingPanel.h"
 #include "timedButton.h"
 #include "mlrVSTLookAndFeel.h"
-#include "PatternOverlay.h"
+#include "PatternStripControl.h"
+#include "HintOverlay.h"
 
 
 #ifndef PAD_AMOUNT
@@ -28,7 +29,8 @@
 
 
 class WaveformControl;
-class PatternOverlay;
+class PatternStripControl;
+
 
 class mlrVSTGUI  : public AudioProcessorEditor,
                                     public SliderListener,
@@ -43,6 +45,10 @@ public:
                                 const int &newNumChannels,
                                 const int &newNumStrips);
     ~mlrVSTGUI();
+
+
+	enum { modeSampleStrips, modePatternStrips };
+
 
     //==============================================================================
     void timerCallback();
@@ -101,10 +107,11 @@ private:
     ComboBox quantiseSettingsCbox; Label quantiseLabel;     // quantise options components
     void setupTempoUI();
 
-    ComboBox presetCbox;
 
     // Buttons ////////////////////////////
     TextButton loadFilesBtn;
+	DrawableButton sampleStripToggle, patternStripToggle;
+	DrawableImage sampleImg, patternImg;
 
     // Record / Resample / Pattern UI ////////////////////////////////
     Label precountLbl, recordLengthLbl, bankLbl;
@@ -128,10 +135,13 @@ private:
     void closePanels();     // closes all panels
 
     //// Presets //////////////////////
+	Label presetLabel;
     TextButton addPresetBtn;
     ToggleButton toggleSetlistBtn;
     Rectangle<int> presetPanelBounds;
     PresetPanel presetPanel;
+    ComboBox presetCbox;
+
 
     //// Settings ///////////////
     int numChannels;        // sets number of simultaneous audio channels
@@ -155,8 +165,14 @@ private:
     int numStrips;
     int waveformControlHeight, waveformControlWidth;
 
-	OwnedArray<PatternOverlay> patternOverlayArray;
+	OwnedArray<PatternStripControl> patternStripArray;
 	void setupPatternOverlays();
+
+	
+	int displayMode;		// are we showing Sample
+
+
+	HintOverlay hintOverlay;
 
     JUCE_LEAK_DETECTOR(mlrVSTGUI);
 };

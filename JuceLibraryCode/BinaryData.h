@@ -19,16 +19,19 @@ namespace BinaryData
     const int            TODOSize = 2392;
 
     extern const char*   locked_png;
-    const int            locked_pngSize = 1232;
+    const int            locked_pngSize = 940;
 
     extern const char*   unlocked_png;
-    const int            unlocked_pngSize = 1242;
+    const int            unlocked_pngSize = 948;
 
-    extern const char*   VERDANA_TTF;
-    const int            VERDANA_TTFSize = 139640;
+    extern const char*   waveform_png;
+    const int            waveform_pngSize = 519;
 
-    extern const char*   FFF_Tusj_ttf;
-    const int            FFF_Tusj_ttfSize = 1543648;
+    extern const char*   pattern_png;
+    const int            pattern_pngSize = 447;
+
+    extern const char*   ProggyClean_ttf;
+    const int            ProggyClean_ttfSize = 41208;
 
     // If you provide the name of one of the binary resource variables above, this function will
     // return the corresponding data and its size (or a null pointer if the name isn't found).

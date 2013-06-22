@@ -17,7 +17,7 @@ MappingPanel::MappingPanel(const Rectangle<int> &bounds,
     processor(owner),
     // Style / layout ////////////////////////////////
     panelLabel("Mapping Setup", "mapping setup"),
-    menuLF(), defaultFont("Verdana", 10.f, Font::plain), panelBounds(bounds),
+    menuLF(), defaultFont("ProggyCleanTT", 18.f, Font::plain), panelBounds(bounds),
     xPosition(0), yPosition(0),
     // Button maps ///////////////////////////////////
     buttonMatrix(), monomePath(),
@@ -35,7 +35,7 @@ MappingPanel::MappingPanel(const Rectangle<int> &bounds,
     const int labelHeight = (int) (monomeHeight / numRows);
 
     // setup the main panel label
-    panelLabel.setBounds(xPosition, yPosition, panelBounds.getWidth(), 30);
+    panelLabel.setBounds(xPosition, yPosition, panelBounds.getWidth(), 36);
     setupNormalLabel(panelLabel, 2.0f);
     xPosition = PAD_AMOUNT;
     yPosition += 30 + PAD_AMOUNT;

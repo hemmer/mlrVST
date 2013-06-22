@@ -29,10 +29,9 @@
 
 //==============================================================================
 mlrVSTLookAndFeel::mlrVSTLookAndFeel() :
-	defaultFont("Verdana", 10.f, Font::plain)
+	defaultFont("ProggyCleanTT", 18.f, Font::plain)
 {
-	FreeTypeFaces::addFaceFromMemory(7.f, 25.f, true, BinaryData::VERDANA_TTF, BinaryData::VERDANA_TTFSize);
-	FreeTypeFaces::addFaceFromMemory(7.f, 25.f, true, BinaryData::FFF_Tusj_ttf, BinaryData::FFF_Tusj_ttfSize);
+	FreeTypeFaces::addFaceFromMemory(7.f, 38.f, true, BinaryData::ProggyClean_ttf, BinaryData::ProggyClean_ttfSize);
 
 	
     setColour (TextButton::buttonColourId,          Colours::white);
@@ -166,9 +165,9 @@ void mlrVSTLookAndFeel::drawLabel(Graphics& g, Label& label)
     const float alpha = label.isEnabled() ? 1.0f : 0.5f;
 
     g.setColour (label.findColour (Label::textColourId).withMultipliedAlpha (alpha));
-    g.drawFittedText(label.getText(), 4, 4,
-        label.getWidth() - 2, label.getHeight() - 8,
-        Justification::centredLeft, 1, 1.0f);
+    g.drawFittedText(label.getText(), 4, 2,
+        label.getWidth() - 2, label.getHeight() - 4,
+        Justification::centredLeft, 4, 1.0f);
 
 
     g.setColour (label.findColour (Label::outlineColourId).withMultipliedAlpha (alpha));
@@ -403,7 +402,7 @@ Font mlrVSTLookAndFeel::getPopupMenuFont()
 
 Font mlrVSTLookAndFeel::getTextButtonFont	(	TextButton & 	button	)	
 {
-	return Font("Verdana", 10.f, Font::plain);
+	return defaultFont;
 }
 
 //==============================================================================

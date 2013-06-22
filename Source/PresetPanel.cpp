@@ -11,7 +11,7 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
     // gui setup //////////////////////////
     panelLabel("preset panel label", "setlist manager"),
     instructionLabel(),
-    defaultFont("Verdana", 10.f, Font::plain), panelBounds(bounds),
+    defaultFont("ProggyCleanTT", 18.f, Font::plain), panelBounds(bounds),
     loadSetlistBtn("load setlist from file", "load setlist"),
     saveSetlistBtn("save setlist to file", "save setlist"),
     presetListTbl(owner), setlistTbl(owner, &presetListTbl)
@@ -21,10 +21,10 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
 
     // add the header label
     addAndMakeVisible(&panelLabel);
-    panelLabel.setBounds(xPosition, yPosition, panelBounds.getWidth(), 30);
+    panelLabel.setBounds(xPosition, yPosition, panelBounds.getWidth(), 36);
     panelLabel.setColour(Label::backgroundColourId, Colours::black);
     panelLabel.setColour(Label::textColourId, Colours::white);
-	Font titleFont("Verdana", 20.f, Font::plain);
+	Font titleFont("ProggyCleanTT", 36.f, Font::plain);
 	panelLabel.setFont(titleFont);
     yPosition += 30 + PAD_AMOUNT;
     xPosition += PAD_AMOUNT;
@@ -39,11 +39,11 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
 
     addAndMakeVisible(&loadSetlistBtn);
     loadSetlistBtn.addListener(this);
-    loadSetlistBtn.setBounds(520, yPosition, 120, 25);
+    loadSetlistBtn.setBounds(520, yPosition, 150, 25);
 
     addAndMakeVisible(&saveSetlistBtn);
     saveSetlistBtn.addListener(this);
-    saveSetlistBtn.setBounds(520, yPosition + 35, 120, 25);
+    saveSetlistBtn.setBounds(520, yPosition + 35, 150, 25);
 
     yPosition += 60 + PAD_AMOUNT;
 

@@ -165,7 +165,8 @@ class overrideLookandFeel : public mlrVSTLookAndFeel
 public:
 
 	overrideLookandFeel(){
-		FreeTypeFaces::addFaceFromMemory(7.f, 25.f, true, BinaryData::VERDANA_TTF, BinaryData::VERDANA_TTFSize);
+		FreeTypeFaces::addFaceFromMemory(7.f, 25.f, true, BinaryData::ProggyClean_ttf, BinaryData::ProggyClean_ttfSize);
+
 	}
 	
 	const Typeface::Ptr getTypefaceForFont (Font const& font)
@@ -186,7 +187,7 @@ public:
 		// Here we override the with a specific font - this
 		// is for classes which don't have a specific setFont
 		// method.
-		g.setFont(Font("Verdana", 10.f, Font::plain));
+		g.setFont(Font("ProggyCleanTT", 18.f, Font::plain));
 
         g.fillAll (label.findColour(Label::backgroundColourId));
 

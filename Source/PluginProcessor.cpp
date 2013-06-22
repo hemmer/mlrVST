@@ -1602,7 +1602,11 @@ void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID,
         presetName = *static_cast<const String*>(newValue); break;
 
     case sNumChannels :
-        numChannels = *static_cast<const int*>(newValue); break;
+		{
+			numChannels = *static_cast<const int*>(newValue);
+			buildChannelArray(numChannels);
+			break;
+		}
 
     case sMonomeSize :
         {
@@ -1802,12 +1806,12 @@ String mlrVSTAudioProcessor::getNormalRowMappingName(const int &mappingID)
     case nmIncPlayspeed : return "increase playspeed";
     case nmHalvePlayspeed : return "/2 playspeed";
     case nmDoublePlayspeed : return "x2 playspeed";
-    case nmSetNormalPlayspeed : return "set playspeed to 1.0 (normal speed)";
+    case nmSetNormalPlayspeed : return "set speed to 1.0";
     case nmStopPlayback : return "stop playback";
     case nmStopPlaybackTape : return "stop playback (tape)";
-    case nmCycleThruRecordings : return "cycle through recorded samples";
-    case nmCycleThruResamplings : return "cycle through resampled samples";
-    case nmCycleThruFileSamples : return "cycle through sample files";
+    case nmCycleThruRecordings : return "cycle through recordings";
+    case nmCycleThruResamplings : return "cycle through resamples";
+    case nmCycleThruFileSamples : return "cycle through samples";
 
     default : jassertfalse; return "error: mappingID " + String(mappingID) + " not found!";
     }

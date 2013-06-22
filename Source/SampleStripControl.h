@@ -131,7 +131,6 @@ private:
     // SampleStrip GUI ////////////////////////////////////////
 	overrideLookandFeel overrideLF;
 	Font defaultFont;
-    const float fontSize;
     Colour backgroundColour;
     // channel selector
     Label chanLbl;
@@ -151,6 +150,7 @@ private:
     DrawableImage lockImg, unlockImg;
     TextButton times2, div2;
     // select num chunks
+	Label numChunksLabel;
     ComboBox selNumChunks;
     // bottom row labels
     Label trackNumberLbl, filenameLbl;
