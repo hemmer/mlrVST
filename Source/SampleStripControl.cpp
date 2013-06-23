@@ -10,7 +10,6 @@ Custom component to display a waveform (corresponding to an mlr row)
 ==============================================================================
 */
 
-
 #include "mlrVSTGUI.h"
 #include <cstdlib>
 #include <cmath>
@@ -30,8 +29,8 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     waveformPaintBounds(0, controlbarSize, componentWidth, (componentHeight - controlbarSize)),
 
     // SampleStrip GUI ////////////////////////////////////////
-	overrideLF(), defaultFont("ProggyCleanTT", 18.f, Font::plain),
-	backgroundColour(Colours::black),
+    overrideLF(), defaultFont("ProggyCleanTT", 18.f, Font::plain),
+    backgroundColour(Colours::black),
     chanLbl("channel label", "chan"), channelButtonArray(),
     volLbl("volume label", "vol"), stripVolumeSldr("volume"),
     modeLbl("mode", "mode"), selPlayMode("select playmode"), isLatchedBtn("latch"),
@@ -43,7 +42,7 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
 
     // Waveform control ////////////////////////
     visualSelectionStart(0), visualSelectionEnd(componentWidth), visualSelectionLength(componentWidth),
-	visualChunkSize(0.0), numChunksLabel("divs", "divs"), numChunks(8),
+    visualChunkSize(0.0), numChunksLabel("divs", "divs"), numChunks(8),
     selectionStartBeforeDrag(0), selectionPointToChange(0), selectionPointFixed(0),
     mouseDownMods(), rightMouseDown(false), modifierBtnStatus(-1), selectedHitZone(0),
     thumbnailScaleFactor(1.0), currentSample(0),
@@ -107,7 +106,7 @@ void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
 void SampleStripControl::changeListenerCallback(ChangeBroadcaster * sender)
 {
     /* TODO: this gets called A LOT during playback (as playback percentage
-       is considered a parameter). Maybe seperate that out from the param setup?
+    is considered a parameter). Maybe seperate that out from the param setup?
     */
     if (sender == dataStrip)
     {
@@ -127,7 +126,7 @@ void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
         // it's easiest just stop the sample first instead!
         dataStrip->stopSamplePlaying();
         dataStrip->setSampleStripParam(SampleStrip::pNumChunks,
-                                       &numChunks);
+            &numChunks);
         repaint();
     }
     else if (comboBoxThatHasChanged == &selPlayMode)
@@ -179,7 +178,7 @@ void SampleStripControl::buttonClicked(Button *btn)
     {
         bool newIsSpeedLocked = !isSpeedLocked;
         dataStrip->setSampleStripParam(SampleStrip::pIsPlaySpeedLocked,
-                                       &newIsSpeedLocked);
+            &newIsSpeedLocked);
     }
 
 }
@@ -201,7 +200,7 @@ void SampleStripControl::sliderValueChanged(Slider *sldr)
 
 void SampleStripControl::updateChannelColours(const int &newChannel)
 {
-	backgroundColour = processor->getChannelColour(newChannel);
+    backgroundColour = processor->getChannelColour(newChannel);
 
     isLatchedBtn.setColour(ToggleButton::textColourId, backgroundColour);
     isReversedBtn.setColour(ToggleButton::textColourId, backgroundColour);
@@ -222,7 +221,7 @@ void SampleStripControl::updateChannelColours(const int &newChannel)
     div2.setColour(TextButton::textColourOffId, backgroundColour);
     div2.setColour(TextButton::buttonOnColourId, backgroundColour);
 
-	speedLockBtn.setColour(DrawableButton::backgroundColourId, backgroundColour);
+    speedLockBtn.setColour(DrawableButton::backgroundColourId, backgroundColour);
 
     repaint();
 }
@@ -247,14 +246,13 @@ void SampleStripControl::buildUI()
     filenameLbl.setBounds(controlbarSize, componentHeight - controlbarSize, 200, controlbarSize);
     filenameLbl.setFont(defaultFont);
 
-
     addAndMakeVisible(&chanLbl);
     chanLbl.setBounds(0, 0, 38, controlbarSize);
     chanLbl.setColour(Label::backgroundColourId, Colours::black);
     chanLbl.setColour(Label::textColourId, Colours::white);
     chanLbl.setFont(defaultFont);
 
-	newXposition = 38;
+    newXposition = 38;
 
     // clear existing buttons
     channelButtonArray.clear();
@@ -263,11 +261,11 @@ void SampleStripControl::buildUI()
     {
         channelButtonArray.add(new DrawableButton("button" + String(chan), DrawableButton::ImageRaw));
         addAndMakeVisible(channelButtonArray.getLast());
-		channelButtonArray.getLast()->setBounds(newXposition + chan * controlbarSize, 0, controlbarSize, controlbarSize);
+        channelButtonArray.getLast()->setBounds(newXposition + chan * controlbarSize, 0, controlbarSize, controlbarSize);
         channelButtonArray.getLast()->addListener(this);
 
-		Colour chanColour = processor->getChannelColour(chan);
-		channelButtonArray.getLast()->setColour(DrawableButton::backgroundColourId, chanColour);
+        Colour chanColour = processor->getChannelColour(chan);
+        channelButtonArray.getLast()->setColour(DrawableButton::backgroundColourId, chanColour);
     }
 
     int previousChannel = *static_cast<const int*>(dataStrip->getSampleStripParam(SampleStrip::pCurrentChannel));
@@ -293,16 +291,15 @@ void SampleStripControl::buildUI()
     stripVolumeSldr.setBounds(newXposition, 0, 60, controlbarSize);
     stripVolumeSldr.setRange(0.0, 2.0, 0.01);
     stripVolumeSldr.setTextBoxIsEditable(true);
-	stripVolumeSldr.setLookAndFeel(&overrideLF);
+    stripVolumeSldr.setLookAndFeel(&overrideLF);
     newXposition += 60;
-
 
     addAndMakeVisible(&modeLbl);
     modeLbl.setBounds(newXposition, 0, 36, controlbarSize);
     modeLbl.setColour(Label::backgroundColourId, Colours::black);
     modeLbl.setColour(Label::textColourId, Colours::white);
     modeLbl.setFont(defaultFont);
-	newXposition += 36;
+    newXposition += 36;
 
     addAndMakeVisible(&selPlayMode);
     selPlayMode.clear();
@@ -312,20 +309,19 @@ void SampleStripControl::buildUI()
     }
     selPlayMode.setBounds(newXposition, 0, 100, controlbarSize);
     selPlayMode.setLookAndFeel(&overrideLF);
-	newXposition += 100;
+    newXposition += 100;
 
-	addAndMakeVisible(&isLatchedBtn);
+    addAndMakeVisible(&isLatchedBtn);
     isLatchedBtn.setBounds(newXposition, 0, 44, controlbarSize);
     isLatchedBtn.setColour(ToggleButton::textColourId, backgroundColour);
-	newXposition += 44;
+    newXposition += 44;
 
     addAndMakeVisible(&playspeedLbl);
     playspeedLbl.setBounds(newXposition, 0, 44, controlbarSize);
     playspeedLbl.setColour(Label::backgroundColourId, Colours::black);
     playspeedLbl.setColour(Label::textColourId, Colours::white);
     playspeedLbl.setFont(defaultFont);
-	newXposition += 44;
-
+    newXposition += 44;
 
     addAndMakeVisible(&playspeedSldr);
     playspeedSldr.setSliderStyle(Slider::LinearBar);
@@ -333,9 +329,8 @@ void SampleStripControl::buildUI()
     playspeedSldr.setBounds(newXposition, 0, 80, controlbarSize);
     playspeedSldr.setRange(0.0, 4.0, 0.001);
     playspeedSldr.setTextBoxIsEditable(true);
-	playspeedSldr.setLookAndFeel(&overrideLF);
-	newXposition += 80;
-
+    playspeedSldr.setLookAndFeel(&overrideLF);
+    newXposition += 80;
 
     addAndMakeVisible(&speedLockBtn);
     speedLockBtn.setImages(&unlockImg);
@@ -354,18 +349,17 @@ void SampleStripControl::buildUI()
     times2.setBounds(newXposition, 0, 20, controlbarSize);
     newXposition += 20;
 
-	addAndMakeVisible(&numChunksLabel);
+    addAndMakeVisible(&numChunksLabel);
     numChunksLabel.setBounds(newXposition, 0, 36, controlbarSize);
-	numChunksLabel.setColour(Label::backgroundColourId, Colours::black);
+    numChunksLabel.setColour(Label::backgroundColourId, Colours::black);
     numChunksLabel.setColour(Label::textColourId, Colours::white);
     numChunksLabel.setFont(defaultFont);
-	newXposition += 36;
+    newXposition += 36;
 
     addAndMakeVisible(&selNumChunks);
     selNumChunks.setBounds(newXposition, 0, 32, controlbarSize);
     selNumChunks.setLookAndFeel(&overrideLF);
 
-	DBG(newXposition + 32);
 }
 
 void SampleStripControl::mouseDown(const MouseEvent &e)
@@ -428,7 +422,7 @@ void SampleStripControl::mouseUp(const MouseEvent& e)
     {
         switch (selectedHitZone)
         {
-        // user selected NONE
+            // user selected NONE
         case pNone :
             {
                 dataStrip->stopSamplePlaying();
@@ -437,7 +431,7 @@ void SampleStripControl::mouseUp(const MouseEvent& e)
                 break;
             }
 
-        // user selected SAMPLE
+            // user selected SAMPLE
         case pSample :
             {
                 PopupMenu sampleMenu = PopupMenu();
@@ -530,27 +524,26 @@ void SampleStripControl::mouseUp(const MouseEvent& e)
 
 void SampleStripControl::mouseDrag(const MouseEvent &e)
 {
-	int mouseX = e.x;
+    int mouseX = e.x;
 
-	// Make sure we don't select outside the waveform
-	if (mouseX > componentWidth) mouseX = componentWidth;
-	else if (mouseX < 0) mouseX = 0;
+    // Make sure we don't select outside the waveform
+    if (mouseX > componentWidth) mouseX = componentWidth;
+    else if (mouseX < 0) mouseX = 0;
 
-
-	// CASE: traditional drag-to-select region of sample
+    // CASE: traditional drag-to-select region of sample
     if (mouseDownMods == ModifierKeys::leftButtonModifier)
     {
         *selectionPointFixed = e.getMouseDownX();
         *selectionPointToChange = mouseX;
     }
 
-	// CASE: just moving one end of an existing selection
+    // CASE: just moving one end of an existing selection
     else if (mouseDownMods == (ModifierKeys::ctrlModifier + ModifierKeys::leftButtonModifier))
     {
         *selectionPointToChange = mouseX;
     }
 
-	// CASE: RMB is held, see which hit zone it selects
+    // CASE: RMB is held, see which hit zone it selects
     else if (e.mods == ModifierKeys::rightButtonModifier)
     {
         selectedHitZone = mouseX / (componentWidth / 4);
@@ -558,8 +551,8 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
 
     // CASE: ctrl-shift-LMB allows us to snap to specific intervals
     else if ((e.mods == (ModifierKeys::ctrlModifier +
-                         ModifierKeys::leftButtonModifier +
-                         ModifierKeys::shiftModifier)))
+        ModifierKeys::leftButtonModifier +
+        ModifierKeys::shiftModifier)))
     {
         // TODO: have snapping interval as an option
         int eighth = componentWidth / 16;
@@ -591,9 +584,6 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
         visualSelectionStart = newStart;
         visualSelectionEnd = newEnd;
     }
-
-
-
 
     // Swap selection positions if inverse selection is made
     if (visualSelectionEnd < visualSelectionStart)
@@ -658,7 +648,6 @@ void SampleStripControl::paint(Graphics& g)
         }
     }
 
-
     /* Finally we grey out the parts of the sample which aren't in
     the selection and paint stripes to indicate what button
     will do what.
@@ -688,7 +677,7 @@ void SampleStripControl::paint(Graphics& g)
         g.fillRect(selectedHitZone * componentWidth / 4, controlbarSize, componentWidth / 4, waveformPaintBounds.getHeight());
 
         g.setColour(Colours::white);
-		g.setFont(defaultFont);
+        g.setFont(defaultFont);
         g.drawFittedText("none", 0 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
         g.drawFittedText("samples", 1 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
         g.drawFittedText("recordings", 2 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
@@ -698,21 +687,21 @@ void SampleStripControl::paint(Graphics& g)
     // if a modifier button is held, draw an overlay
     else if (modifierBtnStatus != mlrVSTAudioProcessor::rmNoBtn)
     {
-		// paint a translucent background
+        // paint a translucent background
         g.setColour(Colours::black.withAlpha(0.3f));
         g.fillRect(waveformPaintBounds);
 
-		// TODO: this should NOT be hard coded!
-		const int numCols = 8;
+        // TODO: this should NOT be hard coded!
+        const int numCols = 8;
 
-		const int rowType = modifierStatus;
-		const int spacing = componentWidth / numCols;
+        const int rowType = modifierStatus;
+        const int spacing = componentWidth / numCols;
 
-		g.setColour(Colours::white);
-		g.setFont(defaultFont);
+        g.setColour(Colours::white);
+        g.setFont(defaultFont);
 
-		switch (modifierStatus)
-		{
+        switch (modifierStatus)
+        {
         case mlrVSTAudioProcessor::rmNoBtn : break;
         case mlrVSTAudioProcessor::rmNormalRowMappingBtnA :
         case mlrVSTAudioProcessor::rmNormalRowMappingBtnB :
@@ -722,42 +711,42 @@ void SampleStripControl::paint(Graphics& g)
                     const int mappingID = processor->getMonomeMapping(rowType, c);
                     const String mappingName = processor->getNormalRowMappingName(mappingID);
 
-					g.drawFittedText(mappingName, PAD_AMOUNT + c * spacing, controlbarSize, spacing - PAD_AMOUNT, maxWaveformHeight,
+                    g.drawFittedText(mappingName, PAD_AMOUNT + c * spacing, controlbarSize, spacing - PAD_AMOUNT, maxWaveformHeight,
                         Justification::centredLeft, 5, 1.0f);
                 }
                 break;
             }
 
-		case mlrVSTAudioProcessor::rmPatternBtn :
-			{
-				// Find out if the pattern associated with this channel is
-				// playing or recording and paint a progress strip along the
-				// middle of the strip based on that
-				if (processor->isPatternPlaying(sampleStripID))
-				{
-					g.setColour(backgroundColour.withAlpha(0.5f));
-					const float percentDone = processor->getPatternPercent(sampleStripID);
-					g.fillRect(0, componentHeight / 2, int (componentWidth*percentDone), controlbarSize);
-				}
-				else if (processor->isPatternRecording(sampleStripID))
-				{
-					g.setColour(backgroundColour);
-					const float percentDone = processor->getPatternPercent(sampleStripID);
-					g.fillRect(0, componentHeight / 2, int (componentWidth*percentDone), controlbarSize);
-				}
+        case mlrVSTAudioProcessor::rmPatternBtn :
+            {
+                // Find out if the pattern associated with this channel is
+                // playing or recording and paint a progress strip along the
+                // middle of the strip based on that
+                if (processor->isPatternPlaying(sampleStripID))
+                {
+                    g.setColour(backgroundColour.withAlpha(0.5f));
+                    const float percentDone = processor->getPatternPercent(sampleStripID);
+                    g.fillRect(0, componentHeight / 2, int (componentWidth*percentDone), controlbarSize);
+                }
+                else if (processor->isPatternRecording(sampleStripID))
+                {
+                    g.setColour(backgroundColour);
+                    const float percentDone = processor->getPatternPercent(sampleStripID);
+                    g.fillRect(0, componentHeight / 2, int (componentWidth*percentDone), controlbarSize);
+                }
 
-				g.setColour(Colours::white);
-				for (int c = 0; c < numCols; ++c)
-				{
-					const int mappingID = processor->getMonomeMapping(rowType, c);
-					const String mappingName = processor->getPatternRowMappingName(mappingID);
+                g.setColour(Colours::white);
+                for (int c = 0; c < numCols; ++c)
+                {
+                    const int mappingID = processor->getMonomeMapping(rowType, c);
+                    const String mappingName = processor->getPatternRowMappingName(mappingID);
 
-					g.drawFittedText(mappingName, PAD_AMOUNT + c * spacing, controlbarSize, spacing - PAD_AMOUNT, maxWaveformHeight,
-						Justification::centredLeft, 5, 1.0f);
-				}
+                    g.drawFittedText(mappingName, PAD_AMOUNT + c * spacing, controlbarSize, spacing - PAD_AMOUNT, maxWaveformHeight,
+                        Justification::centredLeft, 5, 1.0f);
+                }
 
-				break;
-			}
+                break;
+            }
         }
     }
 }
@@ -889,7 +878,6 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
         playbackPercentage = *static_cast<const float*>(newValue);
         break;
 
-
     case SampleStrip::pVisualStart :
         {
             visualSelectionStart =  *static_cast<const int*>(newValue);
@@ -916,7 +904,7 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
     case SampleStrip::pPlaySpeed :
         {
             double newPlaySpeed = *static_cast<const double*>(newValue);
-			playspeedSldr.setValue(newPlaySpeed, NotificationType::dontSendNotification);
+            playspeedSldr.setValue(newPlaySpeed, NotificationType::dontSendNotification);
             break;
         }
 
@@ -950,11 +938,11 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
                 currentSample = newSample;
                 // If the new sample exists
                 if (currentSample)
-					filenameLbl.setText(currentSample->getSampleName(), NotificationType::dontSendNotification);
+                    filenameLbl.setText(currentSample->getSampleName(), NotificationType::dontSendNotification);
                 else
                 {
                     filenameLbl.setText("No file", NotificationType::dontSendNotification);
-					playspeedSldr.setValue(1.0, NotificationType::sendNotification);
+                    playspeedSldr.setValue(1.0, NotificationType::sendNotification);
                 }
             }
 

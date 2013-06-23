@@ -11,9 +11,9 @@ Features / Status
 - Handles OSC messages to and from the monome
 - Number of playback channels can be set at runtime (has no difficult running 8 simultaneous channels of audio)
 - Can load .wav, .flac, .ogg, .aiff, .caf, with arbitrary sample rates
-- Varying levels of quantisation of button presses
+- Variable quantisation of button presses
 - Basic mapping system for top row / with modifier buttons
-- Recording / Resampling / Pattern Recording(though needs to become more user friendly)
+- Recording / Resampling / Pattern Recording (though needs to become more user friendly)
 - Win / Mac / Linux versions
 
 Latest Screenshot

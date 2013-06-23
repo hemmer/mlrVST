@@ -1,15 +1,24 @@
 mlrVST TODO /IDEAS
 
+SHORT TERM
+==========
+- PatternStripControls (cache pattern as array of rectangles, may need ChangeListeners)
+- Sort out monome size (so isn't hardcoded anywhere). Might try grids to click on
+
+
+LONG TERM
+=========
+
 HIGH PRIORTIY
 
-- preset system
-- (advanced) options panel
-- could include envelopes for sample playback
+- preset system polish
+- OSC mappings for each SampleStrip or Global Setting e.g. /osc/mlrvst/strip/1/vol inc 0.1
 - handle different sample rates
 - exception handling (if file is deleted while playing)
 - add SplashScreen
 - allow MIDI clips too
 - Have AudioSample subclass Sample to allow MIDISample
 - arpeggio mode, hold down button sequence to trigger blocks in that order
+- could include envelopes for sample playback
 
 LOW PRIORTIY

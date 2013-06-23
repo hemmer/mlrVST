@@ -1,26 +1,6 @@
 /*
-  ==============================================================================
+    This is a custom LookAndFeel designed for mlrVST.
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
-
-  ------------------------------------------------------------------------------
-
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
-
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-
-  ------------------------------------------------------------------------------
-
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
-
-  ==============================================================================
 */
 
 #ifndef __JUCE_mlrVSTLookAndFeel_JUCEHEADER__
@@ -30,26 +10,16 @@
 #include "Fonts/FreeTypeFaces.h"
 
 
-
-
-
-//==============================================================================
-/**
-    The original Juce look-and-feel.
-
-*/
 class mlrVSTLookAndFeel : public LookAndFeel
 {
 public:
-    //==============================================================================
-    /** Creates the default JUCE look and feel. */
+
     mlrVSTLookAndFeel();
 
-    /** Destructor. */
-    virtual ~mlrVSTLookAndFeel();
+    ~mlrVSTLookAndFeel();
 
-    //==============================================================================
-    /** Draws the background for a standard button. */
+
+    // Draws the background for a standard button.
     virtual void drawButtonBackground (Graphics& g, Button& button,
                                        const Colour& backgroundColour,
                                        bool isMouseOverButton,
@@ -58,7 +28,7 @@ public:
     virtual void drawButtonText (Graphics& g, TextButton& button,
                                  bool isMouseOverButton, bool isButtonDown);
 
-    /** Draws the contents of a standard ToggleButton. */
+    // Draws the contents of a standard ToggleButton.
     virtual void drawToggleButton (Graphics& g, ToggleButton& button,
                                    bool isMouseOverButton,
                                    bool isButtonDown);
@@ -66,8 +36,6 @@ public:
     virtual void drawLabel(Graphics& g, Label& label);
     virtual const Typeface::Ptr getTypefaceForFont(const Font &font );
 	virtual Font getTextButtonFont(TextButton & button);
-
-
 
     virtual void drawTickBox (Graphics& g, Component& component,
                               float x, float y, float w, float h,
@@ -91,7 +59,6 @@ public:
                                 int thumbSize, bool isMouseOver, bool isMouseDown);
 
     virtual ImageEffectFilter* getScrollbarEffect();
-
 
     //==============================================================================
     /** Fills the background of a popup menu component. */
@@ -151,7 +118,6 @@ private:
 
     Typeface::Ptr typeSilk;
 
-
 };
 
 
@@ -159,8 +125,8 @@ private:
 class overrideLookandFeel : public mlrVSTLookAndFeel
 {
 	// this LookAndFeel subclasses the main mlrVSTLookAndFeel
-	// class to override the drawLabel method. This is because 
-	// some components can't manually set the font they want to 
+	// class to override the drawLabel method. This is because
+	// some components can't manually set the font they want to
 	// use.
 public:
 
@@ -168,7 +134,7 @@ public:
 		FreeTypeFaces::addFaceFromMemory(7.f, 25.f, true, BinaryData::ProggyClean_ttf, BinaryData::ProggyClean_ttfSize);
 
 	}
-	
+
 	const Typeface::Ptr getTypefaceForFont (Font const& font)
 	{
 		Typeface::Ptr tf;
@@ -191,11 +157,9 @@ public:
 
         g.fillAll (label.findColour(Label::backgroundColourId));
 
-
         const float alpha = label.isEnabled() ? 1.0f : 0.5f;
 
         g.setColour (label.findColour (Label::textColourId).withMultipliedAlpha (alpha));
-		        
 
         g.drawFittedText(label.getText(), 4, 4,
             label.getWidth() - 2, label.getHeight() - 8,
@@ -209,7 +173,5 @@ public:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (overrideLookandFeel);
 
 };
-
-
 
 #endif   // __JUCE_mlrVSTLookAndFeel_JUCEHEADER__

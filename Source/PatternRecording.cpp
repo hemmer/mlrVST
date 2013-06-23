@@ -129,6 +129,10 @@ void PatternRecording::recordPattern(MidiBuffer &midiMessages, const int &numSam
                 // we are no longer recording
                 isPatternRecording = false;
 
+                // if we finish recording, let any listeners know
+                // so they can redraw representations of the pattern
+                sendChangeMessage();
+
                 DBG("pattern " << patternBank << " finished recording.");
 
 
@@ -146,6 +150,9 @@ void PatternRecording::recordPattern(MidiBuffer &midiMessages, const int &numSam
                 }
 
             }
+
+            // Let the PatternStripControl know to recache pattern
+            sendChangeMessage();
         }
     }
 }

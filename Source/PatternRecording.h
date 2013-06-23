@@ -14,7 +14,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PluginProcessor.h"
 
-class PatternRecording
+class PatternRecording : public ChangeBroadcaster
 {
 public:
 

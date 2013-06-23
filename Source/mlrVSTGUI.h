@@ -33,24 +33,23 @@ class PatternStripControl;
 
 
 class mlrVSTGUI  : public AudioProcessorEditor,
-                                    public SliderListener,
-									public ButtonListener,
-                                    public ComboBoxListener,
-                                    public ChangeListener,
-                                    public Timer,
-                                    public FileDragAndDropTarget
+    public SliderListener,
+    public ButtonListener,
+    public ComboBoxListener,
+    public ChangeListener,
+    public Timer,
+    public FileDragAndDropTarget
 {
 public:
     mlrVSTGUI (mlrVSTAudioProcessor* ownerFilter,
-                                const int &newNumChannels,
-                                const int &newNumStrips);
+               const int &newNumChannels,
+               const int &newNumStrips);
     ~mlrVSTGUI();
 
 
-	enum { modeSampleStrips, modePatternStrips };
+    enum { modeSampleStrips, modePatternStrips };
 
 
-    //==============================================================================
     void timerCallback();
     void paint(Graphics& g);
 
@@ -65,10 +64,10 @@ public:
     // listeners for gui components
     void comboBoxChanged (ComboBox* comboBoxThatHasChanged);
     void sliderValueChanged (Slider*);
-	void buttonClicked(Button*);
+    void buttonClicked(Button*);
 
     /* These just forward the various requests for sample information
-       to the AudioProcessor (which holds the sample pool). */
+    to the AudioProcessor (which holds the sample pool). */
     int getSamplePoolSize(const int &poolID) { return parent->getSamplePoolSize(poolID); }
     String getSampleName(const int &index, const int &poolID) { return parent->getSampleName(index, poolID); }
 
@@ -87,7 +86,7 @@ private:
 
     // Style / positioning objects ///////////////
     mlrVSTLookAndFeel myLookAndFeel;
-	overrideLookandFeel overrideLF;
+    overrideLookandFeel overrideLF;
 
     // these are just helpers for positioning
     int xPosition, yPosition;
@@ -110,8 +109,8 @@ private:
 
     // Buttons ////////////////////////////
     TextButton loadFilesBtn;
-	DrawableButton sampleStripToggle, patternStripToggle;
-	DrawableImage sampleImg, patternImg;
+    DrawableButton sampleStripToggle, patternStripToggle;
+    DrawableImage sampleImg, patternImg;
 
     // Record / Resample / Pattern UI ////////////////////////////////
     Label precountLbl, recordLengthLbl, bankLbl;
@@ -123,7 +122,7 @@ private:
     TimedButton recordBtn, resampleBtn, patternBtn;
     void setUpRecordResampleUI();
 
-	Label vstNameLbl;
+    Label vstNameLbl;
 
     // Misc /////////////////////
     // this object is used to store bpm information from the host
@@ -135,7 +134,7 @@ private:
     void closePanels();     // closes all panels
 
     //// Presets //////////////////////
-	Label presetLabel;
+    Label presetLabel;
     TextButton addPresetBtn;
     ToggleButton toggleSetlistBtn;
     Rectangle<int> presetPanelBounds;
@@ -165,14 +164,14 @@ private:
     int numStrips;
     int waveformControlHeight, waveformControlWidth;
 
-	OwnedArray<PatternStripControl> patternStripArray;
-	void setupPatternOverlays();
-
-	
-	int displayMode;		// are we showing Sample
+    OwnedArray<PatternStripControl> patternStripArray;
+    void setupPatternOverlays();
 
 
-	HintOverlay hintOverlay;
+    int displayMode;		// are we showing Sample
+
+
+    HintOverlay hintOverlay;
 
     JUCE_LEAK_DETECTOR(mlrVSTGUI);
 };

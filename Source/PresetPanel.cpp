@@ -1,13 +1,10 @@
-
-
 #include "PresetPanel.h"
 #include "mlrVSTGUI.h"
 
-
 PresetPanel::PresetPanel(const Rectangle<int> &bounds,
                          mlrVSTAudioProcessor * const owner) :
-    // communication //////////////////////
-    processor(owner),
+// communication //////////////////////
+processor(owner),
     // gui setup //////////////////////////
     panelLabel("preset panel label", "setlist manager"),
     instructionLabel(),
@@ -24,8 +21,8 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
     panelLabel.setBounds(xPosition, yPosition, panelBounds.getWidth(), 36);
     panelLabel.setColour(Label::backgroundColourId, Colours::black);
     panelLabel.setColour(Label::textColourId, Colours::white);
-	Font titleFont("ProggyCleanTT", 36.f, Font::plain);
-	panelLabel.setFont(titleFont);
+    Font titleFont("ProggyCleanTT", 36.f, Font::plain);
+    panelLabel.setFont(titleFont);
     yPosition += 30 + PAD_AMOUNT;
     xPosition += PAD_AMOUNT;
 
@@ -35,7 +32,7 @@ PresetPanel::PresetPanel(const Rectangle<int> &bounds,
     instructionLabel.setColour(Label::backgroundColourId, Colours::black);
     instructionLabel.setColour(Label::textColourId, Colours::white);
     instructionLabel.setFont(defaultFont);
-	instructionLabel.setText("To create a setlist, drag presets from the list on the left to the setlist panel on the right...", NotificationType::dontSendNotification);
+    instructionLabel.setText("To create a setlist, drag presets from the list on the left to the setlist panel on the right...", NotificationType::dontSendNotification);
 
     addAndMakeVisible(&loadSetlistBtn);
     loadSetlistBtn.addListener(this);
@@ -69,7 +66,7 @@ void PresetPanel::buttonClicked(Button *btn)
 
         // popup dialog to open setlist
         if(myChooser.browseForFileToOpen())
-        {	
+        {
             // if sucessful, try load this setlist
             File newSetlist = myChooser.getResult();
             processor->loadXmlSetlist(newSetlist);
@@ -82,7 +79,7 @@ void PresetPanel::buttonClicked(Button *btn)
 
         // popup dialog to open setlist
         if(myChooser.browseForFileToSave(true))
-        {	
+        {
             // if sucessful, try save this setlist
             File newSetlist = myChooser.getResult();
             processor->saveXmlSetlist(newSetlist);
@@ -94,5 +91,5 @@ void PresetPanel::visibilityChanged()
 {
     if (isVisible())
         refreshPresetLists();
-    
+
 }

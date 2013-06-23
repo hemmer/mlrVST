@@ -170,7 +170,6 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     selNumSampleStrips.setSelectedId(numSampleStrips+1, true);
     yPos += PAD_AMOUNT + labelHeight;
 
-
 }
 
 void SettingsPanel::paint(Graphics &g)
