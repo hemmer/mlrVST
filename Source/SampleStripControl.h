@@ -17,6 +17,7 @@
 #include "AudioSample.h"
 #include "SampleStripControl.h"
 #include "mlrVSTLookAndFeel.h"
+#include "CustomArrowButton.h"
 
 /* Forward declaration to set up pointer arrangement
    to allow sample strips to access the UI */
@@ -146,7 +147,7 @@ private:
     Label playspeedLbl;
     Slider playspeedSldr;
     DrawableButton speedLockBtn;
-    ToggleButton isReversedBtn;
+    CustomArrowButton isReversedBtn;
     DrawableImage lockImg, unlockImg;
     TextButton times2, div2;
     // select num chunks

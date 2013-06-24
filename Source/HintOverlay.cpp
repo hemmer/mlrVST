@@ -5,7 +5,7 @@
     Created: 2 Sep 2012 3:14:24pm
     Author:  Hemmer
 
-    A table component to list the possible presets, including some additional 
+    A table component to list the possible presets, including some additional
     information like BMP, and buttons to delete / rename.
 
   ==============================================================================
@@ -17,7 +17,7 @@
 
 HintOverlay::HintOverlay(mlrVSTAudioProcessor * const owner) :
     // communication /////////
-    processor(owner), 
+    processor(owner),
     // gui / components //////
 	overlayPaintBounds(0, 0, GUI_WIDTH, 150)
 {
@@ -32,7 +32,7 @@ void HintOverlay::paint(Graphics &g)
 
 	// if no button is pressed then don't display the hint
 	if (modifierStatus == mlrVSTAudioProcessor::rmNoBtn) return;
-	
+
 
     // start with the background colour
 	g.setColour(Colours::black.withAlpha(0.6f));
@@ -41,9 +41,9 @@ void HintOverlay::paint(Graphics &g)
 	// TODO: should be not hardcoded.
 	const int numMappings = 8;
 
-	
 
-	int buttonPadding; 
+
+	int buttonPadding;
 
 	if (numMappings > 8)
 	{
@@ -58,16 +58,17 @@ void HintOverlay::paint(Graphics &g)
 
 	const int buttonSize = (overlayPaintBounds.getWidth() - (numMappings + 1) * buttonPadding) / numMappings;
 
-	const int yPos = (overlayPaintBounds.getHeight() - buttonSize) / 2;
 
-	
+
+
 
 	for (int i = 0; i < numMappings; ++i)
 	{
-		int xPos = i*(buttonPadding + buttonSize) + buttonPadding;
-		
+		const float xPos = (float) ((buttonPadding + buttonSize)*i + buttonPadding);
+        const float yPos = (overlayPaintBounds.getHeight() - buttonSize) / 2.0f;
+
 		g.setColour(Colours::white);
-		g.fillRoundedRectangle(xPos, yPos, buttonSize, buttonSize, buttonSize/10.0f);
+		g.fillRoundedRectangle(xPos, yPos, (float) buttonSize, (float) buttonSize, buttonSize/10.0f);
 
 		if (i > 7) break;
 

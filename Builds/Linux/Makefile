@@ -58,6 +58,7 @@ OBJECTS := \
   $(OBJDIR)/HintOverlay_866575aa.o \
   $(OBJDIR)/FreeTypeAmalgam_f9f8342c.o \
   $(OBJDIR)/FreeTypeFaces_5f2c9c86.o \
+  $(OBJDIR)/CustomArrowButton_7802bccb.o \
   $(OBJDIR)/timedButton_8bab4a.o \
   $(OBJDIR)/PresetListTable_856af992.o \
   $(OBJDIR)/PresetPanel_1f2c0a46.o \
@@ -151,6 +152,11 @@ $(OBJDIR)/FreeTypeAmalgam_f9f8342c.o: ../../Source/Fonts/FreeTypeAmalgam.c
 $(OBJDIR)/FreeTypeFaces_5f2c9c86.o: ../../Source/Fonts/FreeTypeFaces.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling FreeTypeFaces.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/CustomArrowButton_7802bccb.o: ../../Source/CustomArrowButton.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling CustomArrowButton.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/timedButton_8bab4a.o: ../../Source/timedButton.cpp

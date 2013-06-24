@@ -21,7 +21,6 @@ mlrVSTGUI::mlrVSTGUI (mlrVSTAudioProcessor* owner, const int &newNumChannels, co
     parent(owner),
     // Style / positioning objects //////////
     myLookAndFeel(), overrideLF(),
-    xPosition(0), yPosition(0),
 
     // Fonts ///////////////////////////////////////////////////////
     fontSize(12.f), defaultFont("ProggyCleanTT", 18.f, Font::plain),
@@ -58,12 +57,14 @@ mlrVSTGUI::mlrVSTGUI (mlrVSTAudioProcessor* owner, const int &newNumChannels, co
     debugButton("loadfile", DrawableButton::ImageRaw),    // temporary button
 
     // Presets //////////////////////////////////////////////////
-    presetLabel("presets", "presets"),
-    addPresetBtn("add preset", "Add Preset"),
+    presetLabel("presets", "presets"), presetCbox(),
+    presetPrevBtn("prev", 0.25, Colours::black, Colours::white),
+    presetNextBtn("next", 0.75, Colours::black, Colours::white),
+    addPresetBtn("add", "add preset"),
     toggleSetlistBtn("setlist"),
     presetPanelBounds(294, PAD_AMOUNT, THUMBNAIL_WIDTH, 725),
     presetPanel(presetPanelBounds, owner),
-    presetCbox(),
+
 
     // Settings ///////////////////////////////////////
     numChannels(newNumChannels), useExternalTempo(true),
@@ -90,30 +91,24 @@ mlrVSTGUI::mlrVSTGUI (mlrVSTAudioProcessor* owner, const int &newNumChannels, co
 
     // these are compile time constants
     setSize(GUI_WIDTH, GUI_HEIGHT);
-
     setWantsKeyboardFocus(true);
 
+    int xPosition = PAD_AMOUNT;
+    int yPosition = PAD_AMOUNT;
+
     // set up volume sliders
-    buildSliders();
+    buildSliders(xPosition, yPosition);
 
     // add the bpm slider and quantise settings
-    setupTempoUI();
+    setupTempoUI(xPosition, yPosition);
 
-    // Preset associated stuff
-    addAndMakeVisible(&presetLabel);
-    presetLabel.setBounds(PAD_AMOUNT, 200, 270, 16);
-    presetLabel.setColour(Label::textColourId, Colours::white);
-    presetLabel.setColour(Label::backgroundColourId, Colours::black);
-    presetLabel.setFont(defaultFont);
+    // set up the various panels (settings, mapping, etc)
+    // and the buttons that control them
+    setupPanels(xPosition, yPosition);
 
-    addAndMakeVisible(&presetCbox);
-    presetCbox.setBounds(PAD_AMOUNT, 216, 180, 25);
-    presetCbox.addItem("test1", 1);
-    presetCbox.addItem("test2", 2);
+    // preset associated UI elements
+    setupPresetUI(xPosition, yPosition);
 
-    addAndMakeVisible(&addPresetBtn);
-    addPresetBtn.addListener(this);
-    addPresetBtn.setBounds(180 + 2*PAD_AMOUNT, 216, 80, 25);
 
     // useful UI debugging components
     addAndMakeVisible(&debugButton);
@@ -140,8 +135,7 @@ mlrVSTGUI::mlrVSTGUI (mlrVSTAudioProcessor* owner, const int &newNumChannels, co
 
     masterGainSlider.addListener(this);
 
-    // set up the various panels (settings, mapping, etc)
-    setupPanels();
+
 
     // start timer to update play positions, slider values etc.
     startTimer(50);
@@ -227,70 +221,7 @@ void mlrVSTGUI::setupPatternOverlays()
     }
 }
 
-void mlrVSTGUI::buildSliders()
-{
-    xPosition = yPosition = PAD_AMOUNT;
 
-    // work out the correct height width
-    const int sliderWidth = (int)(270 / (float) (numChannels + 1));
-    const int sliderHeight = 66;    // TODO: no magic numbers!
-
-    // clear any existing sliders
-    slidersArray.clear();
-    slidersMuteBtnArray.clear();
-
-    // Set master volume first
-    addAndMakeVisible(&masterGainSlider);
-    masterGainSlider.setSliderStyle(Slider::LinearVertical);
-
-    masterGainSlider.setRange(0.0, 1.0, 0.01);
-    masterGainSlider.setValue(0.0, NotificationType::dontSendNotification);
-    masterGainSlider.setBounds(xPosition, yPosition, sliderWidth, sliderHeight);
-    masterGainSlider.setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
-    masterGainSlider.setColour(Slider::thumbColourId, Colours::darkgrey);
-    masterGainSlider.setColour(Slider::backgroundColourId, (Colours::darkgrey).darker());
-
-    // and its label
-    addAndMakeVisible(&masterSliderLabel);
-    masterSliderLabel.setBounds(xPosition, yPosition + sliderHeight, sliderWidth, 16);
-    masterSliderLabel.setColour(Label::backgroundColourId, Colours::black);
-    masterSliderLabel.setColour(Label::textColourId, Colours::white);
-    masterSliderLabel.setFont(defaultFont);
-
-    xPosition += 1;
-
-    // then individual channel volumes
-    for(int i = 0; i < numChannels; ++i)
-    {
-        xPosition += sliderWidth;
-
-        slidersArray.add(new Slider("channel " + String(i) + " vol"));
-        addAndMakeVisible(slidersArray[i]);
-        slidersArray[i]->setSliderStyle(Slider::LinearVertical);
-        slidersArray[i]->addListener(this);
-        slidersArray[i]->setRange(0.0, 1.0, 0.01);
-        slidersArray[i]->setBounds(xPosition, yPosition, sliderWidth - 1, sliderHeight);
-        slidersArray[i]->setValue(parent->getChannelGain(i));
-
-        Colour sliderColour = parent->getChannelColour(i);
-        slidersArray[i]->setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
-        slidersArray[i]->setColour(Slider::thumbColourId, sliderColour);
-        slidersArray[i]->setColour(Slider::backgroundColourId, sliderColour.darker());
-
-        // add the labels
-        slidersMuteBtnArray.add(new ToggleButton("ch" + String(i)));
-        addAndMakeVisible(slidersMuteBtnArray[i]);
-        slidersMuteBtnArray[i]->setBounds(xPosition, yPosition + sliderHeight, sliderWidth - 1, 16);
-        slidersMuteBtnArray[i]->setColour(Label::backgroundColourId, Colours::black);
-        slidersMuteBtnArray[i]->setColour(Label::textColourId, Colours::white);
-        slidersMuteBtnArray[i]->addListener(this);
-        slidersMuteBtnArray[i]->setToggleState(parent->getChannelMuteStatus(i), false);
-    }
-
-    // increment yPosition for the next GUI item
-    xPosition = PAD_AMOUNT;
-    yPosition += sliderHeight + 3 * PAD_AMOUNT;
-}
 
 //==============================================================================
 void mlrVSTGUI::paint (Graphics& g)
@@ -318,7 +249,11 @@ void mlrVSTGUI::changeListenerCallback(ChangeBroadcaster *)
     if (newNumChannels != numChannels)
     {
         numChannels = newNumChannels;
-        buildSliders();
+        int xPosition = PAD_AMOUNT;
+        int yPosition = PAD_AMOUNT;
+
+        buildSliders(xPosition, yPosition);
+
         // let the SampleStrips add the right number of buttons
         for(int i = 0; i < sampleStripControlArray.size(); ++i)
             sampleStripControlArray[i]->setNumChannels(numChannels);
@@ -673,7 +608,9 @@ void mlrVSTGUI::updateGlobalSetting(const int &parameterID, const void *newValue
     case mlrVSTAudioProcessor::sNumChannels :
         {
             numChannels = *static_cast<const int*>(newValue);
-            buildSliders();
+
+            int xPosition = PAD_AMOUNT; int yPosition = PAD_AMOUNT;
+            buildSliders(xPosition, yPosition);
             // let the SampleStrips add the right number of buttons
             for(int i = 0; i < sampleStripControlArray.size(); ++i)
                 sampleStripControlArray[i]->setNumChannels(numChannels);
@@ -823,15 +760,76 @@ void mlrVSTGUI::setUpRecordResampleUI()
     patternBankSldr.setLookAndFeel(&overrideLF);
 }
 
-void mlrVSTGUI::setupTempoUI()
+void mlrVSTGUI::buildSliders(int &xPosition, int &yPosition)
+{
+    // work out the correct height width
+    const int sliderWidth = (int)(270 / (float) (numChannels + 1));
+    const int sliderHeight = 66;    // TODO: no magic numbers!
+
+    // clear any existing sliders
+    slidersArray.clear();
+    slidersMuteBtnArray.clear();
+
+    // Set master volume first
+    addAndMakeVisible(&masterGainSlider);
+    masterGainSlider.setSliderStyle(Slider::LinearVertical);
+
+    masterGainSlider.setRange(0.0, 1.0, 0.01);
+    masterGainSlider.setValue(0.0, NotificationType::dontSendNotification);
+    masterGainSlider.setBounds(xPosition, yPosition, sliderWidth, sliderHeight);
+    masterGainSlider.setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
+    masterGainSlider.setColour(Slider::thumbColourId, Colours::darkgrey);
+    masterGainSlider.setColour(Slider::backgroundColourId, (Colours::darkgrey).darker());
+
+    // and its label
+    addAndMakeVisible(&masterSliderLabel);
+    masterSliderLabel.setBounds(xPosition, yPosition + sliderHeight, sliderWidth, 16);
+    masterSliderLabel.setColour(Label::backgroundColourId, Colours::black);
+    masterSliderLabel.setColour(Label::textColourId, Colours::white);
+    masterSliderLabel.setFont(defaultFont);
+
+    xPosition += 1;
+
+    // then individual channel volumes
+    for(int i = 0; i < numChannels; ++i)
+    {
+        xPosition += sliderWidth;
+
+        slidersArray.add(new Slider("channel " + String(i) + " vol"));
+        addAndMakeVisible(slidersArray[i]);
+        slidersArray[i]->setSliderStyle(Slider::LinearVertical);
+        slidersArray[i]->addListener(this);
+        slidersArray[i]->setRange(0.0, 1.0, 0.01);
+        slidersArray[i]->setBounds(xPosition, yPosition, sliderWidth - 1, sliderHeight);
+        slidersArray[i]->setValue(parent->getChannelGain(i));
+
+        Colour sliderColour = parent->getChannelColour(i);
+        slidersArray[i]->setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
+        slidersArray[i]->setColour(Slider::thumbColourId, sliderColour);
+        slidersArray[i]->setColour(Slider::backgroundColourId, sliderColour.darker());
+
+        // add the labels
+        slidersMuteBtnArray.add(new ToggleButton("ch" + String(i)));
+        addAndMakeVisible(slidersMuteBtnArray[i]);
+        slidersMuteBtnArray[i]->setBounds(xPosition, yPosition + sliderHeight, sliderWidth - 1, 16);
+        slidersMuteBtnArray[i]->setColour(Label::backgroundColourId, Colours::black);
+        slidersMuteBtnArray[i]->setColour(Label::textColourId, Colours::white);
+        slidersMuteBtnArray[i]->addListener(this);
+        slidersMuteBtnArray[i]->setToggleState(parent->getChannelMuteStatus(i), false);
+    }
+
+    // increment yPosition for the next GUI item
+    xPosition = PAD_AMOUNT;
+    yPosition += sliderHeight + 3 * PAD_AMOUNT;
+}
+
+void mlrVSTGUI::setupTempoUI(int &xPosition, int &yPosition)
 {
     int bpmSliderWidth = 180, bpmSliderHeight = 30;
     int bpmLabelWidth = bpmSliderWidth, bpmLabelHeight = 16;
 
     int quantiseBoxWidth = 80, quantiseBoxHeight = 30;
     int quantiseLabelWidth = quantiseBoxWidth, quantiseLabelHeight = 16;
-
-    xPosition = PAD_AMOUNT;
 
     ///////////////////////
     // First add the labels
@@ -898,7 +896,7 @@ void mlrVSTGUI::setupTempoUI()
     yPosition += bpmSliderHeight + PAD_AMOUNT;
 }
 
-void mlrVSTGUI::setupPanels()
+void mlrVSTGUI::setupPanels(int &xPosition, int &yPosition)
 {
     const int buttonHeight = 25;
     const int buttonWidth = 66;
@@ -932,6 +930,39 @@ void mlrVSTGUI::setupPanels()
     xPosition = PAD_AMOUNT;
     yPosition += buttonHeight + PAD_AMOUNT;
 }
+
+void mlrVSTGUI::setupPresetUI(int &xPosition, int &yPosition)
+{
+    addAndMakeVisible(&presetLabel);
+    presetLabel.setBounds(xPosition, yPosition, 270, 16);
+    presetLabel.setColour(Label::textColourId, Colours::white);
+    presetLabel.setColour(Label::backgroundColourId, Colours::black);
+    presetLabel.setFont(defaultFont);
+    yPosition += 16;
+
+    addAndMakeVisible(&presetCbox);
+    presetCbox.setBounds(xPosition, yPosition, 180, 25);
+    presetCbox.addItem("test1", 1);
+    presetCbox.addItem("test2", 2);
+    xPosition += 180;
+
+
+    addAndMakeVisible(&presetPrevBtn);
+    presetPrevBtn.setBounds(xPosition, yPosition, 25, 25);
+    xPosition += 25;
+
+    addAndMakeVisible(&presetNextBtn);
+    presetNextBtn.setBounds(xPosition, yPosition, 25, 25);
+    xPosition += 25;
+
+    addAndMakeVisible(&addPresetBtn);
+    addPresetBtn.addListener(this);
+    addPresetBtn.setBounds(xPosition, yPosition, 40, 25);
+
+    xPosition = PAD_AMOUNT;
+    yPosition += 25 + PAD_AMOUNT;
+}
+
 
 // Force any visible panels to close
 void mlrVSTGUI::closePanels()

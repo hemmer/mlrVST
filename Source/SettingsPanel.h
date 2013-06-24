@@ -20,44 +20,6 @@ class mlrVSTAudioProcessor;
 class mlrVSTGUI;
 
 
-class MonomeSelector : public Component
-{
-
-public:
-
-    // TODO: remove this if unnecessary
-    MonomeSelector(const int &h, const int &w) :
-        eightByEightRect(0.0f, 0.0f, w / 2.0f, h / 2.0f),
-        eightBySixteenRect(0.0f, 0.0f, w, h / 2.0f),
-        sixteenByEightRect(0.0f, 0.0f, w / 2.0f, h),
-        sixteenBySixteenRect(0.0f, 0.0f, w, h),
-        height(h), width(w)
-    {
-
-    };
-    ~MonomeSelector() {};
-
-    void paint(Graphics &g)
-    {
-
-        g.setColour(Colours::white);
-
-        g.drawRoundedRectangle( eightByEightRect, 10.0f, 4.0f);
-        g.drawRoundedRectangle( eightBySixteenRect, 10.0f, 4.0f);
-
-    }
-
-
-private:
-
-    Rectangle<float> eightByEightRect, eightBySixteenRect;
-    Rectangle<float> sixteenByEightRect, sixteenBySixteenRect;
-
-    const int height, width;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MonomeSelector);
-
-};
 
 
 class SettingsPanel : public Component,

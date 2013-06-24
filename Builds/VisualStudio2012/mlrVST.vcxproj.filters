@@ -349,6 +349,9 @@
     <ClCompile Include="..\..\Source\Fonts\FreeTypeFaces.cpp">
       <Filter>mlrVST\gui\Fonts</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\CustomArrowButton.cpp">
+      <Filter>mlrVST\gui\buttons</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\timedButton.cpp">
       <Filter>mlrVST\gui\buttons</Filter>
     </ClCompile>
@@ -1562,6 +1565,9 @@
     </ClInclude>
     <ClInclude Include="..\..\Source\Fonts\FreeTypeFaces.h">
       <Filter>mlrVST\gui\Fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\CustomArrowButton.h">
+      <Filter>mlrVST\gui\buttons</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\timedButton.h">
       <Filter>mlrVST\gui\buttons</Filter>

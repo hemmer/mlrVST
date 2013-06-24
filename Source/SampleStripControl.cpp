@@ -35,7 +35,8 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     volLbl("volume label", "vol"), stripVolumeSldr("volume"),
     modeLbl("mode", "mode"), selPlayMode("select playmode"), isLatchedBtn("latch"),
     playspeedLbl("playspeed label", "speed"), playspeedSldr("playspeed"),
-    speedLockBtn("speed lock", DrawableButton::ImageRaw), isReversedBtn(">"),
+    speedLockBtn("speed lock", DrawableButton::ImageRaw),
+    isReversedBtn("reverse", 0.0f, Colours::black, Colours::white),
     lockImg(), unlockImg(), times2("x2"), div2("/2"), selNumChunks(),
     trackNumberLbl("track number", String(sampleStripID)), filenameLbl("filename", "no file"),
     popupLocators(),
@@ -163,8 +164,9 @@ void SampleStripControl::buttonClicked(Button *btn)
     {
         isReversed = !isReversed;
         dataStrip->setSampleStripParam(SampleStrip::pIsReversed, &isReversed);
-        String newButtonText = (isReversed) ? "<" : ">";
-        isReversedBtn.setButtonText(newButtonText);
+
+        const float newArrowDirection = (isReversed) ? 0.5f : 0.0f;
+        isReversedBtn.setDirection(newArrowDirection);
     }
     else if (btn == &times2)
     {
@@ -203,7 +205,7 @@ void SampleStripControl::updateChannelColours(const int &newChannel)
     backgroundColour = processor->getChannelColour(newChannel);
 
     isLatchedBtn.setColour(ToggleButton::textColourId, backgroundColour);
-    isReversedBtn.setColour(ToggleButton::textColourId, backgroundColour);
+    isReversedBtn.setColour(CustomArrowButton::arrowColourId, backgroundColour);
 
     stripVolumeSldr.setColour(Slider::thumbColourId, backgroundColour);
     stripVolumeSldr.setColour(Slider::backgroundColourId, backgroundColour.darker());
@@ -211,8 +213,6 @@ void SampleStripControl::updateChannelColours(const int &newChannel)
     playspeedSldr.setColour(Slider::thumbColourId, backgroundColour);
     playspeedSldr.setColour(Slider::backgroundColourId, backgroundColour.darker());
 
-    isLatchedBtn.setColour(ToggleButton::textColourId, backgroundColour);
-    isReversedBtn.setColour(ToggleButton::textColourId, backgroundColour);
 
     // TODO: background colour of TextButton not controlled when mousedown
     times2.setColour(TextButton::textColourOffId, backgroundColour);
@@ -864,9 +864,9 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
     case SampleStrip::pIsReversed :
         {
             isReversed = *static_cast<const bool*>(newValue);
-            isReversedBtn.setToggleState(isReversed, false);
-            String btnText = (isReversed) ? "<" : ">";
-            isReversedBtn.setButtonText(btnText);
+
+            const float newArrowDirection = (isReversed) ? 0.5f : 0.0f;
+            isReversedBtn.setDirection(newArrowDirection);
             break;
         }
 

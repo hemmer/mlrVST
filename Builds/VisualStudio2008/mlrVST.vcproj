@@ -157,6 +157,8 @@
           <File RelativePath="..\..\Source\Fonts\FreeTypeFaces.h"/>
         </Filter>
         <Filter Name="buttons">
+          <File RelativePath="..\..\Source\CustomArrowButton.h"/>
+          <File RelativePath="..\..\Source\CustomArrowButton.cpp"/>
           <File RelativePath="..\..\Source\timedButton.cpp"/>
           <File RelativePath="..\..\Source\timedButton.h"/>
         </Filter>

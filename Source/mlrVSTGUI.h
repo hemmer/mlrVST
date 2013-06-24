@@ -13,6 +13,7 @@
 #include "mlrVSTLookAndFeel.h"
 #include "PatternStripControl.h"
 #include "HintOverlay.h"
+#include "CustomArrowButton.h"
 
 
 #ifndef PAD_AMOUNT
@@ -88,9 +89,6 @@ private:
     mlrVSTLookAndFeel myLookAndFeel;
     overrideLookandFeel overrideLF;
 
-    // these are just helpers for positioning
-    int xPosition, yPosition;
-
     // Fonts ///////////////////////
     float fontSize; Font defaultFont;
 
@@ -99,12 +97,12 @@ private:
     OwnedArray<Slider> slidersArray;
     OwnedArray<ToggleButton> slidersMuteBtnArray;
     // this just sets it all up
-    void buildSliders();
+    void buildSliders(int &, int &);
 
     // Tempo controls /////////////////
     Slider bpmSlider; Label bpmLabel;                       // bpm components
     ComboBox quantiseSettingsCbox; Label quantiseLabel;     // quantise options components
-    void setupTempoUI();
+    void setupTempoUI(int &, int &);
 
 
     // Buttons ////////////////////////////
@@ -130,16 +128,19 @@ private:
     DrawableButton debugButton;
 
     // Panels ///////////////////////
-    void setupPanels();     // positions panels / buttons
+    void setupPanels(int &xPosition, int &yPosition);
     void closePanels();     // closes all panels
 
     //// Presets //////////////////////
+    void setupPresetUI(int &xPos, int &yPos);
     Label presetLabel;
+    ComboBox presetCbox;
+    CustomArrowButton presetPrevBtn, presetNextBtn;
     TextButton addPresetBtn;
     ToggleButton toggleSetlistBtn;
     Rectangle<int> presetPanelBounds;
     PresetPanel presetPanel;
-    ComboBox presetCbox;
+
 
 
     //// Settings ///////////////

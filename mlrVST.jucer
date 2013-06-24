@@ -50,6 +50,10 @@
         <FILE id="O0icBM" name="FreeTypeFaces.h" compile="0" resource="0" file="Source/Fonts/FreeTypeFaces.h"/>
       </GROUP>
       <GROUP id="{F593CB7E-770C-F39C-E866-8FB55A66E604}" name="buttons">
+        <FILE id="axx3Wm" name="CustomArrowButton.h" compile="0" resource="0"
+              file="Source/CustomArrowButton.h"/>
+        <FILE id="QVsVED" name="CustomArrowButton.cpp" compile="1" resource="0"
+              file="Source/CustomArrowButton.cpp"/>
         <FILE id="DqLjsk" name="timedButton.cpp" compile="1" resource="0" file="Source/timedButton.cpp"/>
         <FILE id="IaoqCf" name="timedButton.h" compile="0" resource="0" file="Source/timedButton.h"/>
       </GROUP>
