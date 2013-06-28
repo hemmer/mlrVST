@@ -33,7 +33,7 @@ mlrVSTLookAndFeel::mlrVSTLookAndFeel() :
 {
 	FreeTypeFaces::addFaceFromMemory(7.f, 38.f, true, BinaryData::ProggyClean_ttf, BinaryData::ProggyClean_ttfSize);
 
-	
+
     setColour (TextButton::buttonColourId,          Colours::white);
     setColour (TextButton::textColourOnId,          Colours::white);
     setColour (TextButton::textColourOffId,         Colours::black);
@@ -60,7 +60,7 @@ mlrVSTLookAndFeel::~mlrVSTLookAndFeel()
 //==============================================================================
 void mlrVSTLookAndFeel::drawButtonBackground (Graphics& g, Button& button,
                                               const Colour& backgroundColour,
-                                              bool isMouseOverButton,
+                                              bool /*isMouseOverButton*/,
                                               bool isButtonDown)
 {
     if (isButtonDown)
@@ -73,7 +73,7 @@ void mlrVSTLookAndFeel::drawButtonBackground (Graphics& g, Button& button,
 }
 
 void mlrVSTLookAndFeel::drawButtonText (Graphics& g, TextButton& button,
-                                        bool isMouseOverButton, bool isButtonDown)
+                                        bool /*isMouseOverButton*/, bool isButtonDown)
 {
     g.setFont(defaultFont);
 
@@ -123,8 +123,8 @@ void mlrVSTLookAndFeel::drawTickBox (Graphics& g, Component& /*component*/,
 
 void mlrVSTLookAndFeel::drawToggleButton (Graphics& g,
                                              ToggleButton& button,
-                                             bool isMouseOverButton,
-                                             bool isButtonDown)
+                                             bool /*isMouseOverButton*/,
+                                             bool /*isButtonDown*/)
 {
     if (button.getToggleState())
     {
@@ -155,13 +155,13 @@ void mlrVSTLookAndFeel::drawLabel(Graphics& g, Label& label)
 {
 	// set up the font with the right size
 	// NOTE: for cases where the font can't be set
-	// (e.g. TextButtons etc) we must use a custom 
+	// (e.g. TextButtons etc) we must use a custom
 	// LookAndFeel (see header).
 	g.setFont(label.getFont());
 
 
     g.fillAll (label.findColour(Label::backgroundColourId));
-	
+
     const float alpha = label.isEnabled() ? 1.0f : 0.5f;
 
     g.setColour (label.findColour (Label::textColourId).withMultipliedAlpha (alpha));
@@ -389,7 +389,7 @@ void mlrVSTLookAndFeel::drawComboBox (Graphics& g, int width, int height,
     }
 }
 
-Font mlrVSTLookAndFeel::getComboBoxFont(ComboBox& box)
+Font mlrVSTLookAndFeel::getComboBoxFont(ComboBox& /*box*/)
 {
     return defaultFont;
 }
@@ -400,7 +400,7 @@ Font mlrVSTLookAndFeel::getPopupMenuFont()
     return defaultFont;
 }
 
-Font mlrVSTLookAndFeel::getTextButtonFont	(	TextButton & 	button	)	
+Font mlrVSTLookAndFeel::getTextButtonFont(TextButton & /*button*/ )
 {
 	return defaultFont;
 }

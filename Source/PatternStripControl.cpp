@@ -63,10 +63,10 @@ void PatternStripControl::cachePattern()
 
             if (diff < 0) continue;
 
-            const int startX = width * ((double) sampleOn[chan] / (double) lengthInSamples);
-            const int noteWidth = width * (double)(diff) / (double) lengthInSamples;
-            const int startY = ((double) chan / 8.0) * halfHeight + halfHeight;
-            const int noteHeight = ((double) halfHeight / 8.0);
+            const float startX = width * ((float) sampleOn[chan] / (float) lengthInSamples);
+            const float noteWidth = width * (float)(diff) / (float) lengthInSamples;
+            const float startY = ((float) chan / 8.0f) * halfHeight + halfHeight;
+            const float noteHeight = ((float) halfHeight / 8.0f);
 
             noteColours.add(Colour((float) chan / 8.0f, 0.5f, 0.7f, 1.0f));
             notePositions.add(Rectangle<float>(startX, startY, noteWidth, noteHeight));
@@ -110,7 +110,7 @@ void PatternStripControl::paint(Graphics& g)
         g.fillRect(notePositions[i]);
     }
 
-    float playbackPosX = overlayPaintBounds.getWidth() * patternData->getPatternPercent();
+    const float playbackPosX = overlayPaintBounds.getWidth() * patternData->getPatternPercent();
 
-    g.drawLine(playbackPosX, 0, playbackPosX, overlayPaintBounds.getHeight(), 1.0f);
+    g.drawLine(playbackPosX, 0.0f, playbackPosX, (float) overlayPaintBounds.getHeight(), 1.0f);
 }

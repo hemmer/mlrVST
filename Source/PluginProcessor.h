@@ -115,7 +115,7 @@ public:
         sRampLength,                // length of volume envelope (in samples)
         NumGlobalSettings
     };
-    
+
     enum GlobalSettingType
     {
         TypeError = -1,
@@ -147,7 +147,7 @@ public:
     void updateGlobalSetting(const int &settingID, const void *newVal, const bool &notifyListeners = true);
     // TODO: should we have a getIntGlobalSetting etc?
     const void* getGlobalSetting(const int &settingID) const;
-    
+
 
 
     enum MonomeSizes
@@ -321,15 +321,20 @@ public:
 
     void setSampleStripParameter(const int &parameterID, const void *newValue, const int &stripID)
     {
-        sampleStripArray[stripID]->setSampleStripParam(parameterID, newValue);
+        if (stripID < numSampleStrips)
+            sampleStripArray[stripID]->setSampleStripParam(parameterID, newValue);
     }
     void toggleSampleStripParameter(const int &parameterID, const int &stripID)
     {
-        sampleStripArray[stripID]->toggleSampleStripParam(parameterID);
+        if (stripID < numSampleStrips)
+            sampleStripArray[stripID]->toggleSampleStripParam(parameterID);
     }
     const void* getSampleStripParameter(const int &parameterID, const int &stripID) const
     {
-        return sampleStripArray[stripID]->getSampleStripParam(parameterID);
+        if (stripID < numSampleStrips)
+            return sampleStripArray[stripID]->getSampleStripParam(parameterID);
+        else
+            return NULL;
     }
 
 
@@ -339,8 +344,8 @@ public:
     void saveXmlSetlist(const File &setlistFile);
     void loadXmlSetlist(const File &setlistFile);
     void addPreset(const String &presetName);
-    
-    // giving a position within the list, try to 
+
+    // giving a position within the list, try to
     // load that preset / setlist item
     void renamePreset(const String &newName, const int & id);
     void removeSetlistItem(const int &id);
@@ -386,7 +391,7 @@ public:
     bool isPatternPlaying() const { return patternRecordings[currentPatternBank]->isPatternPlaying; }
     bool isPatternPlaying(const int &patternID) const { return patternRecordings[patternID]->isPatternPlaying; }
 
-	PatternRecording * getPatternRecording(const int &patternID) 
+	PatternRecording * getPatternRecording(const int &patternID)
 	{
 		jassert( patternID < patternRecordings.size() );
 		return patternRecordings[patternID];

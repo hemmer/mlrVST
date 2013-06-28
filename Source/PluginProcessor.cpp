@@ -742,7 +742,7 @@ void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
     }
 
     numSampleStrips = newNumSampleStrips;
-    DBG("SampleStrip array built");
+    DBG("Created " << newNumSampleStrips << " SampleStrips.");
 
     // resume processing
     suspendProcessing(false);
@@ -874,7 +874,7 @@ void mlrVSTAudioProcessor::addPreset(const String &newPresetName)
         newPreset.setAttribute("chan_" + String(c) + "_vol", channelGains[c]);
 
 
-    
+
     // Store the SampleStrip specific settings
     for (int strip = 0; strip < sampleStripArray.size(); ++strip)
     {
@@ -1167,7 +1167,7 @@ void mlrVSTAudioProcessor::loadPreset(XmlElement * presetToLoad)
 
         }// end of samplestrip loop
 
-        // let the GUI know that we have reloaded 
+        // let the GUI know that we have reloaded
         sendChangeMessage();
     }
 }
@@ -1493,7 +1493,7 @@ int mlrVSTAudioProcessor::writeGlobalSettingToPreset(const int &settingID)
     //  - ScopeNone: don't save/load this setting
     //  - ScopePreset: can vary with every preset
     //  - ScopeSetlist: saved once globally
-    
+
     switch (settingID)
     {
     case sUseExternalTempo : return ScopeSetlist;
@@ -1590,7 +1590,7 @@ int mlrVSTAudioProcessor::getGlobalSettingType(const int &settingID)
 }
 
 void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID,
-                                               const void *newValue, 
+                                               const void *newValue,
                                                const bool &notifyListeners)
 {
     switch (settingID)
@@ -2001,7 +2001,7 @@ void mlrVSTAudioProcessor::executeNormalRowMapping(const int &mappingID, const i
     default : jassertfalse;
     }
 }
-void mlrVSTAudioProcessor::executePatternRowMapping(const int &mappingID, const int &stripID, const bool &state)
+void mlrVSTAudioProcessor::executePatternRowMapping(const int &mappingID, const int &stripID, const bool & /*state*/)
 {
     // the pattern that we are modifing is determined by the row
     const int patternID = stripID;

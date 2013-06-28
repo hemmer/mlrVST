@@ -7,7 +7,7 @@
   This library contains portions of other open source products covered by
   separate licenses. Please see the corresponding source files for specific
   terms.
-  
+
   VFLib is provided under the terms of The MIT License (MIT):
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -172,7 +172,7 @@ public:
   }
 
   ~FreeTypeFace()
-  { 
+  {
     closeFace();
   }
 
@@ -290,7 +290,7 @@ protected:
   // bool convertOutlineToPath (Path& destShape, const FT_Outline* outline);
 
   bool convertOutlineToPath (Path& destShape, const FT_Outline* outline)
-  {   
+  {
     typedef float value_type;
 
     FT_Vector v_last;
@@ -471,7 +471,7 @@ Do_Conic:
       destShape.closeSubPath();
 
 Close:
-      first = last + 1; 
+      first = last + 1;
     }
 
     return true;
@@ -503,7 +503,7 @@ private:
     float ascent = float(m_face->bbox.yMax) / (m_face->bbox.yMax-m_face->bbox.yMin);
     bool isBold = (m_face->style_flags & FT_STYLE_FLAG_BOLD) != 0;
     bool isItalic = (m_face->style_flags & FT_STYLE_FLAG_ITALIC) != 0;
-    
+
     // ??? what do I put here?
     juce_wchar defaultChar = 0;//255;
 
@@ -561,9 +561,9 @@ private:
   bool loadGlyphIfPossible (juce_wchar characterNeeded)
   {
     bool wasLoaded = false;
-    
+
     FT_Error error = 0;
-    
+
     FT_UInt glyph_index = FT_Get_Char_Index (m_face, characterNeeded);
     if (glyph_index == 0)
       error = -1;
@@ -644,7 +644,7 @@ private:
       return new SoftwareImageType;
     }
 
-    void initialiseBitmapData (Image::BitmapData& bitmapData, int x, int y, Image::BitmapData::ReadWriteMode mode)
+    void initialiseBitmapData (Image::BitmapData& bitmapData, int x, int y, Image::BitmapData::ReadWriteMode /*mode*/)
     {
       bitmapData.data = m_imageData + y * m_lineStride + x * m_pixelStride;
       bitmapData.pixelFormat = Image::SingleChannel;
@@ -667,7 +667,7 @@ private:
     LowLevelGraphicsContext& lg = g.getInternalContext();
 
     FT_Error error=0;
-    
+
     if (lg.isVectorDevice())
       error = -1;
 
@@ -777,7 +777,7 @@ protected:
     FT_Int gasp = FT_Get_Gasp (m_face,
                                FT_UInt(m_fontHeight * m_face->units_per_EM));
 
-    
+
     bool useBytecodeHints = (gasp & FT_GASP_DO_GRIDFIT) != 0;
 
     // Unfortunately, this doesn't work quite right yet.
@@ -838,7 +838,7 @@ public:
                           bool appendStyleToFaceName)
   {
     FT_Error error;
-    
+
     FT_Face face;
     error = FT_New_Memory_Face (m_ft->getLibrary(),
                                 (FT_Byte*)faceFileData,

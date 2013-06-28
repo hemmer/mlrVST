@@ -1,0 +1,19 @@
+#N canvas 69 456 650 286 10;
+#X obj 228 218 sendOSC;
+#X obj 39 150 print osc;
+#X msg 228 164 connect localhost 8000;
+#X obj 392 90 vsl 15 64 0 2 0 0 empty empty empty 0 -9 0 10 -262144
+-1 -1 1400 1;
+#X msg 392 172 send /mlrvst/strip/6/vol \$1;
+#X obj 143 53 dumpOSC 8000;
+#X obj 143 142 prepend send;
+#X text 25 19 Receiving values on port 8000 from touchOSC;
+#X text 154 122 resend them on to mlrvst;
+#X text 416 83 Using a slider to control volume;
+#X connect 2 0 0 0;
+#X connect 3 0 4 0;
+#X connect 4 0 0 0;
+#X connect 5 0 1 0;
+#X connect 5 0 6 0;
+#X connect 6 0 0 0;
+#X coords 0 0 1 1 85 60 0;

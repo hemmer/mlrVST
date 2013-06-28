@@ -13,7 +13,7 @@
 
 // Constructor
 OSCHandler::OSCHandler(const String &prefix, mlrVSTAudioProcessor * const owner) :
-    Thread("OscListener Thread"), 
+    Thread("OscListener Thread"),
     // incoming ///////////////////////////////////////
     parent(owner), incomingPort(8000),
     s(IpEndpointName("localhost", incomingPort), this),
@@ -59,12 +59,15 @@ void OSCHandler::clearGrid()
 
 void OSCHandler::ProcessMessage(const osc::ReceivedMessage& m, const IpEndpointName& /*remoteEndpoint*/)
 {
+    String msgPattern = m.AddressPattern();
+    DBG("new message: " << msgPattern);
+
     try
     {
         osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
         osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
 
-        if (strcmp(m.AddressPattern(), buttonPressMask.getCharPointer()) == 0)
+        if (msgPattern == OSCPrefix + "press")
         {
             // example #1:
             osc::int32 row, col, state;
@@ -72,7 +75,29 @@ void OSCHandler::ProcessMessage(const osc::ReceivedMessage& m, const IpEndpointN
             buttonPressCallback(row, col, state == 1);
             DBG(OSCPrefix << "press " << row << " " << col << " " << state);
         }
+        else if (msgPattern.matchesWildcard("/mlrvst/strip/*", false))
+        {
+            msgPattern = msgPattern.substring(14);
 
+            String rowIDStr = msgPattern.upToFirstOccurrenceOf("/", false, false);
+            const int stripID = rowIDStr.getIntValue();
+
+            processStripMessage(stripID, m);
+
+            String OSCcommand = msgPattern.fromFirstOccurrenceOf(rowIDStr + "/", false, false);
+
+            DBG("strip " << stripID << " sends command: " << OSCcommand);
+
+            if (OSCcommand == "vol")
+            {
+                float newVol;
+                args >> newVol >> osc::EndMessage;
+                DBG(newVol);
+
+                parent->setSampleStripParameter(SampleStrip::pStripVolume, &newVol, stripID);
+
+            }
+        }
     }
     catch (osc::Exception& e)
     {
@@ -80,3 +105,7 @@ void OSCHandler::ProcessMessage(const osc::ReceivedMessage& m, const IpEndpointN
     }
 }
 
+void OSCHandler::handleStripMessage(const int &stripID, osc::ReceivedMessage& m)
+{
+
+}
