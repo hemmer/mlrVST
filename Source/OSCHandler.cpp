@@ -66,10 +66,7 @@ void OSCHandler::ProcessMessage(const osc::ReceivedMessage& m, const IpEndpointN
 
     try
     {
-
         String msgPattern = m.AddressPattern();
-        DBG("new message: " << msgPattern << " with wildcard " << stripWildcard);
-
 
         if (msgPattern.equalsIgnoreCase(OSCPrefix + "press"))
         {
