@@ -76,7 +76,11 @@ private:
     String ledStr, ledRowStr, ledClearStr;  // + "led", + "led_row", + "clear"
     String buttonPressMask;                 // + "press"
 
-    void handleStripMessage(const int &stripID, osc::ReceivedMessage& m);
+    void handleStripMessage(const int &stripID, const osc::ReceivedMessage& m);
+
+    float getFloatOSCArg(const osc::ReceivedMessage& m);
+    int getIntOSCArg(const osc::ReceivedMessage& m);
+
     JUCE_LEAK_DETECTOR(OSCHandler);
 
 protected:

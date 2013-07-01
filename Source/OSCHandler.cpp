@@ -30,6 +30,9 @@ OSCHandler::OSCHandler(const String &prefix, mlrVSTAudioProcessor * const owner)
 
 void OSCHandler::buttonPressCallback(const int &monomeCol, const int &monomeRow, const bool &state)
 {
+    if (state) { DBG("button down " << monomeRow << " " << monomeCol); }
+    else       { DBG("button up " << monomeRow << " " << monomeCol); }
+
     parent->processOSCKeyPress(monomeCol, monomeRow, state);
 }
 
@@ -59,44 +62,39 @@ void OSCHandler::clearGrid()
 
 void OSCHandler::ProcessMessage(const osc::ReceivedMessage& m, const IpEndpointName& /*remoteEndpoint*/)
 {
-    String msgPattern = m.AddressPattern();
-    DBG("new message: " << msgPattern);
+    const String stripWildcard = OSCPrefix + "strip/*";
 
     try
     {
-        osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
-        osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
 
-        if (msgPattern == OSCPrefix + "press")
+        String msgPattern = m.AddressPattern();
+        DBG("new message: " << msgPattern << " with wildcard " << stripWildcard);
+
+
+        if (msgPattern.equalsIgnoreCase(OSCPrefix + "press"))
         {
-            // example #1:
+            // we need three arguments for button presses
+            const int numArgs = m.ArgumentCount();
+            if (numArgs != 3) throw osc::Exception();
+
+            osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
+
+            // unpack the monome button, row and state (button up or down)
             osc::int32 row, col, state;
             args >> row >> col >> state >> osc::EndMessage;
             buttonPressCallback(row, col, state == 1);
-            DBG(OSCPrefix << "press " << row << " " << col << " " << state);
         }
-        else if (msgPattern.matchesWildcard("/mlrvst/strip/*", false))
+        else if (msgPattern.matchesWildcard(stripWildcard, false))
         {
-            msgPattern = msgPattern.substring(14);
+            // strip off the /mlrvst/strip/ part of the message
+            msgPattern = msgPattern.substring(stripWildcard.length() - 1);
 
-            String rowIDStr = msgPattern.upToFirstOccurrenceOf("/", false, false);
+            // and extract the SampleStrip rowID from the message
+            const String rowIDStr = msgPattern.upToFirstOccurrenceOf("/", false, false);
+
             const int stripID = rowIDStr.getIntValue();
 
-            processStripMessage(stripID, m);
-
-            String OSCcommand = msgPattern.fromFirstOccurrenceOf(rowIDStr + "/", false, false);
-
-            DBG("strip " << stripID << " sends command: " << OSCcommand);
-
-            if (OSCcommand == "vol")
-            {
-                float newVol;
-                args >> newVol >> osc::EndMessage;
-                DBG(newVol);
-
-                parent->setSampleStripParameter(SampleStrip::pStripVolume, &newVol, stripID);
-
-            }
+            handleStripMessage(stripID, m);
         }
     }
     catch (osc::Exception& e)
@@ -105,7 +103,104 @@ void OSCHandler::ProcessMessage(const osc::ReceivedMessage& m, const IpEndpointN
     }
 }
 
-void OSCHandler::handleStripMessage(const int &stripID, osc::ReceivedMessage& m)
+void OSCHandler::handleStripMessage(const int &stripID, const osc::ReceivedMessage& m)
 {
+    const String msgPattern = m.AddressPattern();
+    const String OSCcommand = msgPattern.fromFirstOccurrenceOf("/" + String(stripID) + "/", false, false);
 
+    DBG("strip " << stripID << " sends command: " << OSCcommand);
+
+    if (OSCcommand == "vol")
+    {
+        try
+        {
+            const float newVol = getFloatOSCArg(m);
+            parent->setSampleStripParameter(SampleStrip::pStripVolume, &newVol, stripID);
+        }
+        catch (osc::Exception &) { DBG("Couldn't process volume message"); }
+    }
+
+
+    else if (OSCcommand == "speed")
+    {
+        try
+        {
+            const float newSpeed = getFloatOSCArg(m);
+            parent->setSampleStripParameter(SampleStrip::pPlaySpeed, &newSpeed, stripID);
+        }
+        catch (osc::Exception &) { DBG("Couldn't process speed message"); }
+    }
+
+    else if (OSCcommand == "chan")
+    {
+        try
+        {
+            const int newChannel = getIntOSCArg(m);
+            parent->setSampleStripParameter(SampleStrip::pCurrentChannel, &newChannel, stripID);
+        }
+        catch (osc::Exception &) { DBG("Couldn't process channel message"); }
+
+    }
+}
+
+
+float OSCHandler::getFloatOSCArg(const osc::ReceivedMessage& m)
+{
+    try
+    {
+        // we assume only one argument
+        const int numArgs = m.ArgumentCount();
+        if (numArgs != 1) throw osc::MissingArgumentException();
+
+        osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+
+        const float floatArg = arg->AsFloat();
+
+        return floatArg;
+
+    }
+    catch (osc::WrongArgumentTypeException& )
+    {
+        // if the argument is an int pretending to be a float, then we
+        // need to consider that too so we cast to float
+        try
+        {
+            osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+            const float floatArg = (float) arg->AsInt32();
+
+            return floatArg;
+        }
+        catch (osc::Exception &e)
+        {
+            throw e;
+        }
+    }
+    catch (osc::Exception &e)
+    {
+        // pass exception on
+        throw e;
+    }
+
+}
+
+int OSCHandler::getIntOSCArg(const osc::ReceivedMessage& m)
+{
+    try
+    {
+        // we assume only one argument
+        const int numArgs = m.ArgumentCount();
+        if (numArgs != 1) throw osc::MissingArgumentException();
+
+        osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+
+        const int intArg = arg->AsInt32();
+
+        return intArg;
+
+    }
+    catch (osc::Exception &e)
+    {
+        // pass exception on
+        throw e;
+    }
 }

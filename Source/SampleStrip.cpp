@@ -56,7 +56,15 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
     switch (parameterID)
     {
     case pCurrentChannel :
-        currentChannel = *static_cast<const int*>(newValue); break;
+        {
+            const int numChannels = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sNumChannels));
+            const int newChannel = *static_cast<const int*>(newValue);
+
+            // check that the new channel is range
+            if (newChannel < numChannels) currentChannel = newChannel;
+
+            break;
+        }
 
     case pNumChunks :
         numChunks = *static_cast<const int*>(newValue);
@@ -249,7 +257,7 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
 
     case pFractionalStart :
         p = &fractionalSampleStart; break;
-    case pFractionalEnd : 
+    case pFractionalEnd :
         p = &fractionalSampleEnd; break;
 
     default:
@@ -888,4 +896,3 @@ void SampleStrip::updateCurrentPlaybackPercentage()
 
     setSampleStripParam(pPlaybackPercentage, &newPlaybackPercentage, false);
 }
-
