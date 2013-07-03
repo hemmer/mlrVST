@@ -277,7 +277,7 @@ public:
 
     AudioSample* getLatestSample() { return samplePool.getLast(); }
 
-    void calcInitialPlaySpeed(const int &stripID);
+    const double calcInitialPlaySpeed(const int &stripID, const bool &applyChange = true);
     void calcPlaySpeedForNewBPM(const int &stripID);
     void calcPlaySpeedForSelectionChange(const int &stripID);
     void modPlaySpeed(const double &factor, const int &stripID);

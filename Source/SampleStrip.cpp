@@ -332,7 +332,7 @@ void SampleStrip::updatePlaySpeedForSelectionChange()
     sendChangeMessage();
 }
 
-void SampleStrip::findInitialPlaySpeed(const double &newBPM, const float &hostSampleRate)
+double SampleStrip::findInitialPlaySpeed(const double &newBPM, const float &hostSampleRate, const bool &applyChange)
 {
     if (currentSample != nullptr)
     {
@@ -361,11 +361,22 @@ void SampleStrip::findInitialPlaySpeed(const double &newBPM, const float &hostSa
                 newPlaySpeed *= 2.0;
             }
         }
-        playSpeed = newPlaySpeed;
 
-        // let any listeners (i.e. GUI) know of the change
-        sendChangeMessage();
+        // if told, update the playspeed to this new tempo
+        if (applyChange)
+        {
+            playSpeed = newPlaySpeed;
 
+            // let any listeners (i.e. GUI) know of the change
+            sendChangeMessage();
+        }
+
+        return newPlaySpeed;
+
+    }
+    else
+    {
+        return 0.0;
     }
 }
 

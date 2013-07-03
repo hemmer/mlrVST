@@ -747,10 +747,10 @@ void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
     // resume processing
     suspendProcessing(false);
 }
-void mlrVSTAudioProcessor::calcInitialPlaySpeed(const int &stripID)
+const double mlrVSTAudioProcessor::calcInitialPlaySpeed(const int &stripID, const bool &applyChange)
 {
     // TODO insert proper host speed here
-    sampleStripArray[stripID]->findInitialPlaySpeed(currentBPM, 44100.0);
+    return sampleStripArray[stripID]->findInitialPlaySpeed(currentBPM, 44100.0, applyChange);
 }
 void mlrVSTAudioProcessor::calcPlaySpeedForNewBPM(const int &stripID)
 {

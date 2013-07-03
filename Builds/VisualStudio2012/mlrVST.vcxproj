@@ -142,6 +142,7 @@
     <ClCompile Include="..\..\Source\HintOverlay.cpp"/>
     <ClCompile Include="..\..\Source\Fonts\FreeTypeAmalgam.c"/>
     <ClCompile Include="..\..\Source\Fonts\FreeTypeFaces.cpp"/>
+    <ClCompile Include="..\..\Source\TextDragSlider.cpp"/>
     <ClCompile Include="..\..\Source\CustomArrowButton.cpp"/>
     <ClCompile Include="..\..\Source\timedButton.cpp"/>
     <ClCompile Include="..\..\Source\PresetListTable.cpp"/>
@@ -1196,6 +1197,7 @@
     <ClInclude Include="..\..\Source\HintOverlay.h"/>
     <ClInclude Include="..\..\Source\Fonts\FreeTypeAmalgam.h"/>
     <ClInclude Include="..\..\Source\Fonts\FreeTypeFaces.h"/>
+    <ClInclude Include="..\..\Source\TextDragSlider.h"/>
     <ClInclude Include="..\..\Source\CustomArrowButton.h"/>
     <ClInclude Include="..\..\Source\timedButton.h"/>
     <ClInclude Include="..\..\Source\PresetListTable.h"/>

@@ -58,6 +58,7 @@ OBJECTS := \
   $(OBJDIR)/HintOverlay_866575aa.o \
   $(OBJDIR)/FreeTypeAmalgam_f9f8342c.o \
   $(OBJDIR)/FreeTypeFaces_5f2c9c86.o \
+  $(OBJDIR)/TextDragSlider_db5742cb.o \
   $(OBJDIR)/CustomArrowButton_7802bccb.o \
   $(OBJDIR)/timedButton_8bab4a.o \
   $(OBJDIR)/PresetListTable_856af992.o \
@@ -152,6 +153,11 @@ $(OBJDIR)/FreeTypeAmalgam_f9f8342c.o: ../../Source/Fonts/FreeTypeAmalgam.c
 $(OBJDIR)/FreeTypeFaces_5f2c9c86.o: ../../Source/Fonts/FreeTypeFaces.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling FreeTypeFaces.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/TextDragSlider_db5742cb.o: ../../Source/TextDragSlider.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling TextDragSlider.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/CustomArrowButton_7802bccb.o: ../../Source/CustomArrowButton.cpp

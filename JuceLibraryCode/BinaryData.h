@@ -6,18 +6,6 @@
 
 namespace BinaryData
 {
-    extern const char*   CHANGES;
-    const int            CHANGESSize = 3356;
-
-    extern const char*   LICENSE;
-    const int            LICENSESize = 1375;
-
-    extern const char*   README;
-    const int            READMESize = 3487;
-
-    extern const char*   TODO;
-    const int            TODOSize = 2392;
-
     extern const char*   locked_png;
     const int            locked_pngSize = 940;
 

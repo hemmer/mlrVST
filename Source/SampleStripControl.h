@@ -18,6 +18,7 @@
 #include "SampleStripControl.h"
 #include "mlrVSTLookAndFeel.h"
 #include "CustomArrowButton.h"
+#include "TextDragSlider.h"
 
 /* Forward declaration to set up pointer arrangement
    to allow sample strips to access the UI */
@@ -27,7 +28,6 @@ class SampleStripControl :  public Component,
     public ChangeListener,
     public ButtonListener,
     public ComboBoxListener,
-    public SliderListener,
     public FileDragAndDropTarget
 {
 public:
@@ -55,7 +55,6 @@ public:
     void changeListenerCallback(ChangeBroadcaster*);
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
     void buttonClicked(Button *btn);
-    void sliderValueChanged(Slider *sldr);
 
     // This allows us to load samples by Drag n' Drop
     bool isInterestedInFileDrag(const StringArray&) { return true; }
@@ -113,7 +112,6 @@ public:
         modifierBtnStatus = newStatus;
     }
     void updateThumbnail(const File &newFile);
-    void buildNumBlocksList(const int &newMaxNumBlocks);
 
 private:
 
@@ -138,21 +136,21 @@ private:
     OwnedArray<DrawableButton> channelButtonArray;
     // volume controls
     Label volLbl;
-    Slider stripVolumeSldr;
+    TextDragSlider stripVolumeSldr;
     // playmode selector
     Label modeLbl;
     ComboBox selPlayMode;
     ToggleButton isLatchedBtn;
     // playspeed controls
     Label playspeedLbl;
-    Slider playspeedSldr;
+    TextDragSlider playspeedSldr;
     DrawableButton speedLockBtn;
     CustomArrowButton isReversedBtn;
     DrawableImage lockImg, unlockImg;
     TextButton times2, div2;
     // select num chunks
 	Label numChunksLabel;
-    ComboBox selNumChunks;
+    TextDragSlider selNumChunks;
     // bottom row labels
     Label trackNumberLbl, filenameLbl;
     // bit of a hack, for some reason popup menu needs a component

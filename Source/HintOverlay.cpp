@@ -89,7 +89,7 @@ void HintOverlay::paint(Graphics &g)
 		g.setColour(Colours::black);
 
 		//g.drawMultiLineText(mappingName, xPos+2, yPos+10, buttonSize);
-		g.drawFittedText(mappingName, xPos+1, yPos+1,
+		g.drawFittedText(mappingName, (int) (xPos) + 1, (int) (yPos) + 1,
 			buttonSize-2, buttonSize-2, Justification::centred, 4, 1.0f);
 
 	}

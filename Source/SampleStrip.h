@@ -104,10 +104,12 @@ public:
 
 	void cycleChannels();
 
+    double findInitialPlaySpeed(const double &BPM, const float &hostSampleRate, const bool &applyChange = true);
+
+
     void updatePlaySpeedForBPMChange(const double &newBPM);
     void setBPM(const double &newBPM) { previousBPM = newBPM; }
     void updatePlaySpeedForSelectionChange();
-    void findInitialPlaySpeed(const double &BPM, const float &hostSampleRate);
     void modPlaySpeed(const double &factor);
     void updateCurrentPlaybackPercentage();
 
@@ -210,7 +212,7 @@ public:
     }
     static int getParameterID(const String &parameterName)
     {
-        // TODO: is this still needed 
+        // TODO: is this still needed
         if (parameterName == "current_channel") return pCurrentChannel;
         if (parameterName == "num_chunks") return pNumChunks;
         if (parameterName == "playmode") return pPlayMode;

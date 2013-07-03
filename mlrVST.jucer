@@ -40,7 +40,7 @@
         <FILE id="o2dLZa" name="HintOverlay.cpp" compile="1" resource="0" file="Source/HintOverlay.cpp"/>
         <FILE id="JBSmSH" name="HintOverlay.h" compile="0" resource="0" file="Source/HintOverlay.h"/>
       </GROUP>
-      <GROUP id="{07B82C21-45DD-8B6D-2164-7EA9B21B659C}" name="Fonts">
+      <GROUP id="{07B82C21-45DD-8B6D-2164-7EA9B21B659C}" name="fonts">
         <FILE id="an0Igc" name="FreeTypeAmalgam.c" compile="1" resource="0"
               file="Source/Fonts/FreeTypeAmalgam.c"/>
         <FILE id="pvqcie" name="FreeTypeAmalgam.h" compile="0" resource="0"
@@ -49,7 +49,11 @@
               file="Source/Fonts/FreeTypeFaces.cpp"/>
         <FILE id="O0icBM" name="FreeTypeFaces.h" compile="0" resource="0" file="Source/Fonts/FreeTypeFaces.h"/>
       </GROUP>
-      <GROUP id="{F593CB7E-770C-F39C-E866-8FB55A66E604}" name="buttons">
+      <GROUP id="{F593CB7E-770C-F39C-E866-8FB55A66E604}" name="components">
+        <FILE id="vpoyUw" name="TextDragSlider.cpp" compile="1" resource="0"
+              file="Source/TextDragSlider.cpp"/>
+        <FILE id="kmpeMB" name="TextDragSlider.h" compile="0" resource="0"
+              file="Source/TextDragSlider.h"/>
         <FILE id="axx3Wm" name="CustomArrowButton.h" compile="0" resource="0"
               file="Source/CustomArrowButton.h"/>
         <FILE id="QVsVED" name="CustomArrowButton.cpp" compile="1" resource="0"
@@ -88,7 +92,7 @@
       <FILE id="UWpAX2" name="OSCHandler.h" compile="0" resource="0" file="Source/OSCHandler.h"/>
     </GROUP>
     <GROUP id="{D0F6CE3F-349B-33F6-1ADE-6659AAF7C4E0}" name="oscpack">
-      <FILE id="ldoZgU" name="CHANGES" compile="0" resource="1" file="oscpack/CHANGES"/>
+      <FILE id="ldoZgU" name="CHANGES" compile="0" resource="0" file="oscpack/CHANGES"/>
       <GROUP id="{8CA3300C-AFAA-8CFF-BF7D-B0C2B84AE824}" name="ip">
         <FILE id="zZLvsT" name="IpEndpointName.cpp" compile="1" resource="0"
               file="oscpack/ip/IpEndpointName.cpp"/>
@@ -104,7 +108,7 @@
         <FILE id="Eqghxp" name="UdpSocket.cpp" compile="1" resource="0" file="oscpack/ip/UdpSocket.cpp"/>
         <FILE id="XF4eh7" name="UdpSocket.h" compile="0" resource="0" file="oscpack/ip/UdpSocket.h"/>
       </GROUP>
-      <FILE id="iElK6e" name="LICENSE" compile="0" resource="1" file="oscpack/LICENSE"/>
+      <FILE id="iElK6e" name="LICENSE" compile="0" resource="0" file="oscpack/LICENSE"/>
       <GROUP id="{DFB5A189-0F83-69BC-A628-209B3A5A657D}" name="osc">
         <FILE id="bIohfa" name="MessageMappingOscPacketListener.h" compile="0"
               resource="0" file="oscpack/osc/MessageMappingOscPacketListener.h"/>
@@ -128,8 +132,8 @@
         <FILE id="X66GGv" name="OscTypes.cpp" compile="1" resource="0" file="oscpack/osc/OscTypes.cpp"/>
         <FILE id="RRPU10" name="OscTypes.h" compile="0" resource="0" file="oscpack/osc/OscTypes.h"/>
       </GROUP>
-      <FILE id="Er5nDB" name="README" compile="0" resource="1" file="oscpack/README"/>
-      <FILE id="CRsgUq" name="TODO" compile="0" resource="1" file="oscpack/TODO"/>
+      <FILE id="Er5nDB" name="README" compile="0" resource="0" file="oscpack/README"/>
+      <FILE id="CRsgUq" name="TODO" compile="0" resource="0" file="oscpack/TODO"/>
     </GROUP>
     <GROUP id="{976ABE17-20BF-66CE-B2ED-6DEA99C08584}" name="Resources">
       <FILE id="gUdYEf" name="locked.png" compile="0" resource="1" file="Resources/locked.png"/>

@@ -20,11 +20,11 @@
     <Filter Include="mlrVST\gui\overlays">
       <UniqueIdentifier>{2735366A-E609-8835-B320-85BAB019D41B}</UniqueIdentifier>
     </Filter>
-    <Filter Include="mlrVST\gui\Fonts">
-      <UniqueIdentifier>{69C8DBFA-D519-4CE8-6ADD-4228BEB2DE56}</UniqueIdentifier>
+    <Filter Include="mlrVST\gui\fonts">
+      <UniqueIdentifier>{2F60693C-D49F-E8A7-55A7-902960ED78CC}</UniqueIdentifier>
     </Filter>
-    <Filter Include="mlrVST\gui\buttons">
-      <UniqueIdentifier>{2C59F540-C799-4443-5757-566B955B7456}</UniqueIdentifier>
+    <Filter Include="mlrVST\gui\components">
+      <UniqueIdentifier>{12E4A416-F02A-6EE3-EF41-C48BBD19DF13}</UniqueIdentifier>
     </Filter>
     <Filter Include="mlrVST\gui\panels">
       <UniqueIdentifier>{26AF136C-A5C5-34B1-5C05-5EC6E30CD604}</UniqueIdentifier>
@@ -344,16 +344,19 @@
       <Filter>mlrVST\gui\overlays</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Fonts\FreeTypeAmalgam.c">
-      <Filter>mlrVST\gui\Fonts</Filter>
+      <Filter>mlrVST\gui\fonts</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Fonts\FreeTypeFaces.cpp">
-      <Filter>mlrVST\gui\Fonts</Filter>
+      <Filter>mlrVST\gui\fonts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\TextDragSlider.cpp">
+      <Filter>mlrVST\gui\components</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\CustomArrowButton.cpp">
-      <Filter>mlrVST\gui\buttons</Filter>
+      <Filter>mlrVST\gui\components</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\timedButton.cpp">
-      <Filter>mlrVST\gui\buttons</Filter>
+      <Filter>mlrVST\gui\components</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\PresetListTable.cpp">
       <Filter>mlrVST\gui\panels</Filter>
@@ -1561,16 +1564,19 @@
       <Filter>mlrVST\gui\overlays</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Fonts\FreeTypeAmalgam.h">
-      <Filter>mlrVST\gui\Fonts</Filter>
+      <Filter>mlrVST\gui\fonts</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Fonts\FreeTypeFaces.h">
-      <Filter>mlrVST\gui\Fonts</Filter>
+      <Filter>mlrVST\gui\fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\TextDragSlider.h">
+      <Filter>mlrVST\gui\components</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\CustomArrowButton.h">
-      <Filter>mlrVST\gui\buttons</Filter>
+      <Filter>mlrVST\gui\components</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\timedButton.h">
-      <Filter>mlrVST\gui\buttons</Filter>
+      <Filter>mlrVST\gui\components</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PresetListTable.h">
       <Filter>mlrVST\gui\panels</Filter>

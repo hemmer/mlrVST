@@ -127,7 +127,7 @@ mlrVSTGUI::mlrVSTGUI (mlrVSTAudioProcessor* owner, const int &newNumChannels, co
 
     addAndMakeVisible(&loadFilesBtn);
     loadFilesBtn.addListener(this);
-    loadFilesBtn.setBounds(50, 350, 70, 25);
+    loadFilesBtn.setBounds(50, 350, 100, 25);
 
     setUpRecordResampleUI();
     buildSampleStripControls(numStrips);

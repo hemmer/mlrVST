@@ -82,10 +82,12 @@ void PatternStripControl::changeListenerCallback(ChangeBroadcaster * sender)
     // TODO: this potentially gets called a lot, maybe use timer?
     if (sender == patternData)
     {
-        repaint();
-
         // store copy of pattern for easy drawing
         cachePattern();
+
+        // and redraw
+        repaint();
+
     }
 }
 

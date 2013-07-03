@@ -150,13 +150,15 @@
           <File RelativePath="..\..\Source\HintOverlay.cpp"/>
           <File RelativePath="..\..\Source\HintOverlay.h"/>
         </Filter>
-        <Filter Name="Fonts">
+        <Filter Name="fonts">
           <File RelativePath="..\..\Source\Fonts\FreeTypeAmalgam.c"/>
           <File RelativePath="..\..\Source\Fonts\FreeTypeAmalgam.h"/>
           <File RelativePath="..\..\Source\Fonts\FreeTypeFaces.cpp"/>
           <File RelativePath="..\..\Source\Fonts\FreeTypeFaces.h"/>
         </Filter>
-        <Filter Name="buttons">
+        <Filter Name="components">
+          <File RelativePath="..\..\Source\TextDragSlider.cpp"/>
+          <File RelativePath="..\..\Source\TextDragSlider.h"/>
           <File RelativePath="..\..\Source\CustomArrowButton.h"/>
           <File RelativePath="..\..\Source\CustomArrowButton.cpp"/>
           <File RelativePath="..\..\Source\timedButton.cpp"/>
@@ -186,16 +188,7 @@
         <File RelativePath="..\..\Source\OSCHandler.h"/>
       </Filter>
       <Filter Name="oscpack">
-        <File RelativePath="..\..\oscpack\CHANGES">
-          <FileConfiguration Name="Debug|Win32"
-                             ExcludedFromBuild="true">
-            <Tool Name="VCCLCompilerTool"/>
-          </FileConfiguration>
-          <FileConfiguration Name="Release|Win32"
-                             ExcludedFromBuild="true">
-            <Tool Name="VCCLCompilerTool"/>
-          </FileConfiguration>
-        </File>
+        <File RelativePath="..\..\oscpack\CHANGES"/>
         <Filter Name="ip">
           <File RelativePath="..\..\oscpack\ip\IpEndpointName.cpp"/>
           <File RelativePath="..\..\oscpack\ip\IpEndpointName.h"/>
@@ -206,16 +199,7 @@
           <File RelativePath="..\..\oscpack\ip\UdpSocket.cpp"/>
           <File RelativePath="..\..\oscpack\ip\UdpSocket.h"/>
         </Filter>
-        <File RelativePath="..\..\oscpack\LICENSE">
-          <FileConfiguration Name="Debug|Win32"
-                             ExcludedFromBuild="true">
-            <Tool Name="VCCLCompilerTool"/>
-          </FileConfiguration>
-          <FileConfiguration Name="Release|Win32"
-                             ExcludedFromBuild="true">
-            <Tool Name="VCCLCompilerTool"/>
-          </FileConfiguration>
-        </File>
+        <File RelativePath="..\..\oscpack\LICENSE"/>
         <Filter Name="osc">
           <File RelativePath="..\..\oscpack\osc\MessageMappingOscPacketListener.h"/>
           <File RelativePath="..\..\oscpack\osc\OscException.h"/>
@@ -230,26 +214,8 @@
           <File RelativePath="..\..\oscpack\osc\OscTypes.cpp"/>
           <File RelativePath="..\..\oscpack\osc\OscTypes.h"/>
         </Filter>
-        <File RelativePath="..\..\oscpack\README">
-          <FileConfiguration Name="Debug|Win32"
-                             ExcludedFromBuild="true">
-            <Tool Name="VCCLCompilerTool"/>
-          </FileConfiguration>
-          <FileConfiguration Name="Release|Win32"
-                             ExcludedFromBuild="true">
-            <Tool Name="VCCLCompilerTool"/>
-          </FileConfiguration>
-        </File>
-        <File RelativePath="..\..\oscpack\TODO">
-          <FileConfiguration Name="Debug|Win32"
-                             ExcludedFromBuild="true">
-            <Tool Name="VCCLCompilerTool"/>
-          </FileConfiguration>
-          <FileConfiguration Name="Release|Win32"
-                             ExcludedFromBuild="true">
-            <Tool Name="VCCLCompilerTool"/>
-          </FileConfiguration>
-        </File>
+        <File RelativePath="..\..\oscpack\README"/>
+        <File RelativePath="..\..\oscpack\TODO"/>
       </Filter>
       <Filter Name="Resources">
         <File RelativePath="..\..\Resources\locked.png">

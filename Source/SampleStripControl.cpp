@@ -32,12 +32,12 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     overrideLF(), defaultFont("ProggyCleanTT", 18.f, Font::plain),
     backgroundColour(Colours::black),
     chanLbl("channel label", "chan"), channelButtonArray(),
-    volLbl("volume label", "vol"), stripVolumeSldr("volume"),
+    volLbl("volume label", "vol"), stripVolumeSldr(TextDragSlider::SliderTypeFloat),
     modeLbl("mode", "mode"), selPlayMode("select playmode"), isLatchedBtn("latch"),
-    playspeedLbl("playspeed label", "speed"), playspeedSldr("playspeed"),
+    playspeedLbl("playspeed label", "speed"), playspeedSldr(TextDragSlider::SliderTypeFloat),
     speedLockBtn("speed lock", DrawableButton::ImageRaw),
     isReversedBtn("reverse", 0.0f, Colours::black, Colours::white),
-    lockImg(), unlockImg(), times2("x2"), div2("/2"), selNumChunks(),
+    lockImg(), unlockImg(), times2("x2"), div2("/2"), selNumChunks(TextDragSlider::SliderTypeInt),
     trackNumberLbl("track number", String(sampleStripID)), filenameLbl("filename", "no file"),
     popupLocators(),
 
@@ -54,6 +54,8 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     isReversed(false), isPlaying(false),
     playbackPercentage(0.0f)
 
+
+
 {
     // load binary data for lock icon
     lockImg.setImage(ImageCache::getFromMemory(BinaryData::locked_png, BinaryData::locked_pngSize));
@@ -61,7 +63,6 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
 
     // does the heavy UI positioning
     buildUI();
-    buildNumBlocksList(8);
 
     popupLocators.add(new Label("none"));
     addAndMakeVisible(popupLocators.getLast());
@@ -79,12 +80,13 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     dataStrip->addChangeListener(this);
 
     // listen for user input
+    stripVolumeSldr.addChangeListener(this);
+    playspeedSldr.addChangeListener(this);
+    selNumChunks.addChangeListener(this);
+
     selPlayMode.addListener(this);
-    playspeedSldr.addListener(this);
-    stripVolumeSldr.addListener(this);
     isReversedBtn.addListener(this);
     isLatchedBtn.addListener(this);
-    selNumChunks.addListener(this);
     times2.addListener(this);
     div2.addListener(this);
     speedLockBtn.addListener(this);
@@ -97,12 +99,6 @@ SampleStripControl::~SampleStripControl()
     popupLocators.clear(true);
 }
 
-void SampleStripControl::buildNumBlocksList(const int &newMaxNumBlocks)
-{
-    selNumChunks.clear();
-    for (int i = 1; i <= newMaxNumBlocks; ++i)
-        selNumChunks.addItem(String(i), i);
-}
 
 void SampleStripControl::changeListenerCallback(ChangeBroadcaster * sender)
 {
@@ -113,24 +109,42 @@ void SampleStripControl::changeListenerCallback(ChangeBroadcaster * sender)
     {
         stripChanged = true;
     }
-}
-
-void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
-{
-
-    if (comboBoxThatHasChanged == &selNumChunks)
+    else if (sender == &stripVolumeSldr)
     {
-        numChunks = selNumChunks.getSelectedId();
+        float newStripVol = stripVolumeSldr.getValue();
+        thumbnailScaleFactor = newStripVol;
+        dataStrip->setSampleStripParam(SampleStrip::pStripVolume, &newStripVol);
+    }
+    else if(sender == &playspeedSldr)
+    {
+        double newPlaySpeed = playspeedSldr.getValue();
+        dataStrip->setSampleStripParam(SampleStrip::pPlaySpeed, &newPlaySpeed);
+    }
+    else if (sender == &selNumChunks)
+    {
+        numChunks = selNumChunks.getValue();
         visualChunkSize = (visualSelectionLength / (float) numChunks);
 
         // It's actually quite complicated/risky to change this on the fly,
         // it's easiest just stop the sample first instead!
         dataStrip->stopSamplePlaying();
-        dataStrip->setSampleStripParam(SampleStrip::pNumChunks,
-            &numChunks);
+        dataStrip->setSampleStripParam(SampleStrip::pNumChunks, &numChunks);
         repaint();
     }
-    else if (comboBoxThatHasChanged == &selPlayMode)
+    else
+    {
+        DBG("ChangeBroadcaster not found!");
+    }
+
+    DBG("SAMPLE STRIP CHANGE!");
+
+
+}
+
+void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
+{
+
+    if (comboBoxThatHasChanged == &selPlayMode)
     {
         // -1 is because ComboBox reserves 0 for when menu is closed without choosing
         int newPlayMode = selPlayMode.getSelectedId() - 1;
@@ -185,21 +199,6 @@ void SampleStripControl::buttonClicked(Button *btn)
 
 }
 
-void SampleStripControl::sliderValueChanged(Slider *sldr)
-{
-    if (sldr == &stripVolumeSldr)
-    {
-        float newStripVol = (float)(stripVolumeSldr.getValue());
-        thumbnailScaleFactor = newStripVol;
-        dataStrip->setSampleStripParam(SampleStrip::pStripVolume, &newStripVol);
-    }
-    else if(sldr == &playspeedSldr)
-    {
-        double newPlaySpeed = playspeedSldr.getValue();
-        dataStrip->setSampleStripParam(SampleStrip::pPlaySpeed, &newPlaySpeed);
-    }
-}
-
 void SampleStripControl::updateChannelColours(const int &newChannel)
 {
     backgroundColour = processor->getChannelColour(newChannel);
@@ -222,6 +221,9 @@ void SampleStripControl::updateChannelColours(const int &newChannel)
     div2.setColour(TextButton::buttonOnColourId, backgroundColour);
 
     speedLockBtn.setColour(DrawableButton::backgroundColourId, backgroundColour);
+
+    selNumChunks.setColour(Slider::thumbColourId, backgroundColour);
+    selNumChunks.setColour(Slider::backgroundColourId, backgroundColour.darker());
 
     repaint();
 }
@@ -286,12 +288,8 @@ void SampleStripControl::buildUI()
     newXposition += 30;
 
     addAndMakeVisible(&stripVolumeSldr);
-    stripVolumeSldr.setSliderStyle(Slider::LinearBar);
-    stripVolumeSldr.setColour(Slider::textBoxTextColourId, Colours::white);
     stripVolumeSldr.setBounds(newXposition, 0, 60, controlbarSize);
-    stripVolumeSldr.setRange(0.0, 2.0, 0.01);
-    stripVolumeSldr.setTextBoxIsEditable(true);
-    stripVolumeSldr.setLookAndFeel(&overrideLF);
+    stripVolumeSldr.setMaxMin(4.0f, 0.0f);
     newXposition += 60;
 
     addAndMakeVisible(&modeLbl);
@@ -324,12 +322,8 @@ void SampleStripControl::buildUI()
     newXposition += 44;
 
     addAndMakeVisible(&playspeedSldr);
-    playspeedSldr.setSliderStyle(Slider::LinearBar);
-    playspeedSldr.setColour(Slider::textBoxTextColourId, Colours::white);
     playspeedSldr.setBounds(newXposition, 0, 80, controlbarSize);
-    playspeedSldr.setRange(0.0, 4.0, 0.001);
-    playspeedSldr.setTextBoxIsEditable(true);
-    playspeedSldr.setLookAndFeel(&overrideLF);
+    playspeedSldr.setMaxMin(16.0f, 0.0f);
     newXposition += 80;
 
     addAndMakeVisible(&speedLockBtn);
@@ -358,7 +352,8 @@ void SampleStripControl::buildUI()
 
     addAndMakeVisible(&selNumChunks);
     selNumChunks.setBounds(newXposition, 0, 32, controlbarSize);
-    selNumChunks.setLookAndFeel(&overrideLF);
+    selNumChunks.setMaxMin(16, 1);
+    selNumChunks.setDefault(8);
 
 }
 
@@ -842,7 +837,10 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
     case SampleStrip::pNumChunks :
         {
             numChunks = *static_cast<const int*>(newValue);
-            selNumChunks.setSelectedId(numChunks, true);
+
+            // update the slider, but avoid sending a change message as
+            // this would result in infinite loop!
+            selNumChunks.setValue(numChunks, false);
             visualChunkSize = (float)(visualSelectionLength / (float) numChunks);
             break;
         }
@@ -896,15 +894,15 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
 
     case SampleStrip::pStripVolume :
         {
-            float newStripVolume = *static_cast<const float*>(newValue);
-            stripVolumeSldr.setValue(newStripVolume, NotificationType::dontSendNotification);
+            var newStripVolume = *static_cast<const float*>(newValue);
+            stripVolumeSldr.setValue(newStripVolume, false);
             break;
         }
 
     case SampleStrip::pPlaySpeed :
         {
             double newPlaySpeed = *static_cast<const double*>(newValue);
-            playspeedSldr.setValue(newPlaySpeed, NotificationType::dontSendNotification);
+            playspeedSldr.setValue(newPlaySpeed, false);
             break;
         }
 
@@ -938,11 +936,13 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
                 currentSample = newSample;
                 // If the new sample exists
                 if (currentSample)
+                {
                     filenameLbl.setText(currentSample->getSampleName(), NotificationType::dontSendNotification);
+                }
                 else
                 {
                     filenameLbl.setText("No file", NotificationType::dontSendNotification);
-                    playspeedSldr.setValue(1.0, NotificationType::sendNotification);
+                    playspeedSldr.setValue(1.0);
                 }
             }
 
