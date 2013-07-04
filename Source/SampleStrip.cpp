@@ -288,7 +288,14 @@ void SampleStrip::toggleSampleStripParam(const int &parameterID, const bool &sen
     case pIsLatched :
         isLatched = !isLatched; break;
     case pIsReversed :
-        isReversed = !isReversed; break;
+        {
+            isReversed = !isReversed;
+
+            if (isReversed) playSpeed = -abs(playSpeed);
+            else playSpeed = abs(playSpeed);
+
+            break;
+        }
 
     case pIsPlaySpeedInc :
         playSpeedIncreasing = !playSpeedIncreasing; break;

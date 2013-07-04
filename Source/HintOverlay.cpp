@@ -35,7 +35,7 @@ void HintOverlay::paint(Graphics &g)
 
 
     // start with the background colour
-	g.setColour(Colours::black.withAlpha(0.6f));
+	g.setColour(Colours::black.withAlpha(0.5f));
 	g.fillRect(overlayPaintBounds);
 
 	// TODO: should be not hardcoded.
@@ -67,7 +67,7 @@ void HintOverlay::paint(Graphics &g)
 		const float xPos = (float) ((buttonPadding + buttonSize)*i + buttonPadding);
         const float yPos = (overlayPaintBounds.getHeight() - buttonSize) / 2.0f;
 
-		g.setColour(Colours::white);
+        g.setColour(Colours::white.withAlpha(0.9f));
 		g.fillRoundedRectangle(xPos, yPos, (float) buttonSize, (float) buttonSize, buttonSize/10.0f);
 
 		if (i > 7) break;

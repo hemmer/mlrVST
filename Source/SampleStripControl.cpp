@@ -109,8 +109,6 @@ void SampleStripControl::changeListenerCallback(ChangeBroadcaster * sender)
     {
         stripChanged = true;
 
-        float newStripVol = *static_cast<const float*>(dataStrip->getSampleStripParam(SampleStrip::pStripVolume));
-        thumbnailScaleFactor = newStripVol;
 
     }
     else if (sender == &stripVolumeSldr)
@@ -898,7 +896,10 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
 
     case SampleStrip::pStripVolume :
         {
-            var newStripVolume = *static_cast<const float*>(newValue);
+            const float newVol = *static_cast<const float*>(newValue);
+            thumbnailScaleFactor = newVol;
+
+            var newStripVolume = newVol;
             stripVolumeSldr.setValue(newStripVolume, false);
             break;
         }
