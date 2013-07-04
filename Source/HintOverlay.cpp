@@ -42,7 +42,6 @@ void HintOverlay::paint(Graphics &g)
 	const int numMappings = 8;
 
 
-
 	int buttonPadding;
 
 	if (numMappings > 8)
@@ -72,21 +71,30 @@ void HintOverlay::paint(Graphics &g)
 
 		if (i > 7) break;
 
-		const int currentMapping = processor->getMonomeMapping(modifierStatus, i);
-		String mappingName;
+        const int currentMapping = processor->getMonomeMapping(modifierStatus, i);
+        String mappingName;
 
-		if (modifierStatus == mlrVSTAudioProcessor::rmNormalRowMappingBtnA ||
-			modifierStatus == mlrVSTAudioProcessor::rmNormalRowMappingBtnB )
-		{
-			mappingName = processor->getNormalRowMappingName(currentMapping);
-		}
-		else if (modifierStatus == mlrVSTAudioProcessor::rmPatternBtn)
-		{
-			mappingName = processor->getPatternRowMappingName(currentMapping);
-		}
+        switch (modifierStatus)
+        {
+        case mlrVSTAudioProcessor::rmNormalRowMappingBtnA :
+        case mlrVSTAudioProcessor::rmNormalRowMappingBtnB :
+            mappingName = processor->getSampleStripMappingName(currentMapping);
+            break;
 
+        case mlrVSTAudioProcessor::rmPatternBtn :
+            mappingName = processor->getPatternStripMappingName(currentMapping);
+            break;
 
-		g.setColour(Colours::black);
+        case mlrVSTAudioProcessor::rmGlobalMappingBtn :
+            mappingName = processor->getGlobalMappingName(currentMapping);
+            break;
+
+        case mlrVSTAudioProcessor::rmNoBtn : break;
+        default : jassertfalse;
+
+        }
+
+        g.setColour(Colours::black);
 
 		//g.drawMultiLineText(mappingName, xPos+2, yPos+10, buttonSize);
 		g.drawFittedText(mappingName, (int) (xPos) + 1, (int) (yPos) + 1,

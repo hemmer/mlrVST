@@ -138,9 +138,6 @@ void SampleStripControl::changeListenerCallback(ChangeBroadcaster * sender)
         DBG("ChangeBroadcaster not found!");
     }
 
-    DBG("SAMPLE STRIP CHANGE!");
-
-
 }
 
 void SampleStripControl::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
@@ -615,8 +612,7 @@ void SampleStripControl::mouseDrag(const MouseEvent &e)
 void SampleStripControl::paint(Graphics& g)
 {
     // Start with the background colour
-    g.setColour(backgroundColour);
-    g.fillRect(waveformPaintBounds);
+    g.fillAll(backgroundColour);
 
     // Draw the current sample waveform in white
     g.setColour(Colours::white.withAlpha(0.75f));
@@ -706,7 +702,7 @@ void SampleStripControl::paint(Graphics& g)
                 for (int c = 0; c < numCols; ++c)
                 {
                     const int mappingID = processor->getMonomeMapping(rowType, c);
-                    const String mappingName = processor->getNormalRowMappingName(mappingID);
+                    const String mappingName = processor->getSampleStripMappingName(mappingID);
 
                     g.drawFittedText(mappingName, PAD_AMOUNT + c * spacing, controlbarSize, spacing - PAD_AMOUNT, maxWaveformHeight,
                         Justification::centredLeft, 5, 1.0f);
@@ -736,7 +732,7 @@ void SampleStripControl::paint(Graphics& g)
                 for (int c = 0; c < numCols; ++c)
                 {
                     const int mappingID = processor->getMonomeMapping(rowType, c);
-                    const String mappingName = processor->getPatternRowMappingName(mappingID);
+                    const String mappingName = processor->getPatternStripMappingName(mappingID);
 
                     g.drawFittedText(mappingName, PAD_AMOUNT + c * spacing, controlbarSize, spacing - PAD_AMOUNT, maxWaveformHeight,
                         Justification::centredLeft, 5, 1.0f);

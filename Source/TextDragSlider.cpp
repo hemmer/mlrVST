@@ -100,12 +100,12 @@ void TextDragSlider::paint(Graphics &g)
     if (sliderType == SliderTypeFloat)
     {
         const double sliderValueFloat = (double) sliderValue;
-        sliderStr = String::formatted("%5.3f", sliderValueFloat);
+        sliderStr = String(sliderValueFloat, 3);
     }
     else if (sliderType == SliderTypeInt)
     {
         const int sliderValueInt = (int) sliderValue;
-        sliderStr = String::formatted("%2d", sliderValueInt);
+        sliderStr = String(sliderValueInt);
     }
     else
         jassertfalse;

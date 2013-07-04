@@ -227,7 +227,6 @@ void mlrVSTGUI::setupPatternOverlays()
 void mlrVSTGUI::paint (Graphics& g)
 {
     g.fillAll(Colours::grey);      // fill with background colour
-
 }
 
 void mlrVSTGUI::changeListenerCallback(ChangeBroadcaster *)
@@ -281,9 +280,11 @@ void mlrVSTGUI::changeListenerCallback(ChangeBroadcaster *)
     patternBankSldr.setValue(patternBank, NotificationType::dontSendNotification);
 
     // see if the host has changed the master gain
-    masterGainSlider.setValue(parent->getParameter(mlrVSTAudioProcessor::pMasterGainParam));
+    const float masterGain = *static_cast<const float*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sMasterGain));
+
+    masterGainSlider.setValue(masterGain, NotificationType::dontSendNotification);
     for(int c = 0; c < numChannels; ++c)
-        slidersArray[c]->setValue(parent->getChannelGain(c));
+        slidersArray[c]->setValue(parent->getChannelGain(c), NotificationType::dontSendNotification);
 
 }
 
@@ -339,11 +340,8 @@ void mlrVSTGUI::sliderValueChanged(Slider* slider)
 {
     if (slider == &masterGainSlider)
     {
-        // It's vital to use setParameterNotifyingHost to change any parameters that are automatable
-        // by the host, rather than just modifying them directly, otherwise the host won't know
-        // that they've changed.
-        parent->setParameterNotifyingHost(mlrVSTAudioProcessor::pMasterGainParam,
-            (float) masterGainSlider.getValue());
+        const float newMasterGain = (float) masterGainSlider.getValue();
+        parent->updateGlobalSetting(mlrVSTAudioProcessor::sMasterGain, &newMasterGain);
     }
     else if (slider == &bpmSlider)
     {

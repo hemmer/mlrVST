@@ -38,11 +38,13 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     // Sample Pools ///////////////////////////
     samplePool(), resamplePool(), recordPool(),
     // Channel Setup ////////////////////////////////////////////////
-    maxChannels(8), channelGains(), channelMutes(), masterGain(0.8f),
+    maxChannels(8), channelGains(), channelMutes(),
+    masterGain(0.8f), isMstrVolInc(false), isMstrVolDec(false),
     defaultChannelGain(0.8f), channelColours(),
     // Global Settings //////////////////////////////////////////////
     numChannels(maxChannels), useExternalTempo(false),
-    currentBPM(120.0), rampLength(50), numSampleStrips(7),
+    currentBPM(120.0), isBPMInc(false), isBPMDec(false),
+    rampLength(50), numSampleStrips(7),
     // Sample Strips //////////////////////
     sampleStripArray(),
     // OSC /////////////////////////////////////////////
@@ -65,7 +67,8 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     // Preset handling /////////////////////////////////////////
     presetList("PRESETLIST"), setlist("SETLIST"),
     // Mapping settings ////////////////////////////////////////
-    topRowMappings(), normalRowMappings(), patternMappings(),
+    topRowMappings(), sampleStripMappings(),
+    patternStripMappings(), globalMappings(),
     numModifierButtons(2), currentStripModifier(-1),
     // Misc /////////////////////////////////////////////////////////
     monomeSize(eightByEight), numMonomeRows(8), numMonomeCols(8),
@@ -417,9 +420,69 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
 void mlrVSTAudioProcessor::timerCallback()
 {
-    // loop over each sample strip
+    /////////////////
+    // Global updates
+
+    // if either of the modifier buttons are lifted, stop increasing
+    if (currentStripModifier != rmGlobalMappingBtn)
+        isBPMInc = isBPMDec = isMstrVolInc = isMstrVolDec = false;
+
+    if (isBPMInc)
+    {
+        const double newBPM = currentBPM + 0.1;
+        updateGlobalSetting(sCurrentBPM, &newBPM, true);
+    }
+    else if (isBPMDec)
+    {
+        const double newBPM = currentBPM - 0.1;
+        updateGlobalSetting(sCurrentBPM, &newBPM, true);
+    }
+
+
+    if (isMstrVolInc)
+    {
+        float newMasterGain = masterGain + 0.05f;
+
+        if (newMasterGain > 1.0f)
+        {
+            newMasterGain = 1.0f;
+            isMstrVolInc = false;
+        }
+
+        updateGlobalSetting(sMasterGain, &newMasterGain, true);
+    }
+    else if (isMstrVolDec)
+    {
+        float newMasterGain = masterGain - 0.05f;
+
+        if (newMasterGain < 0.0f)
+        {
+            newMasterGain = 0.0f;
+            isMstrVolDec = false;
+        }
+
+        updateGlobalSetting(sMasterGain, &newMasterGain, true);
+    }
+
+
+    //////////////////////
+    // SampleStrip updates
     for (int row = 0; row < sampleStripArray.size(); ++row)
     {
+        // first if either of the modifier buttons are lifted...
+        if (currentStripModifier != rmNormalRowMappingBtnA
+            && currentStripModifier != rmNormalRowMappingBtnB)
+        {
+            const bool stopIncsDecs = false;
+
+            // ...stop any vol/speed incs/decs
+            setSampleStripParameter(SampleStrip::pIsVolInc, &stopIncsDecs, row);
+            setSampleStripParameter(SampleStrip::pIsVolDec, &stopIncsDecs, row);
+            setSampleStripParameter(SampleStrip::pIsPlaySpeedInc, &stopIncsDecs, row);
+            setSampleStripParameter(SampleStrip::pIsPlaySpeedDec, &stopIncsDecs, row);
+        }
+
+
 
         const bool isVolInc = *static_cast<const bool*>
             (getSampleStripParameter(SampleStrip::pIsVolInc, row));
@@ -442,12 +505,6 @@ void mlrVSTAudioProcessor::timerCallback()
 
             setSampleStripParameter(SampleStrip::pStripVolume, &stripVol, row);
 
-            // finally if either of the modifier buttons are lifted, stop increasing
-            if (currentStripModifier != rmNormalRowMappingBtnA
-                && currentStripModifier != rmNormalRowMappingBtnB)
-            {
-                toggleSampleStripParameter(SampleStrip::pIsVolInc, row);
-            }
         }
         else if (isVolDec)
         {
@@ -464,12 +521,6 @@ void mlrVSTAudioProcessor::timerCallback()
 
             setSampleStripParameter(SampleStrip::pStripVolume, &stripVol, row);
 
-            // finally if either of the modifier buttons are lifted, stop decreasing
-            if (currentStripModifier != rmNormalRowMappingBtnA
-                && currentStripModifier != rmNormalRowMappingBtnB)
-            {
-                toggleSampleStripParameter(SampleStrip::pIsVolDec, row);
-            }
         }
 
 
@@ -486,12 +537,6 @@ void mlrVSTAudioProcessor::timerCallback()
             stripPlaySpeed += 0.01;
             setSampleStripParameter(SampleStrip::pPlaySpeed, &stripPlaySpeed, row);
 
-            // finally if either of the modifier buttons are lifted, stop increasing
-            if (currentStripModifier != rmNormalRowMappingBtnA
-                && currentStripModifier != rmNormalRowMappingBtnB)
-            {
-                toggleSampleStripParameter(SampleStrip::pIsPlaySpeedInc, row);
-            }
         }
 
         else if (isSpeedDec)
@@ -501,12 +546,6 @@ void mlrVSTAudioProcessor::timerCallback()
             stripPlaySpeed -= 0.01;
             setSampleStripParameter(SampleStrip::pPlaySpeed, &stripPlaySpeed, row);
 
-            // finally if either of the modifier buttons are lifted, stop decreasing
-            if (currentStripModifier != rmNormalRowMappingBtnA
-                && currentStripModifier != rmNormalRowMappingBtnB)
-            {
-                toggleSampleStripParameter(SampleStrip::pIsPlaySpeedDec, row);
-            }
         }
 
 
@@ -567,21 +606,28 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
             {
                 // if pressed down, set this as the current
                 // modifier button, otherwise set it to off (-1)
-                currentStripModifier = (state) ? rmNormalRowMappingBtnA : -1;
+                currentStripModifier = (state) ? rmNormalRowMappingBtnA : rmNoBtn;
                 break;
             }
         case tmModifierBtnB :
             {
                 // if pressed down, set this as the current
                 // modifier button, otherwise set it to off (-1)
-                currentStripModifier = (state) ? rmNormalRowMappingBtnB : -1;
+                currentStripModifier = (state) ? rmNormalRowMappingBtnB : rmNoBtn;
                 break;
             }
         case tmPatternModifierBtn :
             {
                 // if pressed down, set this as the current
                 // modifier button, otherwise set it to off (-1)
-                currentStripModifier = (state) ? rmPatternBtn : -1;
+                currentStripModifier = (state) ? rmPatternBtn : rmNoBtn;
+                break;
+            }
+        case tmGlobalModifierBtn :
+            {
+                // if pressed down, set this as the current
+                // modifier button, otherwise set it to off (-1)
+                currentStripModifier = (state) ? rmGlobalMappingBtn : rmNoBtn;
                 break;
             }
         case tmStartRecording : startRecording(); break;
@@ -614,7 +660,7 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
         const int mappingID = getMonomeMapping(currentStripModifier, monomeCol);
 
         // then excute that mapping
-        executeNormalRowMapping(mappingID, stripID, state);
+        executeSampleStripMapping(mappingID, stripID, state);
 
         // The SampleStrips can get tricked into thinking a button is held
         // if it starts out as a normal press but then a modifier button is
@@ -624,15 +670,33 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
     }
 
 
-    // if pattern modifier buttons is held, each strip now turns into
-    // a set of control buttons that control the pattern recorder
+    // if PatternStrip modifier button is held, each strip now turns into
+    // a set of control buttons that control that pattern recorder
     else if ( currentStripModifier == rmPatternBtn )
     {
         // first, find out which mapping is associated with the button
         const int mappingID = getMonomeMapping(rmPatternBtn, monomeCol);
 
         // then excute that mapping
-        executePatternRowMapping(mappingID, stripID, state);
+        executePatternStripMapping(mappingID, stripID, state);
+
+        // The SampleStrips can get tricked into thinking a button is held
+        // if it starts out as a normal press but then a modifier button is
+        // pressed before the button is lifted. This corrects for this:
+        if (!state) sampleStripArray[stripID]->setButtonStatus(monomeCol, state);
+
+    }
+
+    // if GlobalMapping modifier button is held, the monome now turns into
+    // a set of control columns that control the global mappings (tempo etc)
+    else if ( currentStripModifier == rmGlobalMappingBtn )
+    {
+        // first, find out which mapping is associated with the button
+        const int mappingID = getMonomeMapping(rmGlobalMappingBtn, monomeCol);
+
+        // then excute that mapping (note doesn't depend on row,
+        // meaning we can use any row to trigger it)
+        executeGlobalMapping(mappingID, state);
 
         // The SampleStrips can get tricked into thinking a button is held
         // if it starts out as a normal press but then a modifier button is
@@ -1434,50 +1498,6 @@ return 0.0;
 }
 
 
-int mlrVSTAudioProcessor::getNumParameters()
-{
-    return totalNumParams;
-}
-float mlrVSTAudioProcessor::getParameter(int index)
-{
-    // This method will be called by the host, probably on the audio thread, so
-    // it's absolutely time-critical. Don't use critical sections or anything
-    // UI-related, or anything at all that may block in any way!
-    switch (index)
-    {
-        case pMasterGainParam:
-            return masterGain;
-        default:            return 0.0f;
-    }
-}
-void mlrVSTAudioProcessor::setParameter(int index, float newValue)
-{
-    // This method will be called by the host, probably on the audio thread, so
-    // it's absolutely time-critical. Don't use critical sections or anything
-    // UI-related, or anything at all that may block in any way!
-    switch (index)
-    {
-        case pMasterGainParam :
-            masterGain = newValue;
-            break;
-        default: break;
-    }
-}
-const String mlrVSTAudioProcessor::getParameterName(int index)
-{
-    switch (index)
-    {
-        case pMasterGainParam: return "master gain";
-        default:            break;
-    }
-
-    return String::empty;
-}
-const String mlrVSTAudioProcessor::getParameterText(int index)
-{
-    return String(getParameter(index), 2);
-}
-
 // Global settings ///////////////////////
 int mlrVSTAudioProcessor::writeGlobalSettingToPreset(const int &settingID)
 {
@@ -1496,6 +1516,7 @@ int mlrVSTAudioProcessor::writeGlobalSettingToPreset(const int &settingID)
     case sNumMonomeRows : return 0;
     case sNumMonomeCols : return 0;
     case sNumSampleStrips : return ScopeSetlist;
+    case sMasterGain : return ScopePreset;
     case sCurrentBPM : return ScopePreset;
     case sQuantiseLevel : return 0;
     case sQuantiseMenuSelection : return ScopePreset;
@@ -1523,6 +1544,7 @@ String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID)
     case sNumChannels : return "num_channels";
     case sMonomeSize : return "monome_size";
     case sNumSampleStrips : return "num_sample_strips";
+    case sMasterGain : return "master_gain";
     case sCurrentBPM : return "current_bpm";
     case sQuantiseLevel : return "quantisation_level";
     case sRampLength : return "ramp_length";
@@ -1564,6 +1586,7 @@ int mlrVSTAudioProcessor::getGlobalSettingType(const int &settingID)
     case sNumChannels : return TypeInt;
     case sMonomeSize : return TypeInt;
     case sNumSampleStrips : return TypeInt;
+    case sMasterGain : return TypeFloat;
     case sCurrentBPM : return TypeDouble;
     case sQuantiseLevel : return TypeDouble;
     case sRampLength : return TypeInt;
@@ -1668,6 +1691,12 @@ void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID,
         currentPatternPrecountLength = patternRecordings[currentPatternBank]->patternPrecountLength;
         break;
 
+    case sMasterGain :
+        {
+            masterGain = *static_cast<const float*>(newValue);
+            break;
+        }
+
     case sCurrentBPM :
         {
             currentBPM = *static_cast<const double*>(newValue);
@@ -1723,6 +1752,7 @@ const void* mlrVSTAudioProcessor::getGlobalSetting(const int &settingID) const
     case sNumSampleStrips : return &numSampleStrips;
     case sOSCPrefix : return &OSCPrefix;
     case sMonitorInputs : return &monitorInputs;
+    case sMasterGain: return &masterGain;
     case sCurrentBPM : return &currentBPM;
     case sQuantiseLevel : return &quantisationLevel;
     case sQuantiseMenuSelection : return &quantiseMenuSelection;
@@ -1750,9 +1780,11 @@ int mlrVSTAudioProcessor::getMonomeMapping(const int &rowType, const int &col) c
     switch (rowType)
     {
     case rmTopRowMapping : return topRowMappings[col];
-    case rmNormalRowMappingBtnA : return normalRowMappings[0]->getUnchecked(col);
-    case rmNormalRowMappingBtnB : return normalRowMappings[1]->getUnchecked(col);
-    case rmPatternBtn : return patternMappings[col];
+    case rmNormalRowMappingBtnA : return sampleStripMappings[0]->getUnchecked(col);
+    case rmNormalRowMappingBtnB : return sampleStripMappings[1]->getUnchecked(col);
+    case rmPatternBtn : return patternStripMappings[col];
+    case rmGlobalMappingBtn : return globalMappings[col];
+
     case rmNoBtn :
     default : jassertfalse; return -1;
     }
@@ -1762,9 +1794,11 @@ void mlrVSTAudioProcessor::setMonomeMapping(const int &rowType, const int &col, 
     switch (rowType)
     {
     case rmTopRowMapping : topRowMappings.set(col, newMapping);
-    case rmNormalRowMappingBtnA : normalRowMappings[0]->set(col, newMapping);
-    case rmNormalRowMappingBtnB : normalRowMappings[1]->set(col, newMapping);
-    case rmPatternBtn : return patternMappings.set(col, newMapping);
+    case rmNormalRowMappingBtnA : sampleStripMappings[0]->set(col, newMapping);
+    case rmNormalRowMappingBtnB : sampleStripMappings[1]->set(col, newMapping);
+    case rmPatternBtn : return patternStripMappings.set(col, newMapping);
+    case rmGlobalMappingBtn : return patternStripMappings.set(col, newMapping);
+
     case rmNoBtn :
     default : jassertfalse
     }
@@ -1778,6 +1812,7 @@ String mlrVSTAudioProcessor::getTopRowMappingName(const int &mappingID)
     case tmModifierBtnA : return "modifier button A";
     case tmModifierBtnB : return "modifier button B";
     case tmPatternModifierBtn : return "pattern modifier button";
+    case tmGlobalModifierBtn : return "global modifier btn";
     case tmStartRecording : return "start recording";
     case tmStartResampling : return "stop recording";
     case tmStopAll : return "stop all strips";
@@ -1785,7 +1820,7 @@ String mlrVSTAudioProcessor::getTopRowMappingName(const int &mappingID)
     default : jassertfalse; return "error: mappingID " + String(mappingID) + " not found!";
     }
 }
-String mlrVSTAudioProcessor::getNormalRowMappingName(const int &mappingID)
+String mlrVSTAudioProcessor::getSampleStripMappingName(const int &mappingID)
 {
     switch (mappingID)
     {
@@ -1809,7 +1844,7 @@ String mlrVSTAudioProcessor::getNormalRowMappingName(const int &mappingID)
     default : jassertfalse; return "error: mappingID " + String(mappingID) + " not found!";
     }
 }
-String mlrVSTAudioProcessor::getPatternRowMappingName(const int &mappingID)
+String mlrVSTAudioProcessor::getPatternStripMappingName(const int &mappingID)
 {
     switch (mappingID)
     {
@@ -1825,8 +1860,28 @@ String mlrVSTAudioProcessor::getPatternRowMappingName(const int &mappingID)
 
     }
 }
+String mlrVSTAudioProcessor::getGlobalMappingName(const int &mappingID)
+{
 
-void mlrVSTAudioProcessor::executeNormalRowMapping(const int &mappingID, const int &stripID, const bool &state)
+    switch (mappingID)
+    {
+
+    case gmNoMapping : return "no mapping";
+    case gmBPMInc : return "inc BPM";
+    case gmBPMDec : return "dec BPM";
+    case gmNextPreset : return "next preset";
+    case gmPrevPreset : return "prev preset";
+    case gmMasterVolInc : return "inc mstr vol";
+    case gmMasterVolDec : return "dec mstr vol";
+
+    default : jassertfalse; return "error: mappingID " + String(mappingID) + " not found!";
+
+    }
+}
+
+
+
+void mlrVSTAudioProcessor::executeSampleStripMapping(const int &mappingID, const int &stripID, const bool &state)
 {
     switch (mappingID)
     {
@@ -1994,7 +2049,7 @@ void mlrVSTAudioProcessor::executeNormalRowMapping(const int &mappingID, const i
     default : jassertfalse;
     }
 }
-void mlrVSTAudioProcessor::executePatternRowMapping(const int &mappingID, const int &stripID, const bool & /*state*/)
+void mlrVSTAudioProcessor::executePatternStripMapping(const int &mappingID, const int &stripID, const bool & /*state*/)
 {
     // the pattern that we are modifing is determined by the row
     const int patternID = stripID;
@@ -2020,19 +2075,78 @@ void mlrVSTAudioProcessor::executePatternRowMapping(const int &mappingID, const 
 	default : jassertfalse;
 	}
 }
+void mlrVSTAudioProcessor::executeGlobalMapping(const int &mappingID, const bool & state)
+{
+
+    switch (mappingID)
+    {
+    case gmBPMInc :
+        {
+            if (state)
+            {
+                isBPMInc = true; isBPMDec = false;
+            }
+            else
+                isBPMInc = false;
+
+            break;
+        }
+    case gmBPMDec :
+        {
+            if (state)
+            {
+                isBPMDec = true; isBPMInc = false;
+            }
+            else
+                isBPMDec = false;
+
+            break;
+        }
+    case gmNextPreset : DBG("next preset"); break;
+    case gmPrevPreset : DBG("prev preset"); break;
+    case gmMasterVolInc :
+        {
+            if (state)
+            {
+                isMstrVolInc = true; isMstrVolDec = false;
+            }
+            else
+                isMstrVolInc = false;
+
+            break;
+        }
+    case gmMasterVolDec :
+        {
+            if (state)
+            {
+                isMstrVolDec = true; isMstrVolInc = false;
+            }
+            else
+                isMstrVolDec = false;
+
+            break;
+        }
+
+    case gmNoMapping :
+    default : jassertfalse;
+    }
+}
+
 
 
 void mlrVSTAudioProcessor::setupDefaultRowMappings()
 {
     // clear any existing mappings
     topRowMappings.clear();
-    normalRowMappings.clear();
+    sampleStripMappings.clear();
+    patternStripMappings.clear();
+    globalMappings.clear();
 
     // add the defaults
     topRowMappings.add(tmModifierBtnA);
     topRowMappings.add(tmModifierBtnB);
     topRowMappings.add(tmPatternModifierBtn);
-    topRowMappings.add(tmNoMapping);
+    topRowMappings.add(tmGlobalModifierBtn);
     topRowMappings.add(tmStopAll);
     topRowMappings.add(tmTapeStopAll);
     topRowMappings.add(tmStartRecording);
@@ -2049,26 +2163,35 @@ void mlrVSTAudioProcessor::setupDefaultRowMappings()
     rowMappingsA.add(nmDoublePlayspeed);
 
     Array<int> rowMappingsB;
-	rowMappingsB.add(nmCycleThruChannels);
+    rowMappingsB.add(nmCycleThruChannels);
     rowMappingsB.add(nmCycleThruFileSamples);
     rowMappingsB.add(nmCycleThruRecordings);
     rowMappingsB.add(nmCycleThruResamplings);
-	rowMappingsB.add(nmFindBestTempo);
+    rowMappingsB.add(nmFindBestTempo);
     rowMappingsB.add(nmSetNormalPlayspeed);
-	rowMappingsB.add(nmNoMapping);
+    rowMappingsB.add(nmNoMapping);
     rowMappingsB.add(nmNoMapping);
 
-    normalRowMappings.add(new Array<int>(rowMappingsA));
-    normalRowMappings.add(new Array<int>(rowMappingsB));
+    sampleStripMappings.add(new Array<int>(rowMappingsA));
+    sampleStripMappings.add(new Array<int>(rowMappingsB));
 
-    patternMappings.add(patmapStartRecording);
-    patternMappings.add(patmapStopRecording);
-    patternMappings.add(patmapStartPlaying);
-    patternMappings.add(patmapStopPlaying);
-	patternMappings.add(patmapDecLength);
-	patternMappings.add(patmapIncLength);
-    patternMappings.add(patmapNoMapping);
-    patternMappings.add(patmapNoMapping);
+    patternStripMappings.add(patmapStartRecording);
+    patternStripMappings.add(patmapStopRecording);
+    patternStripMappings.add(patmapStartPlaying);
+    patternStripMappings.add(patmapStopPlaying);
+    patternStripMappings.add(patmapDecLength);
+    patternStripMappings.add(patmapIncLength);
+    patternStripMappings.add(patmapNoMapping);
+    patternStripMappings.add(patmapNoMapping);
+
+    globalMappings.add(gmNextPreset);
+    globalMappings.add(gmPrevPreset);
+    globalMappings.add(gmBPMDec);
+    globalMappings.add(gmBPMInc);
+    globalMappings.add(gmMasterVolDec);
+    globalMappings.add(gmMasterVolInc);
+    globalMappings.add(gmNoMapping);
+    globalMappings.add(gmNoMapping);
 }
 
 // This creates new instances of the plugin...

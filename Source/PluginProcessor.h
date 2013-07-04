@@ -44,11 +44,11 @@ public:
     //==============================================================================
     const String getName() const            { return JucePlugin_Name; }
 
-    int getNumParameters();
-    float getParameter (int index);
-    void setParameter (int index, float newValue);
-    const String getParameterName (int index);
-    const String getParameterText (int index);
+    int getNumParameters() { return totalNumParams; }
+    float getParameter (int /*index*/) { return 0.0f; }
+    void setParameter (int /*index*/, float /*newValue*/) { }
+    const String getParameterName (int /*index*/) { return String::empty; }
+    const String getParameterText (int /*index*/) { return String::empty; }
 
     const String getInputChannelName (int channelIndex) const;
     const String getOutputChannelName (int channelIndex) const;
@@ -79,14 +79,9 @@ public:
 
     void timerCallback();
 
-    //==============================================================================
-    // Note we may not need all these parameters, but if the host is to allow them,
-    // to be automatable, we need to allow for the possibility.
-    enum Parameters
-    {
-        pMasterGainParam = 0,
-        totalNumParams
-    };
+    // If we were to have any VST parameters, they would be listed here
+    // however all mapping is self-contained so totalNumParams = 0
+    enum Parameters { totalNumParams };
 
     // These settings are independent of preset
     enum GlobalSettings
@@ -98,6 +93,7 @@ public:
         sNumMonomeRows,
         sNumMonomeCols,
         sNumSampleStrips,
+        sMasterGain,
         sCurrentBPM,
         sQuantiseLevel,             // options None (-1), 1/1, 1/2, 1/4, etc
         sQuantiseMenuSelection,     // allows menu to be correctly selected
@@ -133,6 +129,18 @@ public:
         ScopeNone,          // this setting is not saved
         ScopePreset,        // this setting is saved with every preset
         ScopeSetlist        // this setting is saved once (per setlist)
+    };
+
+    enum GlobalMappings
+    {
+        gmNoMapping,
+        gmBPMInc,
+        gmBPMDec,
+        gmNextPreset,
+        gmPrevPreset,
+        gmMasterVolInc,
+        gmMasterVolDec,
+        gmNumGlobalMappings
     };
 
     // do we save this setting once at top of setlist, with every
@@ -175,12 +183,14 @@ public:
         tmNoMapping,
         tmModifierBtnA,
         tmModifierBtnB,
+        tmPatternModifierBtn,
+        tmGlobalModifierBtn,
         tmStartRecording,
         tmStartResampling,
         tmStopAll,
         tmTapeStopAll,
-        tmPatternModifierBtn,
-        numTopRowMappings
+
+        tmNumTopRowMappings
     };
 
     // these are the various options for mapping normal
@@ -224,7 +234,9 @@ public:
         rmNormalRowMappingBtnA,
         rmNormalRowMappingBtnB,
         rmPatternBtn,
-        rmTopRowMapping
+        rmGlobalMappingBtn,
+        rmTopRowMapping,
+        rmNumMappingButtons
     };
 
     //
@@ -233,8 +245,10 @@ public:
     int getModifierBtnState() const { return currentStripModifier; }
 
     String getTopRowMappingName(const int &mappingID);
-    String getNormalRowMappingName(const int &mappingID);
-    String getPatternRowMappingName(const int &mappingID);
+    String getSampleStripMappingName(const int &mappingID);
+    String getPatternStripMappingName(const int &mappingID);
+    String getGlobalMappingName(const int &mappingID);
+
 
     // adds a sample to the sample pool
     int addNewSample(File &sampleFile);
@@ -453,14 +467,17 @@ private:
     Array<float> channelGains;      // individual channel volumes
     Array<bool> channelMutes;       // are we on or off
     float masterGain;               // gain for combined signal
-    const float defaultChannelGain; // initial channel gain level
-    Array<Colour> channelColours;   // colours for channels in the GUI
+    bool isMstrVolInc, isMstrVolDec;    // are we increasing mstr vol (using a mapping)
+    const float defaultChannelGain;     // initial channel gain level
+    Array<Colour> channelColours;       // colours for channels in the GUI
 
 
     // Global settings /////////////////////////////////////////////////
     int numChannels;
     bool useExternalTempo;      // either use VST hosts tempo or our own
     double currentBPM;
+    bool isBPMInc, isBPMDec;    // are we currently (in/de)creasing BPM
+
     // Sometimes when starting / stopping / looping back we
     // get a discontinuity in the stream of samples. To avoid
     // this, we apply a short volume ramp at the start / end of
@@ -513,16 +530,20 @@ private:
 
     // Mapping settings ////////////////////////////////////////
     Array<int> topRowMappings;
-    OwnedArray< Array<int> > normalRowMappings;
-    Array<int> patternMappings;
+    OwnedArray< Array<int> > sampleStripMappings;
+    Array<int> patternStripMappings;
+    Array<int> globalMappings;
+
     // Tells us which of the modifier button is being held
     // so strips can be used to stop, reverse sample etc.
     // NOTE: -1 means no strip is held
     const int numModifierButtons;
     int currentStripModifier;
 
-    void executeNormalRowMapping(const int &mappingID, const int &stripID, const bool &state);
-    void executePatternRowMapping(const int &mappingID, const int &stripID, const bool &state);
+    void executeSampleStripMapping(const int &mappingID, const int &stripID, const bool &state);
+    void executePatternStripMapping(const int &mappingID, const int &stripID, const bool &state);
+    void executeGlobalMapping(const int &mappingID, const bool &state);
+
     void setupDefaultRowMappings();
 
 

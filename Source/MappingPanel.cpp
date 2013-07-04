@@ -121,7 +121,7 @@ void MappingPanel::buttonClicked(Button *btn)
                 // top row mappings
                 if (r == 0)
                 {
-                    numOptions = processor->numTopRowMappings;
+                    numOptions = processor->tmNumTopRowMappings;
 
                     // add the list of mappings (+1 is because 0 reserved for no click)
                     for (int m = 0; m < numOptions; ++m)
@@ -134,7 +134,7 @@ void MappingPanel::buttonClicked(Button *btn)
 
                     // add the list of mappings (+1 is because 0 reserved for no click)
                     for (int m = 0; m < numOptions; ++m)
-                        mappingMenu.addItem(m + 1, processor->getNormalRowMappingName(m));
+                        mappingMenu.addItem(m + 1, processor->getSampleStripMappingName(m));
                 }
 
                 // show the menu and store choice
@@ -154,7 +154,7 @@ void MappingPanel::buttonClicked(Button *btn)
                     {
                         const int modifierBtnType = r - 1;
                         processor->setMonomeMapping(modifierBtnType, c, mappingChoice);
-                        newMappingName = processor->getNormalRowMappingName(mappingChoice);
+                        newMappingName = processor->getSampleStripMappingName(mappingChoice);
                     }
 
                     btn->setButtonText(newMappingName);
@@ -206,7 +206,7 @@ void MappingPanel::mouseEnter (const MouseEvent &e)
                     const int modifierBtn = r - 1;
                     const int currentMapping = processor->getMonomeMapping(modifierBtn, c);
 
-                    String mappingName = processor->getNormalRowMappingName(currentMapping);
+                    String mappingName = processor->getSampleStripMappingName(currentMapping);
                     mappingLabels[r]->setText("Modifier " + String(r) + ": " + mappingName, NotificationType::dontSendNotification);
                 }
                 return;
