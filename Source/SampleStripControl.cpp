@@ -108,6 +108,10 @@ void SampleStripControl::changeListenerCallback(ChangeBroadcaster * sender)
     if (sender == dataStrip)
     {
         stripChanged = true;
+
+        float newStripVol = *static_cast<const float*>(dataStrip->getSampleStripParam(SampleStrip::pStripVolume));
+        thumbnailScaleFactor = newStripVol;
+
     }
     else if (sender == &stripVolumeSldr)
     {
@@ -323,7 +327,7 @@ void SampleStripControl::buildUI()
 
     addAndMakeVisible(&playspeedSldr);
     playspeedSldr.setBounds(newXposition, 0, 80, controlbarSize);
-    playspeedSldr.setMaxMin(16.0f, 0.0f);
+    playspeedSldr.setMaxMin(16.0f, -16.0f);
     newXposition += 80;
 
     addAndMakeVisible(&speedLockBtn);

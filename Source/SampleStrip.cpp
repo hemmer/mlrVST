@@ -82,13 +82,23 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
         isPlaying = *static_cast<const bool*>(newValue); break;
 
     case pIsReversed :
-        isReversed = *static_cast<const bool*>(newValue); break;
+        {
+            isReversed = *static_cast<const bool*>(newValue);
+            if (isReversed) playSpeed = -abs(playSpeed);
+            else playSpeed = abs(playSpeed);
+
+            break;
+        }
 
     case pStripVolume :
         stripVolume = *static_cast<const float*>(newValue); break;
 
     case pPlaySpeed :
-        playSpeed = *static_cast<const double*>(newValue); break;
+        playSpeed = *static_cast<const double*>(newValue);
+        if (playSpeed < 0.0) isReversed = true;
+        else if (playSpeed > 0.0) isReversed = false;
+
+        break;
 
     case pIsPlaySpeedLocked :
         isPlaySpeedLocked = *static_cast<const bool*>(newValue); break;
@@ -688,7 +698,7 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
             // this is how much the playback position (in/de)creases for each output sample
             const double playIncrement = playSpeed * tapeStopSpeed;
             // how many audio samples in our playback buffer until we loop or finish playback
-            int playbackSamplesLeftToEnd = (int) (abs(sampleCurrentPosition - playbackEndPosition) / playIncrement);
+            int playbackSamplesLeftToEnd = (int) (abs( (sampleCurrentPosition - playbackEndPosition) / playIncrement));
 
 
             // if we are only rendering as far as the next noteOn, then start to
@@ -751,7 +761,7 @@ void SampleStrip::renderNextSection(AudioSampleBuffer& outputBuffer, int startSa
             else
             {
                 // go back in time...
-                sampleCurrentPosition -= playIncrement;
+                sampleCurrentPosition += playIncrement;
 
                 switch (currentPlayMode)
                 {

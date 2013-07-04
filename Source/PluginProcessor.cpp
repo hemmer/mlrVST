@@ -434,9 +434,9 @@ void mlrVSTAudioProcessor::timerCallback()
             stripVol += 0.05f;
 
             // stop increasing once we reach a max value
-            if (stripVol > 2.0)
+            if (stripVol > 4.0f)
             {
-                stripVol = 2.0;
+                stripVol = 4.0f;
                 toggleSampleStripParameter(SampleStrip::pIsVolInc, row);
             }
 
@@ -499,13 +499,6 @@ void mlrVSTAudioProcessor::timerCallback()
             double stripPlaySpeed = *static_cast<const double*>
                 (getSampleStripParameter(SampleStrip::pPlaySpeed, row));
             stripPlaySpeed -= 0.01;
-
-            if (stripPlaySpeed < 0.0)
-            {
-                stripPlaySpeed = 0.0;
-                toggleSampleStripParameter(SampleStrip::pIsPlaySpeedDec, row);
-            }
-
             setSampleStripParameter(SampleStrip::pPlaySpeed, &stripPlaySpeed, row);
 
             // finally if either of the modifier buttons are lifted, stop decreasing
