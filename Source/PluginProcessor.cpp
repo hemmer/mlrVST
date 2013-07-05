@@ -420,6 +420,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
 void mlrVSTAudioProcessor::timerCallback()
 {
+
     /////////////////
     // Global updates
 
@@ -476,10 +477,10 @@ void mlrVSTAudioProcessor::timerCallback()
             const bool stopIncsDecs = false;
 
             // ...stop any vol/speed incs/decs
-            setSampleStripParameter(SampleStrip::pIsVolInc, &stopIncsDecs, row);
-            setSampleStripParameter(SampleStrip::pIsVolDec, &stopIncsDecs, row);
-            setSampleStripParameter(SampleStrip::pIsPlaySpeedInc, &stopIncsDecs, row);
-            setSampleStripParameter(SampleStrip::pIsPlaySpeedDec, &stopIncsDecs, row);
+            setSampleStripParameter(SampleStrip::pIsVolInc, &stopIncsDecs, row, false);
+            setSampleStripParameter(SampleStrip::pIsVolDec, &stopIncsDecs, row, false);
+            setSampleStripParameter(SampleStrip::pIsPlaySpeedInc, &stopIncsDecs, row, false);
+            setSampleStripParameter(SampleStrip::pIsPlaySpeedDec, &stopIncsDecs, row, false);
         }
 
 

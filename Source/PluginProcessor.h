@@ -333,10 +333,10 @@ public:
     }
 
 
-    void setSampleStripParameter(const int &parameterID, const void *newValue, const int &stripID)
+    void setSampleStripParameter(const int &parameterID, const void *newValue, const int &stripID, const bool sendChangeMsg = true)
     {
         if (stripID < numSampleStrips)
-            sampleStripArray[stripID]->setSampleStripParam(parameterID, newValue);
+            sampleStripArray[stripID]->setSampleStripParam(parameterID, newValue, sendChangeMsg);
     }
     void toggleSampleStripParameter(const int &parameterID, const int &stripID)
     {
