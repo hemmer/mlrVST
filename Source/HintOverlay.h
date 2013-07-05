@@ -1,11 +1,11 @@
 /*
-    ==============================================================================
+==============================================================================
 
     HintOverlay.h
     Created: 28 June 2013 9:03:08pm
     Author:  Hemmer
 
-    ==============================================================================
+==============================================================================
 */
 
 #ifndef __HINTOVERLAY_H_
@@ -16,25 +16,26 @@
 class mlrVSTAudioProcessor;
 
 
-class HintOverlay : public Component
+class HintOverlay : public Component, public ChangeListener
 {
 public:
-    
-    HintOverlay(mlrVSTAudioProcessor * const owner);
 
-    ~HintOverlay(){}
+    HintOverlay(mlrVSTAudioProcessor * const owner);
+    ~HintOverlay();
+
+    void changeListenerCallback(ChangeBroadcaster * /*source*/) { repaint(); }
 
     void paint(Graphics & g);
-
 
 private:
     // communication //////////////////////
     mlrVSTAudioProcessor * const processor;
 
-	Rectangle<int> overlayPaintBounds;
+    // gui / components ///////////////////
+    Rectangle<int> overlayPaintBounds;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HintOverlay);
 };
 
 
-#endif  
+#endif

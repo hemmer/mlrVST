@@ -1599,6 +1599,9 @@
     <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h">
       <Filter>mlrVST\gui</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\Array2D.h">
+      <Filter>mlrVST\other</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\Utilities.h">
       <Filter>mlrVST\other</Filter>
     </ClInclude>

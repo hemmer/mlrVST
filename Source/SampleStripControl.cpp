@@ -31,10 +31,10 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     // SampleStrip GUI ////////////////////////////////////////
     overrideLF(), defaultFont("ProggyCleanTT", 18.f, Font::plain),
     backgroundColour(Colours::black),
-    chanLbl("channel label", "chan"), channelButtonArray(),
-    volLbl("volume label", "vol"), stripVolumeSldr(TextDragSlider::SliderTypeFloat),
-    modeLbl("mode", "mode"), selPlayMode("select playmode"), isLatchedBtn("latch"),
-    playspeedLbl("playspeed label", "speed"), playspeedSldr(TextDragSlider::SliderTypeFloat),
+    chanLbl("channel label", "chan:"), channelButtonArray(),
+    volLbl("volume label", "vol:"), stripVolumeSldr(TextDragSlider::SliderTypeFloat),
+    modeLbl("mode", "mode:"), selPlayMode("select playmode"), isLatchedBtn("latch"),
+    playspeedLbl("playspeed label", "speed:"), playspeedSldr(TextDragSlider::SliderTypeFloat),
     speedLockBtn("speed lock", DrawableButton::ImageRaw),
     isReversedBtn("reverse", 0.0f, Colours::black, Colours::white),
     lockImg(), unlockImg(), times2("x2"), div2("/2"), selNumChunks(TextDragSlider::SliderTypeInt),
@@ -43,7 +43,7 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
 
     // Waveform control ////////////////////////
     visualSelectionStart(0), visualSelectionEnd(componentWidth), visualSelectionLength(componentWidth),
-    visualChunkSize(0.0), numChunksLabel("divs", "divs"), numChunks(8),
+    visualChunkSize(0.0), numChunksLabel("divs", "divs:"), numChunks(8),
     selectionStartBeforeDrag(0), selectionPointToChange(0), selectionPointFixed(0),
     mouseDownMods(), rightMouseDown(false), modifierBtnStatus(-1), selectedHitZone(0),
     thumbnailScaleFactor(1.0), currentSample(0),
@@ -248,12 +248,12 @@ void SampleStripControl::buildUI()
     filenameLbl.setFont(defaultFont);
 
     addAndMakeVisible(&chanLbl);
-    chanLbl.setBounds(0, 0, 38, controlbarSize);
+    chanLbl.setBounds(0, 0, 40, controlbarSize);
     chanLbl.setColour(Label::backgroundColourId, Colours::black);
     chanLbl.setColour(Label::textColourId, Colours::white);
     chanLbl.setFont(defaultFont);
 
-    newXposition = 38;
+    newXposition = 40;
 
     // clear existing buttons
     channelButtonArray.clear();
@@ -279,12 +279,12 @@ void SampleStripControl::buildUI()
     newXposition += (numChannels) * controlbarSize;
 
     addAndMakeVisible(&volLbl);
-    volLbl.setBounds(newXposition, 0, 30, controlbarSize);
+    volLbl.setBounds(newXposition, 0, 32, controlbarSize);
     volLbl.setColour(Label::backgroundColourId, Colours::black);
     volLbl.setColour(Label::textColourId, Colours::white);
     volLbl.setFont(defaultFont);
 
-    newXposition += 30;
+    newXposition += 32;
 
     addAndMakeVisible(&stripVolumeSldr);
     stripVolumeSldr.setBounds(newXposition, 0, 60, controlbarSize);
@@ -292,11 +292,11 @@ void SampleStripControl::buildUI()
     newXposition += 60;
 
     addAndMakeVisible(&modeLbl);
-    modeLbl.setBounds(newXposition, 0, 36, controlbarSize);
+    modeLbl.setBounds(newXposition, 0, 40, controlbarSize);
     modeLbl.setColour(Label::backgroundColourId, Colours::black);
     modeLbl.setColour(Label::textColourId, Colours::white);
     modeLbl.setFont(defaultFont);
-    newXposition += 36;
+    newXposition += 40;
 
     addAndMakeVisible(&selPlayMode);
     selPlayMode.clear();
@@ -314,16 +314,16 @@ void SampleStripControl::buildUI()
     newXposition += 44;
 
     addAndMakeVisible(&playspeedLbl);
-    playspeedLbl.setBounds(newXposition, 0, 44, controlbarSize);
+    playspeedLbl.setBounds(newXposition, 0, 46, controlbarSize);
     playspeedLbl.setColour(Label::backgroundColourId, Colours::black);
     playspeedLbl.setColour(Label::textColourId, Colours::white);
     playspeedLbl.setFont(defaultFont);
-    newXposition += 44;
+    newXposition += 46;
 
     addAndMakeVisible(&playspeedSldr);
-    playspeedSldr.setBounds(newXposition, 0, 80, controlbarSize);
+    playspeedSldr.setBounds(newXposition, 0, 66, controlbarSize);
     playspeedSldr.setMaxMin(16.0f, -16.0f);
-    newXposition += 80;
+    newXposition += 66;
 
     addAndMakeVisible(&speedLockBtn);
     speedLockBtn.setImages(&unlockImg);
@@ -343,11 +343,11 @@ void SampleStripControl::buildUI()
     newXposition += 20;
 
     addAndMakeVisible(&numChunksLabel);
-    numChunksLabel.setBounds(newXposition, 0, 36, controlbarSize);
+    numChunksLabel.setBounds(newXposition, 0, 40, controlbarSize);
     numChunksLabel.setColour(Label::backgroundColourId, Colours::black);
     numChunksLabel.setColour(Label::textColourId, Colours::white);
     numChunksLabel.setFont(defaultFont);
-    newXposition += 36;
+    newXposition += 40;
 
     addAndMakeVisible(&selNumChunks);
     selNumChunks.setBounds(newXposition, 0, 32, controlbarSize);

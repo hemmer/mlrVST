@@ -182,6 +182,7 @@
         <File RelativePath="..\..\Source\mlrVSTLookAndFeel.h"/>
       </Filter>
       <Filter Name="other">
+        <File RelativePath="..\..\Source\Array2D.h"/>
         <File RelativePath="..\..\Source\Utilities.cpp"/>
         <File RelativePath="..\..\Source\Utilities.h"/>
         <File RelativePath="..\..\Source\OSCHandler.cpp"/>

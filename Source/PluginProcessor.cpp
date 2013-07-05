@@ -72,8 +72,10 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     numModifierButtons(2), currentStripModifier(-1),
     // Misc /////////////////////////////////////////////////////////
     monomeSize(eightByEight), numMonomeRows(8), numMonomeCols(8),
+    buttonStatus(numMonomeRows, numMonomeCols, false),
     playbackLEDPosition(), monitorInputs(false)
 {
+
     // compile time assertions
     static_jassert(THUMBNAIL_WIDTH % 8 == 0);
 
@@ -268,7 +270,6 @@ void mlrVSTAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
-
     quantisedBuffer.clear();
     unquantisedCollector.reset(getSampleRate());
 }
@@ -592,6 +593,10 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
     // filter out any keypresses outside the allowed range of the device
     if (monomeRow < 0 || monomeCol < 0) return;
     if (monomeRow >= numMonomeRows || monomeCol >= numMonomeCols) return;
+
+    // globally track presses
+    buttonStatus.set(monomeRow, monomeCol, state);
+    sendChangeMessage();
 
     // if the button is on the top row
     if (monomeRow == 0)
@@ -1635,8 +1640,10 @@ void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID,
             case sixteenByEight :   numMonomeRows = 16; numMonomeCols = 8;
             case eightBySixteen :   numMonomeRows = 8; numMonomeCols = 16;
             case sixteenBySixteen : numMonomeRows = numMonomeCols = 16;
+            default : jassertfalse;
             }
 
+            buttonStatus.setSize(numMonomeRows, numMonomeCols, false);
             break;
         }
 

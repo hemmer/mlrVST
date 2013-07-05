@@ -20,6 +20,7 @@
 #include "OSCHandler.h"
 #include "PatternRecording.h"
 #include "SampleStrip.h"
+#include "Array2D.h"
 
 //==============================================================================
 class mlrVSTAudioProcessor : public AudioProcessor,
@@ -440,6 +441,19 @@ public:
     // which types of audio files can we load
     const String getWildcardFormats() const { return "*.mp3,*.wav;*.flac;*.ogg;*.aif;*.aiff;*.caf"; }
 
+    // function so that HintOverlays can detect button presses
+    const bool isColumnHeld(const int &col)
+    {
+
+        // NOTE: start at row 1 as we want to exclude
+        // modifiers from this search
+        for (int r = 1; r < NUM_ROWS; ++r)
+            if (buttonStatus.get(r, col))
+                return true;
+
+        return false;
+    }
+
 private:
 
     // MIDI / quantisation //////////////////////////////////////
@@ -497,7 +511,6 @@ private:
     String OSCPrefix;           // prefix for incoming / outgoing OSC messages
     OSCHandler oscMsgHandler;   // Send and receive OSC messages through this
 
-
     // Audio Buffers /////////////////
     // this is for summing the contributions from SampleStrips
     AudioSampleBuffer stripContrib;
@@ -552,6 +565,7 @@ private:
     // what size of device are we using
     int monomeSize;
     int numMonomeRows, numMonomeCols;
+    Array2D<bool> buttonStatus;
 
     // Store which LED column is currently being used
     // for displaying playback position.

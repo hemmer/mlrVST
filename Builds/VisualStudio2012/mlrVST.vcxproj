@@ -1207,6 +1207,7 @@
     <ClInclude Include="..\..\Source\MappingPanel.h"/>
     <ClInclude Include="..\..\Source\mlrVSTGUI.h"/>
     <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h"/>
+    <ClInclude Include="..\..\Source\Array2D.h"/>
     <ClInclude Include="..\..\Source\Utilities.h"/>
     <ClInclude Include="..\..\Source\OSCHandler.h"/>
     <ClInclude Include="..\..\oscpack\ip\IpEndpointName.h"/>
