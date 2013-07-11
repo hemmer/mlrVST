@@ -86,6 +86,9 @@
             file="Source/mlrVSTLookAndFeel.h"/>
     </GROUP>
     <GROUP id="{3D0125E7-6B5D-46D4-6A10-4C24E20A3D19}" name="other">
+      <FILE id="Wmp9oK" name="MappingEngine.cpp" compile="1" resource="0"
+            file="Source/MappingEngine.cpp"/>
+      <FILE id="Eygp83" name="MappingEngine.h" compile="0" resource="0" file="Source/MappingEngine.h"/>
       <FILE id="SzqlJm" name="Array2D.h" compile="0" resource="0" file="Source/Array2D.h"/>
       <FILE id="kSRDkp" name="Utilities.cpp" compile="1" resource="0" file="Source/Utilities.cpp"/>
       <FILE id="PeDyts" name="Utilities.h" compile="0" resource="0" file="Source/Utilities.h"/>

@@ -379,6 +379,9 @@
     <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp">
       <Filter>mlrVST\gui</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\MappingEngine.cpp">
+      <Filter>mlrVST\other</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\Utilities.cpp">
       <Filter>mlrVST\other</Filter>
     </ClCompile>
@@ -1598,6 +1601,9 @@
     </ClInclude>
     <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h">
       <Filter>mlrVST\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\MappingEngine.h">
+      <Filter>mlrVST\other</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Array2D.h">
       <Filter>mlrVST\other</Filter>

@@ -121,20 +121,26 @@ void MappingPanel::buttonClicked(Button *btn)
                 // top row mappings
                 if (r == 0)
                 {
-                    numOptions = processor->tmNumTopRowMappings;
+                    numOptions = MappingEngine::tmNumTopRowMappings;
 
                     // add the list of mappings (+1 is because 0 reserved for no click)
                     for (int m = 0; m < numOptions; ++m)
-                        mappingMenu.addItem(m + 1, processor->getTopRowMappingName(m));
+                    {
+                        const String mappingName = processor->getMappingName(MappingEngine::rmTopRowMapping, m);
+                        mappingMenu.addItem(m + 1, mappingName);
+                    }
                 }
                 // normal row mappings
                 else
                 {
-                    numOptions = processor->numNormalRowMappings;
+                    numOptions = MappingEngine::numNormalRowMappings;
 
                     // add the list of mappings (+1 is because 0 reserved for no click)
                     for (int m = 0; m < numOptions; ++m)
-                        mappingMenu.addItem(m + 1, processor->getSampleStripMappingName(m));
+                    {
+                        const String mappingName = processor->getMappingName(MappingEngine::rmSampleStripMappingA, m);
+                        mappingMenu.addItem(m + 1, mappingName);
+                    }
                 }
 
                 // show the menu and store choice
@@ -147,14 +153,14 @@ void MappingPanel::buttonClicked(Button *btn)
                     String newMappingName;
                     if (r == 0)
                     {
-                        processor->setMonomeMapping(mlrVSTAudioProcessor::rmTopRowMapping, c, mappingChoice);
-                        newMappingName = processor->getTopRowMappingName(mappingChoice);
+                        processor->setMonomeMapping(MappingEngine::rmTopRowMapping, c, mappingChoice);
+                        newMappingName = processor->getMappingName(MappingEngine::rmTopRowMapping, mappingChoice);
                     }
                     else if (r == 1 || r == 2)
                     {
                         const int modifierBtnType = r - 1;
                         processor->setMonomeMapping(modifierBtnType, c, mappingChoice);
-                        newMappingName = processor->getSampleStripMappingName(mappingChoice);
+                        newMappingName = processor->getMappingName(MappingEngine::rmSampleStripMappingA, mappingChoice);
                     }
 
                     btn->setButtonText(newMappingName);
@@ -195,8 +201,8 @@ void MappingPanel::mouseEnter (const MouseEvent &e)
             {
                 if (r == 0)
                 {
-                    const int currentMapping = processor->getMonomeMapping(mlrVSTAudioProcessor::rmTopRowMapping, c);
-                    String mappingName = processor->getTopRowMappingName(currentMapping);
+                    const int currentMapping = processor->getMonomeMapping(MappingEngine::rmTopRowMapping, c);
+                    const String mappingName = processor->getMappingName(MappingEngine::rmTopRowMapping, currentMapping);
                     mappingLabels[r]->setText("Top row: " + mappingName, NotificationType::dontSendNotification);
                 }
                 else if (r == 1 || r == 2)
@@ -206,7 +212,7 @@ void MappingPanel::mouseEnter (const MouseEvent &e)
                     const int modifierBtn = r - 1;
                     const int currentMapping = processor->getMonomeMapping(modifierBtn, c);
 
-                    String mappingName = processor->getSampleStripMappingName(currentMapping);
+                    String mappingName = processor->getMappingName(MappingEngine::rmSampleStripMappingA, currentMapping);
                     mappingLabels[r]->setText("Modifier " + String(r) + ": " + mappingName, NotificationType::dontSendNotification);
                 }
                 return;

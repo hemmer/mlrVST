@@ -152,6 +152,7 @@
     <ClCompile Include="..\..\Source\MappingPanel.cpp"/>
     <ClCompile Include="..\..\Source\mlrVSTGUI.cpp"/>
     <ClCompile Include="..\..\Source\mlrVSTLookAndFeel.cpp"/>
+    <ClCompile Include="..\..\Source\MappingEngine.cpp"/>
     <ClCompile Include="..\..\Source\Utilities.cpp"/>
     <ClCompile Include="..\..\Source\OSCHandler.cpp"/>
     <ClCompile Include="..\..\oscpack\ip\IpEndpointName.cpp"/>
@@ -1207,6 +1208,7 @@
     <ClInclude Include="..\..\Source\MappingPanel.h"/>
     <ClInclude Include="..\..\Source\mlrVSTGUI.h"/>
     <ClInclude Include="..\..\Source\mlrVSTLookAndFeel.h"/>
+    <ClInclude Include="..\..\Source\MappingEngine.h"/>
     <ClInclude Include="..\..\Source\Array2D.h"/>
     <ClInclude Include="..\..\Source\Utilities.h"/>
     <ClInclude Include="..\..\Source\OSCHandler.h"/>

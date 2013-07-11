@@ -530,6 +530,10 @@ void SampleStrip::renderNextBlock(AudioSampleBuffer& outputBuffer,
         // look for events in the queue and get the next one (if it exists)
         while (midiIterator.getNextEvent(m, midiEventPos) )
         {
+            // we are only interested in note on/off messages,
+            // as other types of message may crash the VST
+            if (!m.isNoteOnOrOff()) continue;
+
             // First get the sample strip from the channel
             const int stripRow = m.getChannel() - 1;
             // and get the channel associated with that sample strip
@@ -544,8 +548,8 @@ void SampleStrip::renderNextBlock(AudioSampleBuffer& outputBuffer,
                 if ((messageSelChannel == currentChannel) && isPlaying && (midiEventPos < startSample + numSamples))
                     stopSamplePlaying();
 
-                // As the midi message is from a different strip, then it is of
-                // no use here so we keep looking.
+                // As the midi message is from a different strip, then it
+                // is of no use here so we keep looking.
                 continue;
             }
 

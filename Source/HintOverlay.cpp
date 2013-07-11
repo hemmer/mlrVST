@@ -13,6 +13,7 @@
 #include "HintOverlay.h"
 #include "PluginProcessor.h"
 #include "mlrVSTGUI.h"
+#include "MappingEngine.h"
 
 HintOverlay::HintOverlay(mlrVSTAudioProcessor * const owner) :
     // communication ///////////////////////
@@ -34,7 +35,7 @@ void HintOverlay::paint(Graphics &g)
     const int modifierStatus = processor->getModifierBtnState();
 
     // if no button is pressed then don't display the hint
-    if (modifierStatus == mlrVSTAudioProcessor::rmNoBtn) return;
+    if (modifierStatus == MappingEngine::rmNoBtn) return;
 
     // start with the background colour
     g.setColour(Colours::black.withAlpha(0.5f));
@@ -75,28 +76,11 @@ void HintOverlay::paint(Graphics &g)
 
         if (i > 7) break;
 
+        // get the ID of the mapping associated with this type of modifier button
         const int currentMapping = processor->getMonomeMapping(modifierStatus, i);
-        String mappingName;
+        // and find out what its name is
+        const String mappingName = processor->mappingEngine.getMappingName(modifierStatus, currentMapping);
 
-        switch (modifierStatus)
-        {
-        case mlrVSTAudioProcessor::rmNormalRowMappingBtnA :
-        case mlrVSTAudioProcessor::rmNormalRowMappingBtnB :
-            mappingName = processor->getSampleStripMappingName(currentMapping);
-            break;
-
-        case mlrVSTAudioProcessor::rmPatternBtn :
-            mappingName = processor->getPatternStripMappingName(currentMapping);
-            break;
-
-        case mlrVSTAudioProcessor::rmGlobalMappingBtn :
-            mappingName = processor->getGlobalMappingName(currentMapping);
-            break;
-
-        case mlrVSTAudioProcessor::rmNoBtn : break;
-        default : jassertfalse;
-
-        }
 
         g.setColour(Colours::black);
 

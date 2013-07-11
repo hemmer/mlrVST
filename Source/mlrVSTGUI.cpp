@@ -312,7 +312,7 @@ void mlrVSTGUI::timerCallback()
     // see if the modifier button status has changed
     const int modifierStatus = parent->getModifierBtnState();
 
-    if (modifierStatus != mlrVSTAudioProcessor::rmNoBtn)
+    if (modifierStatus != MappingEngine::rmNoBtn)
         hintOverlay.setVisible(true);
     else
         hintOverlay.setVisible(false);

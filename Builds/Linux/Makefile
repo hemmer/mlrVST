@@ -68,6 +68,7 @@ OBJECTS := \
   $(OBJDIR)/MappingPanel_5b8ca75f.o \
   $(OBJDIR)/mlrVSTGUI_eeb94ef8.o \
   $(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o \
+  $(OBJDIR)/MappingEngine_21233411.o \
   $(OBJDIR)/Utilities_707bb76b.o \
   $(OBJDIR)/OSCHandler_bb1eaf54.o \
   $(OBJDIR)/IpEndpointName_d4cc3aed.o \
@@ -203,6 +204,11 @@ $(OBJDIR)/mlrVSTGUI_eeb94ef8.o: ../../Source/mlrVSTGUI.cpp
 $(OBJDIR)/mlrVSTLookAndFeel_e70f60bb.o: ../../Source/mlrVSTLookAndFeel.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling mlrVSTLookAndFeel.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/MappingEngine_21233411.o: ../../Source/MappingEngine.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling MappingEngine.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/Utilities_707bb76b.o: ../../Source/Utilities.cpp

@@ -103,14 +103,6 @@ public:
     // These recall settings and update the GUI appropriately
     void recallParam(const int &paramID, const void *newValue, const bool &doRepaint);
 
-    void setModifierBtnStatus(const int &newStatus)
-    {
-        // if the situation has changed...
-        //if (newStatus != modifierBtnStatus) repaint(); // TODO: check this is ok?
-		repaint();
-
-        modifierBtnStatus = newStatus;
-    }
     void updateThumbnail(const File &newFile);
 
 private:
@@ -166,7 +158,6 @@ private:
     int selectionStartBeforeDrag, *selectionPointToChange, *selectionPointFixed;
     ModifierKeys mouseDownMods;         // so we can track what mouse combination is used
     bool rightMouseDown;                // track RMB usage
-    int modifierBtnStatus;           // so we can draw overlays
     int selectedHitZone;                // what type of sample are we selecting
     double thumbnailScaleFactor;        // scale waveform height by volume
     const AudioSample *currentSample;   // pointer to the sample (to get waveform)

@@ -21,6 +21,7 @@
 #include "PatternRecording.h"
 #include "SampleStrip.h"
 #include "Array2D.h"
+#include "MappingEngine.h"
 
 //==============================================================================
 class mlrVSTAudioProcessor : public AudioProcessor,
@@ -132,17 +133,7 @@ public:
         ScopeSetlist        // this setting is saved once (per setlist)
     };
 
-    enum GlobalMappings
-    {
-        gmNoMapping,
-        gmBPMInc,
-        gmBPMDec,
-        gmNextPreset,
-        gmPrevPreset,
-        gmMasterVolInc,
-        gmMasterVolDec,
-        gmNumGlobalMappings
-    };
+
 
     // do we save this setting once at top of setlist, with every
     // preset, or not at all?
@@ -177,78 +168,21 @@ public:
     };
 
     // Mapping stuff ////////////////////
-
-    // these are the possible options for mappings for the top row(s)
-    enum TopRowMappings
+    int getMonomeMapping(const int &mappingType, const int &col) const
     {
-        tmNoMapping,
-        tmModifierBtnA,
-        tmModifierBtnB,
-        tmPatternModifierBtn,
-        tmGlobalModifierBtn,
-        tmStartRecording,
-        tmStartResampling,
-        tmStopAll,
-        tmTapeStopAll,
-
-        tmNumTopRowMappings
-    };
-
-    // these are the various options for mapping normal
-    // rows (for when the modifier is held)
-    enum NormalRowMappings
+        return mappingEngine.getMonomeMapping(mappingType, col);
+    }
+    void setMonomeMapping(const int &mappingType, const int &col, const int &newMapping)
     {
-        nmNoMapping,
-        nmFindBestTempo,
-        nmToggleReverse,
-		nmCycleThruChannels,
-        nmDecVolume,
-        nmIncVolume,
-        nmDecPlayspeed,
-        nmIncPlayspeed,
-        nmHalvePlayspeed,
-        nmDoublePlayspeed,
-        nmSetNormalPlayspeed,
-        nmStopPlayback,
-        nmStopPlaybackTape,
-        nmCycleThruRecordings,
-        nmCycleThruResamplings,
-        nmCycleThruFileSamples,
-        numNormalRowMappings
-    };
-
-    enum PatternMappings
+        mappingEngine.setMonomeMapping(mappingType, col, newMapping);
+    }
+    String getMappingName(const int &mappingType, const int &mappingID)
     {
-        patmapNoMapping,
-        patmapStartRecording,
-        patmapStopRecording,
-        patmapStartPlaying,
-        patmapStopPlaying,
-		patmapIncLength,
-		patmapDecLength,
-        patmapNumMappings
-    };
-
-    enum RowMappingType
-    {
-        rmNoBtn = -1,
-        rmNormalRowMappingBtnA,
-        rmNormalRowMappingBtnB,
-        rmPatternBtn,
-        rmGlobalMappingBtn,
-        rmTopRowMapping,
-        rmNumMappingButtons
-    };
-
-    //
-    int getMonomeMapping(const int &rowType, const int &col) const;
-    void setMonomeMapping(const int &rowType, const int &col, const int &newMapping);
+        return mappingEngine.getMappingName(mappingType, mappingID);
+    }
     int getModifierBtnState() const { return currentStripModifier; }
 
-    String getTopRowMappingName(const int &mappingID);
-    String getSampleStripMappingName(const int &mappingID);
-    String getPatternStripMappingName(const int &mappingID);
-    String getGlobalMappingName(const int &mappingID);
+
 
 
     // adds a sample to the sample pool
@@ -542,22 +476,24 @@ private:
     XmlElement setlist;     // this is an ordered list of consisting of a entries from presetList
 
     // Mapping settings ////////////////////////////////////////
-    Array<int> topRowMappings;
-    OwnedArray< Array<int> > sampleStripMappings;
-    Array<int> patternStripMappings;
-    Array<int> globalMappings;
+public:
+    // this object tracks/handles all mappings (and related
+    // functions like returning the mapping name etc).
+    MappingEngine mappingEngine;
+
+private:
 
     // Tells us which of the modifier button is being held
-    // so strips can be used to stop, reverse sample etc.
+    // so monome row can be used to control SampleStrip parameters
+    // (like stop, reverse sample etc.), PatternStrip parameters
+    // (like record pattern), Global settings and much more...
     // NOTE: -1 means no strip is held
-    const int numModifierButtons;
     int currentStripModifier;
 
     void executeSampleStripMapping(const int &mappingID, const int &stripID, const bool &state);
     void executePatternStripMapping(const int &mappingID, const int &stripID, const bool &state);
     void executeGlobalMapping(const int &mappingID, const bool &state);
 
-    void setupDefaultRowMappings();
 
 
     // Misc ////////////////

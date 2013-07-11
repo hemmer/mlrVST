@@ -45,7 +45,7 @@ SampleStripControl::SampleStripControl(const int &id, const int &width, const in
     visualSelectionStart(0), visualSelectionEnd(componentWidth), visualSelectionLength(componentWidth),
     visualChunkSize(0.0), numChunksLabel("divs", "divs:"), numChunks(8),
     selectionStartBeforeDrag(0), selectionPointToChange(0), selectionPointFixed(0),
-    mouseDownMods(), rightMouseDown(false), modifierBtnStatus(-1), selectedHitZone(0),
+    mouseDownMods(), rightMouseDown(false), selectedHitZone(0),
     thumbnailScaleFactor(1.0), currentSample(0),
 
     // Settings ///////////////////////
@@ -658,9 +658,6 @@ void SampleStripControl::paint(Graphics& g)
             (float) controlbarSize, visualChunkSize, (float)(componentHeight - controlbarSize));
     }
 
-    // find which modifier button is held (if any)
-    const int modifierStatus = processor->getModifierBtnState();
-
     // draw hit zones
     if (rightMouseDown)
     {
@@ -671,77 +668,17 @@ void SampleStripControl::paint(Graphics& g)
 
         g.setColour(Colours::white);
         g.setFont(defaultFont);
-        g.drawFittedText("none", 0 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
-        g.drawFittedText("samples", 1 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
-        g.drawFittedText("recordings", 2 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
-        g.drawFittedText("resamplings", 3 * componentWidth / 4, componentHeight / 2, componentWidth / 4, 20, Justification::horizontallyCentred, 1);
+
+        const int textHeight = 20;
+        const int textWidth = componentWidth / 4;
+        const int textY = componentHeight / 2;
+
+        g.drawFittedText("none", 0 * textWidth, textY, textWidth, textHeight, Justification::horizontallyCentred, 1, 1.0f);
+        g.drawFittedText("samples", 1 * textWidth, textY, textWidth, textHeight, Justification::horizontallyCentred, 1, 1.0f);
+        g.drawFittedText("recordings", 2 * textWidth, textY, textWidth, textHeight, Justification::horizontallyCentred, 1, 1.0f);
+        g.drawFittedText("resamplings", 3 * textWidth, textY, textWidth, textHeight, Justification::horizontallyCentred, 1, 1.0f);
     }
 
-    // if a modifier button is held, draw an overlay
-    else if (modifierBtnStatus != mlrVSTAudioProcessor::rmNoBtn)
-    {
-        // paint a translucent background
-        g.setColour(Colours::black.withAlpha(0.3f));
-        g.fillRect(waveformPaintBounds);
-
-        // TODO: this should NOT be hard coded!
-        const int numCols = 8;
-
-        const int rowType = modifierStatus;
-        const int spacing = componentWidth / numCols;
-
-        g.setColour(Colours::white);
-        g.setFont(defaultFont);
-
-        switch (modifierStatus)
-        {
-        case mlrVSTAudioProcessor::rmNoBtn : break;
-        case mlrVSTAudioProcessor::rmNormalRowMappingBtnA :
-        case mlrVSTAudioProcessor::rmNormalRowMappingBtnB :
-            {
-                for (int c = 0; c < numCols; ++c)
-                {
-                    const int mappingID = processor->getMonomeMapping(rowType, c);
-                    const String mappingName = processor->getSampleStripMappingName(mappingID);
-
-                    g.drawFittedText(mappingName, PAD_AMOUNT + c * spacing, controlbarSize, spacing - PAD_AMOUNT, maxWaveformHeight,
-                        Justification::centredLeft, 5, 1.0f);
-                }
-                break;
-            }
-
-        case mlrVSTAudioProcessor::rmPatternBtn :
-            {
-                // Find out if the pattern associated with this channel is
-                // playing or recording and paint a progress strip along the
-                // middle of the strip based on that
-                if (processor->isPatternPlaying(sampleStripID))
-                {
-                    g.setColour(backgroundColour.withAlpha(0.5f));
-                    const float percentDone = processor->getPatternPercent(sampleStripID);
-                    g.fillRect(0, componentHeight / 2, int (componentWidth*percentDone), controlbarSize);
-                }
-                else if (processor->isPatternRecording(sampleStripID))
-                {
-                    g.setColour(backgroundColour);
-                    const float percentDone = processor->getPatternPercent(sampleStripID);
-                    g.fillRect(0, componentHeight / 2, int (componentWidth*percentDone), controlbarSize);
-                }
-
-                g.setColour(Colours::white);
-                for (int c = 0; c < numCols; ++c)
-                {
-                    const int mappingID = processor->getMonomeMapping(rowType, c);
-                    const String mappingName = processor->getPatternStripMappingName(mappingID);
-
-                    g.drawFittedText(mappingName, PAD_AMOUNT + c * spacing, controlbarSize, spacing - PAD_AMOUNT, maxWaveformHeight,
-                        Justification::centredLeft, 5, 1.0f);
-                }
-
-                break;
-            }
-        }
-    }
 }
 
 void SampleStripControl::filesDropped(const StringArray& files, int /*x*/, int /*y*/)
