@@ -446,7 +446,7 @@ void mlrVSTGUI::buttonClicked(Button* btn)
         // Toggle the visibility of the setlist manager panel
         presetPanel.setVisible(!currentlyVisible);
         // and update the button
-        toggleSetlistBtn.setToggleState(!currentlyVisible, false);
+        toggleSetlistBtn.setToggleState(!currentlyVisible, NotificationType::dontSendNotification);
     }
 
     else if(btn == &toggleSettingsBtn)
@@ -457,7 +457,7 @@ void mlrVSTGUI::buttonClicked(Button* btn)
         // Toggle the visibility of the settings panel
         settingsPanel.setVisible(!currentlyVisible);
         // and update the button
-        toggleSettingsBtn.setToggleState(!currentlyVisible, false);
+        toggleSettingsBtn.setToggleState(!currentlyVisible, NotificationType::dontSendNotification);
     }
 
     else if(btn == &toggleMappingBtn)
@@ -468,7 +468,7 @@ void mlrVSTGUI::buttonClicked(Button* btn)
         // Toggle the settings panel
         mappingPanel.setVisible(!currentlyVisible);
         // and update the button
-        toggleMappingBtn.setToggleState(!currentlyVisible, false);
+        toggleMappingBtn.setToggleState(!currentlyVisible, NotificationType::dontSendNotification);
     }
 
     else if(btn == &addPresetBtn)
@@ -813,7 +813,8 @@ void mlrVSTGUI::buildSliders(int &xPosition, int &yPosition)
         slidersMuteBtnArray[i]->setColour(Label::backgroundColourId, Colours::black);
         slidersMuteBtnArray[i]->setColour(Label::textColourId, Colours::white);
         slidersMuteBtnArray[i]->addListener(this);
-        slidersMuteBtnArray[i]->setToggleState(parent->getChannelMuteStatus(i), false);
+        slidersMuteBtnArray[i]->setToggleState(parent->getChannelMuteStatus(i),
+                                               NotificationType::dontSendNotification);
     }
 
     // increment yPosition for the next GUI item
@@ -966,11 +967,11 @@ void mlrVSTGUI::setupPresetUI(int &xPosition, int &yPosition)
 void mlrVSTGUI::closePanels()
 {
     presetPanel.setVisible(false);
-    toggleSetlistBtn.setToggleState(false, false);
+    toggleSetlistBtn.setToggleState(false, NotificationType::dontSendNotification);
 
     mappingPanel.setVisible(false);
-    toggleMappingBtn.setToggleState(false, false);
+    toggleMappingBtn.setToggleState(false, NotificationType::dontSendNotification);
 
     settingsPanel.setVisible(false);
-    toggleSettingsBtn.setToggleState(false, false);
+    toggleSettingsBtn.setToggleState(false, NotificationType::dontSendNotification);
 }

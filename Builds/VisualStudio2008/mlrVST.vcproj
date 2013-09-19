@@ -1312,6 +1312,7 @@
         <Filter Name="memory">
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_core\memory\juce_Atomic.h"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_core\memory\juce_ByteOrder.h"/>
+          <File RelativePath="..\..\JuceLibraryCode\modules\juce_core\memory\juce_ContainerDeletePolicy.h"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_core\memory\juce_HeapBlock.h"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_core\memory\juce_LeakedObjectDetector.h"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_core\memory\juce_Memory.h"/>
@@ -1582,6 +1583,17 @@
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_core\files\juce_TemporaryFile.h"/>
         </Filter>
         <Filter Name="network">
+          <File RelativePath="..\..\JuceLibraryCode\modules\juce_core\network\juce_IPAddress.cpp">
+            <FileConfiguration Name="Debug|Win32"
+                               ExcludedFromBuild="true">
+              <Tool Name="VCCLCompilerTool"/>
+            </FileConfiguration>
+            <FileConfiguration Name="Release|Win32"
+                               ExcludedFromBuild="true">
+              <Tool Name="VCCLCompilerTool"/>
+            </FileConfiguration>
+          </File>
+          <File RelativePath="..\..\JuceLibraryCode\modules\juce_core\network\juce_IPAddress.h"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_core\network\juce_MACAddress.cpp">
             <FileConfiguration Name="Debug|Win32"
                                ExcludedFromBuild="true">
@@ -2131,6 +2143,7 @@
             </FileConfiguration>
           </File>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_events\messages\juce_DeletedAtShutdown.h"/>
+          <File RelativePath="..\..\JuceLibraryCode\modules\juce_events\messages\juce_Initialisation.h"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_events\messages\juce_Message.h"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_events\messages\juce_MessageListener.cpp">
             <FileConfiguration Name="Debug|Win32"
@@ -2837,6 +2850,17 @@
             </FileConfiguration>
           </File>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_basics\mouse\juce_MouseEvent.h"/>
+          <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_basics\mouse\juce_MouseInactivityDetector.cpp">
+            <FileConfiguration Name="Debug|Win32"
+                               ExcludedFromBuild="true">
+              <Tool Name="VCCLCompilerTool"/>
+            </FileConfiguration>
+            <FileConfiguration Name="Release|Win32"
+                               ExcludedFromBuild="true">
+              <Tool Name="VCCLCompilerTool"/>
+            </FileConfiguration>
+          </File>
+          <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_basics\mouse\juce_MouseInactivityDetector.h"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_basics\mouse\juce_MouseInputSource.cpp">
             <FileConfiguration Name="Debug|Win32"
                                ExcludedFromBuild="true">
@@ -3207,6 +3231,8 @@
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_basics\menus\juce_PopupMenu.h"/>
         </Filter>
         <Filter Name="layout">
+          <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_basics\layout\juce_AnimatedPosition.h"/>
+          <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_basics\layout\juce_AnimatedPositionBehaviours.h"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_basics\layout\juce_ComponentAnimator.cpp">
             <FileConfiguration Name="Debug|Win32"
                                ExcludedFromBuild="true">
@@ -4264,6 +4290,16 @@
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_extra\native\juce_mac_AppleRemote.mm"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_extra\native\juce_mac_CarbonViewWrapperComponent.h"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_extra\native\juce_mac_NSViewComponent.mm"/>
+          <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_extra\native\juce_mac_SystemTrayIcon.cpp">
+            <FileConfiguration Name="Debug|Win32"
+                               ExcludedFromBuild="true">
+              <Tool Name="VCCLCompilerTool"/>
+            </FileConfiguration>
+            <FileConfiguration Name="Release|Win32"
+                               ExcludedFromBuild="true">
+              <Tool Name="VCCLCompilerTool"/>
+            </FileConfiguration>
+          </File>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_extra\native\juce_mac_WebBrowserComponent.mm"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_extra\native\juce_win32_ActiveXComponent.cpp">
             <FileConfiguration Name="Debug|Win32"

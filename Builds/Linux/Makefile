@@ -1,6 +1,9 @@
 # Automatically generated makefile, created by the Introjucer
 # Don't edit this file! Your changes will be overwritten when you re-save the Introjucer project!
 
+# (this disables dependency generation if multiple architectures are set)
+DEPFLAGS := $(if $(word 2, $(TARGET_ARCH)), , -MMD)
+
 ifndef CONFIG
   CONFIG=Debug
 endif
@@ -16,8 +19,8 @@ ifeq ($(CONFIG),Debug)
   endif
 
   CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
-  CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -g -ggdb -fPIC -O0
-  CXXFLAGS += $(CFLAGS) -DOSC_HOST_LITTLE_ENDIAN
+  CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -g -ggdb -fPIC -O0 -DOSC_HOST_LITTLE_ENDIAN
+  CXXFLAGS += $(CFLAGS)
   LDFLAGS += $(TARGET_ARCH) -L$(BINDIR) -L$(LIBDIR) -shared -L/usr/X11R6/lib/ -lX11 -lXext -lXinerama -lasound -ldl -lfreetype -lpthread -lrt 
   LDDEPS :=
   RESFLAGS :=  -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
@@ -36,17 +39,14 @@ ifeq ($(CONFIG),Release)
   endif
 
   CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
-  CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -fPIC -Os
-  CXXFLAGS += $(CFLAGS) -DOSC_HOST_LITTLE_ENDIAN
+  CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -fPIC -Os -DOSC_HOST_LITTLE_ENDIAN
+  CXXFLAGS += $(CFLAGS)
   LDFLAGS += $(TARGET_ARCH) -L$(BINDIR) -L$(LIBDIR) -shared -fvisibility=hidden -L/usr/X11R6/lib/ -lX11 -lXext -lXinerama -lasound -ldl -lfreetype -lpthread -lrt 
   LDDEPS :=
   RESFLAGS :=  -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../oscpack/
   TARGET := mlrVST.so
   BLDCMD = $(CXX) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS) $(RESOURCES) $(TARGET_ARCH)
 endif
-
-# (this disables dependency generation if multiple architectures are set)
-DEPFLAGS := $(if $(word 2, $(TARGET_ARCH)), , -MMD)
 
 OBJECTS := \
   $(OBJDIR)/AudioSample_c5634f81.o \

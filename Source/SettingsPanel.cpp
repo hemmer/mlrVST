@@ -67,7 +67,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     // load current value from PluginProcessor
     bool useExternalTempo = *static_cast<const bool*>
         (processor->getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
-    useExternalTempoBtn.setToggleState(useExternalTempo, false);
+    useExternalTempoBtn.setToggleState(useExternalTempo, NotificationType::dontSendNotification);
     String tempoBtnText = (useExternalTempo) ? "external tempo" : "internal tempo";
     useExternalTempoBtn.setButtonText(tempoBtnText);
     yPos += PAD_AMOUNT + labelHeight;
@@ -82,7 +82,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     selNumChannels.setBounds(labelWidth + 2 * PAD_AMOUNT, yPos, 150, labelHeight);
     const int numChannels = *static_cast<const int*>
         (processor->getGlobalSetting(mlrVSTAudioProcessor::sNumChannels));
-    selNumChannels.setSelectedId(numChannels, true);
+    selNumChannels.setSelectedId(numChannels, NotificationType::dontSendNotification);
     selNumChannels.setLookAndFeel(&overLF);
     yPos += PAD_AMOUNT + labelHeight;
 
@@ -128,7 +128,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     // load current value from PluginProcessor
     const bool monitorInputs = *static_cast<const bool*>
         (processor->getGlobalSetting(mlrVSTAudioProcessor::sMonitorInputs));
-    monitorInputsBtn.setToggleState(monitorInputs, false);
+    monitorInputsBtn.setToggleState(monitorInputs, NotificationType::dontSendNotification);
     String monitorBtnText = (monitorInputs) ? "enabled" : "disabled";
     monitorInputsBtn.setButtonText(monitorBtnText);
 
@@ -151,7 +151,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     const int monomeSize = *static_cast<const int*>
         (processor->getGlobalSetting(mlrVSTAudioProcessor::sMonomeSize));
 
-    selMonomeSize.setSelectedId(monomeSize, true);
+    selMonomeSize.setSelectedId(monomeSize, NotificationType::dontSendNotification);
     yPos += PAD_AMOUNT + labelHeight;
 
 
@@ -167,7 +167,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
         selNumSampleStrips.addItem(String(s), s+1);
 
     selNumSampleStrips.setBounds(labelWidth + 2 * PAD_AMOUNT, yPos, labelWidth, labelHeight);
-    selNumSampleStrips.setSelectedId(numSampleStrips+1, true);
+    selNumSampleStrips.setSelectedId(numSampleStrips+1, NotificationType::dontSendNotification);
     yPos += PAD_AMOUNT + labelHeight;
 
 }

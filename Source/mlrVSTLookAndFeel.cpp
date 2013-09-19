@@ -176,7 +176,7 @@ void mlrVSTLookAndFeel::drawLabel(Graphics& g, Label& label)
 }
 
 
-const Typeface::Ptr mlrVSTLookAndFeel::getTypefaceForFont (Font const& font)
+Typeface::Ptr mlrVSTLookAndFeel::getTypefaceForFont (Font const& font)
 {
 	Typeface::Ptr tf;
 

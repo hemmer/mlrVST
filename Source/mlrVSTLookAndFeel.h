@@ -34,7 +34,7 @@ public:
                                    bool isButtonDown);
 
     virtual void drawLabel(Graphics& g, Label& label);
-    virtual const Typeface::Ptr getTypefaceForFont(const Font &font );
+    virtual Typeface::Ptr getTypefaceForFont(const Font &font );
 	virtual Font getTextButtonFont(TextButton & button);
 
     virtual void drawTickBox (Graphics& g, Component& component,
@@ -135,7 +135,7 @@ public:
 
 	}
 
-	const Typeface::Ptr getTypefaceForFont (Font const& font)
+	Typeface::Ptr getTypefaceForFont (Font const& font)
 	{
 		Typeface::Ptr tf;
 

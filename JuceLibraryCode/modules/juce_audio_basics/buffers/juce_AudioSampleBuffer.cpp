@@ -1,47 +1,54 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-AudioSampleBuffer::AudioSampleBuffer (const int numChannels_,
+AudioSampleBuffer::AudioSampleBuffer (const int numChans,
                                       const int numSamples) noexcept
-  : numChannels (numChannels_),
+  : numChannels (numChans),
     size (numSamples)
 {
     jassert (numSamples >= 0);
-    jassert (numChannels_ > 0);
+    jassert (numChans > 0);
 
     allocateData();
 }
 
 AudioSampleBuffer::AudioSampleBuffer (const AudioSampleBuffer& other) noexcept
   : numChannels (other.numChannels),
-    size (other.size)
+    size (other.size),
+    allocatedBytes (other.allocatedBytes)
 {
-    allocateData();
+    if (allocatedBytes == 0)
+    {
+        allocateChannels (other.channels, 0);
+    }
+    else
+    {
+        allocateData();
 
-    for (int i = 0; i < numChannels; ++i)
-        FloatVectorOperations::copy (channels[i], other.channels[i], size);
+        for (int i = 0; i < numChannels; ++i)
+            FloatVectorOperations::copy (channels[i], other.channels[i], size);
+    }
 }
 
 void AudioSampleBuffer::allocateData()
@@ -62,25 +69,25 @@ void AudioSampleBuffer::allocateData()
 }
 
 AudioSampleBuffer::AudioSampleBuffer (float* const* dataToReferTo,
-                                      const int numChannels_,
+                                      const int numChans,
                                       const int numSamples) noexcept
-    : numChannels (numChannels_),
+    : numChannels (numChans),
       size (numSamples),
       allocatedBytes (0)
 {
-    jassert (numChannels_ > 0);
+    jassert (numChans > 0);
     allocateChannels (dataToReferTo, 0);
 }
 
 AudioSampleBuffer::AudioSampleBuffer (float* const* dataToReferTo,
-                                      const int numChannels_,
+                                      const int numChans,
                                       const int startSample,
                                       const int numSamples) noexcept
-    : numChannels (numChannels_),
+    : numChannels (numChans),
       size (numSamples),
       allocatedBytes (0)
 {
-    jassert (numChannels_ > 0);
+    jassert (numChans > 0);
     allocateChannels (dataToReferTo, startSample);
 }
 
@@ -151,8 +158,8 @@ void AudioSampleBuffer::setSize (const int newNumChannels,
 
     if (newNumSamples != size || newNumChannels != numChannels)
     {
-        const size_t allocatedSamplesPerChannel = (newNumSamples + 3) & ~3;
-        const size_t channelListSize = ((sizeof (float*) * (size_t) (newNumChannels + 1)) + 15) & ~15;
+        const size_t allocatedSamplesPerChannel = ((size_t) newNumSamples + 3) & ~3u;
+        const size_t channelListSize = ((sizeof (float*) * (size_t) (newNumChannels + 1)) + 15) & ~15u;
         const size_t newTotalBytes = ((size_t) newNumChannels * (size_t) allocatedSamplesPerChannel * sizeof (float))
                                         + channelListSize + 32;
 
@@ -161,7 +168,7 @@ void AudioSampleBuffer::setSize (const int newNumChannels,
             HeapBlock <char, true> newData;
             newData.allocate (newTotalBytes, clearExtraSpace);
 
-            const size_t numSamplesToCopy = jmin (newNumSamples, size);
+            const size_t numSamplesToCopy = (size_t) jmin (newNumSamples, size);
 
             float** const newChannels = reinterpret_cast <float**> (newData.getData());
             float* newChan = reinterpret_cast <float*> (newData + channelListSize);

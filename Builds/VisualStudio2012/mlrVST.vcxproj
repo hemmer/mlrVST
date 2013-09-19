@@ -471,6 +471,9 @@
     <ClCompile Include="..\..\JuceLibraryCode\modules\juce_core\files\juce_TemporaryFile.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\..\JuceLibraryCode\modules\juce_core\network\juce_IPAddress.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\modules\juce_core\network\juce_MACAddress.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
@@ -778,6 +781,9 @@
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\modules\juce_gui_basics\mouse\juce_MouseEvent.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\JuceLibraryCode\modules\juce_gui_basics\mouse\juce_MouseInactivityDetector.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\modules\juce_gui_basics\mouse\juce_MouseInputSource.cpp">
@@ -1149,6 +1155,9 @@
     <ClCompile Include="..\..\JuceLibraryCode\modules\juce_gui_extra\native\juce_linux_WebBrowserComponent.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\..\JuceLibraryCode\modules\juce_gui_extra\native\juce_mac_SystemTrayIcon.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\modules\juce_gui_extra\native\juce_win32_ActiveXComponent.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
@@ -1326,6 +1335,7 @@
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_core\maths\juce_Range.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_core\memory\juce_Atomic.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_core\memory\juce_ByteOrder.h"/>
+    <ClInclude Include="..\..\JuceLibraryCode\modules\juce_core\memory\juce_ContainerDeletePolicy.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_core\memory\juce_HeapBlock.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_core\memory\juce_LeakedObjectDetector.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_core\memory\juce_Memory.h"/>
@@ -1376,6 +1386,7 @@
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_core\files\juce_FileSearchPath.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_core\files\juce_MemoryMappedFile.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_core\files\juce_TemporaryFile.h"/>
+    <ClInclude Include="..\..\JuceLibraryCode\modules\juce_core\network\juce_IPAddress.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_core\network\juce_MACAddress.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_core\network\juce_NamedPipe.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_core\network\juce_Socket.h"/>
@@ -1420,6 +1431,7 @@
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_events\messages\juce_ApplicationBase.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_events\messages\juce_CallbackMessage.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_events\messages\juce_DeletedAtShutdown.h"/>
+    <ClInclude Include="..\..\JuceLibraryCode\modules\juce_events\messages\juce_Initialisation.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_events\messages\juce_Message.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_events\messages\juce_MessageListener.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_events\messages\juce_MessageManager.h"/>
@@ -1488,6 +1500,7 @@
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\mouse\juce_LassoComponent.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\mouse\juce_MouseCursor.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\mouse\juce_MouseEvent.h"/>
+    <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\mouse\juce_MouseInactivityDetector.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\mouse\juce_MouseInputSource.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\mouse\juce_MouseListener.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\mouse\juce_SelectedItemSet.h"/>
@@ -1528,6 +1541,8 @@
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\menus\juce_MenuBarComponent.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\menus\juce_MenuBarModel.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\menus\juce_PopupMenu.h"/>
+    <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\layout\juce_AnimatedPosition.h"/>
+    <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\layout\juce_AnimatedPositionBehaviours.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\layout\juce_ComponentAnimator.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\layout\juce_ComponentBoundsConstrainer.h"/>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\layout\juce_ComponentBuilder.h"/>

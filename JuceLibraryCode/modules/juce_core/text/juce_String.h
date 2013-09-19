@@ -1,53 +1,34 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the juce_core module of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission to use, copy, modify, and/or distribute this software for any purpose with
+   or without fee is hereby granted, provided that the above copyright notice and this
+   permission notice appear in all copies.
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN
+   NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+   DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+   IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+   ------------------------------------------------------------------------------
 
-  ------------------------------------------------------------------------------
+   NOTE! This permissive ISC license applies ONLY to files within the juce_core module!
+   All other JUCE modules are covered by a dual GPL/commercial license, so if you are
+   using any other modules, be sure to check that you also comply with their license.
 
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   For more details, visit www.juce.com
 
   ==============================================================================
 */
 
-#ifndef __JUCE_STRING_JUCEHEADER__
-#define __JUCE_STRING_JUCEHEADER__
+#ifndef JUCE_STRING_H_INCLUDED
+#define JUCE_STRING_H_INCLUDED
 
-#include "juce_CharacterFunctions.h"
-
-#ifndef JUCE_STRING_UTF_TYPE
- #define JUCE_STRING_UTF_TYPE 8
-#endif
-
-#if JUCE_MSVC
- #pragma warning (push)
- #pragma warning (disable: 4514 4996)
-#endif
-
-#include "../memory/juce_Atomic.h"
-#include "juce_CharPointer_UTF8.h"
-#include "juce_CharPointer_UTF16.h"
-#include "juce_CharPointer_UTF32.h"
-#include "juce_CharPointer_ASCII.h"
-
-#if JUCE_MSVC
- #pragma warning (pop)
-#endif
-
-class OutputStream;
 
 //==============================================================================
 /**
@@ -120,37 +101,37 @@ public:
 
     //==============================================================================
     /** Creates a string from a UTF-8 character string */
-    String (const CharPointer_UTF8& text);
+    String (const CharPointer_UTF8 text);
 
     /** Creates a string from a UTF-8 character string */
-    String (const CharPointer_UTF8& text, size_t maxChars);
+    String (const CharPointer_UTF8 text, size_t maxChars);
 
     /** Creates a string from a UTF-8 character string */
-    String (const CharPointer_UTF8& start, const CharPointer_UTF8& end);
+    String (const CharPointer_UTF8 start, const CharPointer_UTF8 end);
 
     //==============================================================================
     /** Creates a string from a UTF-16 character string */
-    String (const CharPointer_UTF16& text);
+    String (const CharPointer_UTF16 text);
 
     /** Creates a string from a UTF-16 character string */
-    String (const CharPointer_UTF16& text, size_t maxChars);
+    String (const CharPointer_UTF16 text, size_t maxChars);
 
     /** Creates a string from a UTF-16 character string */
-    String (const CharPointer_UTF16& start, const CharPointer_UTF16& end);
+    String (const CharPointer_UTF16 start, const CharPointer_UTF16 end);
 
     //==============================================================================
     /** Creates a string from a UTF-32 character string */
-    String (const CharPointer_UTF32& text);
+    String (const CharPointer_UTF32 text);
 
     /** Creates a string from a UTF-32 character string */
-    String (const CharPointer_UTF32& text, size_t maxChars);
+    String (const CharPointer_UTF32 text, size_t maxChars);
 
     /** Creates a string from a UTF-32 character string */
-    String (const CharPointer_UTF32& start, const CharPointer_UTF32& end);
+    String (const CharPointer_UTF32 start, const CharPointer_UTF32 end);
 
     //==============================================================================
     /** Creates a string from an ASCII character string */
-    String (const CharPointer_ASCII& text);
+    String (const CharPointer_ASCII text);
 
     /** Creates a string from a UTF-8 encoded std::string. */
     String (const std::string&);
@@ -238,11 +219,22 @@ public:
 
     /** Appends a string to the end of this one.
 
+        @param startOfTextToAppend  the start of the string to add. This must not be a nullptr
+        @param endOfTextToAppend    the end of the string to add. This must not be a nullptr
+    */
+    void appendCharPointer (const CharPointerType startOfTextToAppend,
+                            const CharPointerType endOfTextToAppend);
+
+    /** Appends a string to the end of this one. */
+    void appendCharPointer (const CharPointerType textToAppend);
+
+    /** Appends a string to the end of this one.
+
         @param textToAppend     the string to add
         @param maxCharsToTake   the maximum number of characters to take from the string passed in
     */
     template <class CharPointer>
-    void appendCharPointer (const CharPointer& textToAppend, size_t maxCharsToTake)
+    void appendCharPointer (const CharPointer textToAppend, size_t maxCharsToTake)
     {
         if (textToAppend.getAddress() != nullptr)
         {
@@ -267,7 +259,7 @@ public:
 
     /** Appends a string to the end of this one. */
     template <class CharPointer>
-    void appendCharPointer (const CharPointer& textToAppend)
+    void appendCharPointer (const CharPointer textToAppend)
     {
         if (textToAppend.getAddress() != nullptr)
         {
@@ -1037,7 +1029,7 @@ public:
         that is returned must not be stored anywhere, as it can be deleted whenever the
         string changes.
     */
-    inline const CharPointerType& getCharPointer() const noexcept    { return text; }
+    inline CharPointerType getCharPointer() const noexcept      { return text; }
 
     /** Returns a pointer to a UTF-8 version of this string.
 
@@ -1221,7 +1213,7 @@ private:
     explicit String (const PreallocationBytes&); // This constructor preallocates a certain amount of memory
     void appendFixedLength (const char* text, int numExtraChars);
     size_t getByteOffsetOfEnd() const noexcept;
-    JUCE_DEPRECATED (String (const String& stringToCopy, size_t charsToAllocate));
+    JUCE_DEPRECATED (String (const String&, size_t));
 
     // This private cast operator should prevent strings being accidentally cast
     // to bools (this is possible because the compiler can add an implicit cast
@@ -1296,11 +1288,11 @@ JUCE_API bool JUCE_CALLTYPE operator== (const String& string1, const char* strin
 /** Case-sensitive comparison of two strings. */
 JUCE_API bool JUCE_CALLTYPE operator== (const String& string1, const wchar_t* string2) noexcept;
 /** Case-sensitive comparison of two strings. */
-JUCE_API bool JUCE_CALLTYPE operator== (const String& string1, const CharPointer_UTF8& string2) noexcept;
+JUCE_API bool JUCE_CALLTYPE operator== (const String& string1, const CharPointer_UTF8 string2) noexcept;
 /** Case-sensitive comparison of two strings. */
-JUCE_API bool JUCE_CALLTYPE operator== (const String& string1, const CharPointer_UTF16& string2) noexcept;
+JUCE_API bool JUCE_CALLTYPE operator== (const String& string1, const CharPointer_UTF16 string2) noexcept;
 /** Case-sensitive comparison of two strings. */
-JUCE_API bool JUCE_CALLTYPE operator== (const String& string1, const CharPointer_UTF32& string2) noexcept;
+JUCE_API bool JUCE_CALLTYPE operator== (const String& string1, const CharPointer_UTF32 string2) noexcept;
 /** Case-sensitive comparison of two strings. */
 JUCE_API bool JUCE_CALLTYPE operator!= (const String& string1, const String& string2) noexcept;
 /** Case-sensitive comparison of two strings. */
@@ -1308,11 +1300,11 @@ JUCE_API bool JUCE_CALLTYPE operator!= (const String& string1, const char* strin
 /** Case-sensitive comparison of two strings. */
 JUCE_API bool JUCE_CALLTYPE operator!= (const String& string1, const wchar_t* string2) noexcept;
 /** Case-sensitive comparison of two strings. */
-JUCE_API bool JUCE_CALLTYPE operator!= (const String& string1, const CharPointer_UTF8& string2) noexcept;
+JUCE_API bool JUCE_CALLTYPE operator!= (const String& string1, const CharPointer_UTF8 string2) noexcept;
 /** Case-sensitive comparison of two strings. */
-JUCE_API bool JUCE_CALLTYPE operator!= (const String& string1, const CharPointer_UTF16& string2) noexcept;
+JUCE_API bool JUCE_CALLTYPE operator!= (const String& string1, const CharPointer_UTF16 string2) noexcept;
 /** Case-sensitive comparison of two strings. */
-JUCE_API bool JUCE_CALLTYPE operator!= (const String& string1, const CharPointer_UTF32& string2) noexcept;
+JUCE_API bool JUCE_CALLTYPE operator!= (const String& string1, const CharPointer_UTF32 string2) noexcept;
 /** Case-sensitive comparison of two strings. */
 JUCE_API bool JUCE_CALLTYPE operator>  (const String& string1, const String& string2) noexcept;
 /** Case-sensitive comparison of two strings. */
@@ -1345,4 +1337,4 @@ std::basic_ostream <wchar_t, traits>& JUCE_CALLTYPE operator<< (std::basic_ostre
 JUCE_API OutputStream& JUCE_CALLTYPE operator<< (OutputStream& stream, const String& stringToWrite);
 
 
-#endif   // __JUCE_STRING_JUCEHEADER__
+#endif   // JUCE_STRING_H_INCLUDED

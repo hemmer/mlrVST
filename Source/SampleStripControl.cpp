@@ -790,7 +790,7 @@ void SampleStripControl::recallParam(const int &paramID, const void *newValue, c
     case SampleStrip::pIsLatched :
         {
             isLatched = *static_cast<const bool*>(newValue);
-            isLatchedBtn.setToggleState(isLatched, false);
+            isLatchedBtn.setToggleState(isLatched, NotificationType::dontSendNotification);
             break;
         }
 

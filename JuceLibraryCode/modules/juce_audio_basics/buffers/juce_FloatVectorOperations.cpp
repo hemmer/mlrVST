@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -163,7 +162,7 @@ namespace FloatVectorHelpers
 void JUCE_CALLTYPE FloatVectorOperations::clear (float* dest, int num) noexcept
 {
    #if JUCE_USE_VDSP_FRAMEWORK
-    vDSP_vclr (dest, 1, num);
+    vDSP_vclr (dest, 1, (size_t) num);
    #else
     zeromem (dest, num * sizeof (float));
    #endif
@@ -172,7 +171,7 @@ void JUCE_CALLTYPE FloatVectorOperations::clear (float* dest, int num) noexcept
 void JUCE_CALLTYPE FloatVectorOperations::fill (float* dest, float valueToFill, int num) noexcept
 {
    #if JUCE_USE_VDSP_FRAMEWORK
-    vDSP_vfill (&valueToFill, dest, 1, num);
+    vDSP_vfill (&valueToFill, dest, 1, (size_t) num);
    #else
     #if JUCE_USE_SSE_INTRINSICS
      const __m128 val = _mm_load1_ps (&valueToFill);
@@ -184,7 +183,7 @@ void JUCE_CALLTYPE FloatVectorOperations::fill (float* dest, float valueToFill, 
 
 void JUCE_CALLTYPE FloatVectorOperations::copy (float* dest, const float* src, int num) noexcept
 {
-    memcpy (dest, src, num * sizeof (float));
+    memcpy (dest, src, (size_t) num * sizeof (float));
 }
 
 void JUCE_CALLTYPE FloatVectorOperations::copyWithMultiply (float* dest, const float* src, float multiplier, int num) noexcept
