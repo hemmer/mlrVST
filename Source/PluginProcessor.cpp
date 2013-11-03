@@ -27,51 +27,43 @@ GLOBAL TODO:
 #include "PluginProcessor.h"
 #include "mlrVSTGUI.h"
 #include "OSCHandler.h"
+#include "GlobalSettings.h"
 #include <cmath>
 
 //==============================================================================
 mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
+    // Global Settings
+    gs(this),
+
     // MIDI / quantisation /////////////////////////////////////////
-    quantisationLevel(-1.0), quantisationOn(false),
-    quantisationGap(0), quantRemaining(0), quantiseMenuSelection(1),
+    quantisationOn(false), quantisationGap(0), quantRemaining(0),
     quantisedBuffer(), unquantisedCollector(),
     // Sample Pools ///////////////////////////
     samplePool(), resamplePool(), recordPool(),
     // Channel Setup ////////////////////////////////////////////////
-    maxChannels(8), channelGains(), channelMutes(),
-    masterGain(0.8f), isMstrVolInc(false), isMstrVolDec(false),
-    defaultChannelGain(0.8f), channelColours(),
+    isMstrVolInc(false), isMstrVolDec(false),
+    channelColours(),
     // Global Settings //////////////////////////////////////////////
-    numChannels(maxChannels), useExternalTempo(false),
-    currentBPM(120.0), isBPMInc(false), isBPMDec(false),
-    rampLength(50), numSampleStrips(7),
+    isBPMInc(false), isBPMDec(false),
+
     // Sample Strips //////////////////////
     sampleStripArray(),
     // OSC /////////////////////////////////////////////
-    OSCPrefix("mlrvst"), oscMsgHandler(OSCPrefix, this),
+    oscMsgHandler(gs.OSCPrefix, this),
     // Audio / MIDI Buffers /////////////////////////////////////////
     stripContrib(2, 0),
-    resampleBuffer(2, 0), isResampling(false),
-    resampleLength(8), resamplePrecountLength(0),
-    resampleLengthInSamples(0), resamplePrecountLengthInSamples(0),
+    resampleBuffer(2, 0), resampleLengthInSamples(0), resamplePrecountLengthInSamples(0),
     resamplePosition(0), resamplePrecountPosition(0),
-    resampleBank(0), resampleBankSize(8),
-    recordBuffer(2, 0), isRecording(false),
-    recordLength(8), recordPrecountLength(0),
-    recordLengthInSamples(0), recordPrecountLengthInSamples(0),
+    recordBuffer(2, 0), recordLengthInSamples(0), recordPrecountLengthInSamples(0),
     recordPosition(0), recordPrecountPosition(0),
-    recordBank(0), recordBankSize(8),
-    patternRecorder(), currentPatternLength(8),
-    currentPatternPrecountLength(0), currentPatternBank(0),
-    patternBankSize(8),
+    patternRecorder(),
     // Preset handling /////////////////////////////////////////
     presetList("PRESETLIST"), setlist("SETLIST"),
     // Mapping settings ////////////////////////////////////////
     mappingEngine(), currentStripModifier(-1),
     // Misc /////////////////////////////////////////////////////////
-    monomeSize(eightByEight), numMonomeRows(8), numMonomeCols(8),
-    buttonStatus(numMonomeRows, numMonomeCols, false),
-    playbackLEDPosition(), monitorInputs(false)
+    buttonStatus(gs.numMonomeRows, gs.numMonomeCols, false),
+    playbackLEDPosition()
 {
 
     // compile time assertions
@@ -82,18 +74,19 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     DBG("OSC thread started");
 
     // create our SampleStrip objects
-    buildSampleStripArray(numSampleStrips);
-    // add our channels
-    buildChannelArray(numChannels);
+    buildSampleStripArray(gs.numSampleStrips);
+
+    // by updating the number of channels we build the mute / gain arrays
+    gs.setGlobalSetting(GlobalSettings::sNumChannels, &(gs.maxChannels), false);
 
 
 
     // TODO: have actual sample rate
-    for (int i = 0; i < resampleBankSize; ++i)
+    for (int i = 0; i < gs.resampleBankSize; ++i)
         resamplePool.add(new AudioSample(44100.0, 44100, THUMBNAIL_WIDTH, "resample #" + String(i), AudioSample::tResampledSample));
-    for (int i = 0; i < recordBankSize; ++i)
+    for (int i = 0; i < gs.recordBankSize; ++i)
         recordPool.add(new AudioSample(44100.0, 44100, THUMBNAIL_WIDTH, "record #" + String(i), AudioSample::tRecordedSample));
-    for (int i = 0; i < patternBankSize; ++i)
+    for (int i = 0; i < gs.patternBankSize; ++i)
         patternRecordings.add(new PatternRecording(this, i));
 
     setlist.createNewChildElement("PRESETNONE");
@@ -112,7 +105,7 @@ mlrVSTAudioProcessor::~mlrVSTAudioProcessor()
 {
     // stop all sample strips
     AudioSample *nullSample = 0;
-    for (int s = 0; s < sampleStripArray.size(); s++)
+    for (int s = 0; s < gs.numSampleStrips; s++)
     {
         sampleStripArray[s]->stopSamplePlaying();
         sampleStripArray[s]->setSampleStripParam(SampleStrip::pAudioSample, nullSample, false);
@@ -199,11 +192,8 @@ void mlrVSTAudioProcessor::setMonomeStatusGrids(const int &/*width*/, const int 
     oscMsgHandler.clearGrid();
 }
 
-void mlrVSTAudioProcessor::buildChannelArray(const int &newNumChannels)
+void mlrVSTAudioProcessor::buildChannelArray()
 {
-    // update the number of channels
-    numChannels = newNumChannels;
-
     // make sure all strips stop playing, and reset their channels
     int initialChannel = 0;
     for (int s = 0; s < sampleStripArray.size(); s++)
@@ -218,23 +208,11 @@ void mlrVSTAudioProcessor::buildChannelArray(const int &newNumChannels)
 
     // reset the list of channels
     channelColours.clear();
-    for (int c = 0; c < numChannels; c++)
+    for (int c = 0; c < gs.numChannels; c++)
     {
-        //Colour channelColour((float) (0.1f * c), 0.5f, 0.5f, 1.0f);
-        Colour channelColour(c / (float) (numChannels), 0.5f, 0.5f, 1.0f);
+        Colour channelColour(c / (float) (gs.numChannels), 0.5f, 0.5f, 1.0f);
         channelColours.add(channelColour);
     }
-
-
-    // reset the gains to the default
-    channelGains.clear();
-    channelMutes.clear();
-    for (int c = 0; c < maxChannels; c++)
-    {
-        channelGains.add(defaultChannelGain);
-        channelMutes.add(false);
-    }
-
 
     DBG("Channel processor array (re)built");
 
@@ -287,17 +265,17 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
         // ask the host for the current time so we can display it...
         AudioPlayHead::CurrentPositionInfo newTime;
 
-        if (useExternalTempo && getPlayHead() != 0 &&
+        if (gs.useExternalTempo && getPlayHead() != 0 &&
             getPlayHead()->getCurrentPosition(newTime))
         {
             // Successfully got the current time from the host..
             lastPosInfo = newTime;
-            if (currentBPM != lastPosInfo.bpm && lastPosInfo.bpm > 1.0)
+            if (gs.currentBPM != lastPosInfo.bpm && lastPosInfo.bpm > 1.0)
             {
 				const double newBPM = lastPosInfo.bpm;
 
 	            // If the tempo has changed, adjust the playspeeds accordingly
-				updateGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM, &newBPM);
+                gs.setGlobalSetting(GlobalSettings::sCurrentBPM, &newBPM);
             }
         }
         else
@@ -348,21 +326,21 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
 
         // use the pattern recorders (if recording)
-        for (int b = 0; b < patternBankSize; ++b)
+        for (int b = 0; b < gs.patternBankSize; ++b)
             patternRecordings[b]->recordPattern(midiMessages, numSamples);
 
         // and play back patterns (if playing back)
-        for (int b = 0; b < patternBankSize; ++b)
+        for (int b = 0; b < gs.patternBankSize; ++b)
             patternRecordings[b]->playPattern(midiMessages, numSamples);
 
 
         // if we are recording from mlrVST's inputs
-        if (isRecording)
+        if (gs.isRecording)
             processRecordingBuffer(buffer, numSamples);
 
 
         // if we're aren't monitoring, clear any incoming audio
-        if (!monitorInputs) buffer.clear();
+        if (!gs.monitorInputs) buffer.clear();
 
 
         // make sure the buffer for SampleStrip contributions is
@@ -371,7 +349,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
 
         for (int s = 0; s < sampleStripArray.size(); s++)
         {
-            sampleStripArray[s]->setBPM(currentBPM);
+            sampleStripArray[s]->setBPM(gs.currentBPM);
 
             // clear the contribution from the previous strip
             stripContrib.clear();
@@ -381,17 +359,18 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
             // get the associated channel so we can apply gain
             const int stripChannel = *static_cast<const int *>(sampleStripArray[s]->getSampleStripParam(SampleStrip::pCurrentChannel));
 
-            if (!channelMutes[stripChannel])
+            // if this channel is NOT muted
+            if (!getChannelMuteStatus(stripChannel))
             {
                 // add this contribution scaled by the channel gain
-                buffer.addFrom(0, 0, stripContrib, 0, 0, numSamples, channelGains[stripChannel]);
-                buffer.addFrom(1, 0, stripContrib, 1, 0, numSamples, channelGains[stripChannel]);
+                buffer.addFrom(0, 0, stripContrib, 0, 0, numSamples, getChannelGain(stripChannel) );
+                buffer.addFrom(1, 0, stripContrib, 1, 0, numSamples, getChannelGain(stripChannel) );
             }
         }
 
         // Go through the outgoing data, and apply our master gain to it...
         for (int channel = 0; channel < getNumInputChannels(); ++channel)
-            buffer.applyGain(channel, 0, buffer.getNumSamples(), masterGain);
+            buffer.applyGain(channel, 0, buffer.getNumSamples(), gs.masterGain);
 
 
         // In case we have more outputs than inputs, we'll clear any output
@@ -401,7 +380,7 @@ void mlrVSTAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& m
             buffer.clear(i, 0, buffer.getNumSamples());
 
         // if we are resampling the audio that mlrVST is producing...
-        if (isResampling)
+        if (gs.isResampling)
             processResamplingBuffer(buffer, numSamples);
 
     }
@@ -428,19 +407,19 @@ void mlrVSTAudioProcessor::timerCallback()
 
     if (isBPMInc)
     {
-        const double newBPM = currentBPM + 0.1;
-        updateGlobalSetting(sCurrentBPM, &newBPM, true);
+        const double newBPM = gs.currentBPM + 0.1;
+        gs.setGlobalSetting(GlobalSettings::sCurrentBPM, &newBPM, true);
     }
     else if (isBPMDec)
     {
-        const double newBPM = currentBPM - 0.1;
-        updateGlobalSetting(sCurrentBPM, &newBPM, true);
+        const double newBPM = gs.currentBPM - 0.1;
+        gs.setGlobalSetting(GlobalSettings::sCurrentBPM, &newBPM, true);
     }
 
 
     if (isMstrVolInc)
     {
-        float newMasterGain = masterGain + 0.05f;
+        float newMasterGain = gs.masterGain + 0.05f;
 
         if (newMasterGain > 1.0f)
         {
@@ -448,11 +427,11 @@ void mlrVSTAudioProcessor::timerCallback()
             isMstrVolInc = false;
         }
 
-        updateGlobalSetting(sMasterGain, &newMasterGain, true);
+        gs.setGlobalSetting(GlobalSettings::sMasterGain, &newMasterGain, true);
     }
     else if (isMstrVolDec)
     {
-        float newMasterGain = masterGain - 0.05f;
+        float newMasterGain = gs.masterGain - 0.05f;
 
         if (newMasterGain < 0.0f)
         {
@@ -460,7 +439,7 @@ void mlrVSTAudioProcessor::timerCallback()
             isMstrVolDec = false;
         }
 
-        updateGlobalSetting(sMasterGain, &newMasterGain, true);
+        gs.setGlobalSetting(GlobalSettings::sMasterGain, &newMasterGain, true);
     }
 
 
@@ -589,7 +568,7 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
 {
     // filter out any keypresses outside the allowed range of the device
     if (monomeRow < 0 || monomeCol < 0) return;
-    if (monomeRow >= numMonomeRows || monomeCol >= numMonomeCols) return;
+    if (monomeRow >= gs.numMonomeRows || monomeCol >= gs.numMonomeCols) return;
 
     // globally track presses
     buttonStatus.set(monomeRow, monomeCol, state);
@@ -652,7 +631,7 @@ void mlrVSTAudioProcessor::processOSCKeyPress(const int &monomeCol, const int &m
     const int stripID = monomeRow - 1;
 
     // check that we have enough SampleStrips...
-    if (stripID >= numSampleStrips) return;
+    if (stripID >= gs.numSampleStrips) return;
 
     // if one of the normal row modifier buttons are held,
     // each strip now turns into a set of control buttons
@@ -801,7 +780,7 @@ void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
             sampleStripArray.add(new SampleStrip(previousNumSampleStrips + i, this));
     }
 
-    numSampleStrips = newNumSampleStrips;
+
     DBG("Created " << newNumSampleStrips << " SampleStrips.");
 
     // resume processing
@@ -810,11 +789,11 @@ void mlrVSTAudioProcessor::buildSampleStripArray(const int &newNumSampleStrips)
 const double mlrVSTAudioProcessor::calcInitialPlaySpeed(const int &stripID, const bool &applyChange)
 {
     // TODO insert proper host speed here
-    return sampleStripArray[stripID]->findInitialPlaySpeed(currentBPM, 44100.0, applyChange);
+    return sampleStripArray[stripID]->findInitialPlaySpeed(gs.currentBPM, 44100.0, applyChange);
 }
 void mlrVSTAudioProcessor::calcPlaySpeedForNewBPM(const int &stripID)
 {
-    sampleStripArray[stripID]->updatePlaySpeedForBPMChange(currentBPM);
+    sampleStripArray[stripID]->updatePlaySpeedForBPMChange(gs.currentBPM);
 }
 void mlrVSTAudioProcessor::calcPlaySpeedForSelectionChange(const int &stripID)
 {
@@ -890,120 +869,7 @@ void mlrVSTAudioProcessor::loadXmlSetlist(const File &setlistFile)
 
 void mlrVSTAudioProcessor::addPreset(const String &newPresetName)
 {
-    // TODO: check name not blank
-
-    // this is now the current preset
-    updateGlobalSetting(sPresetName, &newPresetName);
-
-    // Create an outer XML element..
-    XmlElement newPreset("PRESET");
-
-    for (int s = 0; s < NumGlobalSettings; ++s)
-    {
-        // skip if we don't save this setting with each preset
-        if (writeGlobalSettingToPreset(s) != ScopePreset) continue;
-
-        // find if the setting is a bool, int, double etc.
-        const int settingType = getGlobalSettingType(s);
-        // what description do we write into the xml for this setting
-        const String settingName = getGlobalSettingName(s);
-        // get the actual parameter value (we cast later)
-        const void *p = getGlobalSetting(s);
-
-        switch (settingType)
-        {
-        case SampleStrip::TypeBool :
-            newPreset.setAttribute(settingName, (int)(*static_cast<const bool*>(p))); break;
-        case SampleStrip::TypeInt :
-            newPreset.setAttribute(settingName, *static_cast<const int*>(p)); break;
-        case SampleStrip::TypeDouble :
-            newPreset.setAttribute(settingName, *static_cast<const double*>(p)); break;
-        case SampleStrip::TypeFloat :
-            newPreset.setAttribute(settingName, (double)(*static_cast<const float*>(p))); break;
-        case SampleStrip::TypeString :
-            newPreset.setAttribute(settingName, (*static_cast<const String*>(p))); break;
-        default : jassertfalse;
-        }
-
-    }
-
-    // add the master and channel volumes
-    newPreset.setAttribute("master_vol", masterGain);
-
-    for (int c = 0; c < numChannels; ++c)
-        newPreset.setAttribute("chan_" + String(c) + "_vol", channelGains[c]);
-
-
-
-    // Store the SampleStrip specific settings
-    for (int strip = 0; strip < sampleStripArray.size(); ++strip)
-    {
-        XmlElement *stripXml = new XmlElement("STRIP");
-        stripXml->setAttribute("id", strip);
-
-        // write all parameters to XML
-        for (int param = 0; param < SampleStrip::TotalNumParams; ++param)
-        {
-            // check if we are supposed to save this parameter, if not, skip
-            if (!SampleStrip::isParamSaved(param)) continue;
-
-            // find if the parameter is a bool, int, double etc.
-            const int paramType = sampleStripArray[strip]->getParameterType(param);
-            // what description do we write into the xml for this parameter
-            const String paramName = sampleStripArray[strip]->getParameterName(param);
-            // get the actual parameter value (we cast later)
-            const void *p = sampleStripArray[strip]->getSampleStripParam(param);
-
-            switch (paramType)
-            {
-            case SampleStrip::TypeBool :
-                stripXml->setAttribute(paramName, (int)(*static_cast<const bool*>(p))); break;
-            case SampleStrip::TypeInt :
-                stripXml->setAttribute(paramName, *static_cast<const int*>(p)); break;
-            case SampleStrip::TypeDouble :
-                stripXml->setAttribute(paramName, *static_cast<const double*>(p)); break;
-            case SampleStrip::TypeFloat :
-                stripXml->setAttribute(paramName, (double)(*static_cast<const float*>(p))); break;
-            case SampleStrip::TypeAudioSample :
-                {
-                    const AudioSample * sample = static_cast<const AudioSample*>(p);
-                    if (sample)
-                    {
-                        const String samplePath = sample->getSampleFile().getFullPathName();
-                        stripXml->setAttribute(paramName, samplePath);
-                    }
-                    break;
-                }
-            default : jassertfalse;
-            }
-        }
-
-        // add this strip to the preset
-        newPreset.addChildElement(stripXml);
-    }
-
-    const String nameAttribute = getGlobalSettingName(sPresetName);
-    bool duplicateFound = false;
-
-    // See if a preset of this name exists in the preset list
-    forEachXmlChildElement(presetList, p)
-    {
-        const String pName = p->getStringAttribute(nameAttribute);
-
-        // If it does, replace it
-        if (pName == newPresetName)
-        {
-            presetList.replaceChildElement(p, new XmlElement(newPreset));
-            duplicateFound = true;
-            DBG("Replacing preset: '" << pName << "'.");
-            break;
-        }
-    }
-
-    // If the name is unique, add the new preset
-    if (!duplicateFound) presetList.addChildElement(new XmlElement(newPreset));
-
-    DBG(presetList.createDocument(String::empty));
+    (void) newPresetName;
 }
 
 void mlrVSTAudioProcessor::renamePreset(const String &newName, const int & presetID)
@@ -1013,7 +879,7 @@ void mlrVSTAudioProcessor::renamePreset(const String &newName, const int & prese
     if (presetID >= 0 && presetID < presetListLength)
     {
         XmlElement * elementToRename = presetList.getChildElement(presetID);
-        elementToRename->setAttribute(getGlobalSettingName(sPresetName), newName);
+        elementToRename->setAttribute(GlobalSettings::getGlobalSettingName(GlobalSettings::sPresetName), newName);
     }
 }
 void mlrVSTAudioProcessor::removeSetlistItem(const int &id)
@@ -1061,175 +927,7 @@ void mlrVSTAudioProcessor::insetPresetIntoSetlist(const int &presetID, const int
 
 void mlrVSTAudioProcessor::loadPreset(XmlElement * presetToLoad)
 {
-    // this *should* exist, if not, return doing nothing
-    if (presetToLoad == nullptr)
-    {
-        jassertfalse;
-        return;
-    }
-
-
-    if (presetToLoad->getTagName() == "PRESETNONE")
-    {
-        // we have a blank preset: loadDefaultPreset();
-        DBG("blank preset loaded");
-    }
-    else if (presetToLoad->getTagName() == "PRESET")
-    {
-        const String newPresetName = presetToLoad->getStringAttribute("preset_name", "NOT FOUND");
-        // check we know the name
-        DBG("preset \"" << newPresetName << "\" loaded.");
-
-        // TODO: first load the global parameters
-
-        for (int s = 0; s < NumGlobalSettings; ++s)
-        {
-            // skip if we don't save this setting with each preset
-            if (writeGlobalSettingToPreset(s) != ScopePreset) continue;
-
-            // find if the setting is a bool, int, double etc.
-            const int settingType = getGlobalSettingType(s);
-            // what description do we write into the xml for this setting
-            const String settingName = getGlobalSettingName(s);
-
-            switch (settingType)
-            {
-            case SampleStrip::TypeBool :
-                {
-                    const bool value = presetToLoad->getIntAttribute(settingName) != 0;
-                    updateGlobalSetting(s, &value, false); break;
-                }
-            case SampleStrip::TypeInt :
-                {
-                    const int value = presetToLoad->getIntAttribute(settingName);
-                    updateGlobalSetting(s, &value, false); break;
-                }
-            case SampleStrip::TypeDouble :
-                {
-                    const double value = presetToLoad->getDoubleAttribute(settingName);
-                    updateGlobalSetting(s, &value, false); break;
-                }
-            case SampleStrip::TypeFloat :
-                {
-                    const float value = (float) presetToLoad->getDoubleAttribute(settingName);
-                    updateGlobalSetting(s, &value, false); break;
-                }
-            case SampleStrip::TypeString :
-                {
-                    const String value = presetToLoad->getStringAttribute(settingName);
-                    updateGlobalSetting(s, &value, false); break;
-                }
-            default : jassertfalse;
-            }
-
-        }
-
-
-        const float newMasterGain = (float) presetToLoad->getDoubleAttribute("master_vol", defaultChannelGain);
-        if (newMasterGain >= 0.0 && newMasterGain <= 1.0) masterGain = newMasterGain;
-
-        for (int c = 0; c < numChannels; ++c)
-        {
-            const String chanVolName = "chan_" + String(c) + "_vol";
-            const float chanGain = (float) presetToLoad->getDoubleAttribute(chanVolName, defaultChannelGain);
-            channelGains.set(c, (chanGain >= 0.0 && chanGain <= 1.0) ? chanGain : defaultChannelGain);
-        }
-
-
-
-        // try to find settings for each strip *that currently exists*
-        for (int s = 0; s < sampleStripArray.size(); ++s)
-        {
-            // search the preset for the strip with matching ID
-            forEachXmlChildElement(*presetToLoad, strip)
-            {
-                const int stripID = strip->getIntAttribute("id", -1);
-                // check if the preset has information for this SampleStrip
-                if (stripID != s) continue;
-
-                SampleStrip *currentStrip = sampleStripArray[stripID];
-
-                // if so, try to extract all the required parameters
-                for (int param = 0; param < SampleStrip::TotalNumParams; ++param)
-                {
-                    // check that this is a parameter that we load
-                    const bool doWeLoadParam = SampleStrip::isParamSaved(param);
-                    if (!doWeLoadParam) continue;
-
-                    // what name is this parameter?
-                    const String paramName = SampleStrip::getParameterName(param);
-
-                    // check that it can be found in the XML
-                    if (strip->hasAttribute(paramName))
-                    {
-                        // find its type
-                        const int paramType = SampleStrip::getParameterType(param);
-
-                        // DBG("id: " << stripID << " " << paramName << " " << param << " " << paramType);
-
-                        // try to load it
-                        switch (paramType)
-                        {
-                        case TypeInt :
-                            {
-                                // TODO: validate values here
-                                const int value = strip->getIntAttribute(paramName);
-                                currentStrip->setSampleStripParam(param, &value);
-                                break;
-                            }
-                        case TypeFloat :
-                            {
-                                const float value = (float) strip->getDoubleAttribute(paramName);
-                                currentStrip->setSampleStripParam(param, &value);
-                                break;
-                            }
-                        case TypeDouble :
-                            {
-                                const double value = strip->getDoubleAttribute(paramName);
-                                currentStrip->setSampleStripParam(param, &value);
-                                break;
-                            }
-                        case TypeBool :
-                            {
-                                const bool value = strip->getBoolAttribute(paramName);
-                                currentStrip->setSampleStripParam(param, &value);
-                                break;
-                            }
-                        case TypeAudioSample :
-                            {
-                                const String filePath = strip->getStringAttribute(paramName);
-                                File newFile = File(filePath);
-
-                                // add the sample and get the id
-                                const int sampleID = addNewSample(newFile);
-                                const AudioSample * newSample = getAudioSample(sampleID, pSamplePool);
-
-                                // if the sample loaded correctly, set it to be the strip's AudioSample
-                                if (sampleID != -1 && newSample)
-                                    currentStrip->setSampleStripParam(SampleStrip::pAudioSample, newSample);
-                            }
-                        } // end switch statement
-
-                    } // end of if(hasAtttribute)
-                    else
-                    {
-                        DBG("Param " << paramName << " not found. Doing nothing");
-                        // TODO: load default
-                        // OR do nothing
-                    }
-
-                } // end loop over expected parameters
-
-                // we have loaded this strip's parameters so can stop searching
-                break;
-
-            } // end of loop over preset entries
-
-        }// end of samplestrip loop
-
-        // let the GUI know that we have reloaded
-        sendChangeMessage();
-    }
+    (void) presetToLoad;
 }
 
 
@@ -1239,8 +937,8 @@ void mlrVSTAudioProcessor::loadPreset(XmlElement * presetToLoad)
 
 void mlrVSTAudioProcessor::startResampling()
 {
-    resampleLengthInSamples = (int) (getSampleRate() * (60.0 * resampleLength / currentBPM));
-    resamplePrecountLengthInSamples = (int) (getSampleRate() * (60.0 * resamplePrecountLength / currentBPM));
+    resampleLengthInSamples = (int) (getSampleRate() * (60.0 * gs.resampleLength / gs.currentBPM));
+    resamplePrecountLengthInSamples = (int) (getSampleRate() * (60.0 * gs.resamplePrecountLength / gs.currentBPM));
     resamplePrecountPosition = resamplePrecountLengthInSamples;
 
     // TODO: try writing directly into the bank
@@ -1250,7 +948,7 @@ void mlrVSTAudioProcessor::startResampling()
     resampleBuffer.setSize(2, resampleLengthInSamples, false, true);
     resampleBuffer.clear();
     resamplePosition = 0;
-    isResampling = true;
+    gs.isResampling = true;
 
     DBG("resampling started");
 }
@@ -1295,22 +993,22 @@ void mlrVSTAudioProcessor::processResamplingBuffer(AudioSampleBuffer &buffer, co
             resampleBuffer.addFrom(0, resamplePosition, buffer, 0, 0, samplesToEnd);
             resampleBuffer.addFrom(1, resamplePosition, buffer, 1, 0, samplesToEnd);
             // we are no longer recording
-            isResampling = false;
+            gs.isResampling = false;
 
             // get the pointer to the slot in the resample bank that we want to replace
-            AudioSampleBuffer *resampleSlotToReplace = resamplePool[resampleBank]->getAudioData();
+            AudioSampleBuffer *resampleSlotToReplace = resamplePool[gs.resampleBank]->getAudioData();
             // and resize it in case the length has changed
             resampleSlotToReplace->setSize(2, resampleLengthInSamples, false, false, false);
             // copy in the newly recorded samples
             resampleSlotToReplace->copyFrom(0, 0, resampleBuffer, 0, 0, resampleLengthInSamples);
             resampleSlotToReplace->copyFrom(1, 0, resampleBuffer, 1, 0, resampleLengthInSamples);
             // and update the thumbnail
-            resamplePool[resampleBank]->generateThumbnail(THUMBNAIL_WIDTH);
+            resamplePool[gs.resampleBank]->generateThumbnail(THUMBNAIL_WIDTH);
 
             // this is just so buttons can work out that it's finished
             resamplePosition += samplesToEnd;
 
-            DBG("resample slot " << resampleBank << " updated.");
+            DBG("resample slot " << gs.resampleBank << " updated.");
 
             // make sure all SampleStrips redraw to reflect new waveform
             for (int s = 0; s < sampleStripArray.size(); ++s)
@@ -1321,14 +1019,14 @@ void mlrVSTAudioProcessor::processResamplingBuffer(AudioSampleBuffer &buffer, co
 
 void mlrVSTAudioProcessor::startRecording()
 {
-    recordLengthInSamples = (int) (getSampleRate() * (60.0 * recordLength / currentBPM));
-    recordPrecountLengthInSamples = (int) (getSampleRate() * (60.0 * recordPrecountLength / currentBPM));
+    recordLengthInSamples = (int) (getSampleRate() * (60.0 * gs.recordLength / gs.currentBPM));
+    recordPrecountLengthInSamples = (int) (getSampleRate() * (60.0 * gs.recordPrecountLength / gs.currentBPM));
     recordPrecountPosition = recordPrecountLengthInSamples;
 
     recordBuffer.setSize(2, recordLengthInSamples, false, true);
     recordBuffer.clear();
     recordPosition = 0;
-    isRecording = true;
+    gs.isRecording = true;
 
     DBG("recording started");
 }
@@ -1373,25 +1071,25 @@ void mlrVSTAudioProcessor::processRecordingBuffer(AudioSampleBuffer &buffer, con
             recordBuffer.addFrom(0, recordPosition, buffer, 0, 0, samplesToEnd);
             recordBuffer.addFrom(1, recordPosition, buffer, 1, 0, samplesToEnd);
             // we are no longer recording
-            isRecording = false;
+            gs.isRecording = false;
 
             // get the pointer to the slot in the record bank that we want to replace
-            AudioSampleBuffer *recordSlotToReplace = recordPool[recordBank]->getAudioData();
+            AudioSampleBuffer *recordSlotToReplace = recordPool[gs.recordBank]->getAudioData();
             // and resize it in case the length has changed
             recordSlotToReplace->setSize(2, recordLengthInSamples, false, false, false);
             // copy in the newly recorded samples
             recordSlotToReplace->copyFrom(0, 0, recordBuffer, 0, 0, recordLengthInSamples);
             recordSlotToReplace->copyFrom(1, 0, recordBuffer, 1, 0, recordLengthInSamples);
             // and update the thumbnail
-            recordPool[recordBank]->generateThumbnail(THUMBNAIL_WIDTH);
+            recordPool[gs.recordBank]->generateThumbnail(THUMBNAIL_WIDTH);
 
-            DBG("record slot " << recordBank << " updated.");
+            DBG("record slot " << gs.recordBank << " updated.");
 
             // this is just so the TimedButtons can work out that recording has finished
             recordPosition += samplesToEnd;
 
             // make sure all SampleStrips redraw to reflect new waveform
-            for (int s = 0; s < sampleStripArray.size(); ++s)
+            for (int s = 0; s < gs.numSampleStrips; ++s)
                 sampleStripArray[s]->sendChangeMessage();
         }
     }
@@ -1403,7 +1101,7 @@ void mlrVSTAudioProcessor::processRecordingBuffer(AudioSampleBuffer &buffer, con
 /////////////////////////////
 AudioProcessorEditor* mlrVSTAudioProcessor::createEditor()
 {
-    return new mlrVSTGUI(this, numChannels, numSampleStrips);
+    return new mlrVSTGUI(this, gs.numChannels, gs.numSampleStrips);
 }
 
 void mlrVSTAudioProcessor::getStateInformation(MemoryBlock& destData)
@@ -1413,44 +1111,45 @@ void mlrVSTAudioProcessor::getStateInformation(MemoryBlock& destData)
     // Create an outer XML element..
     XmlElement xml("GLOBALSETTINGS");
 
-    // add some attributes to it..
+    //// add some attributes to it..
 
-    xml.setAttribute("MASTER_GAIN", masterGain);
-    for (int c = 0; c < channelGains.size(); c++)
-    {
-        String name("CHANNEL_GAIN");
-        name += String(c);
-        xml.setAttribute(name, channelGains[c]);
-    }
+    //xml.setAttribute("MASTER_GAIN", gs.masterGain);
+    //for (int c = 0; c < channelGains.size(); c++)
+    //{
+    //    String name("CHANNEL_GAIN");
+    //    name += String(c);
+    //    xml.setAttribute(name, channelGains[c]);
+    //}
 
-    xml.setAttribute("CURRENT_PRESET", "none");
+    //xml.setAttribute("CURRENT_PRESET", "none");
 
     // then use this helper function to stuff it into the binary blob and return it..
     copyXmlToBinary(xml, destData);
 }
 void mlrVSTAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
+    // TODO: this whole thing needs redone
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
 
     // This getXmlFromBinary() helper function retrieves our XML from the binary blob..
-    ScopedPointer<XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+    //ScopedPointer<XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
 
-    if (xmlState != 0)
-    {
-        // make sure that it's actually our type of XML object..
-        if (xmlState->hasTagName("GLOBALSETTINGS"))
-        {
-            // ok, now pull out our parameters...
-            masterGain  = (float) xmlState->getDoubleAttribute("MASTER_GAIN", masterGain);
-            for (int c = 0; c < channelGains.size(); c++)
-            {
-                String name("CHANNEL_GAIN");
-                name += String(c);
-                channelGains.set(c, (float) xmlState->getDoubleAttribute(name, channelGains[c]));
-            }
-        }
-    }
+    //if (xmlState != 0)
+    //{
+    //    // make sure that it's actually our type of XML object..
+    //    if (xmlState->hasTagName("GLOBALSETTINGS"))
+    //    {
+    //        // ok, now pull out our parameters...
+    //        gs.masterGain = (float) xmlState->getDoubleAttribute("MASTER_GAIN", defaultChannelGain);
+    //        for (int c = 0; c < channelGains.size(); c++)
+    //        {
+    //            String name("CHANNEL_GAIN");
+    //            name += String(c);
+    //            channelGains.set(c, (float) xmlState->getDoubleAttribute(name, channelGains[c]));
+    //        }
+    //    }
+    //}
 }
 
 const String mlrVSTAudioProcessor::getInputChannelName(const int channelIndex) const
@@ -1501,285 +1200,6 @@ return 0.0;
 }
 
 
-// Global settings ///////////////////////
-int mlrVSTAudioProcessor::writeGlobalSettingToPreset(const int &settingID)
-{
-    // Explanation of codes:
-    //  - ScopeError: we went wrong somewhere!
-    //  - ScopeNone: don't save/load this setting
-    //  - ScopePreset: can vary with every preset
-    //  - ScopeSetlist: saved once globally
-
-    switch (settingID)
-    {
-    case sUseExternalTempo : return ScopeSetlist;
-    case sNumChannels : return ScopePreset;
-    case sMonomeSize : return ScopeSetlist;
-    case sPresetName : return ScopePreset;
-    case sNumMonomeRows : return 0;
-    case sNumMonomeCols : return 0;
-    case sNumSampleStrips : return ScopeSetlist;
-    case sMasterGain : return ScopePreset;
-    case sCurrentBPM : return ScopePreset;
-    case sQuantiseLevel : return 0;
-    case sQuantiseMenuSelection : return ScopePreset;
-    case sOSCPrefix : return ScopeSetlist;
-    case sMonitorInputs : return ScopePreset;
-    case sRecordPrecount : return ScopePreset;
-    case sRecordLength : return ScopePreset;
-    case sRecordBank : return ScopePreset;
-    case sResamplePrecount : return ScopePreset;
-    case sResampleLength : return ScopePreset;
-    case sResampleBank : return ScopePreset;
-    case sPatternPrecount : return ScopePreset;
-    case sPatternLength : return ScopePreset;
-    case sPatternBank : return ScopePreset;
-    case sRampLength : return ScopeSetlist;
-    default : jassertfalse; return ScopeError;
-    }
-}
-String mlrVSTAudioProcessor::getGlobalSettingName(const int &settingID)
-{
-    switch (settingID)
-    {
-    case sUseExternalTempo : return "use_external_tempo";
-    case sPresetName : return "preset_name";
-    case sNumChannels : return "num_channels";
-    case sMonomeSize : return "monome_size";
-    case sNumSampleStrips : return "num_sample_strips";
-    case sMasterGain : return "master_gain";
-    case sCurrentBPM : return "current_bpm";
-    case sQuantiseLevel : return "quantisation_level";
-    case sRampLength : return "ramp_length";
-    case sQuantiseMenuSelection : return "quantize_level";
-    case sMonitorInputs : return "monitor_inputs";
-    case sRecordPrecount : return "record_length";
-    case sRecordLength : return "record_length";
-    case sRecordBank : return "record_bank";
-    case sResamplePrecount : return "resample_precount";
-    case sResampleLength : return "resample_length";
-    case sResampleBank : return "resample_bank";
-    case sPatternPrecount : return "pattern_precount";
-    case sPatternLength : return "pattern_length";
-    case sPatternBank : return "pattern_bank";
-    default : jassertfalse; return "name_not_found";
-    }
-}
-int mlrVSTAudioProcessor::getGlobalSettingID(const String &settingName)
-{
-    // TODO: is this needed?
-    if (settingName == "num_channels") return sNumChannels;
-    if (settingName == "use_external_tempo") return sUseExternalTempo;
-    if (settingName == "num_channels") return sNumChannels;
-    if (settingName == "monome_size") return sMonomeSize;
-    if (settingName == "num_sample_strips") return sNumSampleStrips;
-    if (settingName == "current_bpm") return sCurrentBPM;
-    if (settingName == "quantisation_level") return sQuantiseLevel;
-    if (settingName == "ramp_length") return sRampLength;
-
-    jassertfalse; return -1;
-
-}
-int mlrVSTAudioProcessor::getGlobalSettingType(const int &settingID)
-{
-    switch (settingID)
-    {
-    case sUseExternalTempo : return TypeBool;
-    case sPresetName : return TypeString;
-    case sNumChannels : return TypeInt;
-    case sMonomeSize : return TypeInt;
-    case sNumSampleStrips : return TypeInt;
-    case sMasterGain : return TypeFloat;
-    case sCurrentBPM : return TypeDouble;
-    case sQuantiseLevel : return TypeDouble;
-    case sRampLength : return TypeInt;
-    case sQuantiseMenuSelection : return TypeInt;
-    case sMonitorInputs : return TypeBool;
-    case sRecordPrecount : return TypeInt;
-    case sRecordLength : return TypeInt;
-    case sRecordBank : return TypeInt;
-    case sResamplePrecount : return TypeInt;
-    case sResampleLength : return TypeInt;
-    case sResampleBank : return TypeInt;
-    case sPatternPrecount : return TypeInt;
-    case sPatternLength : return TypeInt;
-    case sPatternBank : return TypeInt;
-    default : jassertfalse; return TypeError;
-    }
-}
-
-void mlrVSTAudioProcessor::updateGlobalSetting(const int &settingID,
-                                               const void *newValue,
-                                               const bool &notifyListeners)
-{
-    switch (settingID)
-    {
-    case sUseExternalTempo :
-        useExternalTempo = *static_cast<const bool*>(newValue); break;
-
-    case sPresetName :
-        presetName = *static_cast<const String*>(newValue); break;
-
-    case sNumChannels :
-		{
-			numChannels = *static_cast<const int*>(newValue);
-			buildChannelArray(numChannels);
-			break;
-		}
-
-    case sMonomeSize :
-        {
-            monomeSize = *static_cast<const int*>(newValue);
-
-            switch(monomeSize)
-            {
-            case eightByEight :     numMonomeRows = numMonomeCols = 8;
-            case sixteenByEight :   numMonomeRows = 16; numMonomeCols = 8;
-            case eightBySixteen :   numMonomeRows = 8; numMonomeCols = 16;
-            case sixteenBySixteen : numMonomeRows = numMonomeCols = 16;
-            default : jassertfalse;
-            }
-
-            buttonStatus.setSize(numMonomeRows, numMonomeCols, false);
-            break;
-        }
-
-    case sNumSampleStrips :
-        {
-            const int newNumSampleStrips = *static_cast<const int*>(newValue);
-
-            if (newNumSampleStrips != numSampleStrips)
-            {
-                buildSampleStripArray(newNumSampleStrips);
-                numSampleStrips = newNumSampleStrips;
-            }
-            break;
-        }
-
-    case sOSCPrefix :
-        {
-            OSCPrefix = *static_cast<const String*>(newValue);
-            oscMsgHandler.setPrefix(OSCPrefix); break;
-        }
-    case sMonitorInputs :
-        monitorInputs = *static_cast<const bool*>(newValue); break;
-
-    case sResampleLength :
-        resampleLength = *static_cast<const int*>(newValue); break;
-    case sResamplePrecount :
-        resamplePrecountLength = *static_cast<const int*>(newValue); break;
-    case sResampleBank :
-        resampleBank = *static_cast<const int*>(newValue); break;
-
-    case sRecordLength :
-        recordLength = *static_cast<const int*>(newValue); break;
-    case sRecordPrecount :
-        recordPrecountLength = *static_cast<const int*>(newValue); break;
-    case sRecordBank :
-        recordBank = *static_cast<const int*>(newValue); break;
-
-    case sPatternLength :
-        currentPatternLength = *static_cast<const int*>(newValue);
-        patternRecordings[currentPatternBank]->patternLength = currentPatternLength;
-        break;
-
-    case sPatternPrecount :
-        currentPatternPrecountLength = *static_cast<const int*>(newValue);
-        patternRecordings[currentPatternBank]->patternPrecountLength = currentPatternPrecountLength;
-        break;
-
-    case sPatternBank :
-        currentPatternBank = *static_cast<const int*>(newValue);
-
-        // and load the settings associated with that bank
-        currentPatternLength = patternRecordings[currentPatternBank]->patternLength;
-        currentPatternPrecountLength = patternRecordings[currentPatternBank]->patternPrecountLength;
-        break;
-
-    case sMasterGain :
-        {
-            masterGain = *static_cast<const float*>(newValue);
-            break;
-        }
-
-    case sCurrentBPM :
-        {
-            currentBPM = *static_cast<const double*>(newValue);
-            changeBPM();
-
-            break;
-        }
-    case sQuantiseMenuSelection :
-        {
-            quantiseMenuSelection = *static_cast<const int*>(newValue);
-
-            // either quantisation is turned off
-            if (quantiseMenuSelection == 1) quantisationLevel = -1.0;
-            // or calculated from menu selection
-            else if (quantiseMenuSelection > 1)
-            {
-                jassert(quantiseMenuSelection < 8);
-
-                // menu arithmatic
-                const int menuSelection = quantiseMenuSelection - 2;
-                quantisationLevel = 1.0 / pow(2.0, menuSelection);
-            }
-            updateQuantizeSettings(); break;
-        }
-    case sRampLength :
-        {
-            rampLength = *static_cast<const int*>(newValue);
-
-            // let strips know of the change
-            for (int s = 0; s < sampleStripArray.size(); ++s)
-                sampleStripArray[s]->setSampleStripParam(SampleStrip::pRampLength, &rampLength, false);
-
-            break;
-        }
-
-    default :
-        jassertfalse;
-    }
-
-    // if requested, let listeners know that a global setting has changed
-    if (notifyListeners) sendChangeMessage();
-}
-const void* mlrVSTAudioProcessor::getGlobalSetting(const int &settingID) const
-{
-    switch (settingID)
-    {
-    case sUseExternalTempo : return &useExternalTempo;
-    case sPresetName : return &presetName;
-    case sNumChannels : return &numChannels;
-    case sMonomeSize : return &monomeSize;
-    case sNumMonomeRows : return &numMonomeRows;
-    case sNumMonomeCols : return &numMonomeCols;
-    case sNumSampleStrips : return &numSampleStrips;
-    case sOSCPrefix : return &OSCPrefix;
-    case sMonitorInputs : return &monitorInputs;
-    case sMasterGain: return &masterGain;
-    case sCurrentBPM : return &currentBPM;
-    case sQuantiseLevel : return &quantisationLevel;
-    case sQuantiseMenuSelection : return &quantiseMenuSelection;
-    case sRecordLength : return &recordLength;
-    case sRecordPrecount : return &recordPrecountLength;
-    case sRecordBank : return &recordBank;
-    case sResampleLength : return &resampleLength;
-    case sResamplePrecount : return &resamplePrecountLength;
-    case sResampleBank : return &resampleBank;
-
-    case sPatternLength : return &currentPatternLength;
-    case sPatternPrecount : return &currentPatternPrecountLength;
-    case sPatternBank : return &currentPatternBank;
-    case sRampLength : return &rampLength;
-    default : jassertfalse; return 0;
-    }
-}
-
-
-
-
-
 
 void mlrVSTAudioProcessor::executeSampleStripMapping(const int &mappingID, const int &stripID, const bool &state)
 {
@@ -1788,7 +1208,7 @@ void mlrVSTAudioProcessor::executeSampleStripMapping(const int &mappingID, const
     case MappingEngine::nmNoMapping : break;
     case MappingEngine::nmFindBestTempo :
         // TODO: next actual sample rate here!
-        if (state) sampleStripArray[stripID]->findInitialPlaySpeed(currentBPM, 44100.0);
+        if (state) sampleStripArray[stripID]->findInitialPlaySpeed(gs.currentBPM, 44100.0);
         break;
 
     case MappingEngine::nmToggleReverse :
@@ -2033,6 +1453,16 @@ void mlrVSTAudioProcessor::executeGlobalMapping(const int &mappingID, const bool
 }
 
 
+
+// helper / forwarding functions
+const void* mlrVSTAudioProcessor::getGlobalSetting(const int &settingID) const
+{
+    return gs.getGlobalSetting(settingID);
+}
+void mlrVSTAudioProcessor::setGlobalSetting(const int &settingID, const void * newValue, const bool &notifyListeners)
+{
+    gs.setGlobalSetting(settingID, newValue, notifyListeners);
+}
 
 
 

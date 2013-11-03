@@ -41,8 +41,11 @@
     <Filter Include="mlrVST\oscpack\osc">
       <UniqueIdentifier>{B718FC04-CC70-E9E0-466D-CBC23921D98C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="mlrVST\Resources">
-      <UniqueIdentifier>{E9C7A70F-10B8-C9BF-92E2-700B509308FA}</UniqueIdentifier>
+    <Filter Include="mlrVST\resources">
+      <UniqueIdentifier>{C913FDB9-2F0B-4A24-FB67-7E7FF43E919F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mlrVST\settings / presets">
+      <UniqueIdentifier>{999E8BAD-F840-5907-AAC4-F192BEABC569}</UniqueIdentifier>
     </Filter>
     <Filter Include="Juce Modules">
       <UniqueIdentifier>{422C46B7-0467-2DB0-BF3C-16DFCAFD69AC}</UniqueIdentifier>
@@ -408,6 +411,12 @@
     </ClCompile>
     <ClCompile Include="..\..\oscpack\osc\OscTypes.cpp">
       <Filter>mlrVST\oscpack\osc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\GlobalSettings.cpp">
+      <Filter>mlrVST\settings / presets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Preset.cpp">
+      <Filter>mlrVST\settings / presets</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\modules\juce_audio_basics\buffers\juce_AudioDataConverters.cpp">
       <Filter>Juce Modules\juce_audio_basics\buffers</Filter>
@@ -990,12 +999,6 @@
     </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\modules\juce_graphics\geometry\juce_PathStrokeType.cpp">
       <Filter>Juce Modules\juce_graphics\geometry</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JuceLibraryCode\modules\juce_graphics\geometry\juce_RectangleList.cpp">
-      <Filter>Juce Modules\juce_graphics\geometry</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JuceLibraryCode\modules\juce_graphics\placement\juce_Justification.cpp">
-      <Filter>Juce Modules\juce_graphics\placement</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\modules\juce_graphics\placement\juce_RectanglePlacement.cpp">
       <Filter>Juce Modules\juce_graphics\placement</Filter>
@@ -1661,6 +1664,12 @@
     </ClInclude>
     <ClInclude Include="..\..\oscpack\osc\OscTypes.h">
       <Filter>mlrVST\oscpack\osc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\GlobalSettings.h">
+      <Filter>mlrVST\settings / presets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Preset.h">
+      <Filter>mlrVST\settings / presets</Filter>
     </ClInclude>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_audio_basics\buffers\juce_AudioDataConverters.h">
       <Filter>Juce Modules\juce_audio_basics\buffers</Filter>
@@ -2799,9 +2808,6 @@
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\application\juce_Application.h">
       <Filter>Juce Modules\juce_gui_basics\application</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\application\juce_Initialisation.h">
-      <Filter>Juce Modules\juce_gui_basics\application</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\JuceLibraryCode\modules\juce_gui_basics\native\juce_MultiTouchMapper.h">
       <Filter>Juce Modules\juce_gui_basics\native</Filter>
     </ClInclude>
@@ -2895,19 +2901,19 @@
       <Filter>mlrVST\oscpack</Filter>
     </None>
     <None Include="..\..\Resources\locked.png">
-      <Filter>mlrVST\Resources</Filter>
+      <Filter>mlrVST\resources</Filter>
     </None>
     <None Include="..\..\Resources\unlocked.png">
-      <Filter>mlrVST\Resources</Filter>
+      <Filter>mlrVST\resources</Filter>
     </None>
     <None Include="..\..\Resources\waveform.png">
-      <Filter>mlrVST\Resources</Filter>
+      <Filter>mlrVST\resources</Filter>
     </None>
     <None Include="..\..\Resources\pattern.png">
-      <Filter>mlrVST\Resources</Filter>
+      <Filter>mlrVST\resources</Filter>
     </None>
     <None Include="..\..\Resources\ProggyClean.ttf">
-      <Filter>mlrVST\Resources</Filter>
+      <Filter>mlrVST\resources</Filter>
     </None>
     <None Include="..\..\JuceLibraryCode\modules\juce_audio_basics\juce_module_info">
       <Filter>Juce Modules\juce_audio_basics</Filter>

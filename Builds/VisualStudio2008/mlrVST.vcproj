@@ -220,7 +220,7 @@
         <File RelativePath="..\..\oscpack\README"/>
         <File RelativePath="..\..\oscpack\TODO"/>
       </Filter>
-      <Filter Name="Resources">
+      <Filter Name="resources">
         <File RelativePath="..\..\Resources\locked.png">
           <FileConfiguration Name="Debug|Win32"
                              ExcludedFromBuild="true">
@@ -271,6 +271,12 @@
             <Tool Name="VCCLCompilerTool"/>
           </FileConfiguration>
         </File>
+      </Filter>
+      <Filter Name="settings / presets">
+        <File RelativePath="..\..\Source\GlobalSettings.cpp"/>
+        <File RelativePath="..\..\Source\GlobalSettings.h"/>
+        <File RelativePath="..\..\Source\Preset.cpp"/>
+        <File RelativePath="..\..\Source\Preset.h"/>
       </Filter>
     </Filter>
     <Filter Name="Juce Modules">
@@ -2526,29 +2532,9 @@
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_graphics\geometry\juce_PathStrokeType.h"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_graphics\geometry\juce_Point.h"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_graphics\geometry\juce_Rectangle.h"/>
-          <File RelativePath="..\..\JuceLibraryCode\modules\juce_graphics\geometry\juce_RectangleList.cpp">
-            <FileConfiguration Name="Debug|Win32"
-                               ExcludedFromBuild="true">
-              <Tool Name="VCCLCompilerTool"/>
-            </FileConfiguration>
-            <FileConfiguration Name="Release|Win32"
-                               ExcludedFromBuild="true">
-              <Tool Name="VCCLCompilerTool"/>
-            </FileConfiguration>
-          </File>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_graphics\geometry\juce_RectangleList.h"/>
         </Filter>
         <Filter Name="placement">
-          <File RelativePath="..\..\JuceLibraryCode\modules\juce_graphics\placement\juce_Justification.cpp">
-            <FileConfiguration Name="Debug|Win32"
-                               ExcludedFromBuild="true">
-              <Tool Name="VCCLCompilerTool"/>
-            </FileConfiguration>
-            <FileConfiguration Name="Release|Win32"
-                               ExcludedFromBuild="true">
-              <Tool Name="VCCLCompilerTool"/>
-            </FileConfiguration>
-          </File>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_graphics\placement\juce_Justification.h"/>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_graphics\placement\juce_RectanglePlacement.cpp">
             <FileConfiguration Name="Debug|Win32"
@@ -4001,7 +3987,6 @@
             </FileConfiguration>
           </File>
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_basics\application\juce_Application.h"/>
-          <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_basics\application\juce_Initialisation.h"/>
         </Filter>
         <Filter Name="native">
           <File RelativePath="..\..\JuceLibraryCode\modules\juce_gui_basics\native\juce_android_FileChooser.cpp">

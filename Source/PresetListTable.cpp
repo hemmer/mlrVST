@@ -5,7 +5,7 @@
     Created: 2 Sep 2012 3:14:24pm
     Author:  Hemmer
 
-    A table component to list the possible presets, including some additional 
+    A table component to list the possible presets, including some additional
     information like BMP, and buttons to delete / rename.
 
   ==============================================================================
@@ -16,7 +16,7 @@
 
 PresetListTable::PresetListTable(mlrVSTAudioProcessor * const owner) :
     // communication /////////
-    processor(owner), 
+    processor(owner),
     // gui / components //////
     table(), defaultFont("ProggyCleanTT", 18.f, Font::plain),
     // data //////////////////
@@ -59,10 +59,10 @@ void PresetListTable::loadData()
 // a utility method to search our XML for the attribute that matches a column ID
 const String PresetListTable::getAttributeNameForColumnId (const int columnId) const
 {
-    switch (columnId) 
+    switch (columnId)
     {
-    case 1 : return processor->getGlobalSettingName(mlrVSTAudioProcessor::sPresetName);
-    case 2 : return processor->getGlobalSettingName(mlrVSTAudioProcessor::sCurrentBPM);
+    case 1 : return GlobalSettings::getGlobalSettingName(GlobalSettings::sPresetName);
+    case 2 : return GlobalSettings::getGlobalSettingName(GlobalSettings::sCurrentBPM);
     default : return String::empty;
     }
 }
@@ -89,7 +89,7 @@ void PresetListTable::cellClicked (int rowNumber, int columnId, const MouseEvent
 
         // get the old name of the preset
         XmlElement * rowPreset = presetData->getChildElement(rowNumber);
-        const String oldName = rowPreset->getStringAttribute(mlrVSTAudioProcessor::getGlobalSettingName(mlrVSTAudioProcessor::sPresetName));
+        const String oldName = rowPreset->getStringAttribute(GlobalSettings::getGlobalSettingName(GlobalSettings::sPresetName));
 
         w.addTextEditor("text", oldName, "new preset name:");
         w.addButton("ok", 1, KeyPress (KeyPress::returnKey, 0, 0));

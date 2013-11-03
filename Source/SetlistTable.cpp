@@ -12,7 +12,7 @@
 #include "PluginProcessor.h"
 
 
-SetlistTable::SetlistTable(mlrVSTAudioProcessor * const owner, 
+SetlistTable::SetlistTable(mlrVSTAudioProcessor * const owner,
                            PresetListTable * presetListTbl_) :
     // communication ///////////////////////////////
     processor(owner), presetListTbl(presetListTbl_),
@@ -52,9 +52,9 @@ void SetlistTable::loadData()
 // a utility method to search our XML for the attribute that matches a column ID
 const String SetlistTable::getAttributeNameForColumnId (const int columnId) const
 {
-    if (columnId == 2) return processor->getGlobalSettingName(mlrVSTAudioProcessor::sPresetName);
+    if (columnId == 2) return GlobalSettings::getGlobalSettingName(GlobalSettings::sPresetName);
     else return String::empty;
-    
+
 }
 
 void SetlistTable::cellClicked (int rowNumber, int columnId, const MouseEvent &)

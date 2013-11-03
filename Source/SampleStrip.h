@@ -77,16 +77,6 @@ public:
         NUM_PLAY_MODES
     };
 
-    String getPlayModeName(const int &parameterID) const
-    {
-        switch(parameterID)
-        {
-        case LOOP : return "loop";
-        case PLAY_CHUNK_ONCE : return "play chunk";
-        case PLAY_TO_END : return "play to end";
-        default : jassertfalse; return "error!";
-        }
-    }
 
     enum StopMode
     {
@@ -271,12 +261,23 @@ public:
         }
     }
 
+    static String getPlayModeName(const int &parameterID)
+    {
+        switch(parameterID)
+        {
+        case LOOP : return "loop";
+        case PLAY_CHUNK_ONCE : return "play chunk";
+        case PLAY_TO_END : return "play to end";
+        default : jassertfalse; return "error!";
+        }
+    }
+
 private:
     // metadata //////////////
     const int sampleStripID;
 
     // communication //////////////////////////
-    mlrVSTAudioProcessor * const parent;
+    mlrVSTAudioProcessor * const parent;        // with audio processor
 
     // playback parameters /////////////////////
     int currentChannel;                     // what channel is selected

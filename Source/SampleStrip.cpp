@@ -12,6 +12,7 @@
 #include "SampleStrip.h"
 #include "PluginProcessor.h"
 #include "Utilities.h"
+#include "GlobalSettings.h"
 
 SampleStrip::SampleStrip(const int &newID, mlrVSTAudioProcessor *owner) :
 
@@ -57,7 +58,7 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
     {
     case pCurrentChannel :
         {
-            const int numChannels = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sNumChannels));
+            const int numChannels = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sNumChannels));
             const int newChannel = *static_cast<const int*>(newValue);
 
             // check that the new channel is range
@@ -318,7 +319,7 @@ void SampleStrip::toggleSampleStripParam(const int &parameterID, const bool &sen
 
 void SampleStrip::cycleChannels()
 {
-	const int numChannels = *static_cast<const int *>(parent->getGlobalSetting(mlrVSTAudioProcessor::sNumChannels));
+    const int numChannels = *static_cast<const int *>(parent->getGlobalSetting(GlobalSettings::sNumChannels));
 	const int nextChannel = (currentChannel + 1) % numChannels;
 
 	setSampleStripParam(pCurrentChannel, &nextChannel, true);
@@ -434,7 +435,7 @@ void SampleStrip::handleMidiEvent (const MidiMessage& m)
 
     // Check this button associated with this MIDI message
     // is within the size of the specified device
-    const int numMonomeCols = *static_cast<const int *>(parent->getGlobalSetting(mlrVSTAudioProcessor::sNumMonomeCols));
+    const int numMonomeCols = *static_cast<const int *>(parent->getGlobalSetting(GlobalSettings::sNumMonomeCols));
     // and if not skip this MIDI message
     if (monomeCol >= numMonomeCols || monomeCol < 0) return;
 

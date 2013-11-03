@@ -167,7 +167,7 @@ void mlrVSTGUI::buildSampleStripControls(const int &newNumStrips)
     sampleStripControlArray.clear(true);
 
     // rebuild the actual audio objects
-    updateGlobalSetting(mlrVSTAudioProcessor::sNumSampleStrips, &newNumStrips);
+    parent->setGlobalSetting(GlobalSettings::sNumSampleStrips, &newNumStrips);
 
     // what size should the strips be
     waveformControlHeight = ( (GUI_HEIGHT - newNumStrips * PAD_AMOUNT) / newNumStrips);
@@ -240,11 +240,11 @@ void mlrVSTGUI::changeListenerCallback(ChangeBroadcaster *)
     }
     else
     {
-        const double currentBPM = *static_cast<const double*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM));
+        const double currentBPM = *static_cast<const double*>(parent->getGlobalSetting(GlobalSettings::sCurrentBPM));
         bpmSlider.setValue(currentBPM);
     }
 
-    const int newNumChannels = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sNumChannels));
+    const int newNumChannels = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sNumChannels));
     if (newNumChannels != numChannels)
     {
         numChannels = newNumChannels;
@@ -258,29 +258,29 @@ void mlrVSTGUI::changeListenerCallback(ChangeBroadcaster *)
             sampleStripControlArray[i]->setNumChannels(numChannels);
     }
 
-    const int recordLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordLength));
-    const int recordPrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordPrecount));
-    const int recordBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordBank));
+    const int recordLength = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sRecordLength));
+    const int recordPrecount = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sRecordPrecount));
+    const int recordBank = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sRecordBank));
     recordLengthSldr.setValue(recordLength, NotificationType::dontSendNotification);
     recordPrecountSldr.setValue(recordPrecount, NotificationType::dontSendNotification);
     recordBankSldr.setValue(recordBank, NotificationType::dontSendNotification);
 
-    const int resampleLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResampleLength));
-    const int resamplePrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResamplePrecount));
-    const int resampleBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResampleBank));
+    const int resampleLength = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sResampleLength));
+    const int resamplePrecount = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sResamplePrecount));
+    const int resampleBank = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sResampleBank));
     resampleLengthSldr.setValue(resampleLength, NotificationType::dontSendNotification);
     resamplePrecountSldr.setValue(resamplePrecount, NotificationType::dontSendNotification);
     resampleBankSldr.setValue(resampleBank, NotificationType::dontSendNotification);
 
-    const int patternLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternLength));
-    const int patternPrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternPrecount));
-    const int patternBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternBank));
+    const int patternLength = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sPatternLength));
+    const int patternPrecount = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sPatternPrecount));
+    const int patternBank = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sPatternBank));
     patternLengthSldr.setValue(patternLength, NotificationType::dontSendNotification);
     patternPrecountSldr.setValue(patternPrecount, NotificationType::dontSendNotification);
     patternBankSldr.setValue(patternBank, NotificationType::dontSendNotification);
 
     // see if the host has changed the master gain
-    const float masterGain = *static_cast<const float*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sMasterGain));
+    const float masterGain = *static_cast<const float*>(parent->getGlobalSetting(GlobalSettings::sMasterGain));
 
     masterGainSlider.setValue(masterGain, NotificationType::dontSendNotification);
     for(int c = 0; c < numChannels; ++c)
@@ -341,69 +341,69 @@ void mlrVSTGUI::sliderValueChanged(Slider* slider)
     if (slider == &masterGainSlider)
     {
         const float newMasterGain = (float) masterGainSlider.getValue();
-        parent->updateGlobalSetting(mlrVSTAudioProcessor::sMasterGain, &newMasterGain);
+        parent->setGlobalSetting(GlobalSettings::sMasterGain, &newMasterGain);
     }
     else if (slider == &bpmSlider)
     {
         double newBPM = bpmSlider.getValue();
-        parent->updateGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM, &newBPM);
+        parent->setGlobalSetting(GlobalSettings::sCurrentBPM, &newBPM);
     }
 
     // resampling sliders /////////////////
     else if (slider == &resampleLengthSldr)
     {
         const int resampleLength = (int) resampleLengthSldr.getValue();
-        parent->updateGlobalSetting(mlrVSTAudioProcessor::sResampleLength, &resampleLength);
+        parent->setGlobalSetting(GlobalSettings::sResampleLength, &resampleLength);
     }
     else if (slider == &resamplePrecountSldr)
     {
         const int resamplePrecount = (int) resamplePrecountSldr.getValue();
-        parent->updateGlobalSetting(mlrVSTAudioProcessor::sResamplePrecount, &resamplePrecount);
+        parent->setGlobalSetting(GlobalSettings::sResamplePrecount, &resamplePrecount);
     }
     else if (slider == &resampleBankSldr)
     {
         const int resampleBank = (int) resampleBankSldr.getValue();
-        parent->updateGlobalSetting(mlrVSTAudioProcessor::sResampleBank, &resampleBank);
+        parent->setGlobalSetting(GlobalSettings::sResampleBank, &resampleBank);
     }
 
     // recording sliders ////////////////
     else if (slider == &recordLengthSldr)
     {
         const int recordLength = (int) recordLengthSldr.getValue();
-        parent->updateGlobalSetting(mlrVSTAudioProcessor::sRecordLength, &recordLength);
+        parent->setGlobalSetting(GlobalSettings::sRecordLength, &recordLength);
     }
     else if (slider == &recordPrecountSldr)
     {
         const int recordPrecount = (int) recordPrecountSldr.getValue();
-        parent->updateGlobalSetting(mlrVSTAudioProcessor::sRecordPrecount, &recordPrecount);
+        parent->setGlobalSetting(GlobalSettings::sRecordPrecount, &recordPrecount);
     }
     else if (slider == &recordBankSldr)
     {
         const int recordBank = (int) recordBankSldr.getValue();
-        parent->updateGlobalSetting(mlrVSTAudioProcessor::sRecordBank, &recordBank);
+        parent->setGlobalSetting(GlobalSettings::sRecordBank, &recordBank);
     }
 
     // pattern recorder sliders /////////
     else if (slider == &patternLengthSldr)
     {
         const int patternLength = (int) patternLengthSldr.getValue();
-        parent->updateGlobalSetting(mlrVSTAudioProcessor::sPatternLength, &patternLength);
+        parent->setGlobalSetting(GlobalSettings::sPatternLength, &patternLength);
     }
     else if (slider == &patternPrecountSldr)
     {
         const int patternPrecount = (int) patternPrecountSldr.getValue();
-        parent->updateGlobalSetting(mlrVSTAudioProcessor::sPatternPrecount, &patternPrecount);
+        parent->setGlobalSetting(GlobalSettings::sPatternPrecount, &patternPrecount);
     }
     else if (slider == &patternBankSldr)
     {
         const int patternBank = (int) patternBankSldr.getValue();
-        parent->updateGlobalSetting(mlrVSTAudioProcessor::sPatternBank, &patternBank);
+        parent->setGlobalSetting(GlobalSettings::sPatternBank, &patternBank);
 
         // load the precount lengths etc associated with this bank
-        const int patternLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternLength));
+        const int patternLength = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sPatternLength));
         patternLengthSldr.setValue(patternLength, NotificationType::dontSendNotification);
 
-        const int patternPrecountLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternPrecount));
+        const int patternPrecountLength = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sPatternPrecount));
         patternPrecountSldr.setValue(patternPrecountLength, NotificationType::dontSendNotification);
     }
 
@@ -415,7 +415,7 @@ void mlrVSTGUI::sliderValueChanged(Slider* slider)
             if (slider == slidersArray[i])
             {
                 jassert(i < 8);     // we should not have more than 8 channels
-                float newChannelGainValue = (float) slidersArray[i]->getValue();
+                const float newChannelGainValue = (float) slidersArray[i]->getValue();
 
                 // let host know about the new value
                 // channel0GainParam is the first channel id, so +i to access the rest
@@ -432,7 +432,7 @@ void mlrVSTGUI::comboBoxChanged(ComboBox* comboBoxChanged)
         const int choice = quantiseSettingsCbox.getSelectedId();
 
         if (choice > 0)
-            parent->updateGlobalSetting(mlrVSTAudioProcessor::sQuantiseMenuSelection, &choice);
+            parent->setGlobalSetting(GlobalSettings::sQuantiseMenuSelection, &choice);
     }
 }
 
@@ -574,18 +574,18 @@ void mlrVSTGUI::buttonClicked(Button* btn)
 }
 
 // Setting handling stuff
-void mlrVSTGUI::updateGlobalSetting(const int &parameterID, const void *newValue)
+void mlrVSTGUI::setGlobalSetting(const int &parameterID, const void *newValue)
 {
     /* First let the processor store the setting (as mlrVSTGUI
     will lose these on closing. We don't need to update listeners as the GUI
-    is the source of the change (at that is what would be notified).
+    is the source of the change (at that is the only object notified anyway).
     */
-    parent->updateGlobalSetting(parameterID, newValue, false);
+    parent->setGlobalSetting(parameterID, newValue, false);
 
     // a few settings are of interest to the GUI
     switch (parameterID)
     {
-    case mlrVSTAudioProcessor::sUseExternalTempo :
+    case GlobalSettings::sUseExternalTempo :
         {
             useExternalTempo = *static_cast<const bool*>(newValue);
 
@@ -603,7 +603,7 @@ void mlrVSTGUI::updateGlobalSetting(const int &parameterID, const void *newValue
             break;
         }
 
-    case mlrVSTAudioProcessor::sNumChannels :
+    case GlobalSettings::sNumChannels :
         {
             numChannels = *static_cast<const int*>(newValue);
 
@@ -656,7 +656,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     resamplePrecountSldr.setRange(0.0, 8.0, 1.0);
     resamplePrecountSldr.setSliderStyle(Slider::LinearBar);
     resamplePrecountSldr.addListener(this);
-    const int resamplePrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResamplePrecount));
+    const int resamplePrecount = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sResamplePrecount));
     resamplePrecountSldr.setValue(resamplePrecount);
     resamplePrecountSldr.setLookAndFeel(&overrideLF);
     xPosition += sliderWidth + PAD_AMOUNT;
@@ -666,7 +666,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     resampleLengthSldr.setRange(1.0, 32.0, 1.0);
     resampleLengthSldr.setSliderStyle(Slider::LinearBar);
     resampleLengthSldr.addListener(this);
-    const int resampleLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResampleLength));
+    const int resampleLength = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sResampleLength));
     resampleLengthSldr.setValue(resampleLength);
     resampleLengthSldr.setLookAndFeel(&overrideLF);
     xPosition += sliderWidth + PAD_AMOUNT;
@@ -676,7 +676,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     resampleBankSldr.setRange(0.0, 7.0, 1.0);
     resampleBankSldr.setSliderStyle(Slider::LinearBar);
     resampleBankSldr.addListener(this);
-    const int resampleBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sResampleBank));
+    const int resampleBank = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sResampleBank));
     resampleBankSldr.setValue(resampleBank);
     resampleBankSldr.setLookAndFeel(&overrideLF);
 
@@ -695,7 +695,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     recordPrecountSldr.setRange(0.0, 8.0, 1.0);
     recordPrecountSldr.setSliderStyle(Slider::LinearBar);
     recordPrecountSldr.addListener(this);
-    const int recordPrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordPrecount));
+    const int recordPrecount = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sRecordPrecount));
     recordPrecountSldr.setValue(recordPrecount);
     recordPrecountSldr.setLookAndFeel(&overrideLF);
     xPosition += sliderWidth + PAD_AMOUNT;
@@ -705,7 +705,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     recordLengthSldr.setRange(1.0, 32.0, 1.0);
     recordLengthSldr.setSliderStyle(Slider::LinearBar);
     recordLengthSldr.addListener(this);
-    const int recordLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordLength));
+    const int recordLength = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sRecordLength));
     recordLengthSldr.setValue(recordLength);
     recordLengthSldr.setLookAndFeel(&overrideLF);
     xPosition += sliderWidth + PAD_AMOUNT;
@@ -715,7 +715,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     recordBankSldr.setRange(0.0, 7.0, 1.0);
     recordBankSldr.setSliderStyle(Slider::LinearBar);
     recordBankSldr.addListener(this);
-    const int recordBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sRecordBank));
+    const int recordBank = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sRecordBank));
     resampleBankSldr.setValue(recordBank);
     resampleBankSldr.setLookAndFeel(&overrideLF);
     xPosition = PAD_AMOUNT;
@@ -733,7 +733,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     patternPrecountSldr.setRange(0.0, 8.0, 1.0);
     patternPrecountSldr.setSliderStyle(Slider::LinearBar);
     patternPrecountSldr.addListener(this);
-    const int patternPrecount = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternPrecount));
+    const int patternPrecount = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sPatternPrecount));
     patternPrecountSldr.setValue(patternPrecount);
     patternPrecountSldr.setLookAndFeel(&overrideLF);
     xPosition += sliderWidth + PAD_AMOUNT;
@@ -743,7 +743,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     patternLengthSldr.setRange(1.0, 32.0, 1.0);
     patternLengthSldr.setSliderStyle(Slider::LinearBar);
     patternLengthSldr.addListener(this);
-    const int patternLength = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternLength));
+    const int patternLength = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sPatternLength));
     patternLengthSldr.setValue(patternLength);
     patternLengthSldr.setLookAndFeel(&overrideLF);
     xPosition += sliderWidth + PAD_AMOUNT;
@@ -753,7 +753,7 @@ void mlrVSTGUI::setUpRecordResampleUI()
     patternBankSldr.setRange(0.0, 7.0, 1.0);
     patternBankSldr.setSliderStyle(Slider::LinearBar);
     patternBankSldr.addListener(this);
-    const int patternBank = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sPatternBank));
+    const int patternBank = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sPatternBank));
     patternBankSldr.setValue(patternBank);
     patternBankSldr.setLookAndFeel(&overrideLF);
 }
@@ -859,7 +859,7 @@ void mlrVSTGUI::setupTempoUI(int &xPosition, int &yPosition)
     bpmSlider.addListener(this);
     bpmSlider.setLookAndFeel(&overrideLF);
 
-    useExternalTempo = *static_cast<const bool*>(getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
+    useExternalTempo = *static_cast<const bool*>(getGlobalSetting(GlobalSettings::sUseExternalTempo));
     if (useExternalTempo)
     {
         bpmSlider.setEnabled(false);
@@ -867,7 +867,7 @@ void mlrVSTGUI::setupTempoUI(int &xPosition, int &yPosition)
     }
     else
     {
-        double newBPM = *static_cast<const double*>(getGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM));
+        double newBPM = *static_cast<const double*>(getGlobalSetting(GlobalSettings::sCurrentBPM));
         bpmSlider.setValue(newBPM);
         bpmLabel.setText("bpm (internal)", NotificationType::dontSendNotification);
     }
@@ -885,7 +885,7 @@ void mlrVSTGUI::setupTempoUI(int &xPosition, int &yPosition)
         quantiseSettingsCbox.addItem(String(denom) + "n", i);
 
     // and load the stored selection if suitable
-    const int menuSelection = *static_cast<const int*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sQuantiseMenuSelection));
+    const int menuSelection = *static_cast<const int*>(parent->getGlobalSetting(GlobalSettings::sQuantiseMenuSelection));
     if (menuSelection >= 0 && menuSelection < 8) quantiseSettingsCbox.setSelectedId(menuSelection);
     else quantiseSettingsCbox.setSelectedId(1);
 

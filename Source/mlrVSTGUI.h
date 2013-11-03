@@ -75,7 +75,7 @@ public:
     void switchChannels(const int &newChan, const int &stripID) const { parent->switchChannels(newChan, stripID); }
     Colour getChannelColour(const int &chan) const { return parent->getChannelColour(chan); }
 
-    void updateGlobalSetting(const int &parameterID, const void *newValue);
+    void setGlobalSetting(const int &parameterID, const void *newValue);
     const void* getGlobalSetting(const int &parameterID) const { return parent->getGlobalSetting(parameterID); }
 
     void buildSampleStripControls(const int &newNumStrips);
@@ -83,7 +83,7 @@ public:
 private:
 
     // Communication ///////////////////
-    mlrVSTAudioProcessor * const parent;
+    mlrVSTAudioProcessor * const parent;        // with audio processor
 
     // Style / positioning objects ///////////////
     mlrVSTLookAndFeel myLookAndFeel;

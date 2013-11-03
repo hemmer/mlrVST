@@ -139,12 +139,20 @@
       <FILE id="Er5nDB" name="README" compile="0" resource="0" file="oscpack/README"/>
       <FILE id="CRsgUq" name="TODO" compile="0" resource="0" file="oscpack/TODO"/>
     </GROUP>
-    <GROUP id="{976ABE17-20BF-66CE-B2ED-6DEA99C08584}" name="Resources">
+    <GROUP id="{976ABE17-20BF-66CE-B2ED-6DEA99C08584}" name="resources">
       <FILE id="gUdYEf" name="locked.png" compile="0" resource="1" file="Resources/locked.png"/>
       <FILE id="umq6MW" name="unlocked.png" compile="0" resource="1" file="Resources/unlocked.png"/>
       <FILE id="AhuUpu" name="waveform.png" compile="0" resource="1" file="Resources/waveform.png"/>
       <FILE id="mvyiMs" name="pattern.png" compile="0" resource="1" file="Resources/pattern.png"/>
       <FILE id="pTG1LX" name="ProggyClean.ttf" compile="0" resource="1" file="Resources/ProggyClean.ttf"/>
+    </GROUP>
+    <GROUP id="{2E62C8CC-1ECB-7EDD-7154-C92BC1151F6C}" name="settings / presets">
+      <FILE id="x2CdqT" name="GlobalSettings.cpp" compile="1" resource="0"
+            file="Source/GlobalSettings.cpp"/>
+      <FILE id="PozRv2" name="GlobalSettings.h" compile="0" resource="0"
+            file="Source/GlobalSettings.h"/>
+      <FILE id="LuCunC" name="Preset.cpp" compile="1" resource="0" file="Source/Preset.cpp"/>
+      <FILE id="Q614Rp" name="Preset.h" compile="0" resource="0" file="Source/Preset.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>

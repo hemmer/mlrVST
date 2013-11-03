@@ -22,6 +22,9 @@
 #include "SampleStrip.h"
 #include "Array2D.h"
 #include "MappingEngine.h"
+#include "GlobalSettings.h"
+
+class GlobalSettings;
 
 //==============================================================================
 class mlrVSTAudioProcessor : public AudioProcessor,
@@ -85,79 +88,6 @@ public:
     // however all mapping is self-contained so totalNumParams = 0
     enum Parameters { totalNumParams };
 
-    // These settings are independent of preset
-    enum GlobalSettings
-    {
-        sUseExternalTempo,
-        sPresetName,
-        sNumChannels,
-        sMonomeSize,
-        sNumMonomeRows,
-        sNumMonomeCols,
-        sNumSampleStrips,
-        sMasterGain,
-        sCurrentBPM,
-        sQuantiseLevel,             // options None (-1), 1/1, 1/2, 1/4, etc
-        sQuantiseMenuSelection,     // allows menu to be correctly selected
-        sOSCPrefix,
-        sMonitorInputs,
-        sRecordPrecount,
-        sRecordLength,
-        sRecordBank,
-        sResamplePrecount,
-        sResampleLength,
-        sResampleBank,
-        sPatternPrecount,
-        sPatternLength,
-        sPatternBank,
-        sRampLength,                // length of volume envelope (in samples)
-        NumGlobalSettings
-    };
-
-    enum GlobalSettingType
-    {
-        TypeError = -1,
-        TypeInt,
-        TypeDouble,
-        TypeFloat,
-        TypeBool,
-        TypeString,
-        TypeAudioSample
-    };
-
-    enum GlobalSettingScope
-    {
-        ScopeError = -1,    // there's been an error somwhere
-        ScopeNone,          // this setting is not saved
-        ScopePreset,        // this setting is saved with every preset
-        ScopeSetlist        // this setting is saved once (per setlist)
-    };
-
-
-
-    // do we save this setting once at top of setlist, with every
-    // preset, or not at all?
-    static int writeGlobalSettingToPreset(const int &settingID);
-    // get the setting name (for writing in presets etc)
-    static String getGlobalSettingName(const int &settingID);
-    static int getGlobalSettingID(const String &settingName);
-    // is this setting an int, bool, etc
-    static int getGlobalSettingType(const int &parameterID);
-    // setters / getters
-    void updateGlobalSetting(const int &settingID, const void *newVal, const bool &notifyListeners = true);
-    // TODO: should we have a getIntGlobalSetting etc?
-    const void* getGlobalSetting(const int &settingID) const;
-
-
-
-    enum MonomeSizes
-    {
-        eightByEight = 1,
-        eightBySixteen,
-        sixteenByEight,
-        sixteenBySixteen,
-        numSizes
-    };
 
     enum SamplePool
     {
@@ -234,32 +164,31 @@ public:
     void stopAllStrips(const int &stopMode);
 
     void processOSCKeyPress(const int &monomeCol, const int &monomeRow, const bool &state);
+    void setOSCPrefix(const String &newPrefix){ oscMsgHandler.setPrefix(newPrefix); }
 
     // set up the channels (can be used to change number of channels
-    void buildChannelArray(const int &newNumChannels);
+    void buildChannelArray();
     void buildSampleStripArray(const int &numSampleStrips);
 
     SampleStrip* getSampleStrip(const int &index);
 
     bool getChannelMuteStatus(const int &chan) const
     {
-        jassert(chan < channelMutes.size());
-        return channelMutes[chan];
+        const bool status = *static_cast<const bool*>(gs.getGlobalSettingArray(GlobalSettings::sChannelMutes, chan));
+        return status;
     }
     void setChannelMute(const int &chan, const bool &state)
     {
-        jassert(chan < channelMutes.size());
-        channelMutes.set(chan, state);
+        gs.setGlobalSettingArray(GlobalSettings::sChannelMutes, chan, &state);
     }
     float getChannelGain(const int &chan) const
     {
-        jassert(chan < channelGains.size());
-        return channelGains[chan];
+        const float gain = *static_cast<const float*>(gs.getGlobalSettingArray(GlobalSettings::sChannelGains, chan));
+        return gain;
     }
     void setChannelGain(const int &chan, const float &newGain)
     {
-        jassert(chan < channelGains.size());
-        channelGains.set(chan, newGain);
+        gs.setGlobalSettingArray(GlobalSettings::sChannelGains, chan, &newGain);
     }
     Colour getChannelColour(const int &chan) const
     {
@@ -270,23 +199,26 @@ public:
 
     void setSampleStripParameter(const int &parameterID, const void *newValue, const int &stripID, const bool sendChangeMsg = true)
     {
-        if (stripID < numSampleStrips)
+        if (stripID < gs.numSampleStrips && stripID >= 0)
             sampleStripArray[stripID]->setSampleStripParam(parameterID, newValue, sendChangeMsg);
     }
     void toggleSampleStripParameter(const int &parameterID, const int &stripID)
     {
-        if (stripID < numSampleStrips)
+        if (stripID < gs.numSampleStrips && stripID >= 0)
             sampleStripArray[stripID]->toggleSampleStripParam(parameterID);
     }
     const void* getSampleStripParameter(const int &parameterID, const int &stripID) const
     {
-        if (stripID < numSampleStrips)
+        if (stripID < gs.numSampleStrips && stripID >= 0)
             return sampleStripArray[stripID]->getSampleStripParam(parameterID);
         else
             return NULL;
     }
 
-
+    // These are a helper functions so that all classes
+    // don't need access to the gs Settings engine
+    const void* getGlobalSetting(const int &settingID) const;
+    void setGlobalSetting(const int &settingID, const void * newValue, const bool &notifyListeners = true);
 
 
     // Preset stuff
@@ -318,26 +250,26 @@ public:
     float getRecordingPrecountPercent() const;
     float getRecordingPercent() const;
     void processRecordingBuffer(AudioSampleBuffer &input, const int &numSamples);
-    bool areWeRecording() const { return isRecording; }
+    bool areWeRecording() const { return gs.isRecording; }
 
     void startResampling();
     float getResamplingPrecountPercent() const;
     float getResamplingPercent() const;
     void processResamplingBuffer(AudioSampleBuffer &input, const int &numSamples);
-    bool areWeResampling() const { return isResampling; }
+    bool areWeResampling() const { return gs.isResampling; }
 
-    void startPatternRecording() { patternRecordings[currentPatternBank]->startPatternRecording(); }
-    float getPatternPrecountPercent() const { return patternRecordings[currentPatternBank]->getPatternPrecountPercent(); }
+    void startPatternRecording() { patternRecordings[gs.currentPatternBank]->startPatternRecording(); }
+    float getPatternPrecountPercent() const { return patternRecordings[gs.currentPatternBank]->getPatternPrecountPercent(); }
 
 	// get the percent done of the currently selected pattern
-    float getPatternPercent() const { return patternRecordings[currentPatternBank]->getPatternPercent(); }
+    float getPatternPercent() const { return patternRecordings[gs.currentPatternBank]->getPatternPercent(); }
 	// get percent done of requested pattern
     float getPatternPercent(const int &patternID) const { jassert(patternID < patternRecordings.size()); return patternRecordings[patternID]->getPatternPercent(); }
 
-    bool isPatternRecording() const { return patternRecordings[currentPatternBank]->isPatternRecording; }
+    bool isPatternRecording() const { return patternRecordings[gs.currentPatternBank]->isPatternRecording; }
     bool isPatternRecording(const int &patternID) const { return patternRecordings[patternID]->isPatternRecording; }
 
-    bool isPatternPlaying() const { return patternRecordings[currentPatternBank]->isPatternPlaying; }
+    bool isPatternPlaying() const { return patternRecordings[gs.currentPatternBank]->isPatternPlaying; }
     bool isPatternPlaying(const int &patternID) const { return patternRecordings[patternID]->isPatternPlaying; }
 
 	PatternRecording * getPatternRecording(const int &patternID)
@@ -351,14 +283,14 @@ public:
     // note quantisation, quantisationLevel = 0.03125 etc
     void updateQuantizeSettings()
     {
-        if (quantisationLevel < 0.0)
+        if (gs.quantisationLevel < 0.0)
         {
             quantisationOn = false;
             quantisedBuffer.clear();
         }
         else
         {
-            quantisationGap = (int) (getSampleRate() * (120.0 * quantisationLevel / currentBPM));
+            quantisationGap = (int) (getSampleRate() * (120.0 * gs.quantisationLevel / gs.currentBPM));
             quantRemaining = quantisationGap;
             quantisationOn = true;
         }
@@ -388,15 +320,23 @@ public:
         return false;
     }
 
+    void setupButtonStatus(const int &newNumRows, const int &newNumCols)
+    {
+        buttonStatus.setSize(newNumRows, newNumCols, false);
+    }
+
 private:
+
+    GlobalSettings gs;
 
     // MIDI / quantisation //////////////////////////////////////
     // OSC messages from the monome are converted to MIDI messages.
     // quantisationLevel stores the fineness of the quantisation
     // so that 1/4 note quantisation is 0.25 etc. NOTE: any negative
     // values will be interpreted as no quantisation (-1.0 preferred).
-    double quantisationLevel; bool quantisationOn;
-    int quantisationGap, quantRemaining, quantiseMenuSelection;
+    bool quantisationOn;
+    int quantisationGap, quantRemaining;
+
     // quantised notes are stored in one buffer per strip
     MidiBuffer quantisedBuffer;
     // unquantised notes are collected all together
@@ -411,28 +351,16 @@ private:
 
 
     // Channel Setup /////////////
-    const int maxChannels;          // Max number of channels
-    Array<float> channelGains;      // individual channel volumes
-    Array<bool> channelMutes;       // are we on or off
-    float masterGain;               // gain for combined signal
     bool isMstrVolInc, isMstrVolDec;    // are we increasing mstr vol (using a mapping)
-    const float defaultChannelGain;     // initial channel gain level
     Array<Colour> channelColours;       // colours for channels in the GUI
 
 
     // Global settings /////////////////////////////////////////////////
-    int numChannels;
-    bool useExternalTempo;      // either use VST hosts tempo or our own
-    double currentBPM;
+
     bool isBPMInc, isBPMDec;    // are we currently (in/de)creasing BPM
 
-    // Sometimes when starting / stopping / looping back we
-    // get a discontinuity in the stream of samples. To avoid
-    // this, we apply a short volume ramp at the start / end of
-    // playback and at either end of a loop point:
-    int rampLength;
-    // How many sample strips
-    int numSampleStrips;
+
+
 
 
     // SampleStrips ////////////////
@@ -442,7 +370,6 @@ private:
 
 
     // OSC ////////////////////////
-    String OSCPrefix;           // prefix for incoming / outgoing OSC messages
     OSCHandler oscMsgHandler;   // Send and receive OSC messages through this
 
     // Audio Buffers /////////////////
@@ -450,28 +377,17 @@ private:
     AudioSampleBuffer stripContrib;
     // Store resampled information
     AudioSampleBuffer resampleBuffer;
-    bool isResampling;
-    int resampleLength, resamplePrecountLength;                     // length in bars
-    int resampleLengthInSamples, resamplePrecountLengthInSamples;   // length in samples
-    int resamplePosition, resamplePrecountPosition;     // track resampling progress
-    int resampleBank, resampleBankSize;                 // which slot to use (how many are free)
     // Store recorded information
     AudioSampleBuffer recordBuffer;
-    bool isRecording;
-    int recordLength, recordPrecountLength;
-    int recordLengthInSamples, recordPrecountLengthInSamples;
-    int recordPosition, recordPrecountPosition;
-    int recordBank, recordBankSize;
+
     // Pattern recorder information
     MidiBuffer patternRecorder;
-    int currentPatternLength;
-    int currentPatternPrecountLength;
-    int currentPatternBank;
-    int patternBankSize;
+
+
 
 
     // Preset Handling //////////////////////////////////////////
-    String presetName;
+
     XmlElement presetList;  // this is a unique list of possible presets (used internally)
     XmlElement setlist;     // this is an ordered list of consisting of a entries from presetList
 
@@ -495,20 +411,22 @@ private:
     void executeGlobalMapping(const int &mappingID, const bool &state);
 
 
+    int recordLengthInSamples, recordPrecountLengthInSamples;
+    int recordPosition, recordPrecountPosition;
+
+    int resampleLengthInSamples, resamplePrecountLengthInSamples;   // length in samples
+    int resamplePosition, resamplePrecountPosition;     // track resampling progress
 
     // Misc ////////////////
 
-    // what size of device are we using
-    int monomeSize;
-    int numMonomeRows, numMonomeCols;
+
     Array2D<bool> buttonStatus;
 
     // Store which LED column is currently being used
     // for displaying playback position.
     Array<int> playbackLEDPosition;
 
-    // Do we want to play incoming input?
-    bool monitorInputs;
+
 
     void setMonomeStatusGrids(const int &width, const int &height);
 

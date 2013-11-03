@@ -66,7 +66,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     useExternalTempoBtn.addListener(this);
     // load current value from PluginProcessor
     bool useExternalTempo = *static_cast<const bool*>
-        (processor->getGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo));
+        (processor->getGlobalSetting(GlobalSettings::sUseExternalTempo));
     useExternalTempoBtn.setToggleState(useExternalTempo, NotificationType::dontSendNotification);
     String tempoBtnText = (useExternalTempo) ? "external tempo" : "internal tempo";
     useExternalTempoBtn.setButtonText(tempoBtnText);
@@ -81,7 +81,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     for(int i = 1; i <= 8; ++i) selNumChannels.addItem(String(i), i);
     selNumChannels.setBounds(labelWidth + 2 * PAD_AMOUNT, yPos, 150, labelHeight);
     const int numChannels = *static_cast<const int*>
-        (processor->getGlobalSetting(mlrVSTAudioProcessor::sNumChannels));
+        (processor->getGlobalSetting(GlobalSettings::sNumChannels));
     selNumChannels.setSelectedId(numChannels, NotificationType::dontSendNotification);
     selNumChannels.setLookAndFeel(&overLF);
     yPos += PAD_AMOUNT + labelHeight;
@@ -90,7 +90,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     // choose envelope length
     setupLabel(setRampLengthLbl);
     setRampLengthLbl.setBounds(PAD_AMOUNT, yPos, labelWidth, labelHeight);
-    const int initialRampLength = *static_cast<const int*>(processor->getGlobalSetting(mlrVSTAudioProcessor::sRampLength));
+    const int initialRampLength = *static_cast<const int*>(processor->getGlobalSetting(GlobalSettings::sRampLength));
     addAndMakeVisible(&rampLengthSldr);
     rampLengthSldr.setBounds(2*PAD_AMOUNT + labelWidth , yPos, labelWidth, labelHeight);
     rampLengthSldr.setRange(0.0, 1000.0, 1.0);
@@ -113,7 +113,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     oscPrefixTxtBx.addListener(this);
     oscPrefixTxtBx.setEnabled(true);
     const String currentPrefix = *static_cast<const String*>
-        (processor->getGlobalSetting(mlrVSTAudioProcessor::sOSCPrefix));
+        (processor->getGlobalSetting(GlobalSettings::sOSCPrefix));
     oscPrefixTxtBx.setText(currentPrefix, false);
 	oscPrefixTxtBx.setFont(defaultFont);
     yPos += PAD_AMOUNT + labelHeight;
@@ -127,7 +127,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     monitorInputsBtn.addListener(this);
     // load current value from PluginProcessor
     const bool monitorInputs = *static_cast<const bool*>
-        (processor->getGlobalSetting(mlrVSTAudioProcessor::sMonitorInputs));
+        (processor->getGlobalSetting(GlobalSettings::sMonitorInputs));
     monitorInputsBtn.setToggleState(monitorInputs, NotificationType::dontSendNotification);
     String monitorBtnText = (monitorInputs) ? "enabled" : "disabled";
     monitorInputsBtn.setButtonText(monitorBtnText);
@@ -141,15 +141,15 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     addAndMakeVisible(&selMonomeSize);
 
     selMonomeSize.addListener(this);
-    selMonomeSize.addItem("8x8", mlrVSTAudioProcessor::eightByEight);
-    selMonomeSize.addItem("8x16", mlrVSTAudioProcessor::eightBySixteen);
-    selMonomeSize.addItem("16x8", mlrVSTAudioProcessor::sixteenByEight);
-    selMonomeSize.addItem("16x16", mlrVSTAudioProcessor::sixteenBySixteen);
+    selMonomeSize.addItem("8x8", GlobalSettings::eightByEight);
+    selMonomeSize.addItem("8x16", GlobalSettings::eightBySixteen);
+    selMonomeSize.addItem("16x8", GlobalSettings::sixteenByEight);
+    selMonomeSize.addItem("16x16", GlobalSettings::sixteenBySixteen);
 
     selMonomeSize.setBounds(labelWidth + 2 * PAD_AMOUNT, yPos, labelWidth, labelHeight);
 
     const int monomeSize = *static_cast<const int*>
-        (processor->getGlobalSetting(mlrVSTAudioProcessor::sMonomeSize));
+        (processor->getGlobalSetting(GlobalSettings::sMonomeSize));
 
     selMonomeSize.setSelectedId(monomeSize, NotificationType::dontSendNotification);
     yPos += PAD_AMOUNT + labelHeight;
@@ -161,7 +161,7 @@ SettingsPanel::SettingsPanel(const Rectangle<int> &bounds,
     addAndMakeVisible(&selNumSampleStrips);
     selNumSampleStrips.addListener(this);
     const int numSampleStrips = *static_cast<const int*>
-        (processor->getGlobalSetting(mlrVSTAudioProcessor::sNumSampleStrips));
+        (processor->getGlobalSetting(GlobalSettings::sNumSampleStrips));
 
     for (int s = 0; s < 15; ++s)
         selNumSampleStrips.addItem(String(s), s+1);
@@ -184,14 +184,14 @@ void SettingsPanel::buttonClicked(Button *btn)
         bool useExternalTempo = useExternalTempoBtn.getToggleState();
         String tempoBtnText = (useExternalTempo) ? "external tempo" : "internal tempo";
         useExternalTempoBtn.setButtonText(tempoBtnText);
-        pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sUseExternalTempo, &useExternalTempo);
+        pluginUI->setGlobalSetting(GlobalSettings::sUseExternalTempo, &useExternalTempo);
     }
     else if (btn == &monitorInputsBtn)
     {
         bool monitoringInputs = monitorInputsBtn.getToggleState();
         String monitorBtnText = (monitoringInputs) ? "enabled" : "disabled";
         monitorInputsBtn.setButtonText(monitorBtnText);
-        pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sMonitorInputs, &monitoringInputs);
+        pluginUI->setGlobalSetting(GlobalSettings::sMonitorInputs, &monitoringInputs);
     }
 }
 
@@ -203,7 +203,7 @@ void SettingsPanel::comboBoxChanged(ComboBox *box)
         DBG("Number of channels changed to: " + String(newNumChannels));
 
         // update the global setting
-        pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sNumChannels, &newNumChannels);
+        pluginUI->setGlobalSetting(GlobalSettings::sNumChannels, &newNumChannels);
     }
     else if (box == &selMonomeSize)
     {
@@ -211,7 +211,7 @@ void SettingsPanel::comboBoxChanged(ComboBox *box)
         DBG("New size: " + String(newMonomeSize));
 
         // update the global setting
-        pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sMonomeSize, &newMonomeSize);
+        pluginUI->setGlobalSetting(GlobalSettings::sMonomeSize, &newMonomeSize);
     }
     else if (box == &selNumSampleStrips)
     {
@@ -226,14 +226,14 @@ void SettingsPanel::comboBoxChanged(ComboBox *box)
 void SettingsPanel::textEditorChanged(TextEditor &editor)
 {
     String newPrefix = editor.getText();
-    pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sOSCPrefix, &newPrefix);
+    pluginUI->setGlobalSetting(GlobalSettings::sOSCPrefix, &newPrefix);
     DBG(newPrefix);
 }
 
 void SettingsPanel::textEditorReturnKeyPressed (TextEditor &editor)
 {
     String newPrefix = editor.getText();
-    pluginUI->updateGlobalSetting(mlrVSTAudioProcessor::sOSCPrefix, &newPrefix);
+    pluginUI->setGlobalSetting(GlobalSettings::sOSCPrefix, &newPrefix);
     DBG(newPrefix);
 }
 
@@ -243,6 +243,6 @@ void SettingsPanel::sliderValueChanged(Slider *sldr)
     {
         // let the processor know the new value
         int newRampLength = (int) rampLengthSldr.getValue();
-        processor->updateGlobalSetting(mlrVSTAudioProcessor::sRampLength, &newRampLength);
+        processor->setGlobalSetting(GlobalSettings::sRampLength, &newRampLength);
     }
 }

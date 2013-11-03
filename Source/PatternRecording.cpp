@@ -225,7 +225,7 @@ void PatternRecording::startPatternRecording()
 {
     jassert(patternLength != 0);
 
-    const double currentBPM = *static_cast<const double*>(parent->getGlobalSetting(mlrVSTAudioProcessor::sCurrentBPM));
+    const double currentBPM = *static_cast<const double*>(parent->getGlobalSetting(GlobalSettings::sCurrentBPM));
     double sampleRate = parent->getSampleRate();
 
     patternLengthInSamples = (int) (sampleRate * (60.0 * patternLength / currentBPM));

@@ -78,6 +78,8 @@ OBJECTS := \
   $(OBJDIR)/OscPrintReceivedElements_db1e1922.o \
   $(OBJDIR)/OscReceivedElements_b8801585.o \
   $(OBJDIR)/OscTypes_b02e2cd6.o \
+  $(OBJDIR)/GlobalSettings_72a3f96f.o \
+  $(OBJDIR)/Preset_821f7ae8.o \
   $(OBJDIR)/BinaryData_ce4232d4.o \
   $(OBJDIR)/juce_audio_basics_2442e4ea.o \
   $(OBJDIR)/juce_audio_devices_a4c8a728.o \
@@ -254,6 +256,16 @@ $(OBJDIR)/OscReceivedElements_b8801585.o: ../../oscpack/osc/OscReceivedElements.
 $(OBJDIR)/OscTypes_b02e2cd6.o: ../../oscpack/osc/OscTypes.cpp
 	-@mkdir -p $(OBJDIR)
 	@echo "Compiling OscTypes.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/GlobalSettings_72a3f96f.o: ../../Source/GlobalSettings.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling GlobalSettings.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+
+$(OBJDIR)/Preset_821f7ae8.o: ../../Source/Preset.cpp
+	-@mkdir -p $(OBJDIR)
+	@echo "Compiling Preset.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/BinaryData_ce4232d4.o: ../../JuceLibraryCode/BinaryData.cpp
