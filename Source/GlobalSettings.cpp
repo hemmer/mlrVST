@@ -56,7 +56,7 @@ String GlobalSettings::getGlobalSettingName(const int &settingID)
     case sCurrentBPM : return "current_bpm";
     case sQuantiseLevel : return "quantisation_level";
     case sRampLength : return "ramp_length";
-    case sQuantiseMenuSelection : return "quantize_level";
+    case sQuantiseMenuSelection : return "quantize_menu";
     case sMonitorInputs : return "monitor_inputs";
     case sRecordPrecount : return "record_length";
     case sRecordLength : return "record_length";
@@ -311,35 +311,39 @@ void GlobalSettings::setGlobalSetting(const int &settingID,
 void GlobalSettings::setGlobalSettingArray(const int &settingID, const int &index,
                                            const void *newValue, const bool &notifyListeners)
 {
-    const bool isArray = (settingID | TypeArray) != 0;
-    if (!isArray)
+    const int settingType = getGlobalSettingType(settingID);
+    const bool isArray = (settingType & TypeArray) != 0;
+
+    if (isArray)
     {
-        DBG("SettingID" << settingID << " is not an array.");
+        switch (settingID)
+        {
+        case sChannelGains :
+            {
+                jassert(index < channelGains.size());
+                const float channelGain = *static_cast<const float*>(newValue);
+                channelGains.set(index, channelGain);
+                break;
+            }
+        case sChannelMutes :
+            {
+                jassert(index < channelMutes.size());
+                const bool isMuted = *static_cast<const bool*>(newValue);
+                channelMutes.set(index, isMuted);
+                break;
+            }
+        default :
+            DBG("Setting " << settingID << " not found!"); jassertfalse;
+        }
+
+        // if requested, let listeners know that a global setting has changed
+        if (notifyListeners) processor->sendChangeMessage();
+    }
+    else
+    {
+        DBG("SettingID" << settingID << " is not an array!");
         jassertfalse;
     }
-
-    switch (settingID)
-    {
-    case sChannelGains :
-        {
-            jassert(index < channelGains.size());
-            const float channelGain = *static_cast<const float*>(newValue);
-            channelGains.set(index, channelGain);
-            break;
-        }
-    case sChannelMutes :
-        {
-            jassert(index < channelMutes.size());
-            const bool isMuted = *static_cast<const bool*>(newValue);
-            channelMutes.set(index, isMuted);
-            break;
-        }
-    default :
-        DBG("Setting " << settingID << " not found!"); jassertfalse;
-    }
-
-    // if requested, let listeners know that a global setting has changed
-    if (notifyListeners) processor->sendChangeMessage();
 }
 
 const void* GlobalSettings::getGlobalSetting(const int &settingID) const
@@ -375,46 +379,59 @@ const void* GlobalSettings::getGlobalSetting(const int &settingID) const
 }
 const void* GlobalSettings::getGlobalSettingArray(const int &settingID, const int &index) const
 {
-    const bool isArray = (settingID | TypeArray) != 0;
-    if (!isArray)
+    const int settingType = getGlobalSettingType(settingID);
+    const bool isArray = (settingType & TypeArray) != 0;
+
+    if (isArray)
+    {
+        switch (settingID)
+        {
+        case sChannelGains :
+            {
+                jassert(index < channelGains.size());
+                return &(channelGains.getReference(index));
+            }
+        case sChannelMutes :
+            {
+                jassert(index < channelMutes.size());
+                return &(channelMutes.getReference(index));
+            }
+        default :
+            DBG("Setting " << settingID << " not found!"); jassertfalse; return 0;
+        }
+    }
+    else
     {
         DBG("SettingID" << settingID << " is not an array.");
         jassertfalse;
         return 0;
     }
 
-    switch (settingID)
-    {
-    case sChannelGains :
-        {
-            jassert(index < channelGains.size());
-            return &(channelGains.getReference(index));
-        }
-    case sChannelMutes :
-        {
-            jassert(index < channelMutes.size());
-            return &(channelMutes.getReference(index));
-        }
-    default :
-        DBG("Setting " << settingID << " not found!"); jassertfalse; return 0;
-    }
 }
 const int GlobalSettings::getGlobalSettingArrayLength(const int &settingID) const
 {
-    const bool isArray = (settingID | TypeArray) != 0;
-    if (!isArray)
+    const int settingType = getGlobalSettingType(settingID);
+    const bool isArray = (settingType & TypeArray) != 0;
+
+    if (isArray)
+    {
+        const int settingArrayType = settingType - TypeArray;
+
+        switch (settingID)
+        {
+        case sChannelGains :
+        case sChannelMutes :
+            return numChannels;
+        default :
+            DBG("SettingID " << settingID << " not found!"); jassertfalse; return 0;
+        }
+    }
+    else
     {
         DBG("SettingID" << settingID << " is not an array.");
         jassertfalse;
         return 0;
     }
 
-    switch (settingID)
-    {
-    case sChannelGains :
-    case sChannelMutes :
-        return numChannels;
-    default :
-        DBG("Setting " << settingID << " not found!"); jassertfalse; return 0;
+
     }
-}

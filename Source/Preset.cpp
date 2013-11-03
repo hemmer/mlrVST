@@ -18,13 +18,18 @@ XmlElement Preset::createPreset(const String &presetName,
                                 GlobalSettings *gs)
 {
       // TODO: check name not blank
-    XmlElement newPreset(presetName);
+    XmlElement newPreset("preset");
 
     // this is now the current preset
 
     // TODO: this needs sorted!!!!
-    //setGlobalSetting(sPresetName, &newPresetName);
+    gs->setGlobalSetting(GlobalSettings::sPresetName, &presetName);
 
+
+    //////////////////////////////////////////////////////////
+    // Step 1. Write all global settings that are required. We
+    // can get the scope of any given setting by calling:
+    // GlobalSettings::getSettingPresetScope(settingID)
 
     for (int s = 0; s < GlobalSettings::NumGlobalSettings; ++s)
     {
@@ -36,16 +41,16 @@ XmlElement Preset::createPreset(const String &presetName,
         const int settingType = GlobalSettings::getGlobalSettingType(s);
         // what description do we write into the xml for this setting
         const String settingName = GlobalSettings::getGlobalSettingName(s);
-        // get the actual parameter value (we cast later)
-        const void *p = gs->getGlobalSetting(s);
 
+
+        const bool isThisSettingAnArray = (settingType & GlobalSettings::TypeArray) != 0;
 
         // some settings are in arrays (e.g. channel gains): these
         // need special treatment
-        if (settingType | GlobalSettings::TypeArray)
+        if (isThisSettingAnArray)
         {
             const int arraySettingType = settingType - GlobalSettings::TypeArray;
-            const int numItems = gs->getGlobalSettingArrayLength(settingType);
+            const int numItems = gs->getGlobalSettingArrayLength(s);
 
             XmlElement *arrayItems = new XmlElement(settingName);
 
@@ -56,26 +61,35 @@ XmlElement Preset::createPreset(const String &presetName,
                 {
                     for (int i = 0; i < numItems; ++i)
                     {
-                        const bool boolSetting = *static_cast<const bool*>(gs->getGlobalSettingArray(settingType, i));
+                        const bool boolSetting = *static_cast<const bool*>(gs->getGlobalSettingArray(s, i));
                         arrayItems->setAttribute(settingName+String(i), boolSetting);
                     }
+                    break;
                 }
 
             case GlobalSettings::TypeFloat :
                 {
                     for (int i = 0; i < numItems; ++i)
                     {
-                        const float floatSetting = *static_cast<const float*>(gs->getGlobalSettingArray(settingType, i));
+                        const float floatSetting = *static_cast<const float*>(gs->getGlobalSettingArray(s, i));
                         arrayItems->setAttribute(settingName+String(i), floatSetting);
                     }
+                    break;
                 }
 
             default :
                 DBG("Array setting type not found"); jassertfalse;
             }
+
+            newPreset.addChildElement(arrayItems);
+
         }
         else
         {
+            // If we are dealing with single values then get the actual
+            // parameter value (we cast below based on settingType)
+            const void *p = gs->getGlobalSetting(s);
+
             switch (settingType)
             {
             case GlobalSettings::TypeBool :
@@ -98,11 +112,14 @@ XmlElement Preset::createPreset(const String &presetName,
 
 
 
+    ///////////////////////////////////////////////////////////
+    // Step 2. Write the SampleStrip specific settings for each
+    // strip. We use SampleStrip::isParamSaved(param) to check
+    // if that parameter is saved
 
-    // Store the SampleStrip specific settings
     for (int strip = 0; strip < gs->numSampleStrips; ++strip)
     {
-        XmlElement *stripXml = new XmlElement("STRIP");
+        XmlElement *stripXml = new XmlElement("strip");
         stripXml->setAttribute("id", strip);
 
         // write all parameters to XML
@@ -133,6 +150,7 @@ XmlElement Preset::createPreset(const String &presetName,
                     const AudioSample * sample = static_cast<const AudioSample*>(p);
                     if (sample)
                     {
+                        // if we have a valid sample, store its filepath
                         const String samplePath = sample->getSampleFile().getFullPathName();
                         stripXml->setAttribute(paramName, samplePath);
                     }
@@ -142,11 +160,11 @@ XmlElement Preset::createPreset(const String &presetName,
             }
         }
 
-        // add this strip to the preset
+        // add this SampleStrip's parameters to the preset
         newPreset.addChildElement(stripXml);
 
-
     } // end loop over sample strips
+
 
     return newPreset;
 
@@ -180,12 +198,12 @@ void Preset::loadPreset(XmlElement * presetToLoad,
                         mlrVSTAudioProcessor * processor,
                         GlobalSettings *gs)
 {
-        // this *should* exist, if not, return doing nothing
-    //if (presetToLoad == nullptr)
-    //{
-    //    jassertfalse;
-    //    return;
-    //}
+    // this *should* exist, if not, return doing nothing
+    if (presetToLoad == nullptr)
+    {
+        jassertfalse;
+        return;
+    }
 
 
     //if (presetToLoad->getTagName() == "PRESETNONE")

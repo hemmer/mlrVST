@@ -104,7 +104,7 @@ public:
     // setters / getters (array version)
     void setGlobalSettingArray(const int &settingID, const int &index, const void *newValue, const bool &notifyListeners = true);
     const void* getGlobalSettingArray(const int &settingID, const int &index) const;
-    const int GlobalSettings::getGlobalSettingArrayLength(const int &settingID) const;
+    const int getGlobalSettingArrayLength(const int &settingID) const;
 
     enum MonomeSizes
     {

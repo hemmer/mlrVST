@@ -28,6 +28,7 @@ GLOBAL TODO:
 #include "mlrVSTGUI.h"
 #include "OSCHandler.h"
 #include "GlobalSettings.h"
+#include "Preset.h"
 #include <cmath>
 
 //==============================================================================
@@ -869,7 +870,11 @@ void mlrVSTAudioProcessor::loadXmlSetlist(const File &setlistFile)
 
 void mlrVSTAudioProcessor::addPreset(const String &newPresetName)
 {
-    (void) newPresetName;
+    XmlElement newPreset = Preset::createPreset(newPresetName, this, &gs);
+
+    DBG(newPreset.createDocument(String::empty));
+
+    DBG(presetList.createDocument(String::empty));
 }
 
 void mlrVSTAudioProcessor::renamePreset(const String &newName, const int & presetID)
