@@ -51,6 +51,8 @@ String GlobalSettings::getGlobalSettingName(const int &settingID)
     case sChannelGains : return "channel_gains";
     case sChannelMutes: return "channel_mutes";
     case sMonomeSize : return "monome_size";
+    case sNumMonomeRows : return "num_monome_cols";
+    case sNumMonomeCols : return "num_monome_rows";
     case sNumSampleStrips : return "num_sample_strips";
     case sMasterGain : return "master_gain";
     case sCurrentBPM : return "current_bpm";
@@ -67,23 +69,18 @@ String GlobalSettings::getGlobalSettingName(const int &settingID)
     case sPatternPrecount : return "pattern_precount";
     case sPatternLength : return "pattern_length";
     case sPatternBank : return "pattern_bank";
+    case sOSCPrefix : return "osc_prefix";
     default : jassertfalse; return "name_not_found";
     }
 }
 int GlobalSettings::getGlobalSettingID(const String &settingName)
 {
-    // TODO: is this needed?
-    if (settingName == "num_channels") return sNumChannels;
-    if (settingName == "use_external_tempo") return sUseExternalTempo;
-    if (settingName == "num_channels") return sNumChannels;
-    if (settingName == "monome_size") return sMonomeSize;
-    if (settingName == "num_sample_strips") return sNumSampleStrips;
-    if (settingName == "current_bpm") return sCurrentBPM;
-    if (settingName == "quantisation_level") return sQuantiseLevel;
-    if (settingName == "ramp_length") return sRampLength;
+    // lookup all the possible names to find id match
+    for (int i = 0; i < NumGlobalSettings; ++i)
+        if (settingName == getGlobalSettingName(i))
+            return i;
 
     jassertfalse; return -1;
-
 }
 int GlobalSettings::getGlobalSettingType(const int &settingID)
 {
@@ -212,10 +209,18 @@ void GlobalSettings::setGlobalSetting(const int &settingID,
             break;
         }
 
+    case sQuantiseLevel :
+        {
+            quantisationLevel = *static_cast<const double*>(newValue);
+            processor->updateQuantizeSettings();
+            break;
+        }
+
     case sOSCPrefix :
         {
             OSCPrefix = *static_cast<const String*>(newValue);
             processor->setOSCPrefix(OSCPrefix);
+            break;
         }
     case sMonitorInputs :
         monitorInputs = *static_cast<const bool*>(newValue); break;
@@ -268,7 +273,6 @@ void GlobalSettings::setGlobalSetting(const int &settingID,
         {
             currentBPM = *static_cast<const double*>(newValue);
             processor->changeBPM();
-
             break;
         }
     case sQuantiseMenuSelection :

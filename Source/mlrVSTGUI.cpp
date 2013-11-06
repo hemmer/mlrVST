@@ -490,7 +490,7 @@ void mlrVSTGUI::buttonClicked(Button* btn)
             // this is the text they entered..
             String newPresetName(w.getTextEditorContents("text"));
 
-            parent->addPreset(newPresetName);
+            parent->createNewPreset(newPresetName);
         }
 
         // update the preset list to show new additions
@@ -559,7 +559,7 @@ void mlrVSTGUI::buttonClicked(Button* btn)
 
     else if (btn == &debugButton)
     {
-        parent->addPreset("test");
+        parent->createNewPreset("test");
         DBG("Hai");
     }
 

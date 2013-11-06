@@ -194,7 +194,15 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
             break;
         }
 
-    // TODO when pSampleStart is changes, make sure we change fractional too!
+    case pStripID :
+        {
+            // this is a constant and is not changed
+            // but when loading a preset this is called
+            // (as settings are loaded programmatically)
+            break;
+        }
+
+    // TODO: when pSampleStart is changes, make sure we change fractional too!
     default :
         jassertfalse;     // we should NOT be here!
     }
@@ -202,7 +210,6 @@ void SampleStrip::setSampleStripParam(const int &parameterID, const void *newVal
     // notify listeners of changes if requested
     if (sendChangeMsg)
     {
-        //DBG("param " << getParameterName(parameterID) << " sent by " << sampleStripID);
         sendChangeMessage();
     }
 }
@@ -270,6 +277,8 @@ const void* SampleStrip::getSampleStripParam(const int &parameterID) const
         p = &fractionalSampleStart; break;
     case pFractionalEnd :
         p = &fractionalSampleEnd; break;
+    case pStripID :
+        p = &sampleStripID; break;
 
     default:
         DBG("Param not found!");
@@ -308,6 +317,7 @@ void SampleStrip::toggleSampleStripParam(const int &parameterID, const bool &sen
         volumeDecreasing = !volumeDecreasing; break;
 
     default :
+        DBG("SampleStrip parameter is not a bool!");
         jassertfalse;
     }
 

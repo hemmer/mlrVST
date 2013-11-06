@@ -30,10 +30,17 @@ public:
                                    GlobalSettings *gs);
 
     // Pass this a preset in XmlElement form and this method
-    // will load the values in as required
-    static void loadPreset(XmlElement * presetToLoad,
+    // will load the values in as required. Returns true
+    // if sucessful.
+    static bool loadPreset(XmlElement * presetToLoad,
                            mlrVSTAudioProcessor * processor,
                            GlobalSettings *gs);
+
+    // Pass this a collection of presets (setlist) and
+    // it will load them all (and associated files).
+    static bool loadSetlist(XmlElement * presetToLoad,
+                            mlrVSTAudioProcessor * processor,
+                            GlobalSettings *gs);
 
 private:
 

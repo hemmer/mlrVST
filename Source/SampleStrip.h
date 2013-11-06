@@ -55,6 +55,7 @@ public:
         pIsPlaySpeedInc, pIsPlaySpeedDec,
         pFractionalStart, pFractionalEnd,
         pRampLength,
+        pStripID,
         TotalNumParams
     };
 
@@ -169,6 +170,7 @@ public:
 
         case pFractionalStart : return "fractional_start";
         case pFractionalEnd : return "fractional_end";
+        case pStripID : return "id";
 
         default : jassertfalse; return "parameter_not_found_" + String(parameterID);
         }
@@ -197,35 +199,19 @@ public:
         case pEndChunk : return TypeInt;
         case pFractionalStart : return TypeFloat;
         case pFractionalEnd : return TypeFloat;
+        case pStripID : return TypeInt;
         default : jassertfalse; return TypeError;
         }
     }
     static int getParameterID(const String &parameterName)
     {
-        // TODO: is this still needed
-        if (parameterName == "current_channel") return pCurrentChannel;
-        if (parameterName == "num_chunks") return pNumChunks;
-        if (parameterName == "playmode") return pPlayMode;
-        if (parameterName == "is_latched") return pIsLatched ;
-        if (parameterName == "is_reversed") return pIsReversed;
-        if (parameterName == "strip_volume") return pStripVolume;
-        if (parameterName == "play_speed") return pPlaySpeed;
-        if (parameterName == "is_play_speed_locked") return pIsPlaySpeedLocked;
-        if (parameterName == "fractional_start") return pFractionalStart;
-        if (parameterName == "fractional_end") return pFractionalEnd;
+        // lookup all the possible names to find id match
+        for (int i = 0; i < TotalNumParams; ++i)
+            if (parameterName == getParameterName(i))
+                return i;
 
-        //if (parameterName == case pChunkSize : return "chunk_size";
-        //if (parameterName == case pVisualStart : return "visual_start";
-        //if (parameterName == case pVisualEnd : return "visual_end";
-        //if (parameterName == case pAudioSample : return "audio_sample";
-        //if (parameterName == case pSampleStart : return "sample_start";
-        //if (parameterName == case pSampleEnd : return "sample_end";
-        //if (parameterName == case pStartChunk : return "sample_chunk_start";
-        //if (parameterName == case pEndChunk : return "sample_chunk_end";
-
-
-        return -1;
         jassertfalse; return -1;
+
     }
     static bool isParamSaved(const int &parameterID)
     {

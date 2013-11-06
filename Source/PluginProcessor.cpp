@@ -59,7 +59,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     recordPosition(0), recordPrecountPosition(0),
     patternRecorder(),
     // Preset handling /////////////////////////////////////////
-    presetList("PRESETLIST"), setlist("SETLIST"),
+    presetList("preset_list"), setlist("setlist"),
     // Mapping settings ////////////////////////////////////////
     mappingEngine(), currentStripModifier(-1),
     // Misc /////////////////////////////////////////////////////////
@@ -90,7 +90,7 @@ mlrVSTAudioProcessor::mlrVSTAudioProcessor() :
     for (int i = 0; i < gs.patternBankSize; ++i)
         patternRecordings.add(new PatternRecording(this, i));
 
-    setlist.createNewChildElement("PRESETNONE");
+    setlist.createNewChildElement("blank_preset");
 
     lastPosInfo.resetToDefault();
 
@@ -856,26 +856,59 @@ void mlrVSTAudioProcessor::stopAllStrips(const int &stopMode)
 // Preset Handling //
 /////////////////////
 
-void mlrVSTAudioProcessor::saveXmlSetlist(const File &setlistFile)
+bool mlrVSTAudioProcessor::saveXmlSetlist(const File &setlistFile)
 {
     DBG("Saving setlist to: " << setlistFile.getFullPathName());
-
-    XmlElement globalSettings("SETTINGS");
+    return setlist.writeToFile(setlistFile, String::empty);
 }
-void mlrVSTAudioProcessor::loadXmlSetlist(const File &setlistFile)
+bool mlrVSTAudioProcessor::loadXmlSetlist(const File &setlistFile)
 {
-    DBG(setlistFile.getFullPathName());
+    DBG("Loading setlist: " << setlistFile.getFullPathName());
+
+    XmlDocument setlistToLoad(setlistFile);
+    return Preset::loadSetlist(setlistToLoad.getDocumentElement(), this, &gs);
 }
 
-
-void mlrVSTAudioProcessor::addPreset(const String &newPresetName)
+void mlrVSTAudioProcessor::createNewPreset(const String &newPresetName)
 {
+    // first create the preset
     XmlElement newPreset = Preset::createPreset(newPresetName, this, &gs);
 
-    DBG(newPreset.createDocument(String::empty));
+    // see if there is an existing preset and replace it if so
+    const bool replaceExisting = true;
+    addPreset(&newPreset, replaceExisting);
 
     DBG(presetList.createDocument(String::empty));
 }
+void mlrVSTAudioProcessor::addPreset(XmlElement *newPreset, bool replaceExisting)
+{
+    // find the identifier for the preset attribute "name"
+    const String nameAttribute = GlobalSettings::getGlobalSettingName(GlobalSettings::sPresetName);
+
+    // get the new preset's name
+    const String newPresetName = newPreset->getStringAttribute(nameAttribute);
+
+    // and see if a preset of this name already exists in the preset list
+    forEachXmlChildElement(presetList, p)
+    {
+        const String existingPresetName = p->getStringAttribute(nameAttribute);
+
+        // if it does, replace it
+        if (existingPresetName == newPresetName)
+        {
+            if (replaceExisting)
+            {
+                DBG("Replacing preset: '" << existingPresetName << "'.");
+                presetList.replaceChildElement(p, new XmlElement(*newPreset));
+            }
+        }
+    }
+
+    // if we haven't found a match by here, the preset is unique
+    // so add it as a new element
+    presetList.addChildElement(new XmlElement(*newPreset));
+}
+
 
 void mlrVSTAudioProcessor::renamePreset(const String &newName, const int & presetID)
 {
@@ -911,13 +944,13 @@ void mlrVSTAudioProcessor::selectSetlistItem(const int &id)
 {
     // get the preset at the specified index in the setlist
     XmlElement* setlistItemToLoad = setlist.getChildElement(id);
-    if (setlistItemToLoad != nullptr) loadPreset(setlistItemToLoad);
+    if (setlistItemToLoad != nullptr) Preset::loadPreset(setlistItemToLoad, this, &gs);
 }
 void mlrVSTAudioProcessor::selectPresetListItem(const int &id)
 {
     // get the preset at the specified index in the list of presets
     XmlElement* presetItemToLoad = presetList.getChildElement(id);
-    if (presetItemToLoad != nullptr) loadPreset(presetItemToLoad);
+    if (presetItemToLoad != nullptr) Preset::loadPreset(presetItemToLoad, this, &gs);
 }
 
 void mlrVSTAudioProcessor::insetPresetIntoSetlist(const int &presetID, const int &indexToInsertAt)
@@ -930,10 +963,6 @@ void mlrVSTAudioProcessor::insetPresetIntoSetlist(const int &presetID, const int
     }
 }
 
-void mlrVSTAudioProcessor::loadPreset(XmlElement * presetToLoad)
-{
-    (void) presetToLoad;
-}
 
 
 ////////////////////////////

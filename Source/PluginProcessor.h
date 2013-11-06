@@ -196,7 +196,14 @@ public:
         return channelColours[chan];
     }
 
-
+    void sendSampleStripChangeMsg(const int &sampleStripID)
+    {
+        // forces the sample strip to fire a change msg: this is useful
+        // for classes which don't have direct access to SampleStrips
+        // e.g. the Preset class
+        if (sampleStripID < sampleStripArray.size() && sampleStripID >= 0)
+            sampleStripArray[sampleStripID]->sendChangeMessage();
+    }
     void setSampleStripParameter(const int &parameterID, const void *newValue, const int &stripID, const bool sendChangeMsg = true)
     {
         if (stripID < gs.numSampleStrips && stripID >= 0)
@@ -222,9 +229,13 @@ public:
 
 
     // Preset stuff
-    void saveXmlSetlist(const File &setlistFile);
-    void loadXmlSetlist(const File &setlistFile);
-    void addPreset(const String &presetName);
+    bool saveXmlSetlist(const File &setlistFile);   // returns true if saved sucessfully
+    bool loadXmlSetlist(const File &setlistFile);   // returns true if loaded sucessfully
+    void createNewPreset(const String &presetName); // creates a preset and adds to preset list
+    void addPreset(XmlElement *preset, bool replaceExisting = false);
+    void clearSetlist() { setlist.deleteAllChildElements(); }
+    void clearPresetList() { presetList.deleteAllChildElements(); }
+
 
     // giving a position within the list, try to
     // load that preset / setlist item
@@ -235,8 +246,6 @@ public:
     void selectPresetListItem(const int &id);
 
     void insetPresetIntoSetlist(const int &presetID, const int &indexToInsertAt);
-    // this does the "heavy lifting" of actually loading the preset
-    void loadPreset(XmlElement * presetToLoad);
 
     XmlElement getPresetList() const { return presetList; }
     XmlElement & getPresetListP() { return presetList; }
